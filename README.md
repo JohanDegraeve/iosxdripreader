@@ -1,4 +1,7 @@
 # iosxdripreader
+
+Project in development phase 
+
 xdrip/xbridge reader for iOS devices
 
 xdrip app for iOS devices
