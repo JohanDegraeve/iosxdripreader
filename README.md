@@ -15,3 +15,7 @@ To compile :
 - create a folder named src/locale/en_US under iosxdripreader
 - create a file in that folder named distriqt-applicationkey.properties
 - edit distriqt-applicationkey.properties and add one line with "key=the-application-key-from-airnativeextensions.com"
+- as explained here http://airnativeextensions.com/knowledgebase/tutorial/1#ios
+-   donwload the ios sdk (not sure yet which version to download)
+-   and add it in the flash builder project properties (also explained on  http://airnativeextensions.com/knowledgebase/tutorial/1#ios)
+-   
