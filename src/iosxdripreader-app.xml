@@ -229,9 +229,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 	<!-- </fileTypes> -->
 
     <!-- iOS specific capabilities -->
-	<!-- <iPhone> -->
+	<iPhone>
 		<!-- A list of plist key/value pairs to be added to the application Info.plist -->
-		<!-- <InfoAdditions>
+		<InfoAdditions>
             <![CDATA[
                 <key>UIDeviceFamily</key>
                 <array>
@@ -240,10 +240,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
                 </array>
                 <key>UIStatusBarStyle</key>
                 <string>UIStatusBarStyleBlackOpaque</string>
-                <key>UIRequiresPersistentWiFi</key>
-                <string>YES</string>
+                <key>MinimumOSVersion</key>
+                <string>5.1.1</string>
+                <key>UIBackgroundModes</key>
+				<array>
+					<string>bluetooth-central</string>
+				</array>
             ]]>
-        </InfoAdditions> -->
+        </InfoAdditions>
         <!-- A list of plist key/value pairs to be added to the application Entitlements.plist -->
 		<!-- <Entitlements>
             <![CDATA[
@@ -262,7 +266,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 	packaged inside the application and corresponding stripped swfs will be output in 
 	externalStrippedSwfs folder. -->
 	<!-- <externalSwfs></externalSwfs> -->
-	<!-- </iPhone> -->
+	</iPhone>
 
 	<!-- Specify Android specific tags that get passed to AndroidManifest.xml file. -->
     <!--<android> -->
