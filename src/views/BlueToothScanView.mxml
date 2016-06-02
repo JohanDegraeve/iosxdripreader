@@ -16,17 +16,20 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 
 -->
-<s:TabbedViewNavigatorApplication xmlns:fx="http://ns.adobe.com/mxml/2009" 
-								  xmlns:s="library://ns.adobe.com/flex/spark" 
-								  applicationDPI="160"
-								  skinClass="skins.ApplicationSkin">
+<s:View xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		xmlns:s="library://ns.adobe.com/flex/spark" title="BlueToothScanView">
 	
 	<fx:Script>
 		<![CDATA[
-			import skins.ApplicationSkin;
-			import views.BlueToothScanView;
+			import mx.collections.ArrayCollection;
+			/**
+			 * list of devices found while scanning<br>
+			 */
+			[Bindable]
+			private static var _scannedBluetoothDevices:ArrayCollection;
 		]]>
 	</fx:Script>
-	
-	<s:ViewNavigator icon="@Embed('assets/ic_tab_settings_unselected.png')" width="100%" height="100%" firstView="views.BlueToothScanView"/>
-</s:TabbedViewNavigatorApplication>
+	<s:List id="bluetoothdevicelist" dataProvider="{_scannedBluetoothDevices}">
+		
+	</s:List>
+</s:View>
