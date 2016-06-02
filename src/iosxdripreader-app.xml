@@ -332,4 +332,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 		]]></InfoAdditions>
         <requestedDisplayResolution>high</requestedDisplayResolution>
     </iPhone>
+<extensions>
+        <extensionID>com.distriqt.BluetoothLE</extensionID>
+    </extensions>
 </application>
