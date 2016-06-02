@@ -18,4 +18,3 @@ To compile :
 - as explained here http://airnativeextensions.com/knowledgebase/tutorial/1#ios
 - donwload the ios sdk (not sure yet which version to download)
 - and add it in the flash builder project properties (also explained on  http://airnativeextensions.com/knowledgebase/tutorial/1#ios)
--   
