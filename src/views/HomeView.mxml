@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:View xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		xmlns:s="library://ns.adobe.com/flex/spark" title="HomeView"
+		creationComplete="onCreationComplete(event)">
+	<fx:Script>
+		<![CDATA[
+			import mx.events.FlexEvent;
+			
+			import databaseclasses.Database;
+			import databaseclasses.DatabaseEvent;
+			
+			import services.BluetoothService;
+			
+			protected function onCreationComplete(event:FlexEvent):void
+			{
+				var dispatcher:EventDispatcher = new EventDispatcher();
+				dispatcher.addEventListener(DatabaseEvent.RESULT_EVENT,onInitResult);
+				dispatcher.addEventListener(DatabaseEvent.ERROR_EVENT,onInitError);
+				Database.getInstance().init(dispatcher);
+
+				function onInitResult(event:Event):void
+				{
+					dispatcher.removeEventListener(DatabaseEvent.ERROR_EVENT, onInitError);
+					dispatcher.removeEventListener(DatabaseEvent.RESULT_EVENT, onInitResult);
+					BluetoothService.getInstance();//to start the bluetooth service
+				}
+				
+				function onInitError(event:Event):void
+				{	
+					dispatcher.removeEventListener(DatabaseEvent.ERROR_EVENT, onInitError);
+					dispatcher.removeEventListener(DatabaseEvent.RESULT_EVENT, onInitResult);
+					trace("HomeView : database init error");
+				}
+
+			}
+			
+		]]>
+	</fx:Script>
+	
+	
+</s:View>
