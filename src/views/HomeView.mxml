@@ -6,23 +6,27 @@
 		<![CDATA[
 			import mx.events.FlexEvent;
 			
+			import databaseclasses.BlueToothDevice;
 			import databaseclasses.Database;
 			import databaseclasses.DatabaseEvent;
 			
 			import services.BluetoothService;
+			
 			
 			protected function onCreationComplete(event:FlexEvent):void
 			{
 				var dispatcher:EventDispatcher = new EventDispatcher();
 				dispatcher.addEventListener(DatabaseEvent.RESULT_EVENT,onInitResult);
 				dispatcher.addEventListener(DatabaseEvent.ERROR_EVENT,onInitError);
-				Database.getInstance().init(dispatcher);
+				Database.init(dispatcher);
 
 				function onInitResult(event:Event):void
 				{
 					dispatcher.removeEventListener(DatabaseEvent.ERROR_EVENT, onInitError);
 					dispatcher.removeEventListener(DatabaseEvent.RESULT_EVENT, onInitResult);
-					BluetoothService.getInstance();//to start the bluetooth service
+					BluetoothService.init();
+					var test:BluetoothService = new BluetoothService();
+					var name:String = BlueToothDevice.name;
 				}
 				
 				function onInitError(event:Event):void

@@ -36,15 +36,10 @@
 		 public function CommonSettings()
 		 {
 			 if (instance != null) {
-				 throw new Error("CommonSettings class can only be accessed through CommonSettings.getInstance()");	
+				 throw new Error("CommonSettings class  constructor can not be used");	
 			 }
 		 }
 		 
-		 public static function getInstance():CommonSettings {
-			 if (instance == null) instance = new CommonSettings();
-			 return instance;
-		 }
-
 		 public function getCommonSetting(commonSettingId:int):String {
 			 return commonSettings[commonSettingId];
 		 }

@@ -31,21 +31,21 @@ package databaseclasses
 		//Actual Database error : 0008
 		private static var instance:Database = new Database();
 
-		public var aConn:SQLConnection;		
-		private var sqlStatement:SQLStatement;
-		private var globalDispatcher:EventDispatcher;
-		private var sampleDatabaseFileName:String;
+		public static var aConn:SQLConnection;		
+		private static var sqlStatement:SQLStatement;
+		private static var globalDispatcher:EventDispatcher;
+		private static var sampleDatabaseFileName:String;
 		private static const dbFileName:String = "xdripreader.db";
 		private  static var dbFile:File  ;
-		private var xmlFileName:String;
-		private var databaseWasCopiedFromSampleFile:Boolean = false;
+		private static var xmlFileName:String;
+		private static var databaseWasCopiedFromSampleFile:Boolean = false;
 
 		/**
 		* create table to store the bluetooth device name and address<br>
 		 * connected status will be in seperate table<br>
 		 * At most one row should be stored
 		*/
-		private const CREATE_TABLE_ACTIVE_BLUETOOTH_DEVICE:String = "CREATE TABLE IF NOT EXISTS activebluetoothdevice (" +
+		private static const CREATE_TABLE_ACTIVE_BLUETOOTH_DEVICE:String = "CREATE TABLE IF NOT EXISTS activebluetoothdevice (" +
 			"bluetoothdevice_id STRING PRIMARY KEY, " + //unique id, used in all tables that will use Google Sync
 			"name STRING, " +
 			"address STRING, " +
@@ -55,23 +55,19 @@ package databaseclasses
 		/**
 		 * bluetooth device status, no device id stored here because it should at most be one.<br>
 		 * Keeping seperate from BLUETOOTH_DEVICE name and address because connected status will not be Google synced
-		 */private const CREATE_TABLE_ACTIVE_BLUETOOTH_DEVICE_STATUS:String = "CREATE TABLE IF NOT EXISTS activebluetoothdevicestatus (" +
+		 */
+		private static const CREATE_TABLE_ACTIVE_BLUETOOTH_DEVICE_STATUS:String = "CREATE TABLE IF NOT EXISTS activebluetoothdevicestatus (" +
 			"connected BOOLEAN)";
 		
 		
 		/**
-		 * constructor, should not be used, use getInstance()
+		 * constructor, should not be used
 		 */
 		public function Database()
 		{
 			if (instance != null) {
-				throw new Error("Database class can only be accessed through Database.getInstance()");	
+				throw new Error("Database class constructor can not be used");	
 			}
-		}
-		
-		public static function getInstance():Database {
-			if (instance == null) instance = new Database();
-			return instance;
 		}
 		
 		/**
@@ -82,18 +78,18 @@ package databaseclasses
 		 * 
 		 * Independent of the result of the attempt to open the database and to copy from the assets, all tables will be created (if not existing yet).<br>
 		 **/
-		public function init(dispatcher:EventDispatcher):void
+		public static function init(dispatcher:EventDispatcher):void
 		{
 			trace("Database.init");
 			
-			this.globalDispatcher = dispatcher;
+			globalDispatcher = dispatcher;
 			dbFile  = File.applicationStorageDirectory.resolvePath(dbFileName);
 			
-			this.aConn = new SQLConnection();
-			this.aConn.addEventListener(SQLEvent.OPEN, onConnOpen);
-			this.aConn.addEventListener(SQLErrorEvent.ERROR, onConnError);
+			aConn = new SQLConnection();
+			aConn.addEventListener(SQLEvent.OPEN, onConnOpen);
+			aConn.addEventListener(SQLErrorEvent.ERROR, onConnError);
 			trace("Database.as : Attempting to open database in update mode. Database:0001");
-			this.aConn.openAsync(dbFile, SQLMode.UPDATE);
+			aConn.openAsync(dbFile, SQLMode.UPDATE);
 			
 			function onConnOpen(se:SQLEvent):void
 			{
@@ -115,7 +111,7 @@ package databaseclasses
 				//attempt to create dbFile based on a sample in assets directory, 
 				//if that fails then dbFile will simply not exist and so will be created later on in openAsync 
 				databaseWasCopiedFromSampleFile = createDatabaseFromAssets(dbFile);
-				this.aConn = new SQLStatement();
+				aConn = new SQLConnection();
 				aConn.addEventListener(SQLEvent.OPEN, onConnOpen);
 				aConn.addEventListener(SQLErrorEvent.ERROR, onConnError);
 				trace("Database.as : Attempting to open database in creation mode. Database:0004");
@@ -123,7 +119,7 @@ package databaseclasses
 			}
 		}
 		
-		private function createTables():void
+		private static function createTables():void
 		{			
 			trace("Database.as : in method createtables");
 			sqlStatement = new SQLStatement();
@@ -131,7 +127,7 @@ package databaseclasses
 			createBlueToothDeviceTable();				
 		}
 		
-		private function createBlueToothDeviceTable():void {
+		private static function createBlueToothDeviceTable():void {
 			sqlStatement.text = CREATE_TABLE_ACTIVE_BLUETOOTH_DEVICE;
 			sqlStatement.addEventListener(SQLEvent.RESULT,tableCreated);
 			sqlStatement.addEventListener(SQLErrorEvent.ERROR,tableCreationError);
@@ -156,7 +152,7 @@ package databaseclasses
 			}
 		}
 		
-		private function createBlueToothDeviceStatusTable():void {
+		private static function createBlueToothDeviceStatusTable():void {
 			sqlStatement.text = CREATE_TABLE_ACTIVE_BLUETOOTH_DEVICE_STATUS;
 			sqlStatement.addEventListener(SQLEvent.RESULT,tableCreated);
 			sqlStatement.addEventListener(SQLErrorEvent.ERROR,tableCreationError);
@@ -181,7 +177,7 @@ package databaseclasses
 			}
 		}
 		
-		private function finishedCreatingTables():void {
+		private static function finishedCreatingTables():void {
 			if (globalDispatcher != null) {
 				globalDispatcher.dispatchEvent(new Event(DatabaseEvent.RESULT_EVENT));
 				globalDispatcher = null;
@@ -189,7 +185,7 @@ package databaseclasses
 		}
 
 		
-		private  function createDatabaseFromAssets(targetFile:File):Boolean 			
+		private static function createDatabaseFromAssets(targetFile:File):Boolean 			
 		{
 			var isSuccess:Boolean = true; 
 			

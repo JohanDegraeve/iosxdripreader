@@ -28,15 +28,9 @@
 		public function LocalSettings()
 		{
 			if (instance != null) {
-				throw new Error("LocalSettings class can only be accessed through LocalSettings.getInstance()");	
+				throw new Error("LocalSettings class constructor can not be used");	
 			}
 		}
-		
-		public static function getInstance():LocalSettings {
-			if (instance == null) instance = new LocalSettings();
-			return instance;
-		}
-		
 		public function getLocalSetting(localSettingId:int):String {
 			return localSettings[localSettingId];
 		}

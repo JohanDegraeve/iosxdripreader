@@ -15,26 +15,29 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
  
  */
-package model
+package Utilities
 {
-	import mx.resources.IResourceManager;
-	import mx.resources.ResourceManager;
-
-	public class ModelLocator
+	public class UniqueId
 	{
-		private static var instance:ModelLocator = new ModelLocator();
-		/**
-		 * can be used anytime the resourcemanager is needed
-		 */
-		public static var resourceManagerInstance:IResourceManager;
-		
-		public function ModelLocator()
+		public static var ALPHA_CHAR_CODES:Array = ["0","1","2","3","4","5","6","7","8","9","a","b","c","d","e","f"];
+
+		public function UniqueId()
 		{
-			if (instance != null) {
-				throw new Error("ModelLocator class can only be instantiated through ModelLocator.getInstance()");	
-			}
-			resourceManagerInstance = ResourceManager.getInstance();
 		}
 		
+		public static function createEventId():String {
+			var eventId:Array = new Array(24);
+			var date:String = (new Date()).valueOf().toString();
+			for (var i:int = 0; i < date.length; i++) {
+				eventId[i] = date.charAt(i);
+			}
+			for (; i < eventId.length;i++) {
+				eventId[i] = ALPHA_CHAR_CODES[Math.floor(Math.random() *  16)];
+			}
+			var returnValue:String = "";
+			for (i = 0; i < eventId.length; i++)
+				returnValue += eventId[i];
+			return returnValue;
+		}
 	}
 }

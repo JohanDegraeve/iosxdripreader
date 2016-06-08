@@ -33,9 +33,11 @@ package services
 		public function BluetoothService()
 		{
 			if (instance != null) {
-				throw new Error("BluetoothService class can only be instantiated through BluetoothService.getInstance()");	
+				throw new Error("BluetoothService class  constructor can not be used");	
 			}
-
+		}
+		
+		public static function init():void {
 			BluetoothLE.init(ModelLocator.resourceManagerInstance.getString('secrets','distriqt-key'));
 			if (BluetoothLE.isSupported) {
 				trace("bluetoothle is supported");
@@ -55,18 +57,13 @@ package services
 					case BluetoothLEState.STATE_UNSUPPORTED:	
 					case BluetoothLEState.STATE_UNKNOWN:
 				}
-
+				
 			} else {
 				trace("bluetoothle is not supported - no further action to take");
 			}
 		}
 		
-		public static function getInstance():BluetoothService {
-			if (instance == null) instance = new BluetoothService();
-			return instance;
-		}
-		
-		private function bluetoothStateChangedHandler(event:BluetoothLEEvent):void
+		private static function bluetoothStateChangedHandler(event:BluetoothLEEvent):void
 		{
 			trace("bluetoothStateChangedHandler (): " + BluetoothLE.service.state);
 			//TODO : inform the user when bluetooth connection is lost ? or just change an indication field ?
@@ -94,7 +91,7 @@ package services
 		 * 
 		 * TO DO : NOT SURE ACTUALLY IF THE DEVICE WILL AUTOMATICALLY CONNECT TO A PERIPHERAL THAT WAS ALREADY KNOWN BEFORE
 		*/
-		private function bluetoothStatusIsOn():void {
+		private static function bluetoothStatusIsOn():void {
 			BluetoothLE.service.centralManager.addEventListener( PeripheralEvent.DISCOVERED, central_peripheralDiscoveredHandler );
 			
 			if (!BluetoothLE.service.centralManager.scanForPeripherals())
@@ -110,6 +107,5 @@ package services
 				trace( "peripheral discovered: "+ event.peripheral.name );
 			}
 		}
-
 	}
 }

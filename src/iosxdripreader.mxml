@@ -30,7 +30,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			 * just here to make sure an instance off the modellocator is held throughout the existance of the application, so it's intialized only once<br>
 			 * It doesn't necessarily need to be used, you can also use ModelLocator.getInstance
 			 */
-			private var modelLocator:ModelLocator = ModelLocator.getInstance();
 
 		]]>
 	</fx:Script>

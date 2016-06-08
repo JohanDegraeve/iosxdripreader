@@ -15,26 +15,21 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
  
  */
-package model
+package databaseclasses
 {
-	import mx.resources.IResourceManager;
-	import mx.resources.ResourceManager;
+	import Utilities.UniqueId;
 
-	public class ModelLocator
+	/**
+	 * class that holds and does generic attributes and methods for all classes that will do google sync etc. 
+	 */
+	public class SuperDatabaseClass
 	{
-		private static var instance:ModelLocator = new ModelLocator();
-		/**
-		 * can be used anytime the resourcemanager is needed
-		 */
-		public static var resourceManagerInstance:IResourceManager;
-		
-		public function ModelLocator()
+		public var lastModifiedTimestamp:Number;
+		public var _uniqueId:String;
+		public function SuperDatabaseClass()
 		{
-			if (instance != null) {
-				throw new Error("ModelLocator class can only be instantiated through ModelLocator.getInstance()");	
-			}
-			resourceManagerInstance = ResourceManager.getInstance();
+			lastModifiedTimestamp = (new Date()).valueOf();
+			_uniqueId = Utilities.UniqueId.createEventId();
 		}
-		
 	}
 }
