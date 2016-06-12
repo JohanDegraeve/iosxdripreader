@@ -6,7 +6,6 @@
 		<![CDATA[
 			import mx.events.FlexEvent;
 			
-			import databaseclasses.BlueToothDevice;
 			import databaseclasses.Database;
 			import databaseclasses.DatabaseEvent;
 			
@@ -22,11 +21,10 @@
 
 				function onInitResult(event:Event):void
 				{
+					trace("HomeView : database init result ok");
 					dispatcher.removeEventListener(DatabaseEvent.ERROR_EVENT, onInitError);
 					dispatcher.removeEventListener(DatabaseEvent.RESULT_EVENT, onInitResult);
 					BluetoothService.init();
-					var test:BluetoothService = new BluetoothService();
-					var name:String = BlueToothDevice.name;
 				}
 				
 				function onInitError(event:Event):void

@@ -19,10 +19,19 @@ package databaseclasses
 {
 	public class BlueToothDevice extends SuperDatabaseClass
 	{
-		private static var instance:BlueToothDevice = new BlueToothDevice();
+		public static const DEFAULT_BLUETOOTH_DEVICE_ID:String = "1465501584186cb0d5f60b3c";
+		private static var _instance:BlueToothDevice = new BlueToothDevice();
+
+		/**
+		 * in case we need attributes of the superclass (like uniqueid), then we need to get an instance of this class
+		 */
+		public static function get instance():BlueToothDevice
+		{
+			return _instance;
+		}
 		
 		private static var _name:String;
-
+		
 		/**
 		 * name of the device, empty string means not yet assigned to a bluetooth peripheral
 		 */
@@ -79,28 +88,19 @@ package databaseclasses
 			_connected = value;
 		}
 
-		
-		private static var _uniqueId:String;
-
-		public static function get uniqueId():String
-		{
-			return _uniqueId;
-		}
-
 		public static function deviceKnown():Boolean {
 			return _name != "";
 		}
 		
 		public function BlueToothDevice()
 		{	
-			if (instance != null) {
+			if (_instance != null) {
 				throw new Error("BlueToothDevice class  constructor can not be used");	
 			}
 			_name = "";
 			_address = "";
 			_connected = false;
 			//see if a bluetooth device already exists in the database
-			
 		}
 		
 	}

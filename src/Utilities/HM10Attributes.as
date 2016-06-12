@@ -15,27 +15,19 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
  
  */
-package databaseclasses
+package Utilities
 {
-	import Utilities.UniqueId;
-
 	/**
-	 * class that holds and does generic attributes and methods for all classes that will do google sync etc. 
+	 * same definition as in xdrip Android 
 	 */
-	public class SuperDatabaseClass
+	public class HM10Attributes
 	{
-		public var lastModifiedTimestamp:Number;
-		protected var _uniqueId:String;
+		public static const CLIENT_CHARACTERISTIC_CONFIG:String = "00002902-0000-1000-8000-00805f9b34fb";
+		public static const HM_10_SERVICE:String = "0000ffe0-0000-1000-8000-00805f9b34fb";
+		public static const HM_RX_TX:String = "0000ffe1-0000-1000-8000-00805f9b34fb";
 
-		public function get uniqueId():String
+		public function HM10Attributes()
 		{
-			return _uniqueId;
-		}
-		
-		public function SuperDatabaseClass()
-		{
-			lastModifiedTimestamp = (new Date()).valueOf();
-			_uniqueId = Utilities.UniqueId.createEventId();
 		}
 	}
 }
