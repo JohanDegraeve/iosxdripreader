@@ -6,25 +6,54 @@
 		<![CDATA[
 			import mx.events.FlexEvent;
 			
+			import databaseclasses.BlueToothDevice;
 			import databaseclasses.Database;
 			import databaseclasses.DatabaseEvent;
 			
+			import services.BlueToothServiceEvent;
 			import services.BluetoothService;
 			
+			private static var initialStart:Boolean = true;
 			
 			protected function onCreationComplete(event:FlexEvent):void
 			{
-				var dispatcher:EventDispatcher = new EventDispatcher();
-				dispatcher.addEventListener(DatabaseEvent.RESULT_EVENT,onInitResult);
-				dispatcher.addEventListener(DatabaseEvent.ERROR_EVENT,onInitError);
-				Database.init(dispatcher);
-
+				if (initialStart) {
+					var dispatcher:EventDispatcher = new EventDispatcher();
+					dispatcher.addEventListener(DatabaseEvent.RESULT_EVENT,onInitResult);
+					dispatcher.addEventListener(DatabaseEvent.ERROR_EVENT,onInitError);
+					Database.init(dispatcher);
+					initialStart = false;
+				}
+				
 				function onInitResult(event:Event):void
 				{
 					trace("HomeView : database init result ok");
-					dispatcher.removeEventListener(DatabaseEvent.ERROR_EVENT, onInitError);
-					dispatcher.removeEventListener(DatabaseEvent.RESULT_EVENT, onInitResult);
+					//when calling init(dispatcher), Database.init starts initializing and at the end dispatches the event but sets dispatcher to null
+					//don't know exactly why, that's how it is done in HelpDiabetes
+					if (dispatcher != null) {
+						dispatcher.removeEventListener(DatabaseEvent.ERROR_EVENT, onInitError);
+						dispatcher.removeEventListener(DatabaseEvent.RESULT_EVENT, onInitResult);
+					}
+					var dispatcher:EventDispatcher = new EventDispatcher();
+					dispatcher.addEventListener(DatabaseEvent.RESULT_EVENT,blueToothDeviceRetrieved);
+					dispatcher.addEventListener(DatabaseEvent.ERROR_EVENT,blueToothDeviceRetrievalError);
+					Database.getBlueToothDevice(dispatcher);
+				}
+				
+				function blueToothDeviceRetrieved (event:DatabaseEvent):void {
+					BlueToothDevice.address = event.data.address;
+					BlueToothDevice.name = event.data.name;
+					BlueToothDevice.instance.lastModifiedTimestamp = event.data.lastmodifiedtimestamp;
+					BlueToothDevice.connected = false;
+										
+					BluetoothService.instance.addEventListener(BlueToothServiceEvent.BLUETOOTH_STATUS_CHANGED_EVENT,blueToothStatusChanged);
+					BluetoothService.instance.addEventListener(BlueToothServiceEvent.BLUETOOTH_SERVICE_INFORMATION_EVENT,blueToothServiceInformationEvente);
 					BluetoothService.init();
+				}
+				
+				function blueToothDeviceRetrievalError (event:DatabaseEvent):void {
+					//shouldn't happen, not really 
+					trace("BluetoothService.as : BluetoothService.as : Failed retrieving bluetoothdevice");
 				}
 				
 				function onInitError(event:Event):void
@@ -33,7 +62,15 @@
 					dispatcher.removeEventListener(DatabaseEvent.RESULT_EVENT, onInitResult);
 					trace("HomeView : database init error");
 				}
-
+				
+			}
+			
+			private function blueToothStatusChanged(be:BlueToothServiceEvent):void {
+				trace("HomeView : blueToothStatusChanged, new status = " + be.data.status);
+			}
+			
+			private function blueToothServiceInformationEvente(be:BlueToothServiceEvent):void {
+				trace("HomeView : received bluetooth service information = " + be.data.information);
 			}
 			
 		]]>

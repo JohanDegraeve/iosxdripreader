@@ -27,22 +27,29 @@ package services
 	import com.distriqt.extension.bluetoothle.objects.Service;
 	
 	import flash.events.EventDispatcher;
+	import flash.utils.ByteArray;
 	
 	import Utilities.HM10Attributes;
 	
 	import databaseclasses.BlueToothDevice;
-	import databaseclasses.Database;
-	import databaseclasses.DatabaseEvent;
 	
 	import model.ModelLocator;
 	
-	public class BluetoothService
+	public class BluetoothService extends EventDispatcher
 	{
 		[ResourceBundle("secrets")]
+		[ResourceBundle("bluetoothservice")]
 		
-		private static var instance:BluetoothService = new BluetoothService();
+		public static const BLUETOOTH_DEVICE_DISCONNECTED:String = "DEVICE_DISCONNECTED";
+		public static const BLUETOOTH_DEVICE_CONNECTED:String = "DEVICE_CONNECTED";
+		
+		public static var instance:BluetoothService = new BluetoothService();
 		
 		private static var _activeBluetoothPeripheral:Peripheral;
+		
+		private static var initialStart:Boolean = true;
+		
+		private static var blueToothServiceEvent:BlueToothServiceEvent;
 		
 		private static function set activeBluetoothPeripheral(value:Peripheral):void
 		{
@@ -77,7 +84,7 @@ package services
 		public function BluetoothService()
 		{
 			if (instance != null) {
-				throw new Error("BluetoothService class  constructor can not be used");	
+				throw new Error("BluetoothService class constructor can not be used");	
 			}
 		}
 		
@@ -86,71 +93,75 @@ package services
 		 * Also intializes BlueToothDevice with values retrieved from Database. 
 		 */
 		public static function init():void {
+			if (!initialStart)
+				return;
+			else
+				initialStart = false;
+				
 			BluetoothLE.init(ModelLocator.resourceManagerInstance.getString('secrets','distriqt-key'));
 			if (BluetoothLE.isSupported) {
+				treatNewBlueToothStatus(BluetoothLE.service.centralManager.state);	
 				trace("BluetoothService.as : bluetoothle is supported");
 				BluetoothLE.service.centralManager.addEventListener(PeripheralEvent.DISCOVERED, central_peripheralDiscoveredHandler);
 				BluetoothLE.service.centralManager.addEventListener( PeripheralEvent.CONNECT, central_peripheralConnectHandler );
 				BluetoothLE.service.centralManager.addEventListener( PeripheralEvent.CONNECT_FAIL, central_peripheralConnectFailHandler );
 				BluetoothLE.service.centralManager.addEventListener( PeripheralEvent.DISCONNECT, central_peripheralDisconnectHandler );
-				
-				//first of all get the device name and address from database and store it
-				var dispatcher:EventDispatcher = new EventDispatcher();
-				dispatcher.addEventListener(DatabaseEvent.RESULT_EVENT,blueToothDeviceRetrieved);
-				dispatcher.addEventListener(DatabaseEvent.ERROR_EVENT,blueToothDeviceRetrievalError);
-				Database.getBlueToothDevice(dispatcher);
-				
-				function blueToothDeviceRetrieved (event:DatabaseEvent):void {
-					BlueToothDevice.address = event.data.address;
-					BlueToothDevice.name = event.data.name;
-					BlueToothDevice.instance.lastModifiedTimestamp = event.data.lastmodifiedtimestamp;
-					
-					//set an eventlistener for state changes
-					BluetoothLE.service.addEventListener(BluetoothLEEvent.STATE_CHANGED, bluetoothStateChangedHandler);
-					
-					//what's the actual status ?
-					switch (BluetoothLE.service.state)
-					{
-						case BluetoothLEState.STATE_ON:	
-							// We can use the Bluetooth LE functions
-							bluetoothStatusIsOn();
-							break;
-						case BluetoothLEState.STATE_OFF:
-						case BluetoothLEState.STATE_RESETTING:	
-						case BluetoothLEState.STATE_UNAUTHORISED:	
-						case BluetoothLEState.STATE_UNSUPPORTED:	
-						case BluetoothLEState.STATE_UNKNOWN:
-					}
-					
-				}
-				
-				function blueToothDeviceRetrievalError (event:DatabaseEvent):void {
-					//shouldn't happen, not really 
-					trace("BluetoothService.as : BluetoothService.as : Failed retrieving bluetoothdevice");
-				}
+				BluetoothLE.service.addEventListener(BluetoothLEEvent.STATE_CHANGED, bluetoothStateChangedHandler);
+				switch (BluetoothLE.service.centralManager.state)
+				{
+					case BluetoothLEState.STATE_ON:	
+						// We can use the Bluetooth LE functions
+						bluetoothStatusIsOn();
+						break;
+					case BluetoothLEState.STATE_OFF:
+					case BluetoothLEState.STATE_RESETTING:	
+					case BluetoothLEState.STATE_UNAUTHORISED:	
+					case BluetoothLEState.STATE_UNSUPPORTED:	
+					case BluetoothLEState.STATE_UNKNOWN:
+				}				
 			} else {
 				trace("BluetoothService.as : bluetoothle is not supported - no further action to take");
+				blueToothServiceEvent = new BlueToothServiceEvent(BlueToothServiceEvent.BLUETOOTH_SERVICE_INFORMATION_EVENT);
+				blueToothServiceEvent.data = new Object();
+				blueToothServiceEvent.data.information = ModelLocator.resourceManagerInstance.getString('bluetoothservice','bluetooth_not_supported');
+				instance.dispatchEvent(blueToothServiceEvent);
+
+				blueToothServiceEvent = new BlueToothServiceEvent(BlueToothServiceEvent.BLUETOOTH_STATUS_CHANGED_EVENT);
+				blueToothServiceEvent.data = new Object();
+				blueToothServiceEvent.data.status = BluetoothLEState.STATE_UNSUPPORTED;
+				instance.dispatchEvent(blueToothServiceEvent);
 			}
 		}
 		
-		private static function bluetoothStateChangedHandler(event:BluetoothLEEvent):void
-		{
-			trace("BluetoothService.as : bluetoothStateChangedHandler (): " + BluetoothLE.service.state);
-			//TODO : inform the user when bluetooth connection is lost ? or just change an indication field ?
-			//probably in any case listen for STATE_ON, because probably that's where we need to start doing other things
-			//what's the actual status ?
-			switch (BluetoothLE.service.state)
+		private static function treatNewBlueToothStatus(newStatus:String):void {
+			blueToothServiceEvent = new BlueToothServiceEvent(BlueToothServiceEvent.BLUETOOTH_STATUS_CHANGED_EVENT);
+			blueToothServiceEvent.data = new Object();
+			blueToothServiceEvent.data.status = BluetoothLE.service.centralManager.state;
+			instance.dispatchEvent(blueToothServiceEvent);
+
+			switch (BluetoothLE.service.centralManager.state)
 			{
 				case BluetoothLEState.STATE_ON:	
 					// We can use the Bluetooth LE functions
 					bluetoothStatusIsOn();
 					break;
 				case BluetoothLEState.STATE_OFF:
+					break;//does the device automatically change to connected ? 
 				case BluetoothLEState.STATE_RESETTING:	
+					break;
 				case BluetoothLEState.STATE_UNAUTHORISED:	
+					break;
 				case BluetoothLEState.STATE_UNSUPPORTED:	
+					break;
 				case BluetoothLEState.STATE_UNKNOWN:
+					break;
 			}
+		}
+		
+		private static function bluetoothStateChangedHandler(event:BluetoothLEEvent):void
+		{
+			trace("BluetoothService.as : bluetoothStateChangedHandler (): " + BluetoothLE.service.centralManager.state);
+			treatNewBlueToothStatus(BluetoothLE.service.centralManager.state);					
 		}
 		
 		/** the plan is, as soon as we see that the bluetooth status is on<br>
@@ -159,16 +170,28 @@ package services
 		 * Then scan for peripherals. If no peripheral name stored yet, then we'll try to connect to the first xdrip or xbridge<br>
 		 * If bluetoothle peripheral name stored, then connect to that one <br>
 		 * 
-		 * TO DO : NOT SURE ACTUALLY IF THE DEVICE WILL AUTOMATICALLY CONNECT TO A PERIPHERAL THAT WAS ALREADY KNOWN BEFORE
+		 * TODO : NOT SURE ACTUALLY IF THE DEVICE WILL AUTOMATICALLY CONNECT TO A PERIPHERAL THAT WAS ALREADY KNOWN BEFORE
 		 */
 		private static function bluetoothStatusIsOn():void {
 			var uuids:Vector.<String> = new <String>[HM10Attributes.HM_10_SERVICE];
 			
-			if (!BluetoothLE.service.centralManager.scanForPeripherals(uuids))
-			{
-				trace("BluetoothService.as : BluetoothService.bluetoothStatusIsOn : error while trying to scan for peripherals");
-				//TODO handle this error
-				return;
+			if (!BluetoothLE.service.centralManager.isScanning) {
+				if (!BluetoothLE.service.centralManager.scanForPeripherals(uuids))
+				{
+					blueToothServiceEvent = new BlueToothServiceEvent(BlueToothServiceEvent.BLUETOOTH_SERVICE_INFORMATION_EVENT);
+					blueToothServiceEvent.data = new Object();
+					blueToothServiceEvent.data.information = ModelLocator.resourceManagerInstance.getString('bluetoothservice','failed_to_start_scanning_for_peripherals');
+					instance.dispatchEvent(blueToothServiceEvent);
+
+					trace("BluetoothService.as : BluetoothService.bluetoothStatusIsOn : error while trying to scan for peripherals");
+					//TODO handle this error
+					return;
+				} else {
+					blueToothServiceEvent = new BlueToothServiceEvent(BlueToothServiceEvent.BLUETOOTH_SERVICE_INFORMATION_EVENT);
+					blueToothServiceEvent.data = new Object();
+					blueToothServiceEvent.data.information = ModelLocator.resourceManagerInstance.getString('bluetoothservice','started_scanning_for_peripherals');
+					instance.dispatchEvent(blueToothServiceEvent);
+				}
 			}
 		}
 		
@@ -176,17 +199,45 @@ package services
 		{
 			// event.peripheral will contain a Peripheral object with information about the Peripheral
 			trace("BluetoothService.as : peripheral discovered: "+ event.peripheral.name);
-			if ((event.peripheral.name as String).toUpperCase() == "XDRIP" || (event.peripheral.name as String).toUpperCase() == "XBRIDGE") {//not sure if xbridge is ever used, i think it's always xdrip
-				//here we should check if BlueToothDevice.address != "", then theck if BlueToothDevice.address matches the address of the scanned device, if not don't continue
-				//but we don't get the address of the scanned device, so continue
+			if ((event.peripheral.name as String).toUpperCase().indexOf("XDRIP") > -1 || (event.peripheral.name as String).toUpperCase().indexOf("XBRIDGE") > -1) {//not sure if xbridge is ever used, i think it's always xdrip
+				blueToothServiceEvent = new BlueToothServiceEvent(BlueToothServiceEvent.BLUETOOTH_SERVICE_INFORMATION_EVENT);
+				blueToothServiceEvent.data = new Object();
+				blueToothServiceEvent.data.information = ModelLocator.resourceManagerInstance.getString('bluetoothservice','found_peripheral_with_name') + " = " + event.peripheral.name;
+				instance.dispatchEvent(blueToothServiceEvent);
 				
+				if (BlueToothDevice.address != "") {
+					if (BlueToothDevice.address != event.peripheral.uuid) {
+						//a bluetooth device address is already stored, but it's not the one for which peripheraldiscoveredhandler is called
+						//so we ignore it
+						blueToothServiceEvent = new BlueToothServiceEvent(BlueToothServiceEvent.BLUETOOTH_SERVICE_INFORMATION_EVENT);
+						blueToothServiceEvent.data = new Object();
+						blueToothServiceEvent.data.information = ModelLocator.resourceManagerInstance.getString('bluetoothservice','stored_uuid_does_not_match');
+						instance.dispatchEvent(blueToothServiceEvent);
+						return;
+					}
+				}
+
+				//we want to connect to this device, so stop scanning
+				BluetoothLE.service.centralManager.stopScan();
 				trace("BluetoothService.as : connecting to peripheral : " + event.peripheral.name);
 				BluetoothLE.service.centralManager.connect(event.peripheral);
+				blueToothServiceEvent = new BlueToothServiceEvent(BlueToothServiceEvent.BLUETOOTH_SERVICE_INFORMATION_EVENT);
+				blueToothServiceEvent.data = new Object();
+				blueToothServiceEvent.data.information = ModelLocator.resourceManagerInstance.getString('bluetoothservice','stop_scanning_and_try_to_connect');
+				instance.dispatchEvent(blueToothServiceEvent);
 			}
 		}
 		
 		private static function central_peripheralConnectHandler(event:PeripheralEvent):void {
 			trace("BluetoothService.as : connected to peripheral : " + event.peripheral.name);
+			blueToothServiceEvent = new BlueToothServiceEvent(BlueToothServiceEvent.BLUETOOTH_SERVICE_INFORMATION_EVENT);
+			blueToothServiceEvent.data = new Object();
+			blueToothServiceEvent.data.information = ModelLocator.resourceManagerInstance.getString('bluetoothservice','connected_to_peripheral');
+			instance.dispatchEvent(blueToothServiceEvent);
+			BlueToothDevice.address = event.peripheral.uuid;
+			BlueToothDevice.name = event.peripheral.name;
+			BlueToothDevice.connected = true;
+			
 			activeBluetoothPeripheral = event.peripheral;
 			var uuids:Vector.<String> = new <String>[HM10Attributes.HM_10_SERVICE];
 			activeBluetoothPeripheral.discoverServices(uuids);
@@ -199,6 +250,8 @@ package services
 		
 		private static function central_peripheralDisconnectHandler(event:PeripheralEvent):void {
 			trace("BluetoothService.as : disconnected from peripheral : " + event.peripheral.name);
+			
+			BlueToothDevice.connected = false;
 			activeBluetoothPeripheral = null;
 		}
 		
@@ -224,7 +277,7 @@ package services
 					trace( "characteristic: "+ch.uuid );
 				}
 			}
-			//not correct here, first go through each service and each characteristic to trace the content
+			//not really correct here, first go through each service and each characteristic to trace the content
 			//then assume there's only one of each
 			characteristic = event.peripheral.services[0].characteristics[0];
 			if (!activeBluetoothPeripheral.subscribeToCharacteristic(characteristic))
@@ -236,7 +289,6 @@ package services
 		
 		private static function peripheral_characteristic_updatedHandler(event:CharacteristicEvent):void {
 			trace("BluetoothService.as : peripheral_characteristic_updatedHandler: " + event.characteristic.uuid);
-			trace("BluetoothService.as : value="+ event.characteristic.value.readUTFBytes(event.characteristic.value.length));
 			//Should be same as in DexCollectionService , linenumber 443
 			var bytesAvailable:int = event.characteristic.value.bytesAvailable;
 			var endian:String = event.characteristic.value.endian;
@@ -247,10 +299,34 @@ package services
 			//alles zit dus in event.characteristics.value[0]
 			//txid zit daar in, controleren ? best wel zeker ? 
 			//processing van values zit in TransmitterData.create
+			//na het uitlezen ook nog een ack message uitsturen, zie DexCollectionService.java 363
+			
+			//acknowledge the receipt back to the xdrip, otherwise it will keep on trying
+			var value:ByteArray = new ByteArray();
+			value.writeByte(0x02);
+			value.writeByte(0xF0);
+			
+			//call back to peripheral_characteristic_writeErrorHandler seems to be not working, so commented it out
+			//activeBluetoothPeripheral.addEventListener(CharacteristicEvent.WRITE_SUCCESS, peripheral_characteristic_writeHandler);
+			//activeBluetoothPeripheral.addEventListener(CharacteristicEvent.WRITE_ERROR, peripheral_characteristic_writeErrorHandler);
+			var success:Boolean = activeBluetoothPeripheral.writeValueForCharacteristic(characteristic, value);
+			trace("BluetoothService.as : peripheral_characteristic_updatedHandler, result of call to activeBluetoothPeripheral.writeValueForCharacteristic = " + success);
 		}
 		
+		/*private static function peripheral_characteristic_writeHandler(event:CharacteristicEvent):void {
+			activeBluetoothPeripheral.removeEventListener(CharacteristicEvent.WRITE_SUCCESS, peripheral_characteristic_writeHandler);
+			activeBluetoothPeripheral.removeEventListener(CharacteristicEvent.WRITE_ERROR, peripheral_characteristic_writeErrorHandler);
+			trace("	BluetoothService.as : peripheral_characteristic_writeHandler");
+		}
+		
+		private static function peripheral_characteristic_writeErrorHandler(event:CharacteristicEvent):void {
+			activeBluetoothPeripheral.removeEventListener(CharacteristicEvent.WRITE_SUCCESS, peripheral_characteristic_writeHandler);
+			activeBluetoothPeripheral.removeEventListener(CharacteristicEvent.WRITE_ERROR, peripheral_characteristic_writeErrorHandler);
+			trace("	BluetoothService.as : peripheral_characteristic_writeErrorHandler");
+		}*/
+		
 		private static function peripheral_characteristic_errorHandler(event:CharacteristicEvent):void {
-			trace("BluetoothService.as : peripheral_characteristic_errorHandler: " + event.characteristic.uuid);
+			trace("BluetoothService.as : peripheral_characteristic_errorHandler" );
 		}
 		
 		private static function peripheral_characteristic_subscribeHandler(event:CharacteristicEvent):void {

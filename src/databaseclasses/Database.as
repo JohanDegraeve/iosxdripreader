@@ -46,7 +46,7 @@ package databaseclasses
 		 * At most one row should be stored
 		 */
 		private static const CREATE_TABLE_ACTIVE_BLUETOOTH_DEVICE:String = "CREATE TABLE IF NOT EXISTS activebluetoothdevice (" +
-			"bluetoothdevice_id STRING PRIMARY KEY, " + //unique id, used in all tables that will use Google Sync
+			"bluetoothdevice_id STRING PRIMARY KEY, " + //unique id, used in all tables that will use Google Sync (note that for iOS no google sync will be done for this table because mac address is not visible in iOS. UDID is used as address but this is different for each install
 			"name STRING, " +
 			"address STRING, " +
 			"connected BOOLEAN," +

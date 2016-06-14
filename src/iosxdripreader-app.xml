@@ -241,7 +241,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
                 <key>UIStatusBarStyle</key>
                 <string>UIStatusBarStyleBlackOpaque</string>
                 <key>MinimumOSVersion</key>
-                <string>6.1.6</string>
+                <string>8.1.4</string>
                 <key>UIBackgroundModes</key>
 				<array>
 					<string>bluetooth-central</string>
