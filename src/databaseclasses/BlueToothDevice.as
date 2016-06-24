@@ -17,11 +17,15 @@
  */
 package databaseclasses
 {
+	import flash.events.EventDispatcher;
+	
+	import services.BluetoothService;
+	
 	public class BlueToothDevice extends SuperDatabaseClass
 	{
 		public static const DEFAULT_BLUETOOTH_DEVICE_ID:String = "1465501584186cb0d5f60b3c";
 		private static var _instance:BlueToothDevice = new BlueToothDevice();
-
+		
 		/**
 		 * in case we need attributes of the superclass (like uniqueid), then we need to get an instance of this class
 		 */
@@ -39,19 +43,23 @@ package databaseclasses
 		{
 			return _name;
 		}
-
+		
 		/**
 		 * @private
 		 */
 		public static function set name(value:String):void
 		{
+			if (value == _name)
+				return;
+			
 			_name = value;
 			if (_name == null)
 				_name = "";
+			updateDatabase();
 		}
-
+		
 		private static var _address:String;
-
+		
 		/**
 		 * address of the device, empty string or null means not yet assigned to a bluetooth peripheral
 		 */
@@ -59,37 +67,19 @@ package databaseclasses
 		{
 			return _address;
 		}
-
+		
 		/**
 		 * @private
 		 */
 		public static function set address(value:String):void
 		{
+			if (value == _address)
+				return;
+			
 			_address = value;
 			if (_address == null)
 				_address = "";
-		}
-
-		private static var _connected:Boolean;
-
-		/**
-		 * connected or not to a peripheral
-		 */
-		public static function get connected():Boolean
-		{
-			return _connected;
-		}
-
-		/**
-		 * @private
-		 */
-		public static function set connected(value:Boolean):void
-		{
-			_connected = value;
-		}
-
-		public static function deviceKnown():Boolean {
-			return _name != "";
+			updateDatabase();
 		}
 		
 		public function BlueToothDevice()
@@ -99,9 +89,35 @@ package databaseclasses
 			}
 			_name = "";
 			_address = "";
-			_connected = false;
 			//see if a bluetooth device already exists in the database
 		}
 		
+		private static function updateDatabase():void {
+			var localdispatcher:EventDispatcher = new EventDispatcher();
+			localdispatcher.addEventListener(DatabaseEvent.ERROR_EVENT, error);
+			localdispatcher.addEventListener(DatabaseEvent.RESULT_EVENT, result);
+			Database.updateBlueToothDevice(address, name, Number.NaN, localdispatcher); 
+			function error(de:DatabaseEvent):void {
+				localdispatcher.removeEventListener(DatabaseEvent.RESULT_EVENT,error);
+				localdispatcher.removeEventListener(DatabaseEvent.ERROR_EVENT,result);
+				trace("bluetoothdevice.as error updating name");
+			}
+			function result(de:DatabaseEvent):void {
+				localdispatcher.removeEventListener(DatabaseEvent.RESULT_EVENT,error);
+				localdispatcher.removeEventListener(DatabaseEvent.ERROR_EVENT,result);
+				trace("bluetoothdevice.as successfully updated name");
+			}
+		}
+		
+		/**
+		 * sets address and name of bluetoothdevice to empty string, ie there's no device known anymore<br>
+		 * also updates database and calls bluetoothservce.forgetdevice
+		 */
+		public static function forgetBlueToothDevice():void {
+			_address = "";
+			_name = "";
+			updateDatabase();
+			BluetoothService.forgetBlueToothDevice();
+		}
 	}
 }

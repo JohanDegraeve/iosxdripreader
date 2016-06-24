@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:View xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		initialize="init()"
+		xmlns:s="library://ns.adobe.com/flex/spark" title="SettingsView">
+	<fx:Script>
+		<![CDATA[
+			import mx.collections.ArrayCollection;
+			import mx.managers.PopUpManager;
+			
+			import spark.events.IndexChangeEvent;
+			import spark.events.PopUpEvent;
+			
+			import Utilities.AlertPopUp;
+			
+			import databaseclasses.BlueToothDevice;
+			
+			private static var alertPopUp:AlertPopUp;
+			private var textToShow:String ;
+			
+			import model.ModelLocator;
+			[ResourceBundle("settingsview")]
+			
+			private var menuList:ArrayCollection = 	new ArrayCollection([
+				ModelLocator.resourceManagerInstance.getString("settingsview","forget_xdrip_or_xbridge"),
+				ModelLocator.resourceManagerInstance.getString("settingsview","show_logging")
+			]);	
+	
+			private function init():void {
+				/* add event listener for clicking item */
+				settingsList.addEventListener(Event.CHANGE,selectedElementChanged);
+			}
+			
+			private function selectedElementChanged(event:IndexChangeEvent):void {
+				switch (event.newIndex) {
+					case 0:
+						if (BlueToothDevice.address != "") {
+							BlueToothDevice.forgetBlueToothDevice();
+							alertPopUp = new AlertPopUp();
+							alertPopUp.addEventListener(PopUpEvent.CLOSE, okClicked);
+							textToShow = ModelLocator.resourceManagerInstance.getString('settingsview','bluetoothdeviceforgotten') ;
+							alertPopUp.show(this);
+							alertPopUp.setMessage(textToShow);
+						}
+						break;
+					case 1:
+						navigator.pushView(LoggingView);
+						break;
+				}
+				
+				function okClicked(event: PopUpEvent):void {
+					if (alertPopUp != null) {
+						PopUpManager.removePopUp(alertPopUp);
+						if (alertPopUp.hasEventListener(PopUpEvent.CLOSE)) {
+							alertPopUp.removeEventListener(PopUpEvent.CLOSE, okClicked);
+						}
+					}
+				}
+			}
+		]]>
+	</fx:Script>
+	<s:List id="settingsList" left="0" right="0" top="0" bottom="0" itemRenderer="renderers.MenuElementItemRenderer"
+			dataProvider="{menuList}">
+	</s:List>
+	
+</s:View>
+

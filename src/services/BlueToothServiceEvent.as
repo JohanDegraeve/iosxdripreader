@@ -26,7 +26,8 @@ package services
 
 	/**
 	 * used by bluetoothservice to notify on all kinds of events : information messages like bluetooth state change, bluetooth state change,
-	 * result received from transmitter, etc.. 
+	 * result received from transmitter, etc.. <br>
+	 * to get info about connectivity status, new transmitter data ... create listeners for the events<br>
 	 */
 	public class BlueToothServiceEvent extends Event
 	{

@@ -1,4 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+Copyright (C) 2016  Johan Degraeve
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
+
+-->
 <s:View xmlns:fx="http://ns.adobe.com/mxml/2009" 
 		xmlns:s="library://ns.adobe.com/flex/spark" title="HomeView"
 		creationComplete="onCreationComplete(event)">
@@ -6,15 +23,20 @@
 		<![CDATA[
 			import mx.events.FlexEvent;
 			
+			import Utilities.UniqueId;
+			
 			import databaseclasses.BlueToothDevice;
 			import databaseclasses.Database;
 			import databaseclasses.DatabaseEvent;
 			
 			import services.BlueToothServiceEvent;
 			import services.BluetoothService;
+			import services.NotificationService;
 			
 			private static var initialStart:Boolean = true;
-			
+
+			[ResourceBundle("general")]
+
 			protected function onCreationComplete(event:FlexEvent):void
 			{
 				if (initialStart) {
@@ -44,11 +66,11 @@
 					BlueToothDevice.address = event.data.address;
 					BlueToothDevice.name = event.data.name;
 					BlueToothDevice.instance.lastModifiedTimestamp = event.data.lastmodifiedtimestamp;
-					BlueToothDevice.connected = false;
 										
 					BluetoothService.instance.addEventListener(BlueToothServiceEvent.BLUETOOTH_STATUS_CHANGED_EVENT,blueToothStatusChanged);
-					BluetoothService.instance.addEventListener(BlueToothServiceEvent.BLUETOOTH_SERVICE_INFORMATION_EVENT,blueToothServiceInformationEvente);
+					BluetoothService.instance.addEventListener(BlueToothServiceEvent.BLUETOOTH_SERVICE_INFORMATION_EVENT,blueToothServiceInformationReceived);
 					BluetoothService.init();
+					NotificationService.instantiate();
 				}
 				
 				function blueToothDeviceRetrievalError (event:DatabaseEvent):void {
@@ -62,19 +84,15 @@
 					dispatcher.removeEventListener(DatabaseEvent.RESULT_EVENT, onInitResult);
 					trace("HomeView : database init error");
 				}
-				
 			}
 			
 			private function blueToothStatusChanged(be:BlueToothServiceEvent):void {
 				trace("HomeView : blueToothStatusChanged, new status = " + be.data.status);
 			}
 			
-			private function blueToothServiceInformationEvente(be:BlueToothServiceEvent):void {
-				trace("HomeView : received bluetooth service information = " + be.data.information);
+			private function blueToothServiceInformationReceived(be:BlueToothServiceEvent):void {
+				trace((new Date()).toTimeString() + " : HomeView : received bluetooth service information = " + be.data.information);
 			}
-			
 		]]>
 	</fx:Script>
-	
-	
 </s:View>

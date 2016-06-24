@@ -16,7 +16,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 
 -->
-<application xmlns="http://ns.adobe.com/air/application/22.0">
+<application xmlns="http://ns.adobe.com/air/application/21.0">
 
 <!-- Adobe AIR Application Descriptor File Template.
 
@@ -132,7 +132,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 
 		<!-- Display Resolution for the app (either "standard" or "high"). Optional, OSX-only. Default "standard" -->
 		<!-- <requestedDisplayResolution></requestedDisplayResolution> -->
-	<autoOrients>true</autoOrients>
+		<aspectRatio>portrait</aspectRatio> 
+		<autoOrients>false</autoOrients>
         <fullScreen>false</fullScreen>
         <visible>true</visible>
         <softKeyboardBehavior>none</softKeyboardBehavior>
@@ -245,6 +246,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
                 <key>UIBackgroundModes</key>
 				<array>
 					<string>bluetooth-central</string>
+					<string>fetch</string>
 				</array>
             ]]>
         </InfoAdditions>
@@ -328,5 +330,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
     </android>
 <extensions>
         <extensionID>com.distriqt.BluetoothLE</extensionID>
+    <extensionID>com.distriqt.Notifications</extensionID>
+    <extensionID>com.distriqt.Core</extensionID>
     </extensions>
 </application>

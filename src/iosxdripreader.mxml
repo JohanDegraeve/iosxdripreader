@@ -19,20 +19,29 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 <s:TabbedViewNavigatorApplication xmlns:fx="http://ns.adobe.com/mxml/2009" 
 								  xmlns:s="library://ns.adobe.com/flex/spark" 
 								  applicationDPI="160"
+								  initialize="initApplication()"
 								  skinClass="skins.ApplicationSkin">
-	
+	<fx:Style source="assets/style.css"/>
 	<fx:Script>
 		<![CDATA[
-			import model.ModelLocator;
 			import skins.ApplicationSkin;
-			
-			/**
-			 * just here to make sure an instance off the modellocator is held throughout the existance of the application, so it's intialized only once<br>
-			 * It doesn't necessarily need to be used, you can also use ModelLocator.getInstance
-			 */
+			public static var deviceScreenWidth:Number;
+			public static var deviceScreenHeight:Number;
 
+			private function initApplication():void {
+				this.addEventListener( Event.ADDED_TO_STAGE, addedToStageHandler );
+				NativeApplication.nativeApplication.executeInBackground = true;
+			}
+			
+			private function addedToStageHandler(event:Event):void {
+				deviceScreenHeight = height;
+				deviceScreenWidth = width;
+				this.stage.frameRate = 12;
+			}
+			
 		]]>
 	</fx:Script>
 	
 	<s:ViewNavigator icon="@Embed('assets/ic_tab_settings_unselected.png')" width="100%" height="100%" firstView="views.HomeView"/>
+	<s:ViewNavigator icon="@Embed('assets/ic_tab_settings_unselected.png')" width="100%" height="100%" firstView="views.SettingsView"/>
 </s:TabbedViewNavigatorApplication>

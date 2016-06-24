@@ -25,6 +25,9 @@ package Utilities
 		{
 		}
 		
+		/**
+		 * creates an event id of 24 chars, compliant with the way Nightscout expects it
+		 */
 		public static function createEventId():String {
 			var eventId:Array = new Array(24);
 			var date:String = (new Date()).valueOf().toString();

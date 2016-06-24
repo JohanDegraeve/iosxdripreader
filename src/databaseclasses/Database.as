@@ -28,7 +28,7 @@ package databaseclasses
 	
 	public class Database
 	{
-		//Actual Database error : 0013
+		//Actual Database error : 0024
 		private static var instance:Database = new Database();
 		
 		public static var aConn:SQLConnection;		
@@ -39,30 +39,35 @@ package databaseclasses
 		private  static var dbFile:File  ;
 		private static var xmlFileName:String;
 		private static var databaseWasCopiedFromSampleFile:Boolean = false;
+		private static const maxDaysToKeepLogfiles:int = 2;
+		public static const END_OF_RESULT:String = "END_OF_RESULT";
 		
 		/**
 		 * create table to store the bluetooth device name and address<br>
-		 * connected status will be in seperate table<br>
 		 * At most one row should be stored
 		 */
-		private static const CREATE_TABLE_ACTIVE_BLUETOOTH_DEVICE:String = "CREATE TABLE IF NOT EXISTS activebluetoothdevice (" +
+		private static const CREATE_TABLE_BLUETOOTH_DEVICE:String = "CREATE TABLE IF NOT EXISTS bluetoothdevice (" +
 			"bluetoothdevice_id STRING PRIMARY KEY, " + //unique id, used in all tables that will use Google Sync (note that for iOS no google sync will be done for this table because mac address is not visible in iOS. UDID is used as address but this is different for each install
 			"name STRING, " +
 			"address STRING, " +
-			"connected BOOLEAN," +
 			"lastmodifiedtimestamp TIMESTAMP NOT NULL)";
 		
-		private static const SELECT_ALL_BLUETOOTH_DEVICES:String = "SELECT * from activebluetoothdevice";
-		private static const INSERT_DEFAULT_BLUETOOTH_DEVICE:String = "INSERT into activebluetoothdevice (bluetoothdevice_id, name, address, connected, lastmodifiedtimestamp) VALUES (:bluetoothdevice_id,:name, :address, :connected, :lastmodifiedtimestamp)";
+		private static const CREATE_TABLE_LOGGING:String = "CREATE TABLE IF NOT EXISTS logging (" +
+			"logging_id STRING, " +
+			"log STRING, " +
+			"logtimestamp TIMESTAMP NOT NULL, " +
+			"lastmodifiedtimestamp TIMESTAMP NOT NULL)";
+		
+		private static const SELECT_ALL_BLUETOOTH_DEVICES:String = "SELECT * from bluetoothdevice";
+		private static const INSERT_DEFAULT_BLUETOOTH_DEVICE:String = "INSERT into bluetoothdevice (bluetoothdevice_id, name, address, lastmodifiedtimestamp) VALUES (:bluetoothdevice_id,:name, :address, :lastmodifiedtimestamp)";
+		private static const INSERT_LOG:String = "INSERT into logging (logging_id, log, logtimestamp, lastmodifiedtimestamp) VALUES (:logging_id, :log, :logtimestamp, :lastmodifiedtimestamp)";
+		private static const DELETE_OLD_LOGS:String = "DELETE FROM logging where (logtimestamp < :logtimestamp)";
+		private static const GET_ALL_LOGGINGS:String = "SELECT * from logging";
 		
 		/**
-		 * bluetooth device status, no device id stored here because it should at most be one.<br>
-		 * Keeping seperate from BLUETOOTH_DEVICE name and address because connected status will not be Google synced
+		 * to update the bloothdevice, there's only one, no need to have a where clause
 		 */
-		private static const CREATE_TABLE_ACTIVE_BLUETOOTH_DEVICE_STATUS:String = "CREATE TABLE IF NOT EXISTS activebluetoothdevicestatus (" +
-			"connected BOOLEAN)";
-		
-		
+		private static const UPDATE_BLUETOOTH_DEVICE:String = "UPDATE bluetoothdevice SET address = :address, name = :name, lastmodifiedtimestamp = :lastmodifiedtimestamp"; 
 		/**
 		 * constructor, should not be used
 		 */
@@ -80,7 +85,7 @@ package databaseclasses
 		 * <br>
 		 * Independent of the result of the attempt to open the database and to copy from the assets, all tables will be created (if not existing yet).<br>
 		 * <br>
-		 * A default bluetooth device is created if not existing yet with name "", address "", connected false, lastmodifiedtimestamp current date, id = BlueToothDevice.DEFAULT_BLUETOOTH_DEVICE_ID
+		 * A default bluetooth device is created if not existing yet with name "", address "", lastmodifiedtimestamp current date, id = BlueToothDevice.DEFAULT_BLUETOOTH_DEVICE_ID
 		 **/
 		public static function init(dispatcher:EventDispatcher):void
 		{
@@ -132,7 +137,7 @@ package databaseclasses
 		}
 		
 		private static function createBlueToothDeviceTable():void {
-			sqlStatement.text = CREATE_TABLE_ACTIVE_BLUETOOTH_DEVICE;
+			sqlStatement.text = CREATE_TABLE_BLUETOOTH_DEVICE;
 			sqlStatement.addEventListener(SQLEvent.RESULT,tableCreated);
 			sqlStatement.addEventListener(SQLErrorEvent.ERROR,tableCreationError);
 			sqlStatement.execute();
@@ -151,7 +156,7 @@ package databaseclasses
 					var errorEvent:DatabaseEvent = new DatabaseEvent(DatabaseEvent.ERROR_EVENT);
 					errorEvent.data = "Failed to create BlueToothDevice table. Database:0006";
 					globalDispatcher.dispatchEvent(errorEvent);
-					globalDispatcher = null;
+					//globalDispatcher = null;
 				}
 			}
 		}
@@ -171,7 +176,7 @@ package databaseclasses
 					if (result is Array) {
 						if ((result as Array).length == 1) {
 							//there's a bluetoothdevice already, no need to further check
-							createBlueToothDeviceStatusTable();
+							createLoggingTable();
 							return;
 						}
 					}
@@ -187,7 +192,7 @@ package databaseclasses
 					var errorEvent:DatabaseEvent = new DatabaseEvent(DatabaseEvent.ERROR_EVENT);
 					errorEvent.data = "Failed to select BlueToothDevices. Database:0009";
 					globalDispatcher.dispatchEvent(errorEvent);
-					globalDispatcher = null;
+					//globalDispatcher = null;
 				}
 			}
 		}
@@ -201,7 +206,6 @@ package databaseclasses
 			sqlStatement.parameters[":bluetoothdevice_id"] = BlueToothDevice.DEFAULT_BLUETOOTH_DEVICE_ID;
 			sqlStatement.parameters[":name"] = ""; 
 			sqlStatement.parameters[":address"] = "";
-			sqlStatement.parameters[":connected"] = false;
 			sqlStatement.parameters[":lastmodifiedtimestamp"] = (new Date()).valueOf();
 			sqlStatement.addEventListener(SQLEvent.RESULT,defaultBlueToothDeviceInserted);
 			sqlStatement.addEventListener(SQLErrorEvent.ERROR,defaultBlueToothDeviceInsetionFailed);
@@ -210,24 +214,24 @@ package databaseclasses
 			function defaultBlueToothDeviceInserted(se:SQLEvent):void {
 				sqlStatement.removeEventListener(SQLEvent.RESULT,defaultBlueToothDeviceInserted);
 				sqlStatement.removeEventListener(SQLErrorEvent.ERROR,defaultBlueToothDeviceInsetionFailed);
-				createBlueToothDeviceStatusTable();
+				createLoggingTable();
 			}
 			
 			function defaultBlueToothDeviceInsetionFailed(see:SQLErrorEvent):void {
 				sqlStatement.removeEventListener(SQLEvent.RESULT,defaultBlueToothDeviceInserted);
 				sqlStatement.removeEventListener(SQLErrorEvent.ERROR,defaultBlueToothDeviceInsetionFailed);
+				trace("Database.as : insertBlueToothDevice failed. Database 0014");
 				if (globalDispatcher != null) {
 					var errorEvent:DatabaseEvent = new DatabaseEvent(DatabaseEvent.ERROR_EVENT);
 					errorEvent.data = "Failed to insert default bluetooth device. Database:0010 - details = " + (see.error.details == null ? "":see.error.details);
 					globalDispatcher.dispatchEvent(errorEvent);
-					globalDispatcher = null;
+					//globalDispatcher = null;
 				}
 			}
 		}
 		
-		private static function createBlueToothDeviceStatusTable():void {
-			sqlStatement.clearParameters();
-			sqlStatement.text = CREATE_TABLE_ACTIVE_BLUETOOTH_DEVICE_STATUS;
+		private static function createLoggingTable():void {
+			sqlStatement.text = CREATE_TABLE_LOGGING;
 			sqlStatement.addEventListener(SQLEvent.RESULT,tableCreated);
 			sqlStatement.addEventListener(SQLErrorEvent.ERROR,tableCreationError);
 			sqlStatement.execute();
@@ -235,18 +239,44 @@ package databaseclasses
 			function tableCreated(se:SQLEvent):void {
 				sqlStatement.removeEventListener(SQLEvent.RESULT,tableCreated);
 				sqlStatement.removeEventListener(SQLErrorEvent.ERROR,tableCreationError);
-				finishedCreatingTables();
+				deleteOldLogFiles();
 			}
 			
 			function tableCreationError(see:SQLErrorEvent):void {
-				trace("Database.as : Failed to create BlueToothDeviceStatus table. Database:0007");
+				trace("Database.as : Failed to create BlueToothDevice table. Database:0017");
 				sqlStatement.removeEventListener(SQLEvent.RESULT,tableCreated);
 				sqlStatement.removeEventListener(SQLErrorEvent.ERROR,tableCreationError);
 				if (globalDispatcher != null) {
 					var errorEvent:DatabaseEvent = new DatabaseEvent(DatabaseEvent.ERROR_EVENT);
-					errorEvent.data = "Failed to create BlueToothDeviceStatus table. Database:0008 - details = " + (see.error.details == null ? "":see.error.details);
+					errorEvent.data = "Failed to create Logging table. Database:0018";
 					globalDispatcher.dispatchEvent(errorEvent);
-					globalDispatcher = null;
+				}
+			}
+		}
+
+		private static function deleteOldLogFiles():void {
+			sqlStatement.clearParameters();
+			sqlStatement.text = DELETE_OLD_LOGS;
+			sqlStatement.parameters[":logtimestamp"] = (new Date()).valueOf() - maxDaysToKeepLogfiles * 24 * 60 * 60 * 1000;
+
+			sqlStatement.addEventListener(SQLEvent.RESULT,oldLogFilesDeleted);
+			sqlStatement.addEventListener(SQLErrorEvent.ERROR,oldLogFileDeletionFailed);
+			sqlStatement.execute();
+			
+			function oldLogFilesDeleted(se:SQLEvent):void {
+				sqlStatement.removeEventListener(SQLEvent.RESULT,oldLogFilesDeleted);
+				sqlStatement.removeEventListener(SQLErrorEvent.ERROR,oldLogFileDeletionFailed);
+				finishedCreatingTables();
+			}
+			
+			function oldLogFileDeletionFailed(see:SQLErrorEvent):void {
+				trace("Database.as : Failed to delete old logfiles. Database:0021");
+				sqlStatement.removeEventListener(SQLEvent.RESULT,oldLogFilesDeleted);
+				sqlStatement.removeEventListener(SQLErrorEvent.ERROR,oldLogFileDeletionFailed);
+				if (globalDispatcher != null) {
+					var errorEvent:DatabaseEvent = new DatabaseEvent(DatabaseEvent.ERROR_EVENT);
+					errorEvent.data = "Failed to delete old logfiles. Database:0021";
+					globalDispatcher.dispatchEvent(errorEvent);
 				}
 			}
 		}
@@ -254,10 +284,8 @@ package databaseclasses
 		private static function finishedCreatingTables():void {
 			if (globalDispatcher != null) {
 				globalDispatcher.dispatchEvent(new Event(DatabaseEvent.RESULT_EVENT));
-				globalDispatcher = null;
 			}
 		}
-		
 		
 		private static function createDatabaseFromAssets(targetFile:File):Boolean 			
 		{
@@ -339,6 +367,184 @@ package databaseclasses
 			}
 		}
 		
+		/**
+		 * to update the one and only bluetoothdevice 
+		 */
+		internal static function updateBlueToothDevice(address:String, name:String, lastModifiedTimeStamp:Number, dispatcher:EventDispatcher):void {
+			var localSqlStatement:SQLStatement = new SQLStatement()
+			var localdispatcher:EventDispatcher = new EventDispatcher();
+			
+			localdispatcher.addEventListener(SQLEvent.RESULT,onOpenResult);
+			localdispatcher.addEventListener(SQLErrorEvent.ERROR,onOpenError);
+			if (openSQLConnection(localdispatcher))
+				onOpenResult(null);
+			
+			function onOpenResult(se:SQLEvent):void {
+				localdispatcher.removeEventListener(SQLEvent.RESULT,onOpenResult);
+				localdispatcher.removeEventListener(SQLErrorEvent.ERROR,onOpenError);
+				localSqlStatement.sqlConnection = aConn;
+				localSqlStatement.text = UPDATE_BLUETOOTH_DEVICE;
+				
+				localSqlStatement.parameters[":address"] = address;
+				localSqlStatement.parameters[":name"] = name;
+				localSqlStatement.parameters[":lastmodifiedtimestamp"] = (isNaN(lastModifiedTimeStamp) ? (new Date()).valueOf() : lastModifiedTimeStamp);
+				localSqlStatement.addEventListener(SQLEvent.RESULT, bluetoothDeviceUpdated);
+				localSqlStatement.addEventListener(SQLErrorEvent.ERROR, bluetoothDeviceUpdateFailed);
+				localSqlStatement.execute();
+			}
+			
+			function bluetoothDeviceUpdated(se:SQLEvent):void {
+				localSqlStatement.removeEventListener(SQLEvent.RESULT,bluetoothDeviceUpdated);
+				localSqlStatement.removeEventListener(SQLErrorEvent.ERROR,bluetoothDeviceUpdateFailed);
+				trace("Database.as : bluetooth device updated. Database0016");
+				if (dispatcher != null) {
+					var event:DatabaseEvent = new DatabaseEvent(DatabaseEvent.RESULT_EVENT);
+					dispatcher.dispatchEvent(event);
+				}
+			}
+			
+			function bluetoothDeviceUpdateFailed(se:SQLEvent):void {
+				localSqlStatement.removeEventListener(SQLEvent.RESULT,bluetoothDeviceUpdated);
+				localSqlStatement.removeEventListener(SQLErrorEvent.ERROR,bluetoothDeviceUpdateFailed);
+				trace("Database.as : bluetooth device update failed. Database0017");
+				if (dispatcher != null) {
+					var event:DatabaseEvent = new DatabaseEvent(DatabaseEvent.ERROR_EVENT);
+					dispatcher.dispatchEvent(event);
+				}
+			}
+			
+			function onOpenError(see:SQLErrorEvent):void {
+				localdispatcher.removeEventListener(SQLEvent.RESULT,onOpenResult);
+				localdispatcher.removeEventListener(SQLErrorEvent.ERROR,onOpenError);
+				trace("Database.as : Failed to open the database. Database0015");
+				if (dispatcher != null) {
+					var event:DatabaseEvent = new DatabaseEvent(DatabaseEvent.ERROR_EVENT);
+					dispatcher.dispatchEvent(event);
+				}
+			}
+		}
+		
+		public static function insertLogging(logging_id:String, log:String, logTimeStamp:Number, lastModifiedTimeStamp:Number, dispatcher:EventDispatcher):void {
+			var localSqlStatement:SQLStatement = new SQLStatement()
+			var localdispatcher:EventDispatcher = new EventDispatcher();
+			
+			localdispatcher.addEventListener(SQLEvent.RESULT,onOpenResult);
+			localdispatcher.addEventListener(SQLErrorEvent.ERROR,onOpenError);
+			if (openSQLConnection(localdispatcher))
+				onOpenResult(null);
+
+			function onOpenResult(se:SQLEvent):void {
+				localdispatcher.removeEventListener(SQLEvent.RESULT,onOpenResult);
+				localdispatcher.removeEventListener(SQLErrorEvent.ERROR,onOpenError);
+				
+				localSqlStatement.sqlConnection = aConn;
+				localSqlStatement.text = INSERT_LOG;
+				
+				localSqlStatement.parameters[":logging_id"] = logging_id;
+				localSqlStatement.parameters[":log"] = log;
+				localSqlStatement.parameters[":logtimestamp"] = logTimeStamp;
+				localSqlStatement.parameters[":lastmodifiedtimestamp"] = (isNaN(lastModifiedTimeStamp) ? (new Date()).valueOf() : lastModifiedTimeStamp);
+				localSqlStatement.addEventListener(SQLEvent.RESULT,loggingInserted);
+				localSqlStatement.addEventListener(SQLErrorEvent.ERROR,loggingInsertionFailed);
+				localSqlStatement.execute();
+			}
+
+			function onOpenError(see:SQLErrorEvent):void {
+				localdispatcher.removeEventListener(SQLEvent.RESULT,onOpenResult);
+				localdispatcher.removeEventListener(SQLErrorEvent.ERROR,onOpenError);
+				trace("Database.as : Failed to open the database. Database 0020");
+				if (dispatcher != null) {
+					var event:DatabaseEvent = new DatabaseEvent(DatabaseEvent.ERROR_EVENT);
+					event.data = "Database.as : Failed to open the database. Database 0020";
+					dispatcher.dispatchEvent(event);
+				}
+			}
+			
+			function loggingInserted(se:SQLEvent):void {
+				localSqlStatement.removeEventListener(SQLEvent.RESULT,loggingInserted);
+				localSqlStatement.removeEventListener(SQLErrorEvent.ERROR,loggingInsertionFailed);
+				if (dispatcher != null) {
+					var event:DatabaseEvent = new DatabaseEvent(DatabaseEvent.RESULT_EVENT);
+					dispatcher.dispatchEvent(event);
+				}
+			}
+
+			function loggingInsertionFailed(see:SQLErrorEvent):void {
+				localSqlStatement.removeEventListener(SQLEvent.RESULT,loggingInserted);
+				localSqlStatement.removeEventListener(SQLErrorEvent.ERROR,loggingInsertionFailed);
+				if (dispatcher != null) {
+					var event:DatabaseEvent = new DatabaseEvent(DatabaseEvent.ERROR_EVENT);
+					trace("Database.as : Failed to insert logging. Database 0021");
+					event.data = "Database.as : Failed to insert logging. Database 0021";
+					dispatcher.dispatchEvent(event);
+				}
+			}
+		}
+		
+		/**
+		 * will get the loggings and dispatch them one by one (ie one event per logging) in the data field of a Database Event<br>
+		 * If the last string is sent, an additional event is set with data = "END_OF_RESULT"
+		 */
+		public static function getLoggings(dispatcher:EventDispatcher):void {
+			var localSqlStatement:SQLStatement = new SQLStatement();
+			var localdispatcher:EventDispatcher = new EventDispatcher();
+			
+			localdispatcher.addEventListener(SQLEvent.RESULT,onOpenResult);
+			localdispatcher.addEventListener(SQLErrorEvent.ERROR,onOpenError);
+			
+			if (openSQLConnection(localdispatcher))
+				onOpenResult(null);
+			
+			function onOpenResult(se:SQLEvent):void {
+				localdispatcher.removeEventListener(SQLEvent.RESULT,onOpenResult);
+				localdispatcher.removeEventListener(SQLErrorEvent.ERROR,onOpenError);
+				localSqlStatement.addEventListener(SQLEvent.RESULT,loggingsRetrieved);
+				localSqlStatement.addEventListener(SQLErrorEvent.ERROR,loggingRetrievalFailed);
+				localSqlStatement.sqlConnection = aConn;
+				localSqlStatement.text = GET_ALL_LOGGINGS;
+				localSqlStatement.execute();
+			}
+			
+			function loggingsRetrieved(se:SQLEvent):void {
+				localSqlStatement.removeEventListener(SQLEvent.RESULT,loggingsRetrieved);
+				localSqlStatement.removeEventListener(SQLErrorEvent.ERROR,loggingRetrievalFailed);
+				var tempObject:Object = localSqlStatement.getResult().data;
+				if (tempObject != null) {
+					if (tempObject is Array) {
+						for each ( var o:Object in tempObject) {
+							var event:DatabaseEvent = new DatabaseEvent(DatabaseEvent.RESULT_EVENT);
+							event.data = o.log;
+							dispatcher.dispatchEvent(event);
+						}
+					}
+				} else {
+					//no need to dispatch anything, there are no loggings
+				}
+				var event:DatabaseEvent = new DatabaseEvent(DatabaseEvent.RESULT_EVENT);
+				event.data = END_OF_RESULT;
+				dispatcher.dispatchEvent(event);
+			}
+			
+			function loggingRetrievalFailed(see:SQLErrorEvent):void {
+				localSqlStatement.removeEventListener(SQLEvent.RESULT,loggingsRetrieved);
+				localSqlStatement.removeEventListener(SQLErrorEvent.ERROR,loggingRetrievalFailed);
+				trace("Database.as : Failed to retrieve loggings. Database 0022");
+				var errorEvent:DatabaseEvent = new DatabaseEvent(DatabaseEvent.ERROR_EVENT);
+				errorEvent.data = "Failed to retrieve loggings . Database:0022";
+				dispatcher.dispatchEvent(errorEvent);
+			}
+			
+			function onOpenError(see:SQLErrorEvent):void {
+				localdispatcher.removeEventListener(SQLEvent.RESULT,onOpenResult);
+				localdispatcher.removeEventListener(SQLErrorEvent.ERROR,onOpenError);
+				trace("Database.as : Failed to open the database. Database 0023");
+				if (dispatcher != null) {
+					var event:DatabaseEvent = new DatabaseEvent(DatabaseEvent.ERROR_EVENT);
+					dispatcher.dispatchEvent(event);
+				}
+			}
+		}
+
 		/**
 		 * if aconn is not open then open aconn to dbFile , in asynchronous mode, in UPDATE mode<br>
 		 * returns true if aconn is open<br>
