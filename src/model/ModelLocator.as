@@ -17,24 +17,106 @@
  */
 package model
 {
+	import flash.events.EventDispatcher;
+	import flash.system.Capabilities;
+	
+	import mx.collections.ArrayCollection;
+	import mx.collections.Sort;
+	import mx.collections.SortField;
 	import mx.resources.IResourceManager;
 	import mx.resources.ResourceManager;
+	
+	import spark.formatters.DateTimeFormatter;
+	
+	import Utilities.UniqueId;
+	
+	import databaseclasses.Database;
+	import databaseclasses.DatabaseEvent;
+	
+	import services.BlueToothServiceEvent;
+	import services.BluetoothService;
 
-	public class ModelLocator
+	public class ModelLocator extends EventDispatcher
 	{
-		private static var instance:ModelLocator = new ModelLocator();
+		private static var _instance:ModelLocator = new ModelLocator();
+		private static var dateFormatter:DateTimeFormatter;
+
+
+		public static function get instance():ModelLocator
+		{
+			return _instance;
+		}
+
+		private static var _resourceManagerInstance:IResourceManager;
+
 		/**
 		 * can be used anytime the resourcemanager is needed
 		 */
-		public static var resourceManagerInstance:IResourceManager;
+		public static function get resourceManagerInstance():IResourceManager
+		{
+			return _resourceManagerInstance;
+		}
+		
+		private static var _loggingList:ArrayCollection;
+
+		[bindable]
+		/**
+		 * logging info dispatches by several components
+		 */
+		public static function get loggingList():ArrayCollection
+		{
+			return _loggingList;
+		}
 		
 		public function ModelLocator()
 		{
-			if (instance != null) {
+			if (_instance != null) {
 				throw new Error("ModelLocator class can only be instantiated through ModelLocator.getInstance()");	
 			}
-			resourceManagerInstance = ResourceManager.getInstance();
+			
+			_resourceManagerInstance = ResourceManager.getInstance();
+			
+			var dataSortField:SortField = new SortField();
+			dataSortField.numeric = false;
+			var dataSort:Sort = new Sort();
+			dataSort.fields=[dataSortField];
+
+			_loggingList = new ArrayCollection();
+			_loggingList.sort = dataSort;
+			
+			var localDispatcher:EventDispatcher = new EventDispatcher();
+			localDispatcher.addEventListener(DatabaseEvent.RESULT_EVENT, logReceivedFromDatabase);
+			Database.getLoggings(localDispatcher);
+			
+			BluetoothService.instance.addEventListener(BlueToothServiceEvent.BLUETOOTH_SERVICE_INFORMATION_EVENT,blueToothServiceInformationReceived);
+			
+			function blueToothServiceInformationReceived(be:BlueToothServiceEvent):void {
+				_loggingList.addItem(addTimeStamp(" BT : " + be.data.information));
+				Database.insertLogging(Utilities.UniqueId.createEventId(), _loggingList.getItemAt(_loggingList.length - 1) as String, (new Date()).valueOf(),(new Date()).valueOf(),null);
+			}
+			
+			function logReceivedFromDatabase(de:DatabaseEvent):void {
+				if (de.data != null)
+					if (de.data is String) {
+						if (de.data as String == Database.END_OF_RESULT) {
+							_loggingList.refresh();
+						} else {
+							_loggingList.addItem(de.data as String);
+						}
+					}
+			}
 		}
 		
+		private static function addTimeStamp(source:String):String {
+			if (dateFormatter == null) {
+				dateFormatter = new DateTimeFormatter();
+				dateFormatter.dateTimePattern = ModelLocator.resourceManagerInstance.getString('general','datetimepatternforlogginginfo');
+				dateFormatter.useUTC = false;
+				dateFormatter.setStyle("locale",Capabilities.language.substr(0,2));
+			}
+			
+			var returnValue:String = dateFormatter.format((new Date())) + " " + source;
+			return returnValue;
+		}
 	}
 }
