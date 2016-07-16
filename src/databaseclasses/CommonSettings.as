@@ -25,12 +25,32 @@
 		 
 		 //LIST OF SETTINGID's
 		 /**
-		 * we'll remember the name of the bluetoothe peripheral, empty string means we haven't set yet any (or erase the value of) 
+		 * Unique Id of the currently active sensor<br>
+		 * value "0" means there's no sensor active
+		 *  
 		  */
-		 public const COMMON_SETTING_ID_BLUETOOTHNAME:String = 0; 
+		 public static const COMMON_SETTING_ID_CURRENT_SENSOR_ID:int = 0; 
+		 /**
+		 * transmitter battery level (ie 215, 214,...)<br>
+		 * 0 means level not known
+		  */
+		 public static const COMMON_SETTING_TRANSMITTER_BATTERY_VOLTAGE_ID:int = 1;
+		 /**
+		 * true or false
+		  */
+		 public static const COMMON_SETTING_INITIAL_CALIBRATION_DONE_ID:int = 2;
+		 
+		 /**
+		 * bridge battery level<br>
+		 * 0 means level not known
+		  */
+		 public static const COMMON_SETTING_BRIDGE_BATTERY_PERCENTAGE_ID:int = 2;
 
-		 private var commonSettings:Array = [
-			 ""//COMMON_SETTING_ID_BLUETOOTHNAME
+		 private static var commonSettings:Array = [
+			 "0",//COMMON_SETTING_ID_CURRENT_SENSOR_ID
+			 "0",//COMMON_SETTING_TRANSMITTER_BATTERY_LEVEL_ID
+			 "0",//COMMON_SETTING_BRIDGE_BATTERY_LEVEL_ID
+			 "false"//COMMON_SETTING_INITIAL_CALIBRATION_DONE_ID
 		 ];
 		 
 		 public function CommonSettings()
@@ -40,12 +60,13 @@
 			 }
 		 }
 		 
-		 public function getCommonSetting(commonSettingId:int):String {
+		 public static function getCommonSetting(commonSettingId:int):String {
 			 return commonSettings[commonSettingId];
 		 }
 		 
-		 public function setCommonSetting(commonSettingId:int, newValue:String) {
+		 public static function setCommonSetting(commonSettingId:int, newValue:String):void {
 			 commonSettings[commonSettingId] = newValue;
+			//TODO  ook updaten in database en uitlezen ook
 		 }
 	 }
  }

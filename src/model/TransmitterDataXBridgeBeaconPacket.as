@@ -15,29 +15,29 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
  
  */
-package databaseclasses
+package model
 {
-	/**
-	 * local settings are settings specific to this device, ie settings that will not be synchronized among different devices.
-	 */
-	 public class LocalSettings
+	public class TransmitterDataXBridgeBeaconPacket extends TransmitterData
 	{
-		private static var instance:LocalSettings = new LocalSettings();
-		private var localSettings:Array = [];
+		private var _TxID:String;
+
+		public function get TxID():String
+		{
+			return _TxID;
+		}
 
 		
-		public function LocalSettings()
-		{
-			if (instance != null) {
-				throw new Error("LocalSettings class constructor can not be used");	
+		/**
+		 * xbridge beacon packet <br>
+		 * There's no relation with database class, just ust for passing transmitter data from one to another<br>
+		 * There's no timestamp, nor uniqueid because this is only to be used temporary to pass the data, reflecting exactly what is received from the transmitter<br>
+		 * <br>
+		 * txID is the decoded transmitter id 
+		 */
+		public function TransmitterDataXBridgeBeaconPacket(txID:String) {
+			{
+				_TxID = txID;
 			}
-		}
-		public function getLocalSetting(localSettingId:int):String {
-			return localSettings[localSettingId];
-		}
-
-		public function setLocalSetting(localSettingId:int, newValue:String) {
-			localSettings[localSettingId] = newValue;
 		}
 	}
 }

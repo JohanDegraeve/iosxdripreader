@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 								  applicationDPI="160"
 								  initialize="initApplication()"
 								  skinClass="skins.ApplicationSkin">
+
 	<fx:Style source="assets/style.css"/>
 	<fx:Script>
 		<![CDATA[
@@ -29,7 +30,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			public static var deviceScreenHeight:Number;
 
 			private function initApplication():void {
-				this.addEventListener( Event.ADDED_TO_STAGE, addedToStageHandler );
+				this.addEventListener(Event.ADDED_TO_STAGE, addedToStageHandler);
 				NativeApplication.nativeApplication.executeInBackground = true;
 			}
 			

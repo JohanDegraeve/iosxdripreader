@@ -15,7 +15,7 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
  
  */
-package services
+package events
 {
 	import flash.events.Event;
 
@@ -23,6 +23,7 @@ package services
 	[Event(name="ErrorEvent",type="events.BlueToothServiceEvent")]
 	[Event(name="BluetoothStatusChangedEvent",type="events.BlueToothServiceEvent")]
 	[Event(name="BluetoothServiceInformation",type="events.BlueToothServiceEvent")]
+	[Event(name="TransmitterData",type="events.BlueToothServiceEvent")]
 
 	/**
 	 * used by bluetoothservice to notify on all kinds of events : information messages like bluetooth state change, bluetooth state change,
@@ -57,6 +58,14 @@ package services
 		 * data.information will be a string with this info. 
 		 */
 		public static const BLUETOOTH_SERVICE_INFORMATION_EVENT:String = "BluetoothServiceInformation";
+		
+		/**
+		 * To pass transmitter data<br>
+		 * data will be an instance of TransmitterData. The type of subclass determines the type of transmitter data<br>
+		 * The bluetoothservice will not reply to the device and not ack any message<br>
+		 * This is the responsibility of the service that processes the transmitter data (ie TransmitterService)
+		 */
+		public static const TRANSMITTER_DATA:String = "Transmitterdata";
 		
 		public var data:*;
 

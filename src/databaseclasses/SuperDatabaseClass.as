@@ -20,11 +20,18 @@ package databaseclasses
 	import Utilities.UniqueId;
 
 	/**
-	 * class that holds and does generic attributes and methods for all classes that will do google sync etc. 
+	 * class that holds and does generic attributes and methods for all classes that will do google sync etc. <br>
+	 * lastmodifiedtimestamp is to allow syncing, this is not a generic timestamp to be used for other purposes
 	 */
 	public class SuperDatabaseClass
 	{
-		public var lastModifiedTimestamp:Number;
+		protected var _lastModifiedTimestamp:Number;
+
+		public function get lastModifiedTimestamp():Number
+		{
+			return _lastModifiedTimestamp;
+		}
+
 		protected var _uniqueId:String;
 
 		public function get uniqueId():String
@@ -32,10 +39,25 @@ package databaseclasses
 			return _uniqueId;
 		}
 		
-		public function SuperDatabaseClass()
+		/**
+		 * if uniqueID is null than a new id is assigned<br>
+		 * if lastmodifiedtimestamp is Number.NaN then current time is assigned<br> 
+		 */
+		public function SuperDatabaseClass(uniqueId:String, lastmodifiedtimestamp:Number)
 		{
-			lastModifiedTimestamp = (new Date()).valueOf();
-			_uniqueId = Utilities.UniqueId.createEventId();
+			if (isNaN(lastmodifiedtimestamp))
+				_lastModifiedTimestamp = (new Date()).valueOf();
+			else
+				_lastModifiedTimestamp = lastmodifiedtimestamp;
+				
+			if (uniqueId == null)
+				_uniqueId = Utilities.UniqueId.createEventId();
+			else
+				_uniqueId = uniqueId;
+		}
+		
+		protected function resetLastModifiedTimeStamp():void {
+			_lastModifiedTimestamp = (new Date()).valueOf();
 		}
 	}
 }

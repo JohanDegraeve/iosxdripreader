@@ -16,7 +16,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 
 -->
-<application xmlns="http://ns.adobe.com/air/application/21.0">
+<application xmlns="http://ns.adobe.com/air/application/22.0">
 
 <!-- Adobe AIR Application Descriptor File Template.
 
@@ -271,25 +271,32 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 	</iPhone>
 
 	<!-- Specify Android specific tags that get passed to AndroidManifest.xml file. -->
-    <!--<android> -->
-    <!--	<manifestAdditions>
+    <android> 
+    	<manifestAdditions>
 		<![CDATA[
 			<manifest android:installLocation="auto">
 				<uses-permission android:name="android.permission.INTERNET"/>
-				<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
-				<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
-				<uses-feature android:required="true" android:name="android.hardware.touchscreen.multitouch"/>
+				<uses-permission android:name="android.permission.VIBRATE"/>
+				<uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
 				<application android:enabled="true">
-					<activity android:excludeFromRecents="false">
+					<!-- NOTIFICATIONS -->
+					<receiver android:name="com.distriqt.extension.notifications.notifications.receivers.NotificationReceiver">
 						<intent-filter>
-							<action android:name="android.intent.action.MAIN"/>
-							<category android:name="android.intent.category.LAUNCHER"/>
+							<action android:name="net.johandegraeve.iosxdripreader.NOTIFICATION_SELECTED" />
+							<action android:name="net.johandegraeve.iosxdripreader.NOTIFICATION_DELETED" />
+							<action android:name="net.johandegraeve.iosxdripreader.NOTIFICATION_ACTION" />
+							<action android:name="net.johandegraeve.iosxdripreader.NOTIFICATION_DELAYED" />
+							<data android:scheme="dtn" />
 						</intent-filter>
-					</activity>
+						<intent-filter>
+							<action android:name="android.intent.action.BOOT_COMPLETED" />
+						</intent-filter>
+					</receiver>
 				</application>
             </manifest>
 		]]>
-        </manifestAdditions> -->
+        </manifestAdditions>
+	</android>
 	    <!-- Color depth for the app (either "32bit" or "16bit"). Optional. Default 16bit before namespace 3.0, 32bit after -->
         <!-- <colorDepth></colorDepth> -->
         <!-- Indicates if the app contains video or not. Necessary for ordering of video planes with graphics plane, especially in Jellybean - if you app does video this must be set to true - valid values are true or false -->
@@ -302,35 +309,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
         <!-- <webContentsDebuggingEnabled></webContentsDebuggingEnabled> -->
     <!-- </android> -->
 	<!-- End of the schema for adding the android specific tags in AndroidManifest.xml file -->
-
-<android>
+<!-- 
+	<android>
         <colorDepth>16bit</colorDepth>
         <manifestAdditions><![CDATA[
 			<manifest android:installLocation="auto">
-			    <!--See the Adobe AIR documentation for more information about setting Google Android permissions-->
-			    <!--Removing the permission android.permission.INTERNET will have the side effect
-		of preventing you from debugging your application on your device-->
-			    <uses-permission android:name="android.permission.INTERNET"/>
-			    <!--<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>-->
-			    <!--<uses-permission android:name="android.permission.READ_PHONE_STATE"/>-->
-			    <!--<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>-->
-			    <!--The DISABLE_KEYGUARD and WAKE_LOCK permissions should be toggled together
-		in order to access AIR's SystemIdleMode APIs-->
-			    <!--<uses-permission android:name="android.permission.DISABLE_KEYGUARD"/>-->
-			    <!--<uses-permission android:name="android.permission.WAKE_LOCK"/>-->
-			    <!--<uses-permission android:name="android.permission.CAMERA"/>-->
-			    <!--<uses-permission android:name="android.permission.RECORD_AUDIO"/>-->
-			    <!--The ACCESS_NETWORK_STATE and ACCESS_WIFI_STATE permissions should be toggled
-		together in order to use AIR's NetworkInfo APIs-->
-			    <!--<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>-->
-			    <!--<uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>-->
 			</manifest>
 			
 		]]></manifestAdditions>
-    </android>
-<extensions>
-        <extensionID>com.distriqt.BluetoothLE</extensionID>
-    <extensionID>com.distriqt.Notifications</extensionID>
-    <extensionID>com.distriqt.Core</extensionID>
+    </android> -->
+	<extensions>
+    	<extensionID>com.distriqt.BluetoothLE</extensionID>
+    	<extensionID>com.distriqt.Notifications</extensionID>
+    	<extensionID>com.distriqt.Core</extensionID>
     </extensions>
 </application>

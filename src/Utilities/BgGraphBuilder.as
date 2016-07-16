@@ -15,29 +15,14 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
  
  */
-package databaseclasses
+package Utilities
 {
-	/**
-	 * local settings are settings specific to this device, ie settings that will not be synchronized among different devices.
-	 */
-	 public class LocalSettings
+	public class BgGraphBuilder
 	{
-		private static var instance:LocalSettings = new LocalSettings();
-		private var localSettings:Array = [];
-
+		public static const MAX_SLOPE_MINUTES:int = 21;
 		
-		public function LocalSettings()
+		public function BgGraphBuilder()
 		{
-			if (instance != null) {
-				throw new Error("LocalSettings class constructor can not be used");	
-			}
-		}
-		public function getLocalSetting(localSettingId:int):String {
-			return localSettings[localSettingId];
-		}
-
-		public function setLocalSetting(localSettingId:int, newValue:String) {
-			localSettings[localSettingId] = newValue;
 		}
 	}
 }

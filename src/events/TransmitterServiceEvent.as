@@ -1,5 +1,5 @@
 /**
- Copyright (C) 2013  hippoandfriends
+ Copyright (C) 2016  Johan Degraeve
  
  This program is free software: you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -15,28 +15,26 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
  
  */
-package databaseclasses
+package events
 {
 	import flash.events.Event;
 	
-	[Event(name="ResultEvent",type="events.DatabaseEvent")]
-	[Event(name="ErrorEvent",type="events.DatabaseEvent")]
-	[Event(name="DatabaseInformation",type="events.DatabaseEvent")]
+	[Event(name="BGReadingEvent",type="eventsTransmitterServiceEvent")]
 	
-	public class DatabaseEvent extends Event
+	/**
+	 * used by transmitter service to notify on all kinds of events : information messages, etc.. <br>
+	 */
+	
+	public class TransmitterServiceEvent extends Event
 	{
-		public static const RESULT_EVENT:String = "ResultEvent";
-		public static const ERROR_EVENT:String = "ErrorEvent";
 		/**
-		 * To pass status information, this is just text that can be shown to the user to display progress info<br>
-		 * data.information will be a string with this info. 
+		 * event to inform that there's a new bgreading available 
 		 */
-		public static const DATABASE_INFORMATION_EVENT:String = "DatabaseInformation";
-		
+		public static const BGREADING_EVENT:String = "BGReadingEvent";
 		
 		public var data:*;
 		
-		public function DatabaseEvent(type:String, bubbles:Boolean=false, cancelable:Boolean=false)
+		public function TransmitterServiceEvent(type:String, bubbles:Boolean=false, cancelable:Boolean=false)
 		{
 			super(type, bubbles, cancelable);
 		}

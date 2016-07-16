@@ -24,7 +24,7 @@ package databaseclasses
 	public class BlueToothDevice extends SuperDatabaseClass
 	{
 		public static const DEFAULT_BLUETOOTH_DEVICE_ID:String = "1465501584186cb0d5f60b3c";
-		private static var _instance:BlueToothDevice = new BlueToothDevice();
+		private static var _instance:BlueToothDevice = new BlueToothDevice(DEFAULT_BLUETOOTH_DEVICE_ID, Number.NaN);//note that in HomeView.mxml, lastmodifiedtimestamp, name and address will be overwritten with values read from the database
 		
 		/**
 		 * in case we need attributes of the superclass (like uniqueid), then we need to get an instance of this class
@@ -45,7 +45,7 @@ package databaseclasses
 		}
 		
 		/**
-		 * @private
+		 * sets the name, also update in database will be done
 		 */
 		public static function set name(value:String):void
 		{
@@ -69,7 +69,7 @@ package databaseclasses
 		}
 		
 		/**
-		 * @private
+		 * sets the address, also update in database will be done
 		 */
 		public static function set address(value:String):void
 		{
@@ -82,8 +82,14 @@ package databaseclasses
 			updateDatabase();
 		}
 		
-		public function BlueToothDevice()
+		public function set lastModifiedTimestamp(lastmodifiedtimestamp:Number):void
+		{
+			_lastModifiedTimestamp = lastmodifiedtimestamp;
+		}
+		
+		public function BlueToothDevice(bluetoothdeviceid:String, lastmodifiedtimestamp:Number)
 		{	
+			super(bluetoothdeviceid, lastmodifiedtimestamp);
 			if (_instance != null) {
 				throw new Error("BlueToothDevice class  constructor can not be used");	
 			}
@@ -118,6 +124,14 @@ package databaseclasses
 			_name = "";
 			updateDatabase();
 			BluetoothService.forgetBlueToothDevice();
+		}
+		
+		/**
+		 * if name contains BRIDGE (case insensitive) then returns true<br>
+		 * otherwise false
+		 */
+		public static function isXBridge():Boolean {
+			return _name.toUpperCase().indexOf("BRIDGE") >= 0;
 		}
 	}
 }

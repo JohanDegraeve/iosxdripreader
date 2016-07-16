@@ -22,6 +22,9 @@ package services
 	import com.distriqt.extension.notifications.NotificationRepeatInterval;
 	import com.distriqt.extension.notifications.Notifications;
 	import com.distriqt.extension.notifications.Service;
+	import com.distriqt.extension.notifications.actions.Category;
+	import com.distriqt.extension.notifications.builders.ActionBuilder;
+	import com.distriqt.extension.notifications.builders.CategoryBuilder;
 	import com.distriqt.extension.notifications.builders.NotificationBuilder;
 	import com.distriqt.extension.notifications.events.AuthorisationEvent;
 	import com.distriqt.extension.notifications.events.NotificationEvent;
@@ -41,11 +44,14 @@ package services
 	 */
 	public class NotificationService
 	{
-		public static var instance:NotificationService = new NotificationService();
+		[ResourceBundle("notificationservice")]
+
+		private static var instance:NotificationService = new NotificationService();
 		
 		private static var initialStart:Boolean = true;
 		
 		private static const IDENTIFIER_STRING_FOR_WAKEUP_CATEGORY:String = "WAKE_UP_CATEGORY";
+		private static const IDENTIFIER_STRING_FOR_ACCEPT_ACTION:String = "ACCEPT";
 		private static const ID_FOR_WAKEUP_CATEGORY:int = 1;
 		/**
 		* time in minutes, after which notification will fire<br>
@@ -72,6 +78,9 @@ package services
 			if (instance != null) {
 				throw new Error("RestartNotificationService class constructor can not be used");	
 			}
+		}
+		
+		public static function init():void {
 			if (!initialStart)
 				return;
 			else
@@ -79,22 +88,21 @@ package services
 			
 			Core.init();
 			Notifications.init(ModelLocator.resourceManagerInstance.getString('secrets','distriqt-key'));
-			if (Notifications.isSupported) {
-				init();
+			if (!Notifications.isSupported) {
+				return;
 			}
-		}
-		
-		public static function instantiate():void {
-		}
-		
-		private static function init():void {
+			
 			var service:Service = new Service();
 			
 			//Create and add category for wake up notification, ie the notification that will be fired when the app didn't run for more than x minutes
-			/*var wakeupCategory:Category = new CategoryBuilder()
-				.setIdentifier("IDENTIFIER_FOR_WAKEUP_CATEGORY")
+			var wakeupCategory:Category = new CategoryBuilder()
+				.setIdentifier(IDENTIFIER_STRING_FOR_WAKEUP_CATEGORY)
+				.addAction(new ActionBuilder()
+						.setTitle(ModelLocator.resourceManagerInstance.getString('notificationservice','open'))
+						.setIdentifier(IDENTIFIER_STRING_FOR_ACCEPT_ACTION)
+						.build())
 				.build();
-			service.categories.push(wakeupCategory);*/
+			service.categories.push(wakeupCategory);
 			
 			//do the same as above example for alarm categories
 			//then store the integer that is returned, needed for future remove for example
@@ -119,7 +127,7 @@ package services
 				
 				case AuthorisationStatus.DENIED:
 					// The user has disabled notifications
-					// Advise your user of the lack of notifications as you see fit
+					// TODO Advise your user of the lack of notifications as you see fit
 					break;
 			}
 			
@@ -130,9 +138,6 @@ package services
 						// This device has been authorised.
 						// You can register this device and expect to display notifications
 						register();
-						timeOfLastWakeUpNotificationBeingSet = (new Date()).valueOf();
-						setupWakeUpNotification(new Date(timeOfLastWakeUpNotificationBeingSet + DELAY_FOR_WAKEUP_CATEGORY_IN_MINUTES * 60 * 1000));
-						setupWakeUpTimer(new Date(timeOfLastWakeUpNotificationBeingSet + DELAY_FOR_WAKEUP_CATEGORY_IN_MINUTES * 60 * 1000 - timeDifferenceBetweenWakeUpTimerAndWakeUpNotificationInMilliSeconds));//5 seconds sooner
 						break;
 				}
 			}
@@ -144,15 +149,19 @@ package services
 				Notifications.service.addEventListener(NotificationEvent.NOTIFICATION, notificationHandler);
 				Notifications.service.addEventListener(NotificationEvent.NOTIFICATION_SELECTED, notificationHandler);
 				Notifications.service.addEventListener(NotificationEvent.ACTION, actionHandler);
-				
 				Notifications.service.register();
+				
+				timeOfLastWakeUpNotificationBeingSet = (new Date()).valueOf();
+				setupWakeUpNotification(new Date(timeOfLastWakeUpNotificationBeingSet + DELAY_FOR_WAKEUP_CATEGORY_IN_MINUTES * 60 * 1000));
+				setupWakeUpTimer(new Date(timeOfLastWakeUpNotificationBeingSet + DELAY_FOR_WAKEUP_CATEGORY_IN_MINUTES * 60 * 1000 - timeDifferenceBetweenWakeUpTimerAndWakeUpNotificationInMilliSeconds));//5 seconds sooner
 			}
 			
 			function notificationHandler(event:NotificationEvent):void {
-				trace("in notificationHandler at " + (new Date()).toLocaleTimeString());
+				trace("in Notificationservice notificationHandler at " + (new Date()).toLocaleTimeString());
 			}
 			
 			function actionHandler(event:NotificationEvent):void {
+				trace("in Notificationservice. actionHandler at " + (new Date()).toLocaleTimeString());
 			}
 		}
 		
@@ -200,7 +209,7 @@ package services
 				.setBody("notification body")
 				.setCategory(IDENTIFIER_STRING_FOR_WAKEUP_CATEGORY)
 				.setFireDate(fireDate)
-				.setRepeatInterval(NotificationRepeatInterval.REPEAT_QUARTER)
+				.setRepeatInterval(NotificationRepeatInterval.REPEAT_NONE)
 				.build());
 		}
 	}

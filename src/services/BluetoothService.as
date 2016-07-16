@@ -36,19 +36,35 @@ package services
 	
 	import databaseclasses.BlueToothDevice;
 	
+	import events.BlueToothServiceEvent;
+	
 	import model.ModelLocator;
+	import model.TransmitterDataXBridgeBeaconPacket;
+	import model.TransmitterDataXBridgeDataPacket;
+	import model.TransmitterDataXdripDataPacket;
 	
 	/**
 	 * all functionality related to bluetooth connectivity<br>
 	 * init function must be called once immediately at start of the application<br>
-	 * to get info about connectivity status, new transmitter data ... check BluetoothServiceEvent and create listeners for the events<br>
+	 * <br>
+	 * to get info about connectivity status, new transmitter data ... check BluetoothServiceEvent  create listeners for the events<br>
+	 * BluetoothService itself is not doing anything with the data received from the bluetoothdevice, also not checking the transmit id, it just passes the information via 
+	 * dispatching<br>
+	 * <br>
+	 * There is also a method to update the transmitter id, however the bluetoothservice is not handling the response, it just tries to send the message to the device, no guarantee that this will succeed.
 	 */
 	public class BluetoothService extends EventDispatcher
 	{
+		
+		private static var _instance:BluetoothService = new BluetoothService();
+
 		[ResourceBundle("secrets")]
 		[ResourceBundle("bluetoothservice")]
-		
-		public static var instance:BluetoothService = new BluetoothService();
+		public static function get instance():BluetoothService
+		{
+			return _instance;
+		}
+
 		
 		private static var _activeBluetoothPeripheral:Peripheral;
 		
@@ -110,7 +126,7 @@ package services
 		
 		public function BluetoothService()
 		{
-			if (instance != null) {
+			if (_instance != null) {
 				throw new Error("BluetoothService class constructor can not be used");	
 			}
 		}
@@ -156,10 +172,10 @@ package services
 				blueToothServiceEvent = new BlueToothServiceEvent(BlueToothServiceEvent.BLUETOOTH_STATUS_CHANGED_EVENT);
 				blueToothServiceEvent.data = new Object();
 				blueToothServiceEvent.data.status = BluetoothLEState.STATE_UNSUPPORTED;
-				instance.dispatchEvent(blueToothServiceEvent);
+				_instance.dispatchEvent(blueToothServiceEvent);
 				
 				var buffer:ByteArray = new ByteArray();
-				buffer.writeByte(17);//(0x11);
+				/*buffer.writeByte(17);//(0x11);
 				buffer.writeByte(0);//(0x00);
 				buffer.writeByte(128);//(0x80);
 				buffer.writeByte(179);//(0xB3);
@@ -178,43 +194,34 @@ package services
 				buffer.writeByte(102);//(0x66);
 				
 				buffer.writeByte(0);//(0x00);
-				buffer.writeByte(1);//(0x01);
+				buffer.writeByte(1);//(0x01);*/
+				
+				//f1 
+				/*buffer.writeByte(0x07);//(0x07);
+				buffer.writeByte(0xF1);//
+				buffer.writeByte(0x61);//(0xB3);
+				buffer.writeByte(0xCA);//(0x01);
+				
+				buffer.writeByte(0x66);//(0x00);
+				buffer.writeByte(0x00);//(0xF0);
+				buffer.writeByte(0x01);//(0xF0);
+				
+				
 				
 				buffer.position = 0;
 				buffer.endian = Endian.LITTLE_ENDIAN;
 				
-				trace("testarrary = " + buffer.toString());
-				var packetLength:int = buffer.readByte();
-				//position = 1
-				var packetType:int = buffer.readByte();//0 = data packet, 1 =  TXID packet, 0xF1 (241 if read as unsigned int) = Beacon packet
-				switch (packetType) {
-					case 0:
-						//data packet
-						var rawData:Number = buffer.readUnsignedInt();
-						var filteredData:Number = buffer.readUnsignedInt();
-						var transmitterBatteryVoltage:Number = buffer.readUnsignedByte();
-						var bridgeBatteryPercentage:Number = buffer.readUnsignedByte();
-						var txID:Number = buffer.readUnsignedInt();
-						var xBridgeProtocolLevel:Number = buffer.readUnsignedByte();
-						timeStampOfLastDataPacketReceived = (new Date()).valueOf();
-						break;
-					case 1:
-						//TXID packet
-						var txID:Number = buffer.readUnsignedInt();
-						break;
-					case 241:
-						//Beacon packet
-						var txID:Number = buffer.readUnsignedInt();
-						var xBridgeProtocolLevel:Number = buffer.readUnsignedByte();
-						break;
-				}
+				buffer.readUnsignedByte();
+				buffer.readUnsignedByte();
+				var txid:Number = buffer.readUnsignedInt();
+				trace("txid = " + decodeTxID(txid));*/
 					 
 				/*var DexSrc:int;
-				var firstByte:int = buffer.readByte();
+				var firstByte:int = buffer.readUnsignedByte();
 				var rawData:Number;
 				var filteredData:Number;
 				//positin = 1
-				var secondByte:int = buffer.readByte();
+				var secondByte:int = buffer.readUnsignedByte();
 				//position = 2
 				if (firstByte == 7 && secondByte == -15) {
 					//beacon packet
@@ -243,7 +250,7 @@ package services
 			blueToothServiceEvent = new BlueToothServiceEvent(BlueToothServiceEvent.BLUETOOTH_STATUS_CHANGED_EVENT);
 			blueToothServiceEvent.data = new Object();
 			blueToothServiceEvent.data.status = BluetoothLE.service.centralManager.state;
-			instance.dispatchEvent(blueToothServiceEvent);
+			_instance.dispatchEvent(blueToothServiceEvent);
 			
 			switch (BluetoothLE.service.centralManager.state)
 			{
@@ -318,13 +325,13 @@ package services
 		private static function central_peripheralDiscoveredHandler(event:PeripheralEvent):void
 		{
 			// event.peripheral will contain a Peripheral object with information about the Peripheral
-			if ((event.peripheral.name as String).toUpperCase().indexOf("XDRIP") > -1 || (event.peripheral.name as String).toUpperCase().indexOf("XBRIDGE") > -1) {//not sure if xbridge is ever used, i think it's always xdrip
+			if ((event.peripheral.name as String).toUpperCase().indexOf("DRIP") > -1 || (event.peripheral.name as String).toUpperCase().indexOf("XBRIDGE") > -1) {
 				blueToothServiceEvent = new BlueToothServiceEvent(BlueToothServiceEvent.BLUETOOTH_SERVICE_INFORMATION_EVENT);
 				blueToothServiceEvent.data = new Object();
 				blueToothServiceEvent.data.information = 
 					ModelLocator.resourceManagerInstance.getString('bluetoothservice','found_peripheral_with_name') +
 					" = " + event.peripheral.name;
-				instance.dispatchEvent(blueToothServiceEvent);
+				_instance.dispatchEvent(blueToothServiceEvent);
 				
 				if (BlueToothDevice.address != "") {
 					if (BlueToothDevice.address != event.peripheral.uuid) {
@@ -408,47 +415,50 @@ package services
 			}
 		}
 		
+		
+		/**
+		 * simply acknowledges receipt of a message, needed for xbridge so that it goes to sleep 
+		 */
+		public static function ackCharacteristicUpdate():void {
+			var value:ByteArray = new ByteArray();
+			value.writeByte(0x02);
+			value.writeByte(0xF0);
+			activeBluetoothPeripheral.addEventListener(CharacteristicEvent.WRITE_SUCCESS, peripheral_characteristic_writeHandler);
+			activeBluetoothPeripheral.addEventListener(CharacteristicEvent.WRITE_ERROR, peripheral_characteristic_writeErrorHandler);
+			activeBluetoothPeripheral.writeValueForCharacteristic(characteristic, value);
+			
+		}
+		
 		private static function peripheral_characteristic_updatedHandler(event:CharacteristicEvent):void {
-			//Should be same as in DexCollectionService , linenumber 443
 			for (var i:int = 0;i < event.characteristic.value.length;i++) {
 				trace("bytearray element " + i + " = " + (new Number(event.characteristic.value[i])).toString(16));
 			}
 			
-			//alles zit dus in event.characteristics.value[0]
-			//txid zit daar in, controleren ? best wel zeker ? 
-			//processing van values zit in TransmitterData.create
-			//na het uitlezen ook nog een ack message uitsturen, zie DexCollectionService.java 363
-			
-			//acknowledge the receipt back to the xdrip, otherwise it will keep on trying
-			var value:ByteArray = new ByteArray();
-			value.writeByte(0x02);
-			value.writeByte(0xF0);
-			//call back to peripheral_characteristic_writeErrorHandler seems to be not working, so commented it out
-			//activeBluetoothPeripheral.addEventListener(CharacteristicEvent.WRITE_SUCCESS, peripheral_characteristic_writeHandler);
-			//activeBluetoothPeripheral.addEventListener(CharacteristicEvent.WRITE_ERROR, peripheral_characteristic_writeErrorHandler);
-			var success:Boolean = activeBluetoothPeripheral.writeValueForCharacteristic(characteristic, value);
-			
 			//now start reading the values
-			value = event.characteristic.value;
+			var value:ByteArray = event.characteristic.value;
 			blueToothServiceEvent = new BlueToothServiceEvent(BlueToothServiceEvent.BLUETOOTH_SERVICE_INFORMATION_EVENT);
 			blueToothServiceEvent.data = new Object();
 			blueToothServiceEvent.data.information = 
 				ModelLocator.resourceManagerInstance.getString('bluetoothservice','data_packet_received_from_transmitter_with') +
-				" byte 0 = " + value.readByte() + " and byte 1 = " + value.readByte();
-			instance.dispatchEvent(blueToothServiceEvent);
+				" byte 0 = " + value.readUnsignedByte() + " and byte 1 = " + value.readUnsignedByte();
+			_instance.dispatchEvent(blueToothServiceEvent);
+			
+			value.position = 0;
+			processTransmitterData(value);
 		}
 		
-		/*private static function peripheral_characteristic_writeHandler(event:CharacteristicEvent):void {
-		activeBluetoothPeripheral.removeEventListener(CharacteristicEvent.WRITE_SUCCESS, peripheral_characteristic_writeHandler);
-		activeBluetoothPeripheral.removeEventListener(CharacteristicEvent.WRITE_ERROR, peripheral_characteristic_writeErrorHandler);
-		trace("	BluetoothService.as : peripheral_characteristic_writeHandler");
+		private static function peripheral_characteristic_writeHandler(event:CharacteristicEvent):void {
+			activeBluetoothPeripheral.removeEventListener(CharacteristicEvent.WRITE_SUCCESS, peripheral_characteristic_writeHandler);
+			activeBluetoothPeripheral.removeEventListener(CharacteristicEvent.WRITE_ERROR, peripheral_characteristic_writeErrorHandler);
+			trace("	BluetoothService.as : peripheral_characteristic_writeHandler");
 		}
 		
 		private static function peripheral_characteristic_writeErrorHandler(event:CharacteristicEvent):void {
-		activeBluetoothPeripheral.removeEventListener(CharacteristicEvent.WRITE_SUCCESS, peripheral_characteristic_writeHandler);
-		activeBluetoothPeripheral.removeEventListener(CharacteristicEvent.WRITE_ERROR, peripheral_characteristic_writeErrorHandler);
-		trace("	BluetoothService.as : peripheral_characteristic_writeErrorHandler");
-		}*/
+			activeBluetoothPeripheral.removeEventListener(CharacteristicEvent.WRITE_SUCCESS, peripheral_characteristic_writeHandler);
+			activeBluetoothPeripheral.removeEventListener(CharacteristicEvent.WRITE_ERROR, peripheral_characteristic_writeErrorHandler);
+			trace("	BluetoothService.as : peripheral_characteristic_writeErrorHandler");
+			dispatchInformation("failed_to_write_value_for_characteristic_to_device");
+		}
 		
 		private static function peripheral_characteristic_errorHandler(event:CharacteristicEvent):void {
 			trace("BluetoothService.as : peripheral_characteristic_errorHandler" );
@@ -470,7 +480,7 @@ package services
 			blueToothServiceEvent = new BlueToothServiceEvent(BlueToothServiceEvent.BLUETOOTH_SERVICE_INFORMATION_EVENT);
 			blueToothServiceEvent.data = new Object();
 			blueToothServiceEvent.data.information = ModelLocator.resourceManagerInstance.getString('bluetoothservice',informationResourceName);
-			instance.dispatchEvent(blueToothServiceEvent);
+			_instance.dispatchEvent(blueToothServiceEvent);
 		}
 		
 		private static function tryReconnect(event:Event = null):void {
@@ -516,7 +526,7 @@ package services
 				ModelLocator.resourceManagerInstance.getString('bluetoothservice','will_try_to_reconnect_in') +
 				" " + seconds + " " +
 			ModelLocator.resourceManagerInstance.getString('bluetoothservice','seconds');
-			instance.dispatchEvent(blueToothServiceEvent);
+			_instance.dispatchEvent(blueToothServiceEvent);
 			
 			disableReconnectTimer();
 			reconnectTimer = new Timer(seconds * 1000, 1);
@@ -549,7 +559,7 @@ package services
 					" " + seconds + " " +
 					ModelLocator.resourceManagerInstance.getString('bluetoothservice','seconds');
 			}
-			instance.dispatchEvent(blueToothServiceEvent);
+			_instance.dispatchEvent(blueToothServiceEvent);
 			
 			disableCheckScanTimer();
 			checkReScanTimer = new Timer(seconds * 1000, 1);
@@ -593,7 +603,7 @@ package services
 			blueToothServiceEvent = new BlueToothServiceEvent(BlueToothServiceEvent.BLUETOOTH_SERVICE_INFORMATION_EVENT);
 			blueToothServiceEvent.data = new Object();
 			blueToothServiceEvent.data.information = ModelLocator.resourceManagerInstance.getString('settingsview','bluetoothdeviceforgotten');
-			instance.dispatchEvent(blueToothServiceEvent);
+			_instance.dispatchEvent(blueToothServiceEvent);
 
 			currentReconnectTimesPointer = 0;//for next new attempt, whenever just in case
 			currentRescanTimesPointer = 0;
@@ -606,15 +616,28 @@ package services
 				bluetoothStatusIsOn();
 		}
 		
+		/**
+		 * encode transmitter id as explained in xBridge2.pdf 
+		 */
 		public static function encodeTxID(TxID:String):Number {
-				var res:Number = 0;
+				var returnValue:Number = 0;
 				var tmpSrc:String = TxID.toUpperCase();
-				res |= getSrcValue(tmpSrc.charAt(0)) << 20;
-				res |= getSrcValue(tmpSrc.charAt(1)) << 15;
-				res |= getSrcValue(tmpSrc.charAt(2)) << 10;
-				res |= getSrcValue(tmpSrc.charAt(3)) << 5;
-				res |= getSrcValue(tmpSrc.charAt(4));
-				return res;
+				returnValue |= getSrcValue(tmpSrc.charAt(0)) << 20;
+				returnValue |= getSrcValue(tmpSrc.charAt(1)) << 15;
+				returnValue |= getSrcValue(tmpSrc.charAt(2)) << 10;
+				returnValue |= getSrcValue(tmpSrc.charAt(3)) << 5;
+				returnValue |= getSrcValue(tmpSrc.charAt(4));
+				return returnValue;
+		}
+		
+		private static function decodeTxID(TxID:Number):String {
+			var returnValue:String = "";
+			returnValue += srcNameTable[(TxID >> 20) & 0x1F];
+			returnValue += srcNameTable[(TxID >> 15) & 0x1F];
+			returnValue += srcNameTable[(TxID >> 10) & 0x1F];
+			returnValue += srcNameTable[(TxID >> 5) & 0x1F];
+			returnValue += srcNameTable[(TxID >> 0) & 0x1F];
+			return returnValue;
 		}
 
 		private static function getSrcValue(ch:String):int {
@@ -623,6 +646,51 @@ package services
 				if (srcNameTable[i] == ch) break;
 			}
 			return i;
+		}
+		
+		private static function processTransmitterData(buffer:ByteArray):void {
+			var packetLength:int = buffer.readUnsignedByte();
+			//position = 1
+			var packetType:int = buffer.readUnsignedByte();//0 = data packet, 1 =  TXID packet, 0xF1 (241 if read as unsigned int) = Beacon packet
+			switch (packetType) {
+				case 0:
+					//data packet
+					var rawData:Number = buffer.readUnsignedInt();
+					var filteredData:Number = buffer.readUnsignedInt();
+					var transmitterBatteryVoltage:Number = buffer.readUnsignedByte();
+					
+					//following only if the name of the device contains "bridge", if it' doesnt contain bridge, then it's an xdrip (old) and doesn't have those bytes' +
+					if (BlueToothDevice.isXBridge()) {
+						var bridgeBatteryPercentage:Number = buffer.readUnsignedByte();
+						var txID:Number = buffer.readUnsignedInt();
+						var xBridgeProtocolLevel:Number = buffer.readUnsignedByte();
+						
+						blueToothServiceEvent = new BlueToothServiceEvent(BlueToothServiceEvent.TRANSMITTER_DATA);
+						blueToothServiceEvent.data = new TransmitterDataXBridgeDataPacket(rawData, filteredData, transmitterBatteryVoltage, bridgeBatteryPercentage, decodeTxID(txID));
+						_instance.dispatchEvent(blueToothServiceEvent);
+					} else {
+						blueToothServiceEvent = new BlueToothServiceEvent(BlueToothServiceEvent.TRANSMITTER_DATA);
+						blueToothServiceEvent.data = new TransmitterDataXdripDataPacket(rawData, filteredData, transmitterBatteryVoltage);
+						_instance.dispatchEvent(blueToothServiceEvent);
+					}
+					
+					timeStampOfLastDataPacketReceived = (new Date()).valueOf();
+					break;
+				case 1://will actually never happen, this is a packet type for the other direction , ie from App to xbridge
+					//TXID packet
+					var txID:Number = buffer.readUnsignedInt();
+					break;
+				case 241:
+					//Beacon packet
+					var txID:Number = buffer.readUnsignedInt();
+					
+					blueToothServiceEvent = new BlueToothServiceEvent(BlueToothServiceEvent.TRANSMITTER_DATA);
+					blueToothServiceEvent.data = new TransmitterDataXBridgeBeaconPacket(decodeTxID(txID));
+					_instance.dispatchEvent(blueToothServiceEvent);
+					
+					var xBridgeProtocolLevel:Number = buffer.readUnsignedByte();//not needed for the moment
+					break;
+			}
 		}
 	}
 }

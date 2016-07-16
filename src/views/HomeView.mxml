@@ -23,15 +23,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 		<![CDATA[
 			import mx.events.FlexEvent;
 			
-			import Utilities.UniqueId;
-			
 			import databaseclasses.BlueToothDevice;
 			import databaseclasses.Database;
 			import databaseclasses.DatabaseEvent;
 			
-			import services.BlueToothServiceEvent;
+			import events.BlueToothServiceEvent;
+			
 			import services.BluetoothService;
 			import services.NotificationService;
+			import services.TransmitterService;
 			
 			private static var initialStart:Boolean = true;
 
@@ -69,8 +69,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 										
 					BluetoothService.instance.addEventListener(BlueToothServiceEvent.BLUETOOTH_STATUS_CHANGED_EVENT,blueToothStatusChanged);
 					BluetoothService.instance.addEventListener(BlueToothServiceEvent.BLUETOOTH_SERVICE_INFORMATION_EVENT,blueToothServiceInformationReceived);
+					TransmitterService.init();
 					BluetoothService.init();
-					NotificationService.instantiate();
+					NotificationService.init();
 				}
 				
 				function blueToothDeviceRetrievalError (event:DatabaseEvent):void {
