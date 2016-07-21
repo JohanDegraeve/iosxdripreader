@@ -32,9 +32,10 @@ package model
 	
 	import databaseclasses.BgReading;
 	import databaseclasses.Database;
-	import databaseclasses.DatabaseEvent;
 	
 	import events.BlueToothServiceEvent;
+	import events.DatabaseEvent;
+	
 	import services.BluetoothService;
 
 	/**
@@ -83,53 +84,47 @@ package model
 		{
 			return _bgReadings;
 		}
+		
+		private static var _appStartTimestamp:Number;
 
+		/**
+		 * time that the application was started 
+		 */
+		public static function get appStartTimestamp():Number
+		{
+			return _appStartTimestamp;
+		}
 		
 		public function ModelLocator()
 		{
 			if (_instance != null) {
 				throw new Error("ModelLocator class can only be instantiated through ModelLocator.getInstance()");	
 			}
+			trace("instantiating modellocator");
+			_appStartTimestamp = (new Date()).valueOf();
 			
 			_resourceManagerInstance = ResourceManager.getInstance();
-			
-			var dataSortField:SortField= new SortField();
-			dataSortField.numeric = false;
-			var dataSort:Sort = new Sort();
-			dataSort.fields=[dataSortField];
-
-			_loggingList = new ArrayCollection();
-			_loggingList.sort = dataSort;
-			
-			var localDispatcher1:EventDispatcher = new EventDispatcher();
-			localDispatcher1.addEventListener(DatabaseEvent.RESULT_EVENT, logReceivedFromDatabase);
-			Database.getLoggings(localDispatcher1);
-			
+			//event listeners for receiving bluetooth service dand database information events and to store them in the logging
 			BluetoothService.instance.addEventListener(BlueToothServiceEvent.BLUETOOTH_SERVICE_INFORMATION_EVENT,blueToothServiceInformationReceived);
 			Database.instance.addEventListener(DatabaseEvent.DATABASE_INFORMATION_EVENT, databaseInformationEventReceived);
-			
 			function databaseInformationEventReceived(be:DatabaseEvent):void {
 				_loggingList.addItem(addTimeStamp(" DB : " + be.data.information));
 				Database.insertLogging(Utilities.UniqueId.createEventId(), _loggingList.getItemAt(_loggingList.length - 1) as String, (new Date()).valueOf(),(new Date()).valueOf(),null);				
 			}
-			
 			function blueToothServiceInformationReceived(be:BlueToothServiceEvent):void {
 				_loggingList.addItem(addTimeStamp(" BT : " + be.data.information));
 				Database.insertLogging(Utilities.UniqueId.createEventId(), _loggingList.getItemAt(_loggingList.length - 1) as String, (new Date()).valueOf(),(new Date()).valueOf(),null);
 			}
 			
-			function logReceivedFromDatabase(de:DatabaseEvent):void {
-				if (de.data != null)
-					if (de.data is String) {
-						if (de.data as String == Database.END_OF_RESULT) {
-							_loggingList.refresh();
-						} else {
-							_loggingList.addItem(de.data as String);
-						}
-					}
-			}
+			//create the logging list and bgreading list and assign a sorting - but don't get the logs from the database yet because maybe the database init is not finished yet
+			var dataSortField:SortField= new SortField();
+			dataSortField.numeric = false;
+			var dataSort:Sort = new Sort();
+			dataSort.fields=[dataSortField];
+			_loggingList = new ArrayCollection();
+			_loggingList.sort = dataSort;
 			
-			//bgreadings arraycollectin, only last 24 hours should be stored
+			//bgreadings arraycollection
 			_bgReadings = new ArrayCollection();
 			var dataSortFieldForBGReadings:SortField = new SortField();
 			dataSortFieldForBGReadings.name = "timestamp";
@@ -138,20 +133,45 @@ package model
 			var dataSortForBGReadings:Sort = new Sort();
 			dataSortForBGReadings.fields=[dataSortFieldForBGReadings];
 			_bgReadings.sort = dataSortForBGReadings;
-			var localDispatcher2:EventDispatcher = new EventDispatcher();
-			localDispatcher2.addEventListener(DatabaseEvent.RESULT_EVENT, bgReadingsReceivedFromDatabase);
-			Database.getBgReadings(localDispatcher2);
+			Database.instance.addEventListener(DatabaseEvent.DATABASE_INIT_FINISHED_EVENT,getBgReadingsAndLogsFromDatabase);
 			
-			function bgReadingsReceivedFromDatabase(de:DatabaseEvent):void {
+			function getBgReadingsAndLogsFromDatabase():void {
+				Database.instance.addEventListener(DatabaseEvent.BGREADING_RETRIEVAL_EVENT, bgReadingReceivedFromDatabase);
+				//bgreadings created after app start time are not needed because they are already stored in the _bgReadings by the transmitter service
+				Database.getBgReadings(_appStartTimestamp);
+			}
+
+			function bgReadingReceivedFromDatabase(de:DatabaseEvent):void {
 				if (de.data != null)
 					if (de.data is BgReading) {
 						_bgReadings.addItem(de.data);
 					} else if (de.data is String) {
 						if (de.data as String == Database.END_OF_RESULT) {
 							_bgReadings.refresh();
+							Database.instance.removeEventListener(DatabaseEvent.BGREADING_RETRIEVAL_EVENT, bgReadingReceivedFromDatabase);
+							getLogsFromDatabase();
 						}
 					}
 			}
+
+			//get stored logs from the database
+			function getLogsFromDatabase():void {
+				Database.instance.addEventListener(DatabaseEvent.LOGRETRIEVED_EVENT, logReceivedFromDatabase);
+				//logs created after app start time are not needed because they are already added in the logginglist
+				Database.getLoggings(_appStartTimestamp);
+			}
+			function logReceivedFromDatabase(de:DatabaseEvent):void {
+				if (de.data != null)
+					if (de.data is String) {
+						if (de.data as String == Database.END_OF_RESULT) {
+							_loggingList.refresh();
+							Database.instance.removeEventListener(DatabaseEvent.LOGRETRIEVED_EVENT, logReceivedFromDatabase);
+						} else {
+							_loggingList.addItem(de.data as String);
+						}
+					}
+			}
+
 		}
 		
 		private static function addTimeStamp(source:String):String {

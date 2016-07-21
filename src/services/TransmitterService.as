@@ -21,6 +21,7 @@ package services
 	
 	import databaseclasses.BgReading;
 	import databaseclasses.CommonSettings;
+	import databaseclasses.Sensor;
 	
 	import events.BlueToothServiceEvent;
 	import events.TransmitterServiceEvent;
@@ -31,12 +32,20 @@ package services
 	import model.TransmitterDataXdripDataPacket;
 	
 	/**
-	 * transmitter service handles all transmitterdate received from BlueToothService and update tables<br>
+	 * transmitter service handles all transmitterdata received from BlueToothService<br>
+	 * It will handle TransmitterData .. packets (see children of TransmitterData class), create bgreadings ..<br>
+	 * If no sensor active then no bgreading will be created<br>
 	 * init must be called to start the service
 	 */
 	public class TransmitterService extends EventDispatcher
 	{
 		private static var _instance:TransmitterService = new TransmitterService();
+
+		public static function get instance():TransmitterService
+		{
+			return _instance;
+		}
+
 		private static var initialStart:Boolean = true;
 		private static var transmitterServiceEvent:TransmitterServiceEvent;
 		/**
@@ -111,16 +120,20 @@ package services
 						//store the bridge battery level in the common settings (to be synchronized)
 						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_BRIDGE_BATTERY_PERCENTAGE_ID,transmitterDataXBridgeDataPacket.bridgeBatteryPercentage.toString());
 
-						//create and save bgreading
-						ModelLocator.addBGReading(
-							BgReading.
+						if (Sensor.getActiveSensor() != null) {
+							//create and save bgreading
+							ModelLocator.addBGReading(
+								BgReading.
 								create(transmitterDataXBridgeDataPacket.rawData, transmitterDataXBridgeDataPacket.filteredData)
 								.saveToDatabaseSynchronous()
-								);
-						
-						//dispatch the event that there's new data
-						transmitterServiceEvent = new TransmitterServiceEvent(TransmitterServiceEvent.BGREADING_EVENT);
-						_instance.dispatchEvent(transmitterServiceEvent);
+							);
+							
+							//dispatch the event that there's new data
+							transmitterServiceEvent = new TransmitterServiceEvent(TransmitterServiceEvent.BGREADING_EVENT);
+							_instance.dispatchEvent(transmitterServiceEvent);
+						} else {
+							//TODO inform that bgreading is received but sensor not started ?
+						}
 					}
 					
 				} else if (be.data is TransmitterDataXdripDataPacket) {
@@ -139,7 +152,7 @@ package services
 						//create and save bgreading
 						ModelLocator.addBGReading(
 							BgReading.
-							create(transmitterDataXBridgeDataPacket.rawData, transmitterDataXBridgeDataPacket.filteredData)
+							create(transmitterDataXdripDataPacket.rawData, transmitterDataXdripDataPacket.filteredData)
 							.saveToDatabaseSynchronous()
 						);
 						

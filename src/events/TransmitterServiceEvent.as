@@ -19,7 +19,7 @@ package events
 {
 	import flash.events.Event;
 	
-	[Event(name="BGReadingEvent",type="eventsTransmitterServiceEvent")]
+	[Event(name="BGReadingEvent",type="events.TransmitterServiceEvent")]
 	
 	/**
 	 * used by transmitter service to notify on all kinds of events : information messages, etc.. <br>

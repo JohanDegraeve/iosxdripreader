@@ -23,11 +23,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 		<![CDATA[
 			import mx.events.FlexEvent;
 			
-			import databaseclasses.BlueToothDevice;
 			import databaseclasses.Database;
-			import databaseclasses.DatabaseEvent;
 			
 			import events.BlueToothServiceEvent;
+			import events.DatabaseEvent;
+			import events.TransmitterServiceEvent;
+			
+			import model.ModelLocator;
 			
 			import services.BluetoothService;
 			import services.NotificationService;
@@ -39,50 +41,39 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 
 			protected function onCreationComplete(event:FlexEvent):void
 			{
+				//instantiate modellocator because event listeners are being added to the database class, to receive logging information
+				ModelLocator.instance;
+				
 				if (initialStart) {
-					var dispatcher:EventDispatcher = new EventDispatcher();
-					dispatcher.addEventListener(DatabaseEvent.RESULT_EVENT,onInitResult);
-					dispatcher.addEventListener(DatabaseEvent.ERROR_EVENT,onInitError);
-					Database.init(dispatcher);
+					Database.instance.addEventListener(DatabaseEvent.DATABASE_INIT_FINISHED_EVENT,onInitResult);
+					Database.instance.addEventListener(DatabaseEvent.ERROR_EVENT,onInitError);
+					Database.instance.addEventListener(DatabaseEvent.DATABASE_INFORMATION_EVENT, databaseInformationEventReceived);
+					Database.init();
 					initialStart = false;
 				}
 				
 				function onInitResult(event:Event):void
 				{
 					trace("HomeView : database init result ok");
-					//when calling init(dispatcher), Database.init starts initializing and at the end dispatches the event but sets dispatcher to null
-					//don't know exactly why, that's how it is done in HelpDiabetes
-					if (dispatcher != null) {
-						dispatcher.removeEventListener(DatabaseEvent.ERROR_EVENT, onInitError);
-						dispatcher.removeEventListener(DatabaseEvent.RESULT_EVENT, onInitResult);
-					}
-					var dispatcher:EventDispatcher = new EventDispatcher();
-					dispatcher.addEventListener(DatabaseEvent.RESULT_EVENT,blueToothDeviceRetrieved);
-					dispatcher.addEventListener(DatabaseEvent.ERROR_EVENT,blueToothDeviceRetrievalError);
-					Database.getBlueToothDevice(dispatcher);
-				}
-				
-				function blueToothDeviceRetrieved (event:DatabaseEvent):void {
-					BlueToothDevice.address = event.data.address;
-					BlueToothDevice.name = event.data.name;
-					BlueToothDevice.instance.lastModifiedTimestamp = event.data.lastmodifiedtimestamp;
-										
+					Database.instance.removeEventListener(DatabaseEvent.ERROR_EVENT, onInitError);
+					Database.instance.removeEventListener(DatabaseEvent.DATABASE_INIT_FINISHED_EVENT, onInitResult);
+					
+					//will initialise the bluetoothdevice
+					Database.getBlueToothDevice();
+
 					BluetoothService.instance.addEventListener(BlueToothServiceEvent.BLUETOOTH_STATUS_CHANGED_EVENT,blueToothStatusChanged);
 					BluetoothService.instance.addEventListener(BlueToothServiceEvent.BLUETOOTH_SERVICE_INFORMATION_EVENT,blueToothServiceInformationReceived);
+					TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, transmitterServiceBGReadingEventReceived);
+					
 					TransmitterService.init();
 					BluetoothService.init();
 					NotificationService.init();
 				}
 				
-				function blueToothDeviceRetrievalError (event:DatabaseEvent):void {
-					//shouldn't happen, not really 
-					trace("BluetoothService.as : BluetoothService.as : Failed retrieving bluetoothdevice");
-				}
-				
 				function onInitError(event:Event):void
 				{	
-					dispatcher.removeEventListener(DatabaseEvent.ERROR_EVENT, onInitError);
-					dispatcher.removeEventListener(DatabaseEvent.RESULT_EVENT, onInitResult);
+					Database.instance.removeEventListener(DatabaseEvent.ERROR_EVENT, onInitError);
+					Database.instance.removeEventListener(DatabaseEvent.DATABASE_INIT_FINISHED_EVENT, onInitResult);
 					trace("HomeView : database init error");
 				}
 			}
@@ -94,6 +85,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			private function blueToothServiceInformationReceived(be:BlueToothServiceEvent):void {
 				trace((new Date()).toTimeString() + " : HomeView : received bluetooth service information = " + be.data.information);
 			}
+			
+			private function transmitterServiceBGReadingEventReceived(be:TransmitterServiceEvent):void {
+				trace((new Date()).toTimeString() + " : HomeView : received bgreading = ");
+			}
+
+			private function databaseInformationEventReceived(be:DatabaseEvent):void {
+				trace((new Date()).toTimeString() + " : HomeView : received database  information = " + be.data.information);
+			}
+			
 		]]>
 	</fx:Script>
 </s:View>

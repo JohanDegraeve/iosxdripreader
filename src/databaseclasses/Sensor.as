@@ -27,19 +27,19 @@ package databaseclasses
 		{
 			return _startedAt;
 		}
-
+		
 		private var _stoppedAt:Number;
 		public function get stoppedAt():Number
 		{
 			return _stoppedAt;
 		}
-
+		
 		private var _latestBatteryLevel:int;
 		public function get latestBatteryLevel():int
 		{
 			return _latestBatteryLevel;
 		}
-
+		
 		public function Sensor(startedAt:Number, stoppedAt:Number, latestBatteryLevel:int, sensorId:String, lastmodifiedtimestamp:Number)
 		{
 			super(sensorId, lastmodifiedtimestamp);
@@ -75,6 +75,20 @@ package databaseclasses
 			currentSensor = new Sensor((new Date()).valueOf(), 0, 0, null, Number.NaN);
 			Database.insertSensor(currentSensor);
 			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_ID_CURRENT_SENSOR_ID, currentSensor.uniqueId);
+		}
+		
+		/**
+		 * stops the sensor and updates the database<br>
+		 * CommonSettings.COMMON_SETTING_INITIAL_CALIBRATION_DONE_ID is not adapted !!!! TODO check why this is marked, compare with android version
+		 */
+		public static function stopSensor():void {
+			var currentSensor:Sensor = getActiveSensor();
+			if (currentSensor != null) {
+				currentSensor._stoppedAt = (new Date()).valueOf();
+				currentSensor.resetLastModifiedTimeStamp();
+				Database.updateSensor(currentSensor);
+			}
+			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_ID_CURRENT_SENSOR_ID, "0");
 		}
 	}
 }

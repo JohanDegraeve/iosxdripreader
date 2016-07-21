@@ -29,7 +29,6 @@ package services
 	import flash.events.EventDispatcher;
 	import flash.events.TimerEvent;
 	import flash.utils.ByteArray;
-	import flash.utils.Endian;
 	import flash.utils.Timer;
 	
 	import Utilities.HM10Attributes;
@@ -57,14 +56,14 @@ package services
 	{
 		
 		private static var _instance:BluetoothService = new BluetoothService();
-
+		
 		[ResourceBundle("secrets")]
 		[ResourceBundle("bluetoothservice")]
 		public static function get instance():BluetoothService
 		{
 			return _instance;
 		}
-
+		
 		
 		private static var _activeBluetoothPeripheral:Peripheral;
 		
@@ -83,6 +82,8 @@ package services
 		private static const rescanTimesInSeconds:Array = [60,60,60,60,60,300,300,300,300,300,900,900,900,900,1800];
 		private static var currentRescanTimesPointer:int = 0;
 		private static const secondsAfterWhichRunningScanWillBeStopped:int = 60;
+		
+		private static var testcounter:int = 0;
 		
 		private static var nrOfAttemptsToConnectToNewDevice:int = 0;
 		private static const maxNrOfAttemptsToConnectToNewDevice:int = 5;
@@ -143,6 +144,7 @@ package services
 			
 			BluetoothLE.init(ModelLocator.resourceManagerInstance.getString('secrets','distriqt-key'));
 			if (BluetoothLE.isSupported) {
+				trace("passing bluetoothservice.issupported");
 				BluetoothLE.service.centralManager.addEventListener(PeripheralEvent.DISCOVERED, central_peripheralDiscoveredHandler);
 				BluetoothLE.service.centralManager.addEventListener( PeripheralEvent.CONNECT, central_peripheralConnectHandler );
 				BluetoothLE.service.centralManager.addEventListener( PeripheralEvent.CONNECT_FAIL, central_peripheralConnectFailHandler );
@@ -174,7 +176,7 @@ package services
 				blueToothServiceEvent.data.status = BluetoothLEState.STATE_UNSUPPORTED;
 				_instance.dispatchEvent(blueToothServiceEvent);
 				
-				var buffer:ByteArray = new ByteArray();
+				//var buffer:ByteArray = new ByteArray();
 				/*buffer.writeByte(17);//(0x11);
 				buffer.writeByte(0);//(0x00);
 				buffer.writeByte(128);//(0x80);
@@ -215,7 +217,7 @@ package services
 				buffer.readUnsignedByte();
 				var txid:Number = buffer.readUnsignedInt();
 				trace("txid = " + decodeTxID(txid));*/
-					 
+				
 				/*var DexSrc:int;
 				var firstByte:int = buffer.readUnsignedByte();
 				var rawData:Number;
@@ -224,24 +226,24 @@ package services
 				var secondByte:int = buffer.readUnsignedByte();
 				//position = 2
 				if (firstByte == 7 && secondByte == -15) {
-					//beacon packet
-					DexSrc = buffer.readUnsignedInt();
-					//position = 6	
+				//beacon packet
+				DexSrc = buffer.readUnsignedInt();
+				//position = 6	
 				} else {
-					if (firstByte == 17 && secondByte == 0) {
-						//data packet
-						if (packetLength >= lengthOfDataPacket) {
-							//we're still at position 2
-							rawData = buffer.readUnsignedInt();
-							//position = 6
-							filteredData = buffer.readUnsignedInt();
-							//position = 10
-							//transmitterData.sensor_battery_level = txData.get(10) & 0xff;
-						}
-					} else {
-						//seems to be some other kind of packet
-						//TODO dispatch information event
-					}
+				if (firstByte == 17 && secondByte == 0) {
+				//data packet
+				if (packetLength >= lengthOfDataPacket) {
+				//we're still at position 2
+				rawData = buffer.readUnsignedInt();
+				//position = 6
+				filteredData = buffer.readUnsignedInt();
+				//position = 10
+				//transmitterData.sensor_battery_level = txData.get(10) & 0xff;
+				}
+				} else {
+				//seems to be some other kind of packet
+				//TODO dispatch information event
+				}
 				}*/
 			}
 		}
@@ -288,12 +290,11 @@ package services
 			treatNewBlueToothStatus(BluetoothLE.service.centralManager.state);					
 		}
 		
-		/** the plan is, as soon as we see that the bluetooth status is on<br>
+		/** as soon as bluetooth status is on<br>
 		 * &nbsp&nbsp (this may happen the first time that this class is instantiated, means it's instantiated while bluetooth is on<br>
 		 * &nbsp&nbsp or bluetooth was off before, while the app was running already, and it changed to on) <br>
-		 * First, if activebluetoothperipheral is already known, try to connect to it - LETS SEE IF THAT WORKS<br>
-		 * Or scan for peripherals. If no peripheral name stored yet, then we'll try to connect to the first xdrip or xbridge<br>
-		 * If bluetoothle peripheral name stored, then connect to that one <br>
+		 * First, if activebluetoothperipheral is already known, try to connect to it<br>
+		 * If no active bluetooth peripheral known, then scan, try to connect to the first peripheral with name drip or xbridge in it (not case sensitive)<br>
 		 */
 		private static function bluetoothStatusIsOn():void {
 			if (activeBluetoothPeripheral != null) {
@@ -322,10 +323,11 @@ package services
 			}
 		}
 		
-		private static function central_peripheralDiscoveredHandler(event:PeripheralEvent):void
-		{
+		private static function central_peripheralDiscoveredHandler(event:PeripheralEvent):void {
+			trace("passing in central_peripheralDiscoveredHandler for " + testcounter++ + "-th time");
+			
 			// event.peripheral will contain a Peripheral object with information about the Peripheral
-			if ((event.peripheral.name as String).toUpperCase().indexOf("DRIP") > -1 || (event.peripheral.name as String).toUpperCase().indexOf("XBRIDGE") > -1) {
+			if ((event.peripheral.name as String).toUpperCase().indexOf("DRIP") > -1 || (event.peripheral.name as String).toUpperCase().indexOf("BRIDGE") > -1) {
 				blueToothServiceEvent = new BlueToothServiceEvent(BlueToothServiceEvent.BLUETOOTH_SERVICE_INFORMATION_EVENT);
 				blueToothServiceEvent.data = new Object();
 				blueToothServiceEvent.data.information = 
@@ -333,6 +335,7 @@ package services
 					" = " + event.peripheral.name;
 				_instance.dispatchEvent(blueToothServiceEvent);
 				
+				//var temp:String = BlueToothDevice.address;
 				if (BlueToothDevice.address != "") {
 					if (BlueToothDevice.address != event.peripheral.uuid) {
 						//a bluetooth device address is already stored, but it's not the one for which peripheraldiscoveredhandler is called
@@ -361,7 +364,7 @@ package services
 				dispatchInformation('connected_to_peripheral_device_id_stored');
 			} else {
 				dispatchInformation('connected_to_peripheral');
-			}
+			}			
 			activeBluetoothPeripheral = event.peripheral;
 			var uuids:Vector.<String> = new <String>[HM10Attributes.HM_10_SERVICE];
 			activeBluetoothPeripheral.discoverServices(uuids);
@@ -519,13 +522,13 @@ package services
 					currentReconnectTimesPointer--;
 			}
 			trace("seconds for reattempt set to = " + seconds);
-
+			
 			blueToothServiceEvent = new BlueToothServiceEvent(BlueToothServiceEvent.BLUETOOTH_SERVICE_INFORMATION_EVENT);
 			blueToothServiceEvent.data = new Object();
 			blueToothServiceEvent.data.information = 
 				ModelLocator.resourceManagerInstance.getString('bluetoothservice','will_try_to_reconnect_in') +
 				" " + seconds + " " +
-			ModelLocator.resourceManagerInstance.getString('bluetoothservice','seconds');
+				ModelLocator.resourceManagerInstance.getString('bluetoothservice','seconds');
 			_instance.dispatchEvent(blueToothServiceEvent);
 			
 			disableReconnectTimer();
@@ -594,7 +597,7 @@ package services
 				checkReScanTimer = null;
 			}
 		}
-
+		
 		/**
 		 * Disconnects the active bluetoothperipheral if any (otherwise returns without doing anything)<br>
 		 * If bluetooth status = on, then immediately will call bluetoothstatus is on (ie scanning, ...) 
@@ -604,7 +607,7 @@ package services
 			blueToothServiceEvent.data = new Object();
 			blueToothServiceEvent.data.information = ModelLocator.resourceManagerInstance.getString('settingsview','bluetoothdeviceforgotten');
 			_instance.dispatchEvent(blueToothServiceEvent);
-
+			
 			currentReconnectTimesPointer = 0;//for next new attempt, whenever just in case
 			currentRescanTimesPointer = 0;
 			if (activeBluetoothPeripheral == null)
@@ -620,14 +623,14 @@ package services
 		 * encode transmitter id as explained in xBridge2.pdf 
 		 */
 		public static function encodeTxID(TxID:String):Number {
-				var returnValue:Number = 0;
-				var tmpSrc:String = TxID.toUpperCase();
-				returnValue |= getSrcValue(tmpSrc.charAt(0)) << 20;
-				returnValue |= getSrcValue(tmpSrc.charAt(1)) << 15;
-				returnValue |= getSrcValue(tmpSrc.charAt(2)) << 10;
-				returnValue |= getSrcValue(tmpSrc.charAt(3)) << 5;
-				returnValue |= getSrcValue(tmpSrc.charAt(4));
-				return returnValue;
+			var returnValue:Number = 0;
+			var tmpSrc:String = TxID.toUpperCase();
+			returnValue |= getSrcValue(tmpSrc.charAt(0)) << 20;
+			returnValue |= getSrcValue(tmpSrc.charAt(1)) << 15;
+			returnValue |= getSrcValue(tmpSrc.charAt(2)) << 10;
+			returnValue |= getSrcValue(tmpSrc.charAt(3)) << 5;
+			returnValue |= getSrcValue(tmpSrc.charAt(4));
+			return returnValue;
 		}
 		
 		private static function decodeTxID(TxID:Number):String {
@@ -639,7 +642,7 @@ package services
 			returnValue += srcNameTable[(TxID >> 0) & 0x1F];
 			return returnValue;
 		}
-
+		
 		private static function getSrcValue(ch:String):int {
 			var i:int = 0;
 			for (i = 0; i < srcNameTable.length; i++) {

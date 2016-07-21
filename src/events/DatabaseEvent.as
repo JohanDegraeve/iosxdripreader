@@ -15,18 +15,28 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
  
  */
-package databaseclasses
+package events
 {
 	import flash.events.Event;
 	
 	[Event(name="ResultEvent",type="events.DatabaseEvent")]
 	[Event(name="ErrorEvent",type="events.DatabaseEvent")]
 	[Event(name="DatabaseInformation",type="events.DatabaseEvent")]
+	[Event(name="LoggingInsertedEvent",type="events.DatabaseEvent")]
+	[Event(name="LoggingInsertionFailedEvent",type="events.DatabaseEvent")]
+	[Event(name="DatabaseInitFinishedEvent",type="events.DatabaseEvent")]
+	[Event(name="BGReadingRetrievedEvent",type="events.DatabaseEvent")]
+	[Event(name="LogRetrievedEvent",type="events.DatabaseEvent")]
 	
 	public class DatabaseEvent extends Event
 	{
 		public static const RESULT_EVENT:String = "ResultEvent";
 		public static const ERROR_EVENT:String = "ErrorEvent";
+		public static const LOGGING_INSERTED_EVENT:String = "LoggingInsertedEvent";
+		public static const LOGGING_INSERTION_FAILED_EVENT:String = "LoggingInsertionFailedEvent";
+		public static const DATABASE_INIT_FINISHED_EVENT:String = "DatabaseInitFinishedEvent";
+		public static const BGREADING_RETRIEVAL_EVENT:String = "BGReadingRetrievedEvent";
+		public static const LOGRETRIEVED_EVENT:String = "LogRetrievedEvent";
 		/**
 		 * To pass status information, this is just text that can be shown to the user to display progress info<br>
 		 * data.information will be a string with this info. 

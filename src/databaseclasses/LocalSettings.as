@@ -23,7 +23,7 @@ package databaseclasses
 	 public class LocalSettings
 	{
 		private static var instance:LocalSettings = new LocalSettings();
-		private var localSettings:Array = [];
+		private static var localSettings:Array = [];
 
 		
 		public function LocalSettings()
@@ -32,12 +32,18 @@ package databaseclasses
 				throw new Error("LocalSettings class constructor can not be used");	
 			}
 		}
-		public function getLocalSetting(localSettingId:int):String {
+		public static function getLocalSetting(localSettingId:int):String {
 			return localSettings[localSettingId];
 		}
 
-		public function setLocalSetting(localSettingId:int, newValue:String) {
+		public static function setLocalSetting(localSettingId:int, newValue:String, updateDatabase:Boolean = true):void {
 			localSettings[localSettingId] = newValue;
+			if (updateDatabase)
+				Database.updateLocalSetting(localSettingId, newValue);
+		}
+		
+		public static function getNumberOfSettings():int {
+			return localSettings.length;
 		}
 	}
 }

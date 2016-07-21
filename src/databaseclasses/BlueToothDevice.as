@@ -17,14 +17,12 @@
  */
 package databaseclasses
 {
-	import flash.events.EventDispatcher;
-	
 	import services.BluetoothService;
 	
 	public class BlueToothDevice extends SuperDatabaseClass
 	{
 		public static const DEFAULT_BLUETOOTH_DEVICE_ID:String = "1465501584186cb0d5f60b3c";
-		private static var _instance:BlueToothDevice = new BlueToothDevice(DEFAULT_BLUETOOTH_DEVICE_ID, Number.NaN);//note that in HomeView.mxml, lastmodifiedtimestamp, name and address will be overwritten with values read from the database
+		private static var _instance:BlueToothDevice = new BlueToothDevice(DEFAULT_BLUETOOTH_DEVICE_ID, Number.NaN);//note that while calling Database.getbluetoothdevice, all attributes will be overwritten by the values stored in the database
 		
 		/**
 		 * in case we need attributes of the superclass (like uniqueid), then we need to get an instance of this class
@@ -37,11 +35,12 @@ package databaseclasses
 		private static var _name:String;
 		
 		/**
-		 * name of the device, empty string means not yet assigned to a bluetooth peripheral
+		 * name of the device, empty string means not yet assigned to a bluetooth peripheral<br>
+		 * return value will never be null, although the stored value may be null
 		 */
 		public static function get name():String
 		{
-			return _name;
+			return _name == null ? "":_name;
 		}
 		
 		/**
@@ -55,17 +54,19 @@ package databaseclasses
 			_name = value;
 			if (_name == null)
 				_name = "";
-			updateDatabase();
+
+			Database.updateBlueToothDevice(_address, _name, (new Date()).valueOf());
 		}
 		
 		private static var _address:String;
 		
 		/**
-		 * address of the device, empty string or null means not yet assigned to a bluetooth peripheral
+		 * address of the device, empty string means not yet assigned to a bluetooth peripheral<br>
+		 * return value will never be null (although actual stored value may still be null)
 		 */
 		public static function get address():String
 		{
-			return _address;
+			return _address == null ? "":_address;
 		}
 		
 		/**
@@ -79,7 +80,8 @@ package databaseclasses
 			_address = value;
 			if (_address == null)
 				_address = "";
-			updateDatabase();
+			Database.updateBlueToothDevice(_address, _name, (new Date()).valueOf());
+
 		}
 		
 		public function set lastModifiedTimestamp(lastmodifiedtimestamp:Number):void
@@ -93,26 +95,6 @@ package databaseclasses
 			if (_instance != null) {
 				throw new Error("BlueToothDevice class  constructor can not be used");	
 			}
-			_name = "";
-			_address = "";
-			//see if a bluetooth device already exists in the database
-		}
-		
-		private static function updateDatabase():void {
-			var localdispatcher:EventDispatcher = new EventDispatcher();
-			localdispatcher.addEventListener(DatabaseEvent.ERROR_EVENT, error);
-			localdispatcher.addEventListener(DatabaseEvent.RESULT_EVENT, result);
-			Database.updateBlueToothDevice(address, name, Number.NaN, localdispatcher); 
-			function error(de:DatabaseEvent):void {
-				localdispatcher.removeEventListener(DatabaseEvent.RESULT_EVENT,error);
-				localdispatcher.removeEventListener(DatabaseEvent.ERROR_EVENT,result);
-				trace("bluetoothdevice.as error updating name");
-			}
-			function result(de:DatabaseEvent):void {
-				localdispatcher.removeEventListener(DatabaseEvent.RESULT_EVENT,error);
-				localdispatcher.removeEventListener(DatabaseEvent.ERROR_EVENT,result);
-				trace("bluetoothdevice.as successfully updated name");
-			}
 		}
 		
 		/**
@@ -122,8 +104,12 @@ package databaseclasses
 		public static function forgetBlueToothDevice():void {
 			_address = "";
 			_name = "";
-			updateDatabase();
+			Database.updateBlueToothDevice("", "", (new Date()).valueOf());
 			BluetoothService.forgetBlueToothDevice();
+		}
+		
+		public static function setLastModifiedTimestamp(newtimestamp:Number):void {
+			instance.lastModifiedTimestamp = newtimestamp;
 		}
 		
 		/**
@@ -131,7 +117,7 @@ package databaseclasses
 		 * otherwise false
 		 */
 		public static function isXBridge():Boolean {
-			return _name.toUpperCase().indexOf("BRIDGE") >= 0;
+			return _name.toUpperCase().indexOf("BRIDGE") > -1;
 		}
 	}
 }

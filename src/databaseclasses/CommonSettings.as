@@ -25,31 +25,30 @@
 		 
 		 //LIST OF SETTINGID's
 		 /**
-		 * Unique Id of the currently active sensor<br>
-		 * value "0" means there's no sensor active
-		 *  
+		  * Unique Id of the currently active sensor<br>
+		  * value "0" means there's no sensor active
+		  *  
 		  */
 		 public static const COMMON_SETTING_ID_CURRENT_SENSOR_ID:int = 0; 
 		 /**
-		 * transmitter battery level (ie 215, 214,...)<br>
-		 * 0 means level not known
+		  * transmitter battery level (ie 215, 214,...)<br>
+		  * 0 means level not known
 		  */
 		 public static const COMMON_SETTING_TRANSMITTER_BATTERY_VOLTAGE_ID:int = 1;
 		 /**
-		 * true or false
-		  */
-		 public static const COMMON_SETTING_INITIAL_CALIBRATION_DONE_ID:int = 2;
-		 
-		 /**
-		 * bridge battery level<br>
-		 * 0 means level not known
+		  * bridge battery level<br>
+		  * 0 means level not known
 		  */
 		 public static const COMMON_SETTING_BRIDGE_BATTERY_PERCENTAGE_ID:int = 2;
-
+		 /**
+		  * true or false
+		  */
+		 public static const COMMON_SETTING_INITIAL_CALIBRATION_DONE_ID:int = 3;
+		 
 		 private static var commonSettings:Array = [
 			 "0",//COMMON_SETTING_ID_CURRENT_SENSOR_ID
-			 "0",//COMMON_SETTING_TRANSMITTER_BATTERY_LEVEL_ID
-			 "0",//COMMON_SETTING_BRIDGE_BATTERY_LEVEL_ID
+			 "0",//COMMON_SETTING_TRANSMITTER_BATTERY_VOLTAGE_ID
+			 "0",//COMMON_SETTING_BRIDGE_BATTERY_PERCENTAGE_ID
 			 "false"//COMMON_SETTING_INITIAL_CALIBRATION_DONE_ID
 		 ];
 		 
@@ -64,9 +63,14 @@
 			 return commonSettings[commonSettingId];
 		 }
 		 
-		 public static function setCommonSetting(commonSettingId:int, newValue:String):void {
+		 public static function setCommonSetting(commonSettingId:int, newValue:String, updateDatabase:Boolean = true):void {
 			 commonSettings[commonSettingId] = newValue;
-			//TODO  ook updaten in database en uitlezen ook
+			 if (updateDatabase)
+			 	Database.updateCommonSetting(commonSettingId, newValue);
+		 }
+		 
+		 public static function getNumberOfSettings():int {
+			 return commonSettings.length;
 		 }
 	 }
  }

@@ -277,7 +277,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			<manifest android:installLocation="auto">
 				<uses-permission android:name="android.permission.INTERNET"/>
 				<uses-permission android:name="android.permission.VIBRATE"/>
+				<uses-permission android:name="android.permission.BLUETOOTH"/>
+				<uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>
+				<uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
 				<uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+				<uses-feature android:name="android.hardware.bluetooth_le" android:required="true"/>
 				<application android:enabled="true">
 					<!-- NOTIFICATIONS -->
 					<receiver android:name="com.distriqt.extension.notifications.notifications.receivers.NotificationReceiver">
@@ -322,5 +326,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
     	<extensionID>com.distriqt.BluetoothLE</extensionID>
     	<extensionID>com.distriqt.Notifications</extensionID>
     	<extensionID>com.distriqt.Core</extensionID>
+    <extensionID>com.distriqt.Dialog</extensionID>
+    <extensionID>com.distriqt.AndroidSupport</extensionID>
     </extensions>
 </application>

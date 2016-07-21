@@ -53,6 +53,7 @@ package services
 		private static const IDENTIFIER_STRING_FOR_WAKEUP_CATEGORY:String = "WAKE_UP_CATEGORY";
 		private static const IDENTIFIER_STRING_FOR_ACCEPT_ACTION:String = "ACCEPT";
 		private static const ID_FOR_WAKEUP_CATEGORY:int = 1;
+		private static const debugMode:Boolean = false;
 		/**
 		* time in minutes, after which notification will fire<br>
 		* If application was killed in between setting the notification and the firing of it, it will effectively fire, and so the user can click it which will cause the 
@@ -157,11 +158,11 @@ package services
 			}
 			
 			function notificationHandler(event:NotificationEvent):void {
-				trace("in Notificationservice notificationHandler at " + (new Date()).toLocaleTimeString());
+				if (debugMode) trace("in Notificationservice notificationHandler at " + (new Date()).toLocaleTimeString());
 			}
 			
 			function actionHandler(event:NotificationEvent):void {
-				trace("in Notificationservice. actionHandler at " + (new Date()).toLocaleTimeString());
+				if (debugMode) trace("in Notificationservice. actionHandler at " + (new Date()).toLocaleTimeString());
 			}
 		}
 		
@@ -178,14 +179,14 @@ package services
 			if (delayToSet < 0)
 				delayToSet = 0;
 			
-			trace("setting wakeuptimer with delay of (ms) " + delayToSet);
+			if (debugMode) trace("setting wakeuptimer with delay of (ms) " + delayToSet);
 			wakeUpTimer = new Timer(delayToSet, 1);
 			wakeUpTimer.addEventListener(TimerEvent.TIMER, handleWakeUpTimerEvent);
 			wakeUpTimer.start();
 		}
 		
 		private static function handleWakeUpTimerEvent(event:Event):void {
-			trace("in handleWakeUpTimerEvent at " + (new Date()).toLocaleTimeString()); 
+			if (debugMode) trace("in handleWakeUpTimerEvent at " + (new Date()).toLocaleTimeString()); 
 			
 			//normally (the time now) = timeOfLastWakeUpNotificationBeingSet + DELAY_FOR_WAKEUP_CATEGORY_IN_MINUTES * 60 * 1000 - 5 seconds
 			// so (the time now) + 5 seconds = timeOfLastWakeUpNotificationBeingSet + DELAY_FOR_WAKEUP_CATEGORY_IN_MINUTES * 60 * 1000
@@ -199,8 +200,8 @@ package services
 		}
 		
 		private static function setupWakeUpNotification(fireDate:Date):void {
-			trace("in setupWakeUpNotification at " + (new Date()).toLocaleTimeString());
-		 	trace("setting notification at " + fireDate.toLocaleTimeString());
+			if (debugMode) trace("in setupWakeUpNotification at " + (new Date()).toLocaleTimeString());
+		 	if (debugMode) trace("setting notification at " + fireDate.toLocaleTimeString());
 			Notifications.service.notify(
 				new NotificationBuilder()
 				.setId(ID_FOR_WAKEUP_CATEGORY)
