@@ -74,8 +74,12 @@ package services
 		private static var reconnectTimer:Timer;
 		private static var reconnectTimesInSeconds:Array = [5,5,60,60,60,60,60,300,300,300,300,300,900,900,900,900,1800];
 		private static var currentReconnectTimesPointer:int = 0;
-		
 		private static var checkReScanTimer:Timer;
+		private static var discoverServiceOrCharacteristicTimer:Timer;
+		private static const DISCOVER_SERVICES_OR_CHARACTERISTICS_RETRY_TIME_IN_SECONDS:int = 1;
+		private static const MAX_RETRY_DISCOVER_SERVICES_OR_CHARACTERISTICS:int = 5;
+		private static var amountOfDiscoverServicesOrCharacteristicsAttempt:int = 0;
+		
 		/**
 		 * seconds after which new scan will be started 
 		 */
@@ -94,18 +98,23 @@ package services
 			'Q', 'R', 'S', 'T', 'U', 'W', 'X', 'Y' ];
 		
 		private static var timeStampOfLastDataPacketReceived:Number = 0;
+		private static const uuids_HM_10_Service:Vector.<String> = new <String>[HM10Attributes.HM_10_SERVICE];
+		private static const uuids_HM_RX_TX:Vector.<String> = new <String>[HM10Attributes.HM_RX_TX];
+		private static const debugMode = false;
 		
 		private static function set activeBluetoothPeripheral(value:Peripheral):void
 		{
 			_activeBluetoothPeripheral = value;
 			if (value != null) {
-				_activeBluetoothPeripheral.addEventListener(PeripheralEvent.DISCOVER_SERVICES, peripheral_discoverServicesHandler );
-				_activeBluetoothPeripheral.addEventListener(PeripheralEvent.DISCOVER_CHARACTERISTICS, peripheral_discoverCharacteristicsHandler );
-				_activeBluetoothPeripheral.addEventListener(CharacteristicEvent.UPDATE, peripheral_characteristic_updatedHandler);
-				_activeBluetoothPeripheral.addEventListener(CharacteristicEvent.UPDATE_ERROR, peripheral_characteristic_errorHandler);
-				_activeBluetoothPeripheral.addEventListener(CharacteristicEvent.SUBSCRIBE, peripheral_characteristic_subscribeHandler);
-				_activeBluetoothPeripheral.addEventListener(CharacteristicEvent.SUBSCRIBE_ERROR, peripheral_characteristic_subscribeErrorHandler);
-				_activeBluetoothPeripheral.addEventListener(CharacteristicEvent.UNSUBSCRIBE, peripheral_characteristic_unsubscribeHandler);
+				if (!_activeBluetoothPeripheral.hasEventListener(PeripheralEvent.DISCOVER_SERVICES)) {
+					_activeBluetoothPeripheral.addEventListener(PeripheralEvent.DISCOVER_SERVICES, peripheral_discoverServicesHandler );
+					_activeBluetoothPeripheral.addEventListener(PeripheralEvent.DISCOVER_CHARACTERISTICS, peripheral_discoverCharacteristicsHandler );
+					_activeBluetoothPeripheral.addEventListener(CharacteristicEvent.UPDATE, peripheral_characteristic_updatedHandler);
+					_activeBluetoothPeripheral.addEventListener(CharacteristicEvent.UPDATE_ERROR, peripheral_characteristic_errorHandler);
+					_activeBluetoothPeripheral.addEventListener(CharacteristicEvent.SUBSCRIBE, peripheral_characteristic_subscribeHandler);
+					_activeBluetoothPeripheral.addEventListener(CharacteristicEvent.SUBSCRIBE_ERROR, peripheral_characteristic_subscribeErrorHandler);
+					_activeBluetoothPeripheral.addEventListener(CharacteristicEvent.UNSUBSCRIBE, peripheral_characteristic_unsubscribeHandler);
+				}
 			}
 		}
 		
@@ -144,7 +153,7 @@ package services
 			
 			BluetoothLE.init(ModelLocator.resourceManagerInstance.getString('secrets','distriqt-key'));
 			if (BluetoothLE.isSupported) {
-				trace("passing bluetoothservice.issupported");
+				if (debugMode) trace("passing bluetoothservice.issupported");
 				BluetoothLE.service.centralManager.addEventListener(PeripheralEvent.DISCOVERED, central_peripheralDiscoveredHandler);
 				BluetoothLE.service.centralManager.addEventListener( PeripheralEvent.CONNECT, central_peripheralConnectHandler );
 				BluetoothLE.service.centralManager.addEventListener( PeripheralEvent.CONNECT_FAIL, central_peripheralConnectFailHandler );
@@ -216,7 +225,7 @@ package services
 				buffer.readUnsignedByte();
 				buffer.readUnsignedByte();
 				var txid:Number = buffer.readUnsignedInt();
-				trace("txid = " + decodeTxID(txid));*/
+				if (debugMode) trace("txid = " + decodeTxID(txid));*/
 				
 				/*var DexSrc:int;
 				var firstByte:int = buffer.readUnsignedByte();
@@ -304,9 +313,8 @@ package services
 				BluetoothLE.service.centralManager.stopScan();
 			} else {
 				nrOfAttemptsToConnectToNewDevice = 0;
-				var uuids:Vector.<String> = new <String>[HM10Attributes.HM_10_SERVICE];
 				if (!BluetoothLE.service.centralManager.isScanning) {
-					if (!BluetoothLE.service.centralManager.scanForPeripherals(uuids))
+					if (!BluetoothLE.service.centralManager.scanForPeripherals(uuids_HM_10_Service))
 					{
 						dispatchInformation('failed_to_start_scanning_for_peripherals');
 						return;
@@ -324,7 +332,7 @@ package services
 		}
 		
 		private static function central_peripheralDiscoveredHandler(event:PeripheralEvent):void {
-			trace("passing in central_peripheralDiscoveredHandler for " + testcounter++ + "-th time");
+			if (debugMode) trace("passing in central_peripheralDiscoveredHandler for " + testcounter++ + "-th time");
 			
 			// event.peripheral will contain a Peripheral object with information about the Peripheral
 			if ((event.peripheral.name as String).toUpperCase().indexOf("DRIP") > -1 || (event.peripheral.name as String).toUpperCase().indexOf("BRIDGE") > -1) {
@@ -366,8 +374,31 @@ package services
 				dispatchInformation('connected_to_peripheral');
 			}			
 			activeBluetoothPeripheral = event.peripheral;
-			var uuids:Vector.<String> = new <String>[HM10Attributes.HM_10_SERVICE];
-			activeBluetoothPeripheral.discoverServices(uuids);
+			discoverServices();
+		}
+		
+		private static function discoverServices(event:Event = null):void {
+			if (discoverServiceOrCharacteristicTimer != null) {
+				if (discoverServiceOrCharacteristicTimer.hasEventListener(TimerEvent.TIMER)) 
+					discoverServiceOrCharacteristicTimer.removeEventListener(TimerEvent.TIMER,discoverServices);
+				discoverServiceOrCharacteristicTimer.stop();
+				discoverServiceOrCharacteristicTimer = null;
+			}
+			
+			if (amountOfDiscoverServicesOrCharacteristicsAttempt < MAX_RETRY_DISCOVER_SERVICES_OR_CHARACTERISTICS) {
+				amountOfDiscoverServicesOrCharacteristicsAttempt++;
+				blueToothServiceEvent = new BlueToothServiceEvent(BlueToothServiceEvent.BLUETOOTH_SERVICE_INFORMATION_EVENT);
+				blueToothServiceEvent.data = new Object();
+				blueToothServiceEvent.data.information = ModelLocator.resourceManagerInstance.getString('bluetoothservice','launching_discoverservices_attempt_amount') + " " + amountOfDiscoverServicesOrCharacteristicsAttempt;
+				_instance.dispatchEvent(blueToothServiceEvent);
+
+				activeBluetoothPeripheral.discoverServices(uuids_HM_10_Service);
+				discoverServiceOrCharacteristicTimer = new Timer(DISCOVER_SERVICES_OR_CHARACTERISTICS_RETRY_TIME_IN_SECONDS * 1000, 1);
+				discoverServiceOrCharacteristicTimer.addEventListener(TimerEvent.TIMER, discoverServices);
+				discoverServiceOrCharacteristicTimer.start();
+			} else {
+				dispatchInformation("max_amount_of_discover_services_attempt_reached");
+			}
 		}
 		
 		private static function central_peripheralConnectFailHandler(event:PeripheralEvent):void {
@@ -402,22 +433,93 @@ package services
 		}
 		
 		private static function peripheral_discoverServicesHandler(event:PeripheralEvent):void {
+			if (discoverServiceOrCharacteristicTimer != null) {
+				if (discoverServiceOrCharacteristicTimer.hasEventListener(TimerEvent.TIMER)) 
+					discoverServiceOrCharacteristicTimer.removeEventListener(TimerEvent.TIMER,discoverServices);
+				discoverServiceOrCharacteristicTimer.stop();
+				discoverServiceOrCharacteristicTimer = null;
+			}
+			dispatchInformation("services_discovered");
+			amountOfDiscoverServicesOrCharacteristicsAttempt = 0;
+			
 			if (event.peripheral.services.length > 0)
 			{
 				activeBluetoothPeripheral = event.peripheral;
-				var uuids:Vector.<String> = new <String>[HM10Attributes.HM_RX_TX];
-				activeBluetoothPeripheral.discoverCharacteristics(activeBluetoothPeripheral.services[0]/*, uuids*/);
+				discoverCharacteristics();
+			}
+		}
+		
+		private static function discoverCharacteristics(event:Event = null):void {
+			if (discoverServiceOrCharacteristicTimer != null) {
+				if (discoverServiceOrCharacteristicTimer.hasEventListener(TimerEvent.TIMER)) 
+					discoverServiceOrCharacteristicTimer.removeEventListener(TimerEvent.TIMER,discoverCharacteristics);
+				discoverServiceOrCharacteristicTimer.stop();
+				discoverServiceOrCharacteristicTimer = null;
+			}
+			
+			if (amountOfDiscoverServicesOrCharacteristicsAttempt < MAX_RETRY_DISCOVER_SERVICES_OR_CHARACTERISTICS) {
+				amountOfDiscoverServicesOrCharacteristicsAttempt++;
+				blueToothServiceEvent = new BlueToothServiceEvent(BlueToothServiceEvent.BLUETOOTH_SERVICE_INFORMATION_EVENT);
+				blueToothServiceEvent.data = new Object();
+				blueToothServiceEvent.data.information = ModelLocator.resourceManagerInstance.getString('bluetoothservice','launching_discovercharacteristics_attempt_amount') + " " + amountOfDiscoverServicesOrCharacteristicsAttempt;
+				_instance.dispatchEvent(blueToothServiceEvent);
+				
+				//find the index of the service that has uuid = the one used by xdrip/xbridge
+				var index:int;
+				for each (var o:Object in activeBluetoothPeripheral.services) {
+					if (o.uuid == HM10Attributes.HM_10_SERVICE) {
+						break;
+					}
+					index++;
+				}
+				activeBluetoothPeripheral.discoverCharacteristics(activeBluetoothPeripheral.services[index], uuids_HM_RX_TX);
+				discoverServiceOrCharacteristicTimer = new Timer(DISCOVER_SERVICES_OR_CHARACTERISTICS_RETRY_TIME_IN_SECONDS * 1000, 1);
+				discoverServiceOrCharacteristicTimer.addEventListener(TimerEvent.TIMER, discoverCharacteristics);
+				discoverServiceOrCharacteristicTimer.start();
+			} else {
+				dispatchInformation("max_amount_of_discover_characteristics_attempt_reached");
 			}
 		}
 		
 		private static function peripheral_discoverCharacteristicsHandler(event:PeripheralEvent):void {
-			characteristic = event.peripheral.services[0].characteristics[0];
+			if (discoverServiceOrCharacteristicTimer != null) {
+				if (discoverServiceOrCharacteristicTimer.hasEventListener(TimerEvent.TIMER)) 
+					discoverServiceOrCharacteristicTimer.removeEventListener(TimerEvent.TIMER,discoverCharacteristics);
+				discoverServiceOrCharacteristicTimer.stop();
+				discoverServiceOrCharacteristicTimer = null;
+			}
+			dispatchInformation("characteristics_discovered");
+			amountOfDiscoverServicesOrCharacteristicsAttempt = 0;
+
+			activeBluetoothPeripheral = event.peripheral;
+			
+			//find the index of the service that has uuid = the one used by xdrip/xbridge
+			var servicesIndex:int;
+			for each (var o:Object in activeBluetoothPeripheral.services) {
+				if (o.uuid == HM10Attributes.HM_10_SERVICE) {
+					break;
+				}
+				servicesIndex++;
+			}
+
+			var characteristicsIndex:int;
+			for each (var o:Object in activeBluetoothPeripheral.services[servicesIndex].characteristics) {
+				if (o.uuid == HM10Attributes.HM_RX_TX) {
+					break;
+				}
+				characteristicsIndex++;
+			}
+			
+			characteristic = event.peripheral.services[servicesIndex].characteristics[characteristicsIndex];
 			if (!activeBluetoothPeripheral.subscribeToCharacteristic(characteristic))
 			{
-				// TODO error starting subscription process
+				//if (debugMode) trace("bluetoothservice.as error in subscribetocharacteristic ");
+				dispatchInformation("subscribe_to_characteristics_failed");
+			} else {
+				dispatchInformation("successfully_subscribed_to_characteristics");
+				//if (debugMode) trace("bluetoothservice.as successfully subscribed to characteristic");
 			}
 		}
-		
 		
 		/**
 		 * simply acknowledges receipt of a message, needed for xbridge so that it goes to sleep 
@@ -429,12 +531,11 @@ package services
 			activeBluetoothPeripheral.addEventListener(CharacteristicEvent.WRITE_SUCCESS, peripheral_characteristic_writeHandler);
 			activeBluetoothPeripheral.addEventListener(CharacteristicEvent.WRITE_ERROR, peripheral_characteristic_writeErrorHandler);
 			activeBluetoothPeripheral.writeValueForCharacteristic(characteristic, value);
-			
 		}
 		
 		private static function peripheral_characteristic_updatedHandler(event:CharacteristicEvent):void {
 			for (var i:int = 0;i < event.characteristic.value.length;i++) {
-				trace("bytearray element " + i + " = " + (new Number(event.characteristic.value[i])).toString(16));
+				if (debugMode) trace("bluetoothservice.as bytearray element " + i + " = " + (new Number(event.characteristic.value[i])).toString(16));
 			}
 			
 			//now start reading the values
@@ -453,30 +554,33 @@ package services
 		private static function peripheral_characteristic_writeHandler(event:CharacteristicEvent):void {
 			activeBluetoothPeripheral.removeEventListener(CharacteristicEvent.WRITE_SUCCESS, peripheral_characteristic_writeHandler);
 			activeBluetoothPeripheral.removeEventListener(CharacteristicEvent.WRITE_ERROR, peripheral_characteristic_writeErrorHandler);
-			trace("	BluetoothService.as : peripheral_characteristic_writeHandler");
+			if (debugMode) trace("	BluetoothService.as : peripheral_characteristic_writeHandler");
 		}
 		
 		private static function peripheral_characteristic_writeErrorHandler(event:CharacteristicEvent):void {
 			activeBluetoothPeripheral.removeEventListener(CharacteristicEvent.WRITE_SUCCESS, peripheral_characteristic_writeHandler);
 			activeBluetoothPeripheral.removeEventListener(CharacteristicEvent.WRITE_ERROR, peripheral_characteristic_writeErrorHandler);
-			trace("	BluetoothService.as : peripheral_characteristic_writeErrorHandler");
+			if (debugMode) trace("	BluetoothService.as : peripheral_characteristic_writeErrorHandler");
 			dispatchInformation("failed_to_write_value_for_characteristic_to_device");
 		}
 		
 		private static function peripheral_characteristic_errorHandler(event:CharacteristicEvent):void {
-			trace("BluetoothService.as : peripheral_characteristic_errorHandler" );
+			if (debugMode) trace("BluetoothService.as : peripheral_characteristic_errorHandler" );
+			dispatchInformation("characteristic_update_error_received");
 		}
 		
 		private static function peripheral_characteristic_subscribeHandler(event:CharacteristicEvent):void {
-			trace("BluetoothService.as : peripheral_characteristic_subscribeHandler: " + event.characteristic.uuid);
+			if (debugMode) trace("BluetoothService.as : peripheral_characteristic_subscribeHandler: " + event.characteristic.uuid);
+			dispatchInformation("characteristic_subscribe_error");
 		}
 		
 		private static function peripheral_characteristic_subscribeErrorHandler(event:CharacteristicEvent):void {
-			trace("BluetoothService.as : peripheral_characteristic_subscribeErrorHandler: " + event.characteristic.uuid);
+			if (debugMode) trace("BluetoothService.as : peripheral_characteristic_subscribeErrorHandler: " + event.characteristic.uuid);
+			dispatchInformation("characteristic_subscribe_error");
 		}
 		
 		private static function peripheral_characteristic_unsubscribeHandler(event:CharacteristicEvent):void {
-			trace("BluetoothService.as : peripheral_characteristic_unsubscribeHandler: " + event.characteristic.uuid);	
+			if (debugMode) trace("BluetoothService.as : peripheral_characteristic_unsubscribeHandler: " + event.characteristic.uuid);	
 		}
 		
 		private static function dispatchInformation(informationResourceName:String):void {
@@ -521,7 +625,7 @@ package services
 				if (currentReconnectTimesPointer == reconnectTimesInSeconds.length)
 					currentReconnectTimesPointer--;
 			}
-			trace("seconds for reattempt set to = " + seconds);
+			if (debugMode) trace("seconds for reattempt set to = " + seconds);
 			
 			blueToothServiceEvent = new BlueToothServiceEvent(BlueToothServiceEvent.BLUETOOTH_SERVICE_INFORMATION_EVENT);
 			blueToothServiceEvent.data = new Object();

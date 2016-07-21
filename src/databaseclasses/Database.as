@@ -621,7 +621,8 @@ package databaseclasses
 				conn.close();
 			} catch (error:SQLError) {
 				dispatchInformation('error_while_updating_bluetooth_device', error.details);
-				conn.rollback();conn.close();
+				conn.rollback();
+				conn.close();
 			}
 		}
 		
@@ -772,7 +773,8 @@ package databaseclasses
 				conn.close();
 			} catch (error:SQLError) {
 				dispatchInformation('error_while_inserting_calibration_request_in_db', error.details);
-				conn.rollback();conn.close();
+				conn.rollback();
+				conn.close();
 			}
 		}
 		
@@ -793,7 +795,8 @@ package databaseclasses
 				conn.close();
 			} catch (error:SQLError) {
 				dispatchInformation('error_while_deleting_calibration_request_in_db', error.details);
-				conn.rollback();conn.close();
+				conn.rollback();
+				conn.close();
 			}
 		}
 		
@@ -818,7 +821,8 @@ package databaseclasses
 				conn.close();
 			} catch (error:SQLError) {
 				dispatchInformation('error_while_updating_calibration_request_in_db', error.details);
-				conn.rollback();conn.close();
+				conn.rollback();
+				conn.close();
 			}
 		}
 		
@@ -840,7 +844,8 @@ package databaseclasses
 				conn.close();
 			} catch (error:SQLError) {
 				dispatchInformation('error_while_deleting_all_calibration_in_db', error.details);
-				conn.rollback();conn.close();
+				conn.rollback();
+				conn.close();
 			}
 		}
 		
@@ -861,7 +866,8 @@ package databaseclasses
 				conn.close();
 			} catch (error:SQLError) {
 				dispatchInformation('error_while_deleting_all_calibrationrequests_in_db', error.details);
-				conn.rollback();conn.close();
+				conn.rollback();
+				conn.close();
 			}
 		}
 		
@@ -1182,7 +1188,8 @@ package databaseclasses
 				conn.close();
 			} catch (error:SQLError) {
 				dispatchInformation('error_while_inserting_calibration_in_db', error.details);
-				conn.rollback();conn.close();
+				conn.rollback();
+				conn.close();
 			}
 		}
 		
@@ -1203,7 +1210,8 @@ package databaseclasses
 				conn.close();
 			} catch (error:SQLError) {
 				dispatchInformation('error_while_deleting_calibration_in_db', error.details);
-				conn.rollback();conn.close();
+				conn.rollback();
+				conn.close();
 			}
 		}
 		
@@ -1250,7 +1258,8 @@ package databaseclasses
 				conn.close();
 			} catch (error:SQLError) {
 				dispatchInformation('error_while_updating_calibration_in_db', error.details);
-				conn.rollback();conn.close();
+				conn.rollback();
+				conn.close();
 			}
 		}
 		
@@ -1402,7 +1411,8 @@ package databaseclasses
 				conn.close();
 			} catch (error:SQLError) {
 				dispatchInformation('error_while_inserting_sensor_in_db', error.details);
-				conn.rollback();conn.close();
+				conn.rollback();
+				conn.close();
 			}
 		}
 		
@@ -1423,7 +1433,8 @@ package databaseclasses
 				conn.close();
 			} catch (error:SQLError) {
 				dispatchInformation('error_while_deleting_sensor_in_db', error.details);
-				conn.rollback();conn.close();
+				conn.rollback();
+				conn.close();
 			}
 		}
 		
@@ -1449,7 +1460,8 @@ package databaseclasses
 				conn.close();
 			} catch (error:SQLError) {
 				dispatchInformation('error_while_updating_sensor_in_db', error.details);
-				conn.rollback();conn.close();
+				conn.rollback();
+				conn.close();
 			}
 		}
 		
@@ -1550,7 +1562,8 @@ package databaseclasses
 				conn.close();
 			} catch (error:SQLError) {
 				dispatchInformation('error_while_inserting_bgreading_in_db', error.details);
-				conn.rollback();conn.close();
+				conn.rollback();
+				conn.close();
 			}
 		}
 		
@@ -1571,7 +1584,8 @@ package databaseclasses
 				conn.close();
 			} catch (error:SQLError) {
 				dispatchInformation('error_while_deleting_bgreading_in_db', error.details);
-				conn.rollback();conn.close();
+				conn.rollback();
+				conn.close();
 			}
 		}
 		
@@ -1614,7 +1628,8 @@ package databaseclasses
 				conn.close();
 			} catch (error:SQLError) {
 				dispatchInformation('error_while_updating_bgreading_in_db', error.details);
-				conn.rollback();conn.close();
+				conn.rollback();
+				conn.close();
 			}
 		}
 		
@@ -1788,7 +1803,8 @@ package databaseclasses
 				conn.close();
 			} catch (error:SQLError) {
 				dispatchInformation('error_while_updating_common_setting', error.details);
-				conn.rollback();conn.close();
+				conn.rollback();
+				conn.close();
 			}
 		}
 		
@@ -1809,7 +1825,8 @@ package databaseclasses
 				conn.close();
 			} catch (error:SQLError) {
 				dispatchInformation('error_while_inserting_common_setting', error.details);
-				conn.rollback();conn.close();
+				conn.rollback();
+				conn.close();
 			}
 		}
 		
@@ -1830,7 +1847,8 @@ package databaseclasses
 				conn.close();
 			} catch (error:SQLError) {
 				dispatchInformation('error_while_updating_local_setting', error.details);
-				conn.rollback();conn.close();
+				conn.rollback();
+				conn.close();
 			}
 		}
 		
@@ -1851,7 +1869,8 @@ package databaseclasses
 				conn.close();
 			} catch (error:SQLError) {
 				dispatchInformation('error_while_inserting_local_setting', error.details);
-				conn.rollback();conn.close();
+				conn.rollback();
+				conn.close();
 			}
 		}
 		
