@@ -55,7 +55,7 @@ package databaseclasses
 			if (_name == null)
 				_name = "";
 
-			Database.updateBlueToothDevice(_address, _name, (new Date()).valueOf());
+			Database.updateBlueToothDeviceSynchronous(_address, _name, (new Date()).valueOf());
 		}
 		
 		private static var _address:String;
@@ -80,7 +80,7 @@ package databaseclasses
 			_address = value;
 			if (_address == null)
 				_address = "";
-			Database.updateBlueToothDevice(_address, _name, (new Date()).valueOf());
+			Database.updateBlueToothDeviceSynchronous(_address, _name, (new Date()).valueOf());
 
 		}
 		
@@ -104,7 +104,7 @@ package databaseclasses
 		public static function forgetBlueToothDevice():void {
 			_address = "";
 			_name = "";
-			Database.updateBlueToothDevice("", "", (new Date()).valueOf());
+			Database.updateBlueToothDeviceSynchronous("", "", (new Date()).valueOf());
 			BluetoothService.forgetBlueToothDevice();
 		}
 		

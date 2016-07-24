@@ -764,15 +764,6 @@ package databaseclasses
 		 * asynchronous meaning return means update in database not guaranteed finished<br>
 		 * returns this 
 		 */
-		public function updateInDatabaseAsynchronous():void {
-			Database.updateBgReadingAsynchronous(this);
-		}
-		
-		/**
-		 * for existing bgreadings only<br>
-		 * asynchronous meaning return means update in database not guaranteed finished<br>
-		 * returns this 
-		 */
 		public function deleteInDatabase():void {
 			Database.deleteBgReadingSynchronous(this);
 		}

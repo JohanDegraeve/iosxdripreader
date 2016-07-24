@@ -237,6 +237,8 @@ package databaseclasses
 		{
 			return _secondScale;
 		}
+		
+		
 	
 		/**
 		 * if calibrationid = null, then a new value will be assigned by the constructor<br>
@@ -446,8 +448,8 @@ package databaseclasses
 			lowBgReading.findNewCurve();
 			lowBgReading.findNewCurve();
 
-			highBgReading.updateInDatabaseAsynchronous();
-			lowBgReading.updateInDatabaseAsynchronous();
+			highBgReading.updateInDatabaseSynchronous();
+			lowBgReading.updateInDatabaseSynchronous();
 
 			calculateWLS();
 			adjustRecentBgReadings(5);
@@ -500,7 +502,7 @@ package databaseclasses
 						);
 					bgReading.calibration = calibration;
 					bgReading.calibrationFlag = true;
-					bgReading.updateInDatabaseAsynchronous();
+					bgReading.updateInDatabaseSynchronous();
 					calculateWLS();
 					adjustRecentBgReadings(1);//TODO to align with android version, make it configurable to adjust up to 30 days
 					Calibration.requestCalibrationIfRangeTooNarrow();
@@ -659,7 +661,7 @@ package databaseclasses
 					var oldYValue:Number = bgReading.calculatedValue;
 					var newYvalue:Number = (bgReading.ageAdjustedRawValue * latestCalibration.slope) + latestCalibration.intercept;
 					bgReading.calculatedValue = ((newYvalue * (denom - i)) + (oldYValue * ( i ))) / denom;
-					bgReading.updateInDatabaseAsynchronous();
+					bgReading.updateInDatabaseSynchronous();
 					i += 1;
 				}
 			} else if (calibrations.length == 2) {
@@ -668,13 +670,13 @@ package databaseclasses
 					var newYvalue:Number = (bgReading.ageAdjustedRawValue * latestCalibration.slope) + latestCalibration.intercept;
 					bgReading.calculatedValue = newYvalue;
 					BgReading.updateCalculatedValue(bgReading);
-					bgReading.updateInDatabaseAsynchronous();
+					bgReading.updateInDatabaseSynchronous();
 				}
 			}
 			(bgReadings.getItemAt(0) as BgReading).findNewRawCurve();
 			(bgReadings.getItemAt(0) as BgReading).findNewCurve();
-			(bgReadings.getItemAt(0) as BgReading).updateInDatabaseAsynchronous();
-			(bgReadings.getItemAt(0) as BgReading).updateInDatabaseAsynchronous();		
+			(bgReadings.getItemAt(0) as BgReading).updateInDatabaseSynchronous();
+			(bgReadings.getItemAt(0) as BgReading).updateInDatabaseSynchronous();		
 		}
 		
 		public static function requestCalibrationIfRangeTooNarrow():void {

@@ -513,11 +513,7 @@ package services
 			characteristic = event.peripheral.services[servicesIndex].characteristics[characteristicsIndex];
 			if (!activeBluetoothPeripheral.subscribeToCharacteristic(characteristic))
 			{
-				//if (debugMode) trace("bluetoothservice.as error in subscribetocharacteristic ");
-				dispatchInformation("subscribe_to_characteristics_failed");
-			} else {
-				dispatchInformation("successfully_subscribed_to_characteristics");
-				//if (debugMode) trace("bluetoothservice.as successfully subscribed to characteristic");
+				dispatchInformation("subscribe_to_characteristic_failed_due_to_invalid_state");
 			}
 		}
 		
@@ -530,7 +526,9 @@ package services
 			value.writeByte(0xF0);
 			activeBluetoothPeripheral.addEventListener(CharacteristicEvent.WRITE_SUCCESS, peripheral_characteristic_writeHandler);
 			activeBluetoothPeripheral.addEventListener(CharacteristicEvent.WRITE_ERROR, peripheral_characteristic_writeErrorHandler);
-			activeBluetoothPeripheral.writeValueForCharacteristic(characteristic, value);
+			if (!activeBluetoothPeripheral.writeValueForCharacteristic(characteristic, value)) {
+				dispatchInformation("write_value_for_characteristic_failed_due_to_invalid_state");
+			}
 		}
 		
 		private static function peripheral_characteristic_updatedHandler(event:CharacteristicEvent):void {
@@ -571,12 +569,12 @@ package services
 		
 		private static function peripheral_characteristic_subscribeHandler(event:CharacteristicEvent):void {
 			if (debugMode) trace("BluetoothService.as : peripheral_characteristic_subscribeHandler: " + event.characteristic.uuid);
-			dispatchInformation("characteristic_subscribe_error");
+			dispatchInformation("successfully_subscribed_to_characteristics");
 		}
 		
 		private static function peripheral_characteristic_subscribeErrorHandler(event:CharacteristicEvent):void {
 			if (debugMode) trace("BluetoothService.as : peripheral_characteristic_subscribeErrorHandler: " + event.characteristic.uuid);
-			dispatchInformation("characteristic_subscribe_error");
+			dispatchInformation("subscribe_to_characteristics_failed");
 		}
 		
 		private static function peripheral_characteristic_unsubscribeHandler(event:CharacteristicEvent):void {

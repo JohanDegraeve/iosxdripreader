@@ -64,10 +64,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 					BluetoothService.instance.addEventListener(BlueToothServiceEvent.BLUETOOTH_STATUS_CHANGED_EVENT,blueToothStatusChanged);
 					BluetoothService.instance.addEventListener(BlueToothServiceEvent.BLUETOOTH_SERVICE_INFORMATION_EVENT,blueToothServiceInformationReceived);
 					TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, transmitterServiceBGReadingEventReceived);
-					
-					TransmitterService.init();
-					BluetoothService.init();
-					NotificationService.init();
 				}
 				
 				function onInitError(event:Event):void
@@ -87,7 +83,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			}
 			
 			private function transmitterServiceBGReadingEventReceived(be:TransmitterServiceEvent):void {
-				trace((new Date()).toTimeString() + " : HomeView : received bgreading = ");
+				trace((new Date()).toTimeString() + " : HomeView : received bgreading.");
 			}
 
 			private function databaseInformationEventReceived(be:DatabaseEvent):void {

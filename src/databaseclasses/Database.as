@@ -45,7 +45,7 @@ package databaseclasses
 			return _instance;
 		}
 		
-		public static var aConn:SQLConnection;		
+		private static var aConn:SQLConnection;
 		private static var sqlStatement:SQLStatement;
 		private static var sampleDatabaseFileName:String = "xdripreader-sample.db";;
 		private static const dbFileName:String = "xdripreader.db";
@@ -243,7 +243,7 @@ package databaseclasses
 				if (debugMode) trace("Database.as : Failed to create calibration request table. Database:0024");
 				sqlStatement.removeEventListener(SQLEvent.RESULT,tableCreated);
 				sqlStatement.removeEventListener(SQLErrorEvent.ERROR,tableCreationError);
-				dispatchInformation('failed_to_create_calibration_request_table', see != null ? see.error.details:null);
+				dispatchInformation('failed_to_create_calibration_request_table', see != null ? see.error.message:null);
 			}
 		}
 		
@@ -264,7 +264,7 @@ package databaseclasses
 				if (debugMode) trace("Database.as : Failed to create sensor table. Database:0028");
 				sqlStatement.removeEventListener(SQLEvent.RESULT,tableCreated);
 				sqlStatement.removeEventListener(SQLErrorEvent.ERROR,tableCreationError);
-				dispatchInformation('failed_to_create_sensor_table', see != null ? see.error.details:null);
+				dispatchInformation('failed_to_create_sensor_table', see != null ? see.error.message:null);
 			}
 		}
 		
@@ -285,7 +285,7 @@ package databaseclasses
 				if (debugMode) trace("Database.as : Failed to create calibration table. Database:0026");
 				sqlStatement.removeEventListener(SQLEvent.RESULT,tableCreated);
 				sqlStatement.removeEventListener(SQLErrorEvent.ERROR,tableCreationError);
-				dispatchInformation('failed_to_create_calibration_table', see != null ? see.error.details:null);
+				dispatchInformation('failed_to_create_calibration_table', see != null ? see.error.message:null);
 			}
 		}
 		
@@ -306,7 +306,7 @@ package databaseclasses
 				if (debugMode) trace("Database.as : Failed to create bgreading table. Database:0030");
 				sqlStatement.removeEventListener(SQLEvent.RESULT,tableCreated);
 				sqlStatement.removeEventListener(SQLErrorEvent.ERROR,tableCreationError);
-				dispatchInformation('failed_to_create_bgreading_table', see != null ? see.error.details:null);
+				dispatchInformation('failed_to_create_bgreading_table', see != null ? see.error.message:null);
 			}
 		}
 		
@@ -326,7 +326,7 @@ package databaseclasses
 			function tableCreationError(see:SQLErrorEvent):void {
 				sqlStatement.removeEventListener(SQLEvent.RESULT,tableCreated);
 				sqlStatement.removeEventListener(SQLErrorEvent.ERROR,tableCreationError);
-				dispatchInformation('failed_to_create_commonsettings_table', see != null ? see.error.details:null);
+				dispatchInformation('failed_to_create_commonsettings_table', see != null ? see.error.message:null);
 			}
 		}
 		
@@ -346,7 +346,7 @@ package databaseclasses
 			function tableCreationError(see:SQLErrorEvent):void {
 				sqlStatement.removeEventListener(SQLEvent.RESULT,tableCreated);
 				sqlStatement.removeEventListener(SQLErrorEvent.ERROR,tableCreationError);
-				dispatchInformation('failed_to_create_localsettings_table', see != null ? see.error.details:null);
+				dispatchInformation('failed_to_create_localsettings_table', see != null ? see.error.message:null);
 			}
 		}
 		
@@ -366,7 +366,7 @@ package databaseclasses
 					result = new Array(0);
 				if (result is Array) { //TODO what if it's not an array ?
 					for each (var o:Object in result) {
-							CommonSettings.setCommonSetting((o.id as int),(o.value as String), false);
+							CommonSettings.setCommonSetting((o.id as int),(o.value as String) == "-" ? "":(o.value as String), false);
 					}
 				} 
 				addMissingCommonSetting(result.length);
@@ -376,14 +376,14 @@ package databaseclasses
 				sqlStatement.removeEventListener(SQLEvent.RESULT, allCommonSettingsRetrieved);
 				sqlStatement.removeEventListener(SQLErrorEvent.ERROR, allCommonSettingsRetrievalFailed);
 				if (debugMode) trace("Failure in get all common settings - Database 0035");
-				dispatchInformation('error_while_retrieving_common_settings_in_db', see.error.details);
+				dispatchInformation('error_while_retrieving_common_settings_in_db', see.error.message);
 			}
 			
 			function allLocalSettingsRetrievalFailed(see:SQLErrorEvent):void {
 				sqlStatement.removeEventListener(SQLEvent.RESULT, allLocalSettingsRetrieved);
 				sqlStatement.removeEventListener(SQLErrorEvent.ERROR, allLocalSettingsRetrievalFailed);
 				if (debugMode) trace("Failure in get all local settings - Database 0036");
-				dispatchInformation('error_while_retrieving_local_settings_in_db', see.error.details);
+				dispatchInformation('error_while_retrieving_local_settings_in_db', see.error.message);
 			}
 			
 			function addMissingCommonSetting(settingId:int):void {
@@ -407,7 +407,7 @@ package databaseclasses
 					result = new Array(0);
 				if (result is Array) { //TODO what if it's not an array ?
 					for each (var o:Object in result) {
-						LocalSettings.setLocalSetting((o.id as int),(o.value as String), false);
+						LocalSettings.setLocalSetting((o.id as int),(o.value as String) == "-" ? "":(o.value as String), false);
 					}
 				} 
 				addMissingLocalSetting(result.length);
@@ -440,7 +440,7 @@ package databaseclasses
 				if (debugMode) trace("Database.as : Failed to create BlueToothDevice table. Database:0005");
 				sqlStatement.removeEventListener(SQLEvent.RESULT,tableCreated);
 				sqlStatement.removeEventListener(SQLErrorEvent.ERROR,tableCreationError);
-				dispatchInformation("failed_to_create_bluetoothdevice_table", see.error.details);
+				dispatchInformation("failed_to_create_bluetoothdevice_table", see.error.message);
 			}
 		}
 		
@@ -472,12 +472,13 @@ package databaseclasses
 				if (debugMode) trace("Database.as : Failed to select BlueToothDevices. Database:0009");
 				sqlStatement.removeEventListener(SQLEvent.RESULT,blueToothDevicesSelected);
 				sqlStatement.removeEventListener(SQLErrorEvent.ERROR,blueToothDevicesSelectionFailed);
-				dispatchInformation("failed_to_select_bluetoothdevice", se.error.details);
+				dispatchInformation("failed_to_select_bluetoothdevice", se.error.message);
 			}
 		}
 		
 		/**
-		 * will add one row, with name and address "", and default id 
+		 * will add one row, with name and address "", and default id<br>
+		 * asynchronous
 		 */
 		private static function insertBlueToothDevice():void {
 			sqlStatement.clearParameters();
@@ -500,7 +501,7 @@ package databaseclasses
 				sqlStatement.removeEventListener(SQLEvent.RESULT,defaultBlueToothDeviceInserted);
 				sqlStatement.removeEventListener(SQLErrorEvent.ERROR,defaultBlueToothDeviceInsetionFailed);
 				if (debugMode) trace("Database.as : insertBlueToothDevice failed. Database 0014");
-				dispatchInformation("failed_to_insert_bluetoothdevice", see.error.details);
+				dispatchInformation("failed_to_insert_bluetoothdevice", see.error.message);
 			}
 		}
 		
@@ -521,10 +522,13 @@ package databaseclasses
 				if (debugMode) trace("Database.as : Failed to create Logging table. Database:0017");
 				sqlStatement.removeEventListener(SQLEvent.RESULT,tableCreated);
 				sqlStatement.removeEventListener(SQLErrorEvent.ERROR,tableCreationError);
-				dispatchInformation("failed_to_create_logging_table", see.error.details);
+				dispatchInformation("failed_to_create_logging_table", see.error.message);
 			}
 		}
 		
+		/**
+		 * asynchronous 
+		 */
 		private static function deleteOldLogFiles():void {
 			sqlStatement.clearParameters();
 			sqlStatement.text = DELETE_OLD_LOGS;
@@ -544,11 +548,12 @@ package databaseclasses
 				if (debugMode) trace("Database.as : Failed to delete old logfiles. Database:0021");
 				sqlStatement.removeEventListener(SQLEvent.RESULT,oldLogFilesDeleted);
 				sqlStatement.removeEventListener(SQLErrorEvent.ERROR,oldLogFileDeletionFailed);
-				dispatchInformation("failed_to_delete_old_logfiles", see.error.details);
+				dispatchInformation("failed_to_delete_old_logfiles", see.error.message);
 			}
 		}
 		
 		private static function finishedCreatingTables():void {
+			
 			var event:DatabaseEvent = new DatabaseEvent(DatabaseEvent.DATABASE_INIT_FINISHED_EVENT);
 			instance.dispatchEvent(event);
 		}
@@ -570,7 +575,7 @@ package databaseclasses
 		}
 		
 		/**
-		 * synchronous, no returnvalue, will simply overwritte the bluetoothdevice attributes (which is a single instance)<br>
+		 * synchronous, no returnvalue, will simply overwrite the bluetoothdevice attributes (which is a single instance)<br>
 		 */
 		public static function getBlueToothDevice():void {
 			var returnValue:BlueToothDevice;
@@ -593,9 +598,11 @@ package databaseclasses
 					dispatchInformation('error_while_getting_bluetooth_device_in_db', 'resulting amount of bluetoothdevices should be 1 but is ' + numResults);
 				}
 			} catch (error:SQLError) {
-				dispatchInformation('error_while_getting_bluetooth_device_in_db', error.details);
+				dispatchInformation('error_while_getting_bluetooth_device_in_db', error.message + " - " + error.details);
+				if (conn.connected) conn.close();
 			} catch (other:Error) {
 				dispatchInformation('error_while_getting_bluetooth_device_in_db', other.getStackTrace().toString());
+				if (conn.connected) conn.close();
 			}
 		}
 		
@@ -603,7 +610,7 @@ package databaseclasses
 		 * to update the one and only bluetoothdevice<br>
 		 * synchronous
 		 */
-		public static function updateBlueToothDevice(address:String, name:String, lastModifiedTimeStamp:Number):void {
+		public static function updateBlueToothDeviceSynchronous(address:String, name:String, lastModifiedTimeStamp:Number):void {
 			if (address == null) address = "";
 			if (name == null) name = "";
 			try  {
@@ -620,66 +627,34 @@ package databaseclasses
 				conn.commit();
 				conn.close();
 			} catch (error:SQLError) {
-				dispatchInformation('error_while_updating_bluetooth_device', error.details);
-				conn.rollback();
-				conn.close();
+				dispatchInformation('error_while_updating_bluetooth_device', error.message);
+				if (conn.connected) {
+					conn.rollback();
+					conn.close();
+				}
 			}
 		}
 		
 		public static function insertLogging(logging_id:String, log:String, logTimeStamp:Number, lastModifiedTimeStamp:Number, dispatcher:EventDispatcher):void {
-			var localSqlStatement:SQLStatement = new SQLStatement()
-			var localdispatcher:EventDispatcher = new EventDispatcher();
-			
-			localdispatcher.addEventListener(SQLEvent.RESULT,onOpenResult);
-			localdispatcher.addEventListener(SQLErrorEvent.ERROR,onOpenError);
-			if (openSQLConnection(localdispatcher))
-				onOpenResult(null);
-			
-			function onOpenResult(se:SQLEvent):void {
-				localdispatcher.removeEventListener(SQLEvent.RESULT,onOpenResult);
-				localdispatcher.removeEventListener(SQLErrorEvent.ERROR,onOpenError);
-				
-				localSqlStatement.sqlConnection = aConn;
-				localSqlStatement.text = INSERT_LOG;
-				
-				localSqlStatement.parameters[":logging_id"] = logging_id;
-				localSqlStatement.parameters[":log"] = log;
-				localSqlStatement.parameters[":logtimestamp"] = logTimeStamp;
-				localSqlStatement.parameters[":lastmodifiedtimestamp"] = (isNaN(lastModifiedTimeStamp) ? (new Date()).valueOf() : lastModifiedTimeStamp);
-				localSqlStatement.addEventListener(SQLEvent.RESULT,loggingInserted);
-				localSqlStatement.addEventListener(SQLErrorEvent.ERROR,loggingInsertionFailed);
-				localSqlStatement.execute();
-			}
-			
-			function onOpenError(see:SQLErrorEvent):void {
-				localdispatcher.removeEventListener(SQLEvent.RESULT,onOpenResult);
-				localdispatcher.removeEventListener(SQLErrorEvent.ERROR,onOpenError);
-				if (debugMode) trace("Database.as : Failed to open the database. Database 0020");
-				if (dispatcher != null) {
-					var event:DatabaseEvent = new DatabaseEvent(DatabaseEvent.ERROR_EVENT);
-					event.data = "Database.as : Failed to open the database. Database 0020";
-					dispatcher.dispatchEvent(event);
-				}
-			}
-			
-			function loggingInserted(se:SQLEvent):void {
-				localSqlStatement.removeEventListener(SQLEvent.RESULT,loggingInserted);
-				localSqlStatement.removeEventListener(SQLErrorEvent.ERROR,loggingInsertionFailed);
-				if (dispatcher != null) {
-					var event:DatabaseEvent = new DatabaseEvent(DatabaseEvent.LOGGING_INSERTED_EVENT);
-					dispatcher.dispatchEvent(event);
-				}
-			}
-			
-			function loggingInsertionFailed(see:SQLErrorEvent):void {
-				localSqlStatement.removeEventListener(SQLEvent.RESULT,loggingInserted);
-				localSqlStatement.removeEventListener(SQLErrorEvent.ERROR,loggingInsertionFailed);
-				dispatchInformation("failed_to_insert_logging_in_db",see.error.details);
-				if (dispatcher != null) {
-					var event:DatabaseEvent = new DatabaseEvent(DatabaseEvent.LOGGING_INSERTION_FAILED_EVENT);
-					if (debugMode) trace("Database.as : Failed to insert logging. Database 0021");
-					event.data = "Database.as : Failed to insert logging. Database 0021";
-					dispatcher.dispatchEvent(event);
+			try {
+				var conn:SQLConnection = new SQLConnection();
+				conn.open(dbFile, SQLMode.UPDATE);
+				conn.begin();
+				var insertRequest:SQLStatement = new SQLStatement();
+				insertRequest.sqlConnection = conn;
+				insertRequest.text = INSERT_LOG;
+				insertRequest.parameters[":logging_id"] = logging_id;
+				insertRequest.parameters[":log"] = log;
+				insertRequest.parameters[":logtimestamp"] = logTimeStamp;
+				insertRequest.parameters[":lastmodifiedtimestamp"] = (isNaN(lastModifiedTimeStamp) ? (new Date()).valueOf() : lastModifiedTimeStamp);
+				insertRequest.execute();
+				conn.commit();
+				conn.close();
+			} catch (error:SQLError) {
+				dispatchInformation('failed_to_insert_logging_in_db', error.message);
+				if (conn.connected) {
+					conn.rollback();
+					conn.close();
 				}
 			}
 		}
@@ -725,6 +700,7 @@ package databaseclasses
 				} else {
 					//no need to dispatch anything, there are no loggings
 				}
+				
 				var event:DatabaseEvent = new DatabaseEvent(DatabaseEvent.LOGRETRIEVED_EVENT);
 				event.data = END_OF_RESULT;
 				instance.dispatchEvent(event);
@@ -737,16 +713,18 @@ package databaseclasses
 				var errorEvent:DatabaseEvent = new DatabaseEvent(DatabaseEvent.ERROR_EVENT);
 				errorEvent.data = "Failed to retrieve loggings . Database:0022";
 				instance.dispatchEvent(errorEvent);
+				
 			}
 			
 			function onOpenError(see:SQLErrorEvent):void {
 				localdispatcher.removeEventListener(SQLEvent.RESULT,onOpenResult);
 				localdispatcher.removeEventListener(SQLErrorEvent.ERROR,onOpenError);
 				if (debugMode) trace("Database.as : Failed to open the database. Database 0023");
-				dispatchInformation("failed_to_retrieve_logging_failed_to_open_the_database", see.error.details);
+				dispatchInformation("failed_to_retrieve_logging_failed_to_open_the_database", see.error.message);
 				var errorEvent:DatabaseEvent = new DatabaseEvent(DatabaseEvent.ERROR_EVENT);
 				errorEvent.data = "Database.as : Failed to open the database. Database 0023";
 				instance.dispatchEvent(errorEvent);
+				
 			}
 		}
 		
@@ -767,14 +745,16 @@ package databaseclasses
 					calibrationRequest.lastModifiedTimestamp.toString() + 
 					", " +
 					calibrationRequest.requestIfAbove + ", " + calibrationRequest.requestIfBelow + ", " +
-					false +")";
+					"0" + ")";
 				insertRequest.execute();
 				conn.commit();
 				conn.close();
 			} catch (error:SQLError) {
-				dispatchInformation('error_while_inserting_calibration_request_in_db', error.details);
-				conn.rollback();
-				conn.close();
+				dispatchInformation('error_while_inserting_calibration_request_in_db', error.message);
+				if (conn.connected) {
+					conn.rollback();
+					conn.close();
+				}			
 			}
 		}
 		
@@ -789,14 +769,16 @@ package databaseclasses
 				conn.begin();
 				var deleteRequest:SQLStatement = new SQLStatement();
 				deleteRequest.sqlConnection = conn;
-				deleteRequest.text = "UPDATE calibrationrequest SET deleted = true where calibrationrequestid = " + "'" + calibrationRequest.uniqueId + "'";
+				deleteRequest.text = "UPDATE calibrationrequest SET deleted = 1 where calibrationrequestid = " + "'" + calibrationRequest.uniqueId + "'";
 				deleteRequest.execute();
 				conn.commit();
 				conn.close();
 			} catch (error:SQLError) {
-				dispatchInformation('error_while_deleting_calibration_request_in_db', error.details);
-				conn.rollback();
-				conn.close();
+				dispatchInformation('error_while_deleting_calibration_request_in_db', error.message);
+				if (conn.connected) {
+					conn.rollback();
+					conn.close();
+				}			
 			}
 		}
 		
@@ -820,15 +802,18 @@ package databaseclasses
 				conn.commit();
 				conn.close();
 			} catch (error:SQLError) {
-				dispatchInformation('error_while_updating_calibration_request_in_db', error.details);
-				conn.rollback();
-				conn.close();
+				dispatchInformation('error_while_updating_calibration_request_in_db', error.message);
+				if (conn.connected) {
+					conn.rollback();
+					conn.close();
+				}			
 			}
 		}
 		
 
 		/**
 		 * deletes all calibrations<br>
+		 * REMOVE THIS - CALIBRATIONS SHOULD BE DELETED AFTER X DAYS <br>
 		 * synchronous
 		 */
 		public static function deleteAllCalibrationsSynchronous():void {
@@ -843,9 +828,11 @@ package databaseclasses
 				conn.commit();
 				conn.close();
 			} catch (error:SQLError) {
-				dispatchInformation('error_while_deleting_all_calibration_in_db', error.details);
-				conn.rollback();
-				conn.close();
+				dispatchInformation('error_while_deleting_all_calibration_in_db', error.message);
+				if (conn.connected) {
+					conn.rollback();
+					conn.close();
+				}			
 			}
 		}
 		
@@ -860,14 +847,16 @@ package databaseclasses
 				conn.begin();
 				var deleteRequest:SQLStatement = new SQLStatement();
 				deleteRequest.sqlConnection = conn;
-				deleteRequest.text = "UPDATE calibrationrequest SET deleted = true";
+				deleteRequest.text = "UPDATE calibrationrequest SET deleted = 1";
 				deleteRequest.execute();
 				conn.commit();
 				conn.close();
 			} catch (error:SQLError) {
-				dispatchInformation('error_while_deleting_all_calibrationrequests_in_db', error.details);
-				conn.rollback();
-				conn.close();
+				dispatchInformation('error_while_deleting_all_calibrationrequests_in_db', error.message);
+				if (conn.connected) {
+					conn.rollback();
+					conn.close();
+				}			
 			}
 		}
 		
@@ -883,21 +872,26 @@ package databaseclasses
 				conn.begin();
 				var getRequest:SQLStatement = new SQLStatement();
 				getRequest.sqlConnection = conn;
-				getRequest.text = "SELECT * FROM calibrationrequest WHERE deleted = false AND  requestifabove < " + value + " AND requestifbelow > " + value;
+				getRequest.text = "SELECT * FROM calibrationrequest WHERE deleted = 0 AND  requestifabove < " + value + " AND requestifbelow > " + value;
 				getRequest.execute();
 				var result:SQLResult = getRequest.getResult();
 				conn.close();
-				var numResults:int = result.data.length;
-				for (var i:int = 0; i < numResults; i++) 
-				{ 
-					var row:Object = result.data[i]; 
-					returnValue.addItem(new CalibrationRequest(row.requestifabove, row.requestifbelow, row.calibrationrequestid, row.lastmodifiedtimestamp));
-				} 
+				if (result.data != null) {
+					var numResults:int = result.data.length;
+					for (var i:int = 0; i < numResults; i++) 
+					{ 
+						var row:Object = result.data[i]; 
+						returnValue.addItem(new CalibrationRequest(row.requestifabove, row.requestifbelow, row.calibrationrequestid, row.lastmodifiedtimestamp));
+					} 
+				}
 			} catch (error:SQLError) {
-				dispatchInformation('error_while_getting_calibration_requests_in_db', error.details);
+				dispatchInformation('error_while_getting_calibration_requests_in_db', error.message);
+				if (conn.connected) conn.close();
 			} catch (other:Error) {
 				dispatchInformation('error_while_getting_calibration_requests_in_db',other.getStackTrace().toString());
+				if (conn.connected) conn.close();
 			} finally {
+				if (conn.connected) conn.close();
 				return returnValue;
 			}
 		}
@@ -914,63 +908,67 @@ package databaseclasses
 				getRequest.execute();
 				var result:SQLResult = getRequest.getResult();
 				conn.close();
-				var numResults:int = result.data.length;
-				for (var i:int = 0; i < numResults; i++) 
-				{ 
-					var row:Object = result.data[i];
-					var tempReturnValue:ArrayCollection = new ArrayCollection();
-					tempReturnValue.addItem(
-						new Calibration(
-							result.data[i].timestamp,
-							result.data[i].sensorAgeAtTimeOfEstimation,
-							getSensor(result.data[i].sensorid),
-							result.data[i].bg,
-							result.data[i].rawValue,
-							result.data[i].adjustedRawValue,
-							result.data[i].sensorConfidence,
-							result.data[i].slopeConfidence,
-							result.data[i].rawTimestamp,
-							result.data[i].slope,
-							result.data[i].intercept,
-							result.data[i].distanceFromEstimate,
-							result.data[i].estimateRawAtTimeOfCalibration,
-							result.data[i].estimateBgAtTimeOfCalibration,
-							result.data[i].possibleBad == "1" ? true:false,
-							result.data[i].checkIn == "1" ? true:false,
-							result.data[i].firstDecay,
-							result.data[i].secondDecay,
-							result.data[i].firstSlope,
-							result.data[i].secondSlope,
-							result.data[i].firstIntercept,
-							result.data[i].secondIntercept,
-							result.data[i].firstScale,
-							result.data[i].secondScale,
-							result.data[i].lastmodifiedtimestamp,
-							result.data[i].calibrationid)
-					);
-					var dataSortFieldForReturnValue:SortField = new SortField();
-					dataSortFieldForReturnValue.name = "timestamp";
-					dataSortFieldForReturnValue.numeric = true;
-					dataSortFieldForReturnValue.descending = true;//ie from large to small
-					var dataSortForBGReadings:Sort = new Sort();
-					dataSortForBGReadings.fields=[dataSortFieldForReturnValue];
-					tempReturnValue.sort = dataSortForBGReadings;
-					tempReturnValue.refresh();
-					for (var cntr:int; cntr < tempReturnValue.length; cntr++) {
-						returnValue.addItem(tempReturnValue.getItemAt(cntr));
-						if (cntr == number -1) {
-							break;
+				if (result.data != null) {
+					var numResults:int = result.data.length;
+					for (var i:int = 0; i < numResults; i++) 
+					{ 
+						var row:Object = result.data[i];
+						var tempReturnValue:ArrayCollection = new ArrayCollection();
+						tempReturnValue.addItem(
+							new Calibration(
+								result.data[i].timestamp,
+								result.data[i].sensorAgeAtTimeOfEstimation,
+								((result.data[i].sensorid) as String) == "-" ? null:getSensor(result.data[i].sensorid),
+								result.data[i].bg,
+								result.data[i].rawValue,
+								result.data[i].adjustedRawValue,
+								result.data[i].sensorConfidence,
+								result.data[i].slopeConfidence,
+								result.data[i].rawTimestamp,
+								result.data[i].slope,
+								result.data[i].intercept,
+								result.data[i].distanceFromEstimate,
+								result.data[i].estimateRawAtTimeOfCalibration,
+								result.data[i].estimateBgAtTimeOfCalibration,
+								result.data[i].possibleBad == "1" ? true:false,
+								result.data[i].checkIn == "1" ? true:false,
+								result.data[i].firstDecay,
+								result.data[i].secondDecay,
+								result.data[i].firstSlope,
+								result.data[i].secondSlope,
+								result.data[i].firstIntercept,
+								result.data[i].secondIntercept,
+								result.data[i].firstScale,
+								result.data[i].secondScale,
+								result.data[i].lastmodifiedtimestamp,
+								result.data[i].calibrationid)
+						);
+						var dataSortFieldForReturnValue:SortField = new SortField();
+						dataSortFieldForReturnValue.name = "timestamp";
+						dataSortFieldForReturnValue.numeric = true;
+						dataSortFieldForReturnValue.descending = true;//ie from large to small
+						var dataSortForBGReadings:Sort = new Sort();
+						dataSortForBGReadings.fields=[dataSortFieldForReturnValue];
+						tempReturnValue.sort = dataSortForBGReadings;
+						tempReturnValue.refresh();
+						for (var cntr:int; cntr < tempReturnValue.length; cntr++) {
+							returnValue.addItem(tempReturnValue.getItemAt(cntr));
+							if (cntr == number - 1) {
+								break;
+							}
 						}
-					}
-					//TODO check that returnvalue is in descending order, latest calibrations
-				} 
-				
+						//TODO check that returnvalue is in descending order, latest calibrations
+					} 
+				}
 			} catch (error:SQLError) {
-				dispatchInformation('error_while_getting_latest_calibrations_in_db', error.details);
+				dispatchInformation('error_while_getting_latest_calibrations_in_db', error.message);
+				if (conn.connected) conn.close();
 			} catch (other:Error) {
 				dispatchInformation('error_while_getting_latest_calibrations_in_db',other.getStackTrace().toString());
+				if (conn.connected) conn.close();
 			} finally {
-				return tempReturnValue;
+				if (conn.connected) conn.close();
+				return returnValue;
 			}
 		}
 			
@@ -993,54 +991,58 @@ package databaseclasses
 				getRequest.execute();
 				var result:SQLResult = getRequest.getResult();
 				conn.close();
-				var numResults:int = result.data.length;
-				for (var i:int = 0; i < numResults; i++) 
-				{ 
-					var row:Object = result.data[i]; 
-					returnValue.addItem(
-						new Calibration(
-							result.data[i].timestamp,
-							result.data[i].sensorAgeAtTimeOfEstimation,
-							getSensor(result.data[i].sensorid),
-							result.data[i].bg,
-							result.data[i].rawValue,
-							result.data[i].adjustedRawValue,
-							result.data[i].sensorConfidence,
-							result.data[i].slopeConfidence,
-							result.data[i].rawTimestamp,
-							result.data[i].slope,
-							result.data[i].intercept,
-							result.data[i].distanceFromEstimate,
-							result.data[i].estimateRawAtTimeOfCalibration,
-							result.data[i].estimateBgAtTimeOfCalibration,
-							result.data[i].possibleBad == "1" ? true:false,
-							result.data[i].checkIn == "1" ? true:false,
-							result.data[i].firstDecay,
-							result.data[i].secondDecay,
-							result.data[i].firstSlope,
-							result.data[i].secondSlope,
-							result.data[i].firstIntercept,
-							result.data[i].secondIntercept,
-							result.data[i].firstScale,
-							result.data[i].secondScale,
-							result.data[i].lastmodifiedtimestamp,
-							result.data[i].calibrationid)
-					);
-					var dataSortFieldForReturnValue:SortField = new SortField();
-					dataSortFieldForReturnValue.name = "timestamp";
-					dataSortFieldForReturnValue.numeric = true;
-					dataSortFieldForReturnValue.descending = true;//ie from large to small
-					var dataSortForBGReadings:Sort = new Sort();
-					dataSortForBGReadings.fields=[dataSortFieldForReturnValue];
-					returnValue.sort = dataSortForBGReadings;
-					returnValue.refresh();
-				} 
-				
+				if (result.data != null) {
+					var numResults:int = result.data.length;
+					for (var i:int = 0; i < numResults; i++) 
+					{ 
+						var row:Object = result.data[i]; 
+						returnValue.addItem(
+							new Calibration(
+								result.data[i].timestamp,
+								result.data[i].sensorAgeAtTimeOfEstimation,
+								((result.data[i].sensorid) as String) == "-" ? null:getSensor(result.data[i].sensorid),
+								result.data[i].bg,
+								result.data[i].rawValue,
+								result.data[i].adjustedRawValue,
+								result.data[i].sensorConfidence,
+								result.data[i].slopeConfidence,
+								result.data[i].rawTimestamp,
+								result.data[i].slope,
+								result.data[i].intercept,
+								result.data[i].distanceFromEstimate,
+								result.data[i].estimateRawAtTimeOfCalibration,
+								result.data[i].estimateBgAtTimeOfCalibration,
+								result.data[i].possibleBad == "1" ? true:false,
+								result.data[i].checkIn == "1" ? true:false,
+								result.data[i].firstDecay,
+								result.data[i].secondDecay,
+								result.data[i].firstSlope,
+								result.data[i].secondSlope,
+								result.data[i].firstIntercept,
+								result.data[i].secondIntercept,
+								result.data[i].firstScale,
+								result.data[i].secondScale,
+								result.data[i].lastmodifiedtimestamp,
+								result.data[i].calibrationid)
+						);
+						var dataSortFieldForReturnValue:SortField = new SortField();
+						dataSortFieldForReturnValue.name = "timestamp";
+						dataSortFieldForReturnValue.numeric = true;
+						dataSortFieldForReturnValue.descending = true;//ie from large to small
+						var dataSortForBGReadings:Sort = new Sort();
+						dataSortForBGReadings.fields=[dataSortFieldForReturnValue];
+						returnValue.sort = dataSortForBGReadings;
+						returnValue.refresh();
+					} 
+				}
 			} catch (error:SQLError) {
-				dispatchInformation('error_while_getting_for_sensor_in_lastxdays_in_db', error.details);
+				dispatchInformation('error_while_getting_for_sensor_in_lastxdays_in_db', error.message);
+				if (conn.connected) conn.close();
 			} catch (other:Error) {
 				dispatchInformation('error_while_getting_for_sensor_in_lastxdays_in_db',other.getStackTrace().toString());
+				if (conn.connected) conn.close();
 			} finally {
+				if (conn.connected) conn.close();
 				return returnValue;
 			}
 		}
@@ -1059,62 +1061,68 @@ package databaseclasses
 				conn.begin();
 				var getRequest:SQLStatement = new SQLStatement();
 				getRequest.sqlConnection = conn;
-				getRequest.text = "SELECT * FROM calibration WHERE sensorid = " + sensorid;
+				getRequest.text = "SELECT * FROM calibration WHERE sensorid = '" + sensorid + "'";
 				getRequest.execute();
-				var result:SQLResult = getRequest.getResult();
 				conn.close();
-				var numResults:int = result.data.length;
-				var calibrations:ArrayCollection = new ArrayCollection();
-				for (var i:int = 0; i < numResults; i++) 
-				{ 
-					var row:Object = result.data[i]; 
-					calibrations.addItem(
-						new Calibration(
-							result.data[i].timestamp,
-							result.data[i].sensorAgeAtTimeOfEstimation,
-							getSensor(result.data[i].sensorid),
-							result.data[i].bg,
-							result.data[i].rawValue,
-							result.data[i].adjustedRawValue,
-							result.data[i].sensorConfidence,
-							result.data[i].slopeConfidence,
-							result.data[i].rawTimestamp,
-							result.data[i].slope,
-							result.data[i].intercept,
-							result.data[i].distanceFromEstimate,
-							result.data[i].estimateRawAtTimeOfCalibration,
-							result.data[i].estimateBgAtTimeOfCalibration,
-							result.data[i].possibleBad == "1" ? true:false,
-							result.data[i].checkIn == "1" ? true:false,
-							result.data[i].firstDecay,
-							result.data[i].secondDecay,
-							result.data[i].firstSlope,
-							result.data[i].secondSlope,
-							result.data[i].firstIntercept,
-							result.data[i].secondIntercept,
-							result.data[i].firstScale,
-							result.data[i].secondScale,
-							result.data[i].lastmodifiedtimestamp,
-							result.data[i].calibrationid)
-					);
-					var dataSortFieldForReturnValue:SortField = new SortField();
-					dataSortFieldForReturnValue.name = "timestamp";
-					dataSortFieldForReturnValue.numeric = true;
-					if (first)
-						dataSortFieldForReturnValue.descending = true;//ie from large to small
-					var dataSortForBGReadings:Sort = new Sort();
-					dataSortForBGReadings.fields=[dataSortFieldForReturnValue];
-					calibrations.sort = dataSortForBGReadings;
-					calibrations.refresh();
-					if (calibrations.length > 0)
-						returnValue = calibrations.getItemAt(0) as Calibration;
-				} 
-				
+				var result:SQLResult = getRequest.getResult();
+				if (result.data != null) {
+					if (result.data != null) {
+						var calibrations:ArrayCollection = new ArrayCollection();
+						var numResults:int = result.data.length;
+						for (var i:int = 0; i < numResults; i++) 
+						{ 
+							var row:Object = result.data[i]; 
+							calibrations.addItem(
+								new Calibration(
+									result.data[i].timestamp,
+									result.data[i].sensorAgeAtTimeOfEstimation,
+									((result.data[i].sensorid) as String) == "-" ? null:getSensor(result.data[i].sensorid),
+									result.data[i].bg,
+									result.data[i].rawValue,
+									result.data[i].adjustedRawValue,
+									result.data[i].sensorConfidence,
+									result.data[i].slopeConfidence,
+									result.data[i].rawTimestamp,
+									result.data[i].slope,
+									result.data[i].intercept,
+									result.data[i].distanceFromEstimate,
+									result.data[i].estimateRawAtTimeOfCalibration,
+									result.data[i].estimateBgAtTimeOfCalibration,
+									result.data[i].possibleBad == "1" ? true:false,
+									result.data[i].checkIn == "1" ? true:false,
+									result.data[i].firstDecay,
+									result.data[i].secondDecay,
+									result.data[i].firstSlope,
+									result.data[i].secondSlope,
+									result.data[i].firstIntercept,
+									result.data[i].secondIntercept,
+									result.data[i].firstScale,
+									result.data[i].secondScale,
+									result.data[i].lastmodifiedtimestamp,
+									result.data[i].calibrationid)
+							);
+							var dataSortFieldForReturnValue:SortField = new SortField();
+							dataSortFieldForReturnValue.name = "timestamp";
+							dataSortFieldForReturnValue.numeric = true;
+							if (first)
+								dataSortFieldForReturnValue.descending = true;//ie from large to small
+							var dataSortForBGReadings:Sort = new Sort();
+							dataSortForBGReadings.fields=[dataSortFieldForReturnValue];
+							calibrations.sort = dataSortForBGReadings;
+							calibrations.refresh();
+							if (calibrations.length > 0)
+								returnValue = calibrations.getItemAt(0) as Calibration;
+						} 
+					}
+				}
 			} catch (error:SQLError) {
-				dispatchInformation('error_while_getting_last_or_first_calibration_in_db', error.details);
+				dispatchInformation('error_while_getting_last_or_first_calibration_in_db', error.message);
+				if (conn.connected) conn.close();
 			} catch (other:Error) {
 				dispatchInformation('error_while_getting_last_or_first_calibration_in_db',other.getStackTrace().toString());
+				if (conn.connected) conn.close();
 			} finally {
+				if (conn.connected) conn.close();
 				return returnValue;
 			}
 		}
@@ -1161,7 +1169,7 @@ package databaseclasses
 						calibration.lastModifiedTimestamp + ", " +
 						calibration.timestamp + ", " +
 						calibration.sensorAgeAtTimeOfEstimation + ", " +
-						"'" + calibration.sensor.uniqueId +"', " + 
+						calibration.sensor == null ? "'-'" : "'" + calibration.sensor.uniqueId +"', " + 
 						calibration.bg +", " + 
 						calibration.rawValue +", " + 
 						calibration.adjustedRawValue +", " + 
@@ -1173,8 +1181,8 @@ package databaseclasses
 						calibration.distanceFromEstimate +", " +
 						calibration.estimateRawAtTimeOfCalibration +", " +
 						calibration.estimateBgAtTimeOfCalibration +", " +
-						calibration.possibleBad ? "1":"0" +", " +
-						calibration.checkIn ? "1":"0" +", " +
+						(calibration.possibleBad ? "1":"0") +", " +
+						(calibration.checkIn ? "1":"0") +", " +
 						calibration.firstDecay +", " +
 						calibration.secondDecay +", " +
 						calibration.firstSlope +", " +
@@ -1187,9 +1195,11 @@ package databaseclasses
 				conn.commit();
 				conn.close();
 			} catch (error:SQLError) {
-				dispatchInformation('error_while_inserting_calibration_in_db', error.details);
-				conn.rollback();
-				conn.close();
+				dispatchInformation('error_while_inserting_calibration_in_db', error.message);
+				if (conn.connected) {
+					conn.rollback();
+					conn.close();
+				}
 			}
 		}
 		
@@ -1209,9 +1219,11 @@ package databaseclasses
 				conn.commit();
 				conn.close();
 			} catch (error:SQLError) {
-				dispatchInformation('error_while_deleting_calibration_in_db', error.details);
-				conn.rollback();
-				conn.close();
+				dispatchInformation('error_while_deleting_calibration_in_db', error.message);
+				if (conn.connected) {
+					conn.rollback();
+					conn.close();
+				}
 			}
 		}
 		
@@ -1230,7 +1242,7 @@ package databaseclasses
 					"lastmodifiedtimestamp = " + calibration.lastModifiedTimestamp + ", " + 
 					"timestamp = " + calibration.timestamp + ", " + 
 					"sensorAgeAtTimeOfEstimation = " + calibration.sensorAgeAtTimeOfEstimation + ", " + 
-					"sensorid = '" + calibration.sensor.uniqueId + "', " +
+					"sensorid = " + calibration.sensor == null ? "'-'" : "'" + calibration.sensor.uniqueId +"', " +
 					"bg = " +  calibration.bg + ", " +
 					"rawValue = " +  calibration.rawValue + ", " +
 					"adjustedRawValue = " +  calibration.adjustedRawValue + ", " +
@@ -1242,8 +1254,8 @@ package databaseclasses
 					"distanceFromEstimate = " +  calibration.distanceFromEstimate + ", " +
 					"estimateRawAtTimeOfCalibration = " +  calibration.estimateRawAtTimeOfCalibration + ", " +
 					"estimateBgAtTimeOfCalibration = " +  calibration.estimateBgAtTimeOfCalibration + ", " +
-					"possibleBad = " +  calibration.possibleBad? "1":"0" + ", " +
-					"checkIn = " + calibration.checkIn? "1":"0" + ", " +
+					"possibleBad = " +  (calibration.possibleBad? "1":"0") + ", " +
+					"checkIn = " + (calibration.checkIn? "1":"0") + ", " +
 					"firstDecay = " +  calibration.firstDecay + ", " +
 					"secondDecay = " +  calibration.secondDecay + ", " +
 					"firstSlope = " +  calibration.firstSlope + ", " +
@@ -1257,9 +1269,11 @@ package databaseclasses
 				conn.commit();
 				conn.close();
 			} catch (error:SQLError) {
-				dispatchInformation('error_while_updating_calibration_in_db', error.details);
-				conn.rollback();
-				conn.close();
+				dispatchInformation('error_while_updating_calibration_in_db', error.message);
+				if (conn.connected) {
+					conn.rollback();
+					conn.close();
+				}
 			}
 		}
 		
@@ -1268,7 +1282,7 @@ package databaseclasses
 		 * synchronous
 		 */
 		public static function getCalibration(uniqueId:String):Calibration {
-			var returnValue:Calibration;
+			var returnValue:Calibration = null;
 			try {
 				var conn:SQLConnection = new SQLConnection();
 				conn.open(dbFile, SQLMode.READ);
@@ -1279,44 +1293,49 @@ package databaseclasses
 				getRequest.execute();
 				var result:SQLResult = getRequest.getResult();
 				conn.close();
-				var numResults:int = result.data.length;
-				if (numResults == 1) {
-					returnValue = new Calibration(
-						result.data[0].timestamp,
-						result.data[0].sensorAgeAtTimeOfEstimation,
-						getSensor(result.data[0].sensorid),
-						result.data[0].bg,
-						result.data[0].rawValue,
-						result.data[0].adjustedRawValue,
-						result.data[0].sensorConfidence,
-						result.data[0].slopeConfidence,
-						result.data[0].rawTimestamp,
-						result.data[0].slope,
-						result.data[0].intercept,
-						result.data[0].distanceFromEstimate,
-						result.data[0].estimateRawAtTimeOfCalibration,
-						result.data[0].estimateBgAtTimeOfCalibration,
-						result.data[0].possibleBad == "1" ? true:false,
-						result.data[0].checkIn == "1" ? true:false,
-						result.data[0].firstDecay,
-						result.data[0].secondDecay,
-						result.data[0].firstSlope,
-						result.data[0].secondSlope,
-						result.data[0].firstIntercept,
-						result.data[0].secondIntercept,
-						result.data[0].firstScale,
-						result.data[0].secondScale,
-						result.data[0].lastmodifiedtimestamp,
-						result.data[0].calibrationid
-					)
-				} else {
-					dispatchInformation('error_while_getting_calibration_in_db','resulting amount of calibrations should be 1 but is ' + numResults);
+				if (result.data != null) {
+					var numResults:int = result.data.length;
+					if (numResults == 1) {
+						returnValue = new Calibration(
+							result.data[0].timestamp,
+							result.data[0].sensorAgeAtTimeOfEstimation,
+							((result.data[0].sensorid) as String) == "-" ? null:getSensor(result.data[0].sensorid),
+							result.data[0].bg,
+							result.data[0].rawValue,
+							result.data[0].adjustedRawValue,
+							result.data[0].sensorConfidence,
+							result.data[0].slopeConfidence,
+							result.data[0].rawTimestamp,
+							result.data[0].slope,
+							result.data[0].intercept,
+							result.data[0].distanceFromEstimate,
+							result.data[0].estimateRawAtTimeOfCalibration,
+							result.data[0].estimateBgAtTimeOfCalibration,
+							result.data[0].possibleBad == "1" ? true:false,
+							result.data[0].checkIn == "1" ? true:false,
+							result.data[0].firstDecay,
+							result.data[0].secondDecay,
+							result.data[0].firstSlope,
+							result.data[0].secondSlope,
+							result.data[0].firstIntercept,
+							result.data[0].secondIntercept,
+							result.data[0].firstScale,
+							result.data[0].secondScale,
+							result.data[0].lastmodifiedtimestamp,
+							result.data[0].calibrationid
+						)
+					} else {
+						dispatchInformation('error_while_getting_calibration_in_db','resulting amount of calibrations should be 1 but is ' + numResults);
+					}
 				}
 			} catch (error:SQLError) {
-				dispatchInformation('error_while_getting_calibration_in_db', error.details);
+				dispatchInformation('error_while_getting_calibration_in_db', error.message);
+				if (conn.connected) conn.close();
 			} catch (other:Error) {
 				dispatchInformation('error_while_getting_calibration_in_db', other.getStackTrace().toString());
+				if (conn.connected) conn.close();
 			} finally {
+				if (conn.connected) conn.close();
 				return returnValue;
 			}
 		}
@@ -1339,44 +1358,48 @@ package databaseclasses
 				getRequest.execute();
 				var result:SQLResult = getRequest.getResult();
 				conn.close();
-				var numResults:int = result.data.length;
-				for (var i:int = 0; i < numResults; i++) 
-				{ 
-					returnValue.addItem(new Calibration(
-						result.data[i].timestamp,
-						result.data[i].sensorAgeAtTimeOfEstimation,
-						getSensor(result.data[i].sensorid),
-						result.data[i].bg,
-						result.data[i].rawValue,
-						result.data[i].adjustedRawValue,
-						result.data[i].sensorConfidence,
-						result.data[i].slopeConfidence,
-						result.data[i].rawTimestamp,
-						result.data[i].slope,
-						result.data[i].intercept,
-						result.data[i].distanceFromEstimate,
-						result.data[i].estimateRawAtTimeOfCalibration,
-						result.data[i].estimateBgAtTimeOfCalibration,
-						result.data[i].possibleBad == "1" ? true:false,
-						result.data[i].checkIn == "1" ? true:false,
-						result.data[i].firstDecay,
-						result.data[i].secondDecay,
-						result.data[i].firstSlope,
-						result.data[i].secondSlope,
-						result.data[i].firstIntercept,
-						result.data[i].secondIntercept,
-						result.data[i].firstScale,
-						result.data[i].secondScale,
-						result.data[i].lastmodifiedtimestamp,
-						result.data[i].calibrationid
-					));
-				} 
+				if (result.data != null) {
+					var numResults:int = result.data.length;
+					for (var i:int = 0; i < numResults; i++) 
+					{ 
+						returnValue.addItem(new Calibration(
+							result.data[i].timestamp,
+							result.data[i].sensorAgeAtTimeOfEstimation,
+							((result.data[i].sensorid) as String) == "-" ? null:getSensor(result.data[i].sensorid),
+							result.data[i].bg,
+							result.data[i].rawValue,
+							result.data[i].adjustedRawValue,
+							result.data[i].sensorConfidence,
+							result.data[i].slopeConfidence,
+							result.data[i].rawTimestamp,
+							result.data[i].slope,
+							result.data[i].intercept,
+							result.data[i].distanceFromEstimate,
+							result.data[i].estimateRawAtTimeOfCalibration,
+							result.data[i].estimateBgAtTimeOfCalibration,
+							result.data[i].possibleBad == "1" ? true:false,
+							result.data[i].checkIn == "1" ? true:false,
+							result.data[i].firstDecay,
+							result.data[i].secondDecay,
+							result.data[i].firstSlope,
+							result.data[i].secondSlope,
+							result.data[i].firstIntercept,
+							result.data[i].secondIntercept,
+							result.data[i].firstScale,
+							result.data[i].secondScale,
+							result.data[i].lastmodifiedtimestamp,
+							result.data[i].calibrationid
+						));
+					} 
+				}
 			} catch (error:SQLError) {
-				dispatchInformation('error_while_getting_calibration_in_db', error.details);
+				dispatchInformation('error_while_getting_calibration_in_db', error.message);
+				if (conn.connected) conn.close();
 			} catch (other:Error) {
 				dispatchInformation('error_while_getting_calibration_in_db', other.getStackTrace().toString());
+				if (conn.connected) conn.close();
 			} finally {
-				
+				if (conn.connected) conn.close();
 				return returnValue;
 			}
 		}
@@ -1410,9 +1433,11 @@ package databaseclasses
 				conn.commit();
 				conn.close();
 			} catch (error:SQLError) {
-				dispatchInformation('error_while_inserting_sensor_in_db', error.details);
-				conn.rollback();
-				conn.close();
+				dispatchInformation('error_while_inserting_sensor_in_db', error.message);
+				if (conn.connected) {
+					conn.rollback();
+					conn.close();
+				}
 			}
 		}
 		
@@ -1432,9 +1457,11 @@ package databaseclasses
 				conn.commit();
 				conn.close();
 			} catch (error:SQLError) {
-				dispatchInformation('error_while_deleting_sensor_in_db', error.details);
-				conn.rollback();
-				conn.close();
+				dispatchInformation('error_while_deleting_sensor_in_db', error.message);
+				if (conn.connected) {
+					conn.rollback();
+					conn.close();
+				}
 			}
 		}
 		
@@ -1459,18 +1486,21 @@ package databaseclasses
 				conn.commit();
 				conn.close();
 			} catch (error:SQLError) {
-				dispatchInformation('error_while_updating_sensor_in_db', error.details);
-				conn.rollback();
-				conn.close();
+				dispatchInformation('error_while_updating_sensor_in_db', error.message);
+				if (conn.connected) {
+					conn.rollback();
+					conn.close();
+				}
 			}
 		}
 		
 		/**
 		 * get sensor for specified uniqueId<br>
+		 * null if none found<br>
 		 * synchronous
 		 */
 		public static function getSensor(uniqueId:String):Sensor {
-			var returnValue:Sensor;
+			var returnValue:Sensor = null;
 			try {
 				var conn:SQLConnection = new SQLConnection();
 				conn.open(dbFile, SQLMode.READ);
@@ -1478,26 +1508,32 @@ package databaseclasses
 				var getRequest:SQLStatement = new SQLStatement();
 				getRequest.sqlConnection = conn;
 				getRequest.text = "SELECT * FROM sensor WHERE sensorid = '" + uniqueId + "'";
+				while (aConn.inTransaction){};
 				getRequest.execute();
 				var result:SQLResult = getRequest.getResult();
 				conn.close();
-				var numResults:int = result.data.length;
-				if (numResults == 1) {
-					returnValue = new Sensor(
-						result.data[0].startedat,
-						result.data[0].stoppedat,
-						result.data[0].latestbatterylevel,
-						result.data[0].sensorid,
-						result.data[0].lastmodifiedtimestamp
-					)
-				} else {
-					dispatchInformation('error_while_getting_sensor_in_db','resulting amount of sensors should be 1 but is ' + numResults);
+				if (result.data != null) {
+					var numResults:int = result.data.length;
+					if (numResults == 1) {
+						returnValue = new Sensor(
+							result.data[0].startedat,
+							result.data[0].stoppedat,
+							result.data[0].latestbatterylevel,
+							result.data[0].sensorid,
+							result.data[0].lastmodifiedtimestamp
+						)
+					} else {
+						dispatchInformation('error_while_getting_sensor_in_db','resulting amount of sensors should be 1 but is ' + numResults);
+					}
 				}
 			} catch (error:SQLError) {
-				dispatchInformation('error_while_getting_sensor_in_db', error.details);
+				dispatchInformation('error_while_getting_sensor_in_db', error.message);
+				if (conn.connected) conn.close();
 			} catch (other:Error) {
 				dispatchInformation('error_while_getting_sensor_in_db', other.getStackTrace().toString());
+				if (conn.connected) conn.close();
 			} finally {
+				if (conn.connected) conn.close();
 				return returnValue;
 			}
 		}
@@ -1509,61 +1545,66 @@ package databaseclasses
 		 */
 		public static function insertBgReadingSynchronous(bgreading:BgReading):void {
 			try {
+				var calibration:Calibration = bgreading.calibration;
+				var calibrationIdAsString:String = calibration == null ? "-":bgreading.calibration.uniqueId;
 				var conn:SQLConnection = new SQLConnection();
 				conn.open(dbFile, SQLMode.UPDATE);
 				conn.begin();
 				var insertRequest:SQLStatement = new SQLStatement();
 				insertRequest.sqlConnection = conn;
-				insertRequest.text = "INSERT INTO bgreading (" +
-					"bgreadingid, " +
-					"lastmodifiedtimestamp, " +
-					"timestamp," +
-					"sensorid," +
-					"calibrationid," +
-					"rawData," +
-					"filteredData," +
-					"ageAdjustedRawValue," +
-					"calibrationFlag," +
-					"calculatedValue," +
-					"filteredCalculatedValue," +
-					"calculatedValueSlope," +
-					"a," +
-					"b," +
-					"c," +
-					"ra," +
-					"rb" +
-					"rc," +
-					"rawCalculated," +
-					"hideSlope," +
-					"noise) " +
-					"VALUES ('" + bgreading.uniqueId + "', " +
-					bgreading.lastModifiedTimestamp.toString() + ", " +
-					bgreading.timestamp + ", " +
-					"'" + bgreading.sensor.uniqueId +"', '" + 
-					bgreading.calibration.uniqueId +"', " + 
-					bgreading.rawData +", " + 
-					bgreading.filteredData +", " + 
-					bgreading.ageAdjustedRawValue +", " + 
-					bgreading.calibrationFlag ? "1":"0" +", " +
-					bgreading.calculatedValue +", " +
-					bgreading.filteredCalculatedValue +", " +
-					bgreading.calculatedValueSlope +", " +
-					bgreading.a +", " +
-					bgreading.b +", " +
-					bgreading.c +", " +
-					bgreading.ra +", " +
-					bgreading.rb +", " +
-					bgreading.rc +", " +
-					bgreading.rawCalculated +", " +
-					bgreading.hideSlope +", " +
-					"'" + bgreading.noise + "'" + ")";
+				var text:String = "INSERT INTO bgreading (";
+					text += "bgreadingid, ";
+					text += "lastmodifiedtimestamp, ";
+					text += "timestamp,";
+					text += "sensorid,";
+					text += "calibrationid,";
+					text += "rawData,";
+					text += "filteredData,";
+					text += "ageAdjustedRawValue,";
+					text += "calibrationFlag,";
+					text += "calculatedValue,";
+					text += "filteredCalculatedValue,";
+					text += "calculatedValueSlope,";
+					text += "a,";
+					text += "b,";
+					text += "c,";
+					text += "ra,";
+					text += "rb,";
+					text += "rc,";
+					text += "rawCalculated,";
+					text += "hideSlope,";
+					text += "noise) ";
+					text += "VALUES ('" + bgreading.uniqueId + "', ";
+					text += bgreading.lastModifiedTimestamp.toString() + ", ";
+					text += bgreading.timestamp + ", ";
+					text += "'" + bgreading.sensor.uniqueId +"',"; 
+					text += "'" + calibrationIdAsString + "', ";
+					text += bgreading.rawData + ", "; 
+					text += bgreading.filteredData + ", "; 
+					text += bgreading.ageAdjustedRawValue + ", "; 
+					text += (bgreading.calibrationFlag ? "1":"0") + ", ";
+					text += bgreading.calculatedValue + ", ";
+					text += bgreading.filteredCalculatedValue + ", ";
+					text += bgreading.calculatedValueSlope + ", ";
+					text += bgreading.a + ", ";
+					text += bgreading.b + ", ";
+					text += bgreading.c + ", ";
+					text += bgreading.ra + ", ";
+					text += bgreading.rb + ", ";
+					text += bgreading.rc + ", ";
+					text += bgreading.rawCalculated + ", ";
+					text += (bgreading.hideSlope ? "1":"0") + ", ";
+					text += "'" + (bgreading.noise == null ? "-":bgreading.noise) + "'" + ")";
+				insertRequest.text = text;
 				insertRequest.execute();
 				conn.commit();
 				conn.close();
 			} catch (error:SQLError) {
-				dispatchInformation('error_while_inserting_bgreading_in_db', error.details);
-				conn.rollback();
-				conn.close();
+				dispatchInformation('error_while_inserting_bgreading_in_db', error.message + " - " + error.details);
+				if (conn.connected) {
+					conn.rollback();
+					conn.close();
+				}
 			}
 		}
 		
@@ -1583,9 +1624,11 @@ package databaseclasses
 				conn.commit();
 				conn.close();
 			} catch (error:SQLError) {
-				dispatchInformation('error_while_deleting_bgreading_in_db', error.details);
-				conn.rollback();
-				conn.close();
+				dispatchInformation('error_while_deleting_bgreading_in_db', error.message + " - " + error.details);
+				if (conn.connected) {
+					conn.rollback();
+					conn.close();
+				}
 			}
 		}
 		
@@ -1605,11 +1648,11 @@ package databaseclasses
 					"lastmodifiedtimestamp = " + bgreading.lastModifiedTimestamp.toString() + ", " + 
 					"timestamp = " + bgreading.timestamp + ", " + 
 					"sensorid = '" +  bgreading.sensor.uniqueId + "', " +
-					"calibrationid = " +  "'" + bgreading.calibration.uniqueId + "'" + ", " +
+					"calibrationid = " +  bgreading.calibration == null ? "'-'":("'" + bgreading.calibration.uniqueId + "'") + ", " +
 					"rawData = " +  bgreading.rawData + ", " +
 					"filteredData = " +  bgreading.filteredData + ", " +
 					"ageAdjustedRawValue = " +  bgreading.ageAdjustedRawValue + ", " +
-					"calibrationFlag = " +  bgreading.calibrationFlag + ", " +
+					"calibrationFlag = " +  (bgreading.calibrationFlag ? "1":"0") + ", " +
 					"calculatedValue = " +  bgreading.calculatedValue + ", " +
 					"filteredCalculatedValue = " +  bgreading.filteredCalculatedValue + ", " +
 					"calculatedValueSlope = " +  bgreading.calculatedValueSlope + ", " +
@@ -1620,84 +1663,21 @@ package databaseclasses
 					"rb = " + bgreading.rb + ", " +
 					"rc = " +  bgreading.rc + ", " +
 					"rawCalculated = " +  bgreading.rawCalculated + ", " +
-					"hideSlope = " +  bgreading.hideSlope + ", " +
-					"noise = " +  "'" + bgreading.noise + "'" + ", " +
+					"hideSlope = " +  (bgreading.hideSlope ? "1":"0") + ", " +
+					"noise = " +  "'" + (bgreading.noise == null ? "-":bgreading.noise) + "'" + ", " +
 					"WHERE bgreadingid = " + "'" + bgreading.uniqueId + "'" ;
 				updateRequest.execute();
 				conn.commit();
 				conn.close();
 			} catch (error:SQLError) {
-				dispatchInformation('error_while_updating_bgreading_in_db', error.details);
-				conn.rollback();
-				conn.close();
+				dispatchInformation('error_while_updating_bgreading_in_db', error.message + " - " + error.details);
+				if (conn.connected) {
+					conn.rollback();
+					conn.close();
+				}
 			}
 		}
 		
-		/**
-		 * updates a calibration in the database<br>
-		 * if lastmodifiedtimestamp is Number.NaN then it will be assigned actual time<br>
-		 * dispatches info if anything goes wrong<br>
-		 * asynchronous
-		 */
-		public static function updateBgReadingAsynchronous(bgreading:BgReading):void {
-			var localSqlStatement:SQLStatement = new SQLStatement();
-			var localdispatcher:EventDispatcher = new EventDispatcher();
-			
-			localdispatcher.addEventListener(SQLEvent.RESULT,onOpenResult);
-			localdispatcher.addEventListener(SQLErrorEvent.ERROR,onOpenError);
-			
-			if (openSQLConnection(localdispatcher))
-				onOpenResult(null);
-			
-			function onOpenResult(se:SQLEvent):void {
-				localdispatcher.removeEventListener(SQLEvent.RESULT,onOpenResult);
-				localdispatcher.removeEventListener(SQLErrorEvent.ERROR,onOpenError);
-				localSqlStatement.addEventListener(SQLEvent.RESULT,bgReadingUpdated);
-				localSqlStatement.addEventListener(SQLErrorEvent.ERROR,bgReadingUpdateFailed);
-				localSqlStatement.sqlConnection = aConn;
-				localSqlStatement.text = "UPDATE bgreading SET " +
-					"lastmodifiedtimestamp = " + bgreading.lastModifiedTimestamp.toString() + ", " + 
-					"timestamp = " + bgreading.timestamp + ", " + 
-					"sensorid = '" +  bgreading.sensor.uniqueId + "', " +
-					"calibrationid = " +  "'" + bgreading.calibration.uniqueId + "'" + ", " +
-					"rawData = " +  bgreading.rawData + ", " +
-					"filteredData = " +  bgreading.filteredData + ", " +
-					"ageAdjustedRawValue = " +  bgreading.ageAdjustedRawValue + ", " +
-					"calibrationFlag = " +  bgreading.calibrationFlag + ", " +
-					"calculatedValue = " +  bgreading.calculatedValue + ", " +
-					"filteredCalculatedValue = " +  bgreading.filteredCalculatedValue + ", " +
-					"calculatedValueSlope = " +  bgreading.calculatedValueSlope + ", " +
-					"a = " +  bgreading.a + ", " +
-					"b = " +  bgreading.b + ", " +
-					"c = " +  bgreading.c + ", " +
-					"ra = " +  bgreading.ra + ", " +
-					"rb = " + bgreading.rb + ", " +
-					"rc = " +  bgreading.rc + ", " +
-					"rawCalculated = " +  bgreading.rawCalculated + ", " +
-					"hideSlope = " +  bgreading.hideSlope + ", " +
-					"noise = " +  "'" + bgreading.noise + "'" + ", " +
-					"WHERE bgreadingid = " + "'" + bgreading.uniqueId + "'" ;
-				localSqlStatement.execute();
-			}
-			
-			function bgReadingUpdated(se:SQLEvent):void {
-				localSqlStatement.removeEventListener(SQLEvent.RESULT,bgReadingUpdated);
-				localSqlStatement.removeEventListener(SQLErrorEvent.ERROR,bgReadingUpdateFailed);
-			}
-			
-			function bgReadingUpdateFailed(see:SQLErrorEvent):void {
-				localSqlStatement.removeEventListener(SQLEvent.RESULT,bgReadingUpdated);
-				localSqlStatement.removeEventListener(SQLErrorEvent.ERROR,bgReadingUpdateFailed);
-				dispatchInformation('error_while_updating_bgreading_in_database', see != null ? see.error.details:null);
-			}
-			
-			function onOpenError(see:SQLErrorEvent):void {
-				localdispatcher.removeEventListener(SQLEvent.RESULT,onOpenResult);
-				localdispatcher.removeEventListener(SQLErrorEvent.ERROR,onOpenError);
-				dispatchInformation('error_while_updating_bgreading_in_database', see != null ? see.error.details:null);
-			}
-		}
-
 		/**
 		 * will get the bgreadings and dispatch them one by one (ie one event per bgreading) in the data field of a BGREADING_RETRIEVAL_EVENT<br>
 		 * If the last string is sent, an additional event is set with data = "END_OF_RESULT"<br>
@@ -1735,8 +1715,8 @@ package databaseclasses
 							var event:DatabaseEvent = new DatabaseEvent(DatabaseEvent.BGREADING_RETRIEVAL_EVENT);
 							event.data = new BgReading(
 								o.timestamp,
-								getSensor(o.sensorid),
-								getCalibration(o.calibrationid),
+								(o.sensorid as String) == "-" ? null:getSensor(o.sensorid),
+								(o.calibrationid as String) == "-" ? null:getCalibration(o.calibrationid),
 								o.rawData,
 								o.filteredData,
 								o.ageAdjustedRawValue,
@@ -1752,7 +1732,7 @@ package databaseclasses
 								o.rc,
 								o.rawCalculated,
 								o.hideSlope == "1" ? true:false,
-								o.noise,
+								(o.noise as String) == "-" ? null:o.noise,
 								o.lastmodifiedtimestamp,
 								o.bgreadingid);
 								instance.dispatchEvent(event);
@@ -1761,6 +1741,7 @@ package databaseclasses
 				} else {
 					//no need to dispatch anything, there are no bgreadings
 				}
+				
 				var event:DatabaseEvent = new DatabaseEvent(DatabaseEvent.BGREADING_RETRIEVAL_EVENT);
 				event.data = END_OF_RESULT;
 				instance.dispatchEvent(event);
@@ -1769,47 +1750,51 @@ package databaseclasses
 			function bgreadingRetrievalFailed(see:SQLErrorEvent):void {
 				localSqlStatement.removeEventListener(SQLEvent.RESULT,bgReadingsRetrieved);
 				localSqlStatement.removeEventListener(SQLErrorEvent.ERROR,bgreadingRetrievalFailed);
-				dispatchInformation("failed_to_retrieve_bg_reading", see.error.details);
+				dispatchInformation("failed_to_retrieve_bg_reading", see.error.message);
 				if (debugMode) trace("Database.as : Failed to retrieve bgreadings. Database 0032");
 				var errorEvent:DatabaseEvent = new DatabaseEvent(DatabaseEvent.ERROR_EVENT);
 				errorEvent.data = "Failed to retrieve bgreadings . Database:0032";
 				instance.dispatchEvent(errorEvent);
+				
 			}
 			
 			function onOpenError(see:SQLErrorEvent):void {
 				localdispatcher.removeEventListener(SQLEvent.RESULT,onOpenResult);
 				localdispatcher.removeEventListener(SQLErrorEvent.ERROR,onOpenError);
-				dispatchInformation("failed_to_retrieve_bg_reading_error_opening_database", see.error.details);
+				dispatchInformation("failed_to_retrieve_bg_reading_error_opening_database", see.error.message);
 				if (debugMode) trace("Database.as : Failed to open the database. Database 0033");
 				var event:DatabaseEvent = new DatabaseEvent(DatabaseEvent.ERROR_EVENT);
 				instance.dispatchEvent(event);
+				
 			}
 		}
 		
-		public static function updateCommonSetting(settingId:int, newValue:String, lastModifiedTimeStamp:Number = Number.NaN):void {
-			if (newValue == null) newValue = "";
-			try  {
+		public static function updateCommonSetting(settingId:int,newValue:String, lastModifiedTimeStamp:Number = Number.NaN):void {
+			if (newValue == null || newValue == "") newValue = "-";
+			try {
 				var conn:SQLConnection = new SQLConnection();
 				conn.open(dbFile, SQLMode.UPDATE);
 				conn.begin();
 				var updateRequest:SQLStatement = new SQLStatement();
 				updateRequest.sqlConnection = conn;
-				updateRequest.text = "UPDATE commonsettings SET " +
+				updateRequest.text =  "UPDATE commonsettings SET " +
 					"lastmodifiedtimestamp = " + (isNaN(lastModifiedTimeStamp) ? (new Date()).valueOf() : lastModifiedTimeStamp) + "," +
-					" value = " + (newValue == "" ? null:("'" + newValue + "'")) +  
-					" where id  = " + settingId; 
+					" value = '" + newValue + "'" +  
+					" where id  = " + settingId;
 				updateRequest.execute();
 				conn.commit();
 				conn.close();
 			} catch (error:SQLError) {
-				dispatchInformation('error_while_updating_common_setting', error.details);
-				conn.rollback();
-				conn.close();
+				dispatchInformation('error_while_updating_common_setting', error.message + " - " + error.details);
+				if (conn.connected) {
+					conn.rollback();
+					conn.close();
+				}
 			}
 		}
 		
 		public static function insertCommonSetting(settingId:int, newValue:String, lastModifiedTimeStamp:Number = Number.NaN):void {
-			if (newValue == null) newValue = "";
+			if (newValue == null || newValue == "") newValue = "-";//don't like the null or empty string values, - should be replaced back to null or ""
 			try  {
 				var conn:SQLConnection = new SQLConnection();
 				conn.open(dbFile, SQLMode.UPDATE);
@@ -1818,42 +1803,46 @@ package databaseclasses
 				insertRequest.sqlConnection = conn;
 				insertRequest.text = "INSERT INTO commonsettings (lastmodifiedtimestamp, value, id) " +
 					"VALUES (" + (isNaN(lastModifiedTimeStamp) ? (new Date()).valueOf() : lastModifiedTimeStamp) + ", " +
-					(newValue == "" ? null:("'" + newValue + "'")) + ", "  +
+					"'" + newValue + "'" + ", "  +
 					settingId + ")"; 
 				insertRequest.execute();
 				conn.commit();
 				conn.close();
 			} catch (error:SQLError) {
-				dispatchInformation('error_while_inserting_common_setting', error.details);
-				conn.rollback();
-				conn.close();
+				dispatchInformation('error_while_inserting_common_setting', error.message + " - " + error.details);
+				if (conn.connected) {
+					conn.rollback();
+					conn.close();
+				}
 			}
 		}
 		
-		public static function updateLocalSetting(settingId:int, newValue:String, lastModifiedTimeStamp:Number = Number.NaN):void {
-			if (newValue == null) newValue = "";
-			try  {
+		public static function updateLocalSetting(settingId:int,newValue:String, lastModifiedTimeStamp:Number = Number.NaN):void {
+			if (newValue == null || newValue == "") newValue = "-";
+			try {
 				var conn:SQLConnection = new SQLConnection();
 				conn.open(dbFile, SQLMode.UPDATE);
 				conn.begin();
 				var updateRequest:SQLStatement = new SQLStatement();
 				updateRequest.sqlConnection = conn;
-				updateRequest.text = "UPDATE localsettings SET " +
+				updateRequest.text =  "UPDATE localsettings SET " +
 					"lastmodifiedtimestamp = " + (isNaN(lastModifiedTimeStamp) ? (new Date()).valueOf() : lastModifiedTimeStamp) + "," +
-					"value = " + (newValue == "" ? null:("'" + newValue + "'")) +  
-					" where id  = " + settingId; 
+					" value = '" + newValue + "'" + 
+					" where id  = " + settingId;
 				updateRequest.execute();
 				conn.commit();
 				conn.close();
 			} catch (error:SQLError) {
-				dispatchInformation('error_while_updating_local_setting', error.details);
-				conn.rollback();
-				conn.close();
+				dispatchInformation('error_while_updating_local_setting', error.message + " - " + error.details);
+				if (conn.connected) {
+					conn.rollback();
+					conn.close();
+				}
 			}
 		}
 		
 		public static function insertLocalSetting(settingId:int, newValue:String, lastModifiedTimeStamp:Number = Number.NaN):void {
-			if (newValue == null) newValue = "";
+			if (newValue == null || newValue == "") newValue = "-";//don't like the null or empty string values, - should be replaced back to null or ""
 			try  {
 				var conn:SQLConnection = new SQLConnection();
 				conn.open(dbFile, SQLMode.UPDATE);
@@ -1862,22 +1851,24 @@ package databaseclasses
 				insertRequest.sqlConnection = conn;
 				insertRequest.text = "INSERT INTO localsettings (lastmodifiedtimestamp, value, id) " +
 					"VALUES (" + (isNaN(lastModifiedTimeStamp) ? (new Date()).valueOf() : lastModifiedTimeStamp) + ", " +
-					"'" + (newValue == "" ? null:("'" + newValue + "'")) + "', "  +
+					"'" + newValue + "'" + ", "  +
 					settingId + ")"; 
 				insertRequest.execute();
 				conn.commit();
 				conn.close();
 			} catch (error:SQLError) {
-				dispatchInformation('error_while_inserting_local_setting', error.details);
-				conn.rollback();
-				conn.close();
+				dispatchInformation('error_while_inserting_local_setting', error.message + " - " + error.details);
+				if (conn.connected) {
+					conn.rollback();
+					conn.close();
+				}
 			}
 		}
 		
 		/**
 		 * if aconn is not open then open aconn to dbFile , in asynchronous mode, in UPDATE mode<br>
 		 * returns true if aconn is open<br>
-		 * if aconn is closed then connection will be opened asynchronous mode and an event will be dispatched to the dispatcher after opening the connecion<br>
+		 * if aConn is closed then connection will be opened asynchronous mode and an event will be dispatched to the dispatcher after opening the connecion<br>
 		 * so that means if openSQLConnection returns true then there's no need to wait for the dispatcher event to trigger. <br>
 		 */ 
 		private static function openSQLConnection(dispatcher:EventDispatcher):Boolean {

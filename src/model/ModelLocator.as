@@ -37,6 +37,8 @@ package model
 	import events.DatabaseEvent;
 	
 	import services.BluetoothService;
+	import services.NotificationService;
+	import services.TransmitterService;
 
 	/**
 	 * holds arraylist needed for displaying etc, like bgreadings of last 24 hours, loggings, .. 
@@ -166,6 +168,13 @@ package model
 						if (de.data as String == Database.END_OF_RESULT) {
 							_loggingList.refresh();
 							Database.instance.removeEventListener(DatabaseEvent.LOGRETRIEVED_EVENT, logReceivedFromDatabase);
+
+							//now is the time to start the bluetoothservice because as soon as this service is started, 
+							//new bgreadings may come in, being created synchronously in the database, there should be no more async transactions in the database
+							TransmitterService.init();
+							BluetoothService.init();
+							NotificationService.init();
+
 						} else {
 							_loggingList.addItem(de.data as String);
 						}
@@ -186,6 +195,9 @@ package model
 			return returnValue;
 		}
 		
+		/**
+		 * add bgreading also removes bgreadings olther than 24 hours 
+		 */
 		public static function addBGReading(bgReading:BgReading):void {
 			_bgReadings.addItem(bgReading);
 			_bgReadings.refresh();
