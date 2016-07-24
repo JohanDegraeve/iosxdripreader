@@ -22,6 +22,9 @@ package services
 	import com.distriqt.extension.dialog.events.DialogViewEvent;
 	
 	import flash.display.Stage;
+	import flash.events.Event;
+	import flash.events.TimerEvent;
+	import flash.utils.Timer;
 	
 	import mx.collections.ArrayCollection;
 	
@@ -38,7 +41,9 @@ package services
 		private static var _instance:DialogService = new DialogService();
 		private static var initialStart:Boolean = true;
 		private static var dialogViews:ArrayCollection;
+		private static var dialogViewsMaxDurations:ArrayCollection;
 		private static var dialogOpen:Boolean;
+		private static var maxDurationTimer:Timer;
 		
 		public function DialogService()
 		{
@@ -56,33 +61,72 @@ package services
 			Dialog.init(ModelLocator.resourceManagerInstance.getString('secrets','distriqt-key'));
 			Dialog.service.root = stage;
 			dialogViews = new ArrayCollection();
+			dialogViewsMaxDurations = new ArrayCollection();
 			dialogOpen = false;
 		}
 		
-		public static function addDialog(dialogView:DialogView):void {
+		/**
+		 * if maxDurationInSeconds specified then the dialog will be closed after the specified time
+		 */
+		public static function addDialog(dialogView:DialogView, maxDurationInSeconds:Number = Number.NaN):void {
 			if (dialogOpen) {
 				dialogViews.addItem(dialogView);
+				dialogViewsMaxDurations.addItem(maxDurationInSeconds);
 				//dialog will be processed as soon as the dialog that is currently open is closed again
 			} else {
-				processNewDialog(dialogView);				
+				processNewDialog(dialogView, maxDurationInSeconds);
 			}
 		}
 		
-		private static function processNewDialog(dialogView:DialogView):void {
+		private static function maxDurationReached(event:Event = null):void {
+			if (dialogViews.length > 0) {
+				(dialogViews.getItemAt(0) as DialogView).dispose();
+				dialogOpen = false;
+				if (dialogViews.length > 0) {
+					var dialogViewToShow:DialogView = dialogViews.getItemAt(0) as DialogView;
+					dialogViews.removeItemAt(0);
+					dialogViewsMaxDurations.removeItemAt(0);
+					processNewDialog(dialogViewToShow);
+				}
+			}
+		}
+		
+		private static function processNewDialog(dialogView:DialogView, maxDurationInSeconds:Number = Number.NaN):void {
 			dialogView.addEventListener(DialogViewEvent.CLOSED, dialogViewClosed);
 			//dialogView.addEventListener(DialogViewEvent.CANCELLED, dialogViewClosed);
 			dialogView.show();
 			dialogOpen = true;
+			if (!isNaN(maxDurationInSeconds)) {
+				if (maxDurationInSeconds > 0) {
+					disableMaxDurationTimer();
+					maxDurationTimer = new Timer(maxDurationInSeconds * 1000, 1);
+					maxDurationTimer.addEventListener(TimerEvent.TIMER, maxDurationReached);
+					maxDurationTimer.start();
+				}
+			}
 		}
 		
 		private static function dialogViewClosed(event:DialogViewEvent):void {
+			disableMaxDurationTimer();
+			
 			var alert:DialogView = DialogView(event.currentTarget);
 			alert.dispose();
 			dialogOpen = false;
 			if (dialogViews.length > 0) {
 				var dialogViewToShow:DialogView = dialogViews.getItemAt(0) as DialogView;
 				dialogViews.removeItemAt(0);
-				processNewDialog(dialogViewToShow);
+				var maxDuration:Number = dialogViewsMaxDurations.getItemAt(0) as Number;
+				dialogViewsMaxDurations.removeItemAt(0);
+				processNewDialog(dialogViewToShow, maxDuration);
+			}
+		}
+		
+		private static function disableMaxDurationTimer():void {
+			if (maxDurationTimer != null) {
+				if (maxDurationTimer.hasEventListener(TimerEvent.TIMER)) 
+					maxDurationTimer.removeEventListener(TimerEvent.TIMER,maxDurationReached);
+				maxDurationTimer.stop();
+				maxDurationTimer = null;
 			}
 		}
 	}

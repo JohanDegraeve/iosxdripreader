@@ -37,6 +37,7 @@ package model
 	import events.DatabaseEvent;
 	
 	import services.BluetoothService;
+	import services.CalibrationService;
 	import services.NotificationService;
 	import services.TransmitterService;
 
@@ -174,7 +175,7 @@ package model
 							TransmitterService.init();
 							BluetoothService.init();
 							NotificationService.init();
-
+							//CalibrationService.init(); (only for test purposes)
 						} else {
 							_loggingList.addItem(de.data as String);
 						}

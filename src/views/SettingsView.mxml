@@ -84,6 +84,15 @@
 							Sensor.startSensor();
 							menuList.removeItemAt(2);
 							menuList.addItemAt(ModelLocator.resourceManagerInstance.getString("settingsview","stop_sensor"),2);
+
+							var alert:DialogView = Dialog.service.create(
+								new AlertBuilder()
+								.setTitle(ModelLocator.resourceManagerInstance.getString("settingsview","attention"))
+								.setMessage(ModelLocator.resourceManagerInstance.getString("settingsview","inform_about_calibration"))
+								.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
+								.build()
+							);
+							DialogService.addDialog(alert);
 						}
 					} else {
 						if (event.index == 0) {

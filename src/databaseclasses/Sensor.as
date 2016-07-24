@@ -20,6 +20,8 @@
  */
 package databaseclasses
 {
+	import services.CalibrationService;
+
 	public class Sensor extends SuperDatabaseClass
 	{
 		private var _startedAt:Number;
@@ -62,8 +64,8 @@ package databaseclasses
 		
 		/**
 		 * starts a new sensor and inserts it in the database<br>
-		 * if a sensor is currently active then it will be stopped<br> 
-		 * CommonSettings.COMMON_SETTING_INITIAL_CALIBRATION_DONE_ID is not adapted !!!! 
+		 * if a sensor is currently active then it will be stopped<br>
+		 * Also calls CalibrationService.init() 
 		 */
 		public static function startSensor():void {
 			var currentSensor:Sensor = getActiveSensor();
@@ -75,6 +77,7 @@ package databaseclasses
 			currentSensor = new Sensor((new Date()).valueOf(), 0, 0, null, Number.NaN);
 			Database.insertSensor(currentSensor);
 			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_ID_CURRENT_SENSOR_ID, currentSensor.uniqueId);
+			CalibrationService.init();
 		}
 		
 		/**
