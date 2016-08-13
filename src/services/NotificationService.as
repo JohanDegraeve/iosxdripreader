@@ -33,6 +33,8 @@ package services
 	import flash.events.TimerEvent;
 	import flash.utils.Timer;
 	
+	import distriqtkey.DistriqtKey;
+	
 	import model.ModelLocator;
 	
 	/**
@@ -88,7 +90,7 @@ package services
 				initialStart = false;
 			
 			Core.init();
-			Notifications.init(ModelLocator.resourceManagerInstance.getString('secrets','distriqt-key'));
+			Notifications.init(DistriqtKey.distriqtKey);
 			if (!Notifications.isSupported) {
 				return;
 			}
@@ -153,8 +155,8 @@ package services
 				Notifications.service.register();
 				
 				timeOfLastWakeUpNotificationBeingSet = (new Date()).valueOf();
-				setupWakeUpNotification(new Date(timeOfLastWakeUpNotificationBeingSet + DELAY_FOR_WAKEUP_CATEGORY_IN_MINUTES * 60 * 1000));
-				setupWakeUpTimer(new Date(timeOfLastWakeUpNotificationBeingSet + DELAY_FOR_WAKEUP_CATEGORY_IN_MINUTES * 60 * 1000 - timeDifferenceBetweenWakeUpTimerAndWakeUpNotificationInMilliSeconds));//5 seconds sooner
+				//setupWakeUpNotification(new Date(timeOfLastWakeUpNotificationBeingSet + DELAY_FOR_WAKEUP_CATEGORY_IN_MINUTES * 60 * 1000));
+				//setupWakeUpTimer(new Date(timeOfLastWakeUpNotificationBeingSet + DELAY_FOR_WAKEUP_CATEGORY_IN_MINUTES * 60 * 1000 - timeDifferenceBetweenWakeUpTimerAndWakeUpNotificationInMilliSeconds));//5 seconds sooner
 			}
 			
 			function notificationHandler(event:NotificationEvent):void {

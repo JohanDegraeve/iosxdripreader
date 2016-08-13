@@ -39,13 +39,15 @@ package services
 	 */
 	public class TransmitterService extends EventDispatcher
 	{
+		[ResourceBundle("transmitterservice")]
+		
 		private static var _instance:TransmitterService = new TransmitterService();
-
+		
 		public static function get instance():TransmitterService
 		{
 			return _instance;
 		}
-
+		
 		private static var initialStart:Boolean = true;
 		private static var transmitterServiceEvent:TransmitterServiceEvent;
 		/**
@@ -91,7 +93,7 @@ package services
 					//if the currently stored transmit id is different from 00000 AND if the id in the beacon is different from the stored one
 					//send the transmit id to the device, byte 0 0x06, byte 1 0x01 byte 2 to 5 the encoded transmitter id as 32 bit unsigned integer
 					//dispatch the event that there's new data
-
+					
 					
 					//only if tx id is ok
 					BluetoothService.ackCharacteristicUpdate();
@@ -100,7 +102,7 @@ package services
 					var transmitterDataXBridgeDataPacket:TransmitterDataXBridgeDataPacket = be.data as TransmitterDataXBridgeDataPacket;
 					if (((new Date()).valueOf() - lastPacketTime) < 60000) {
 						//if previous packet was less than 1 minute ago then ignore it
-						trace("Transmitterservice : received duplicate TransmitterDataXBridgeDataPacket, ignoring it"); 
+						dispatchInformation('ignoring_transmitterxbridgedatapacket');
 					} else {
 						lastPacketTime = (new Date()).valueOf();
 						// check the transmitter id as in case of TransmitterDataXBridgeBeaconPacket
@@ -116,17 +118,15 @@ package services
 						//then process the data :
 						//store the transmitter battery level in the common settings (to be synchronized)
 						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_BATTERY_VOLTAGE_ID,transmitterDataXBridgeDataPacket.transmitterBatteryVoltage.toString());
-
+						
 						//store the bridge battery level in the common settings (to be synchronized)
 						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_BRIDGE_BATTERY_PERCENTAGE_ID,transmitterDataXBridgeDataPacket.bridgeBatteryPercentage.toString());
-
 						if (Sensor.getActiveSensor() != null) {
+							Sensor.getActiveSensor().latestBatteryLevel = transmitterDataXBridgeDataPacket.transmitterBatteryVoltage;
 							//create and save bgreading
-							ModelLocator.addBGReading(
-								BgReading.
+							BgReading.
 								create(transmitterDataXBridgeDataPacket.rawData, transmitterDataXBridgeDataPacket.filteredData)
-								.saveToDatabaseSynchronous()
-							);
+								.saveToDatabaseSynchronous();
 							
 							//dispatch the event that there's new data
 							transmitterServiceEvent = new TransmitterServiceEvent(TransmitterServiceEvent.BGREADING_EVENT);
@@ -140,7 +140,7 @@ package services
 					var transmitterDataXdripDataPacket:TransmitterDataXdripDataPacket = be.data as TransmitterDataXdripDataPacket;
 					if (((new Date()).valueOf() - lastPacketTime) < 60000) {
 						//if previous packet was less than 1 minute ago then ignore it
-						trace("Transmitterservice : received duplicate TransmitterDataXBridgeDataPacket, ignoring it"); 
+						dispatchInformation('ignoring_transmitterxdripdatapacket');
 					} else {//it's an xdrip, with old software, 
 						lastPacketTime = (new Date()).valueOf();
 						
@@ -149,12 +149,11 @@ package services
 						
 						//store the transmitter battery level in the common settings (to be synchronized)
 						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_BATTERY_VOLTAGE_ID,transmitterDataXdripDataPacket.transmitterBatteryVoltage.toString());
+						Sensor.getActiveSensor().latestBatteryLevel = transmitterDataXdripDataPacket.transmitterBatteryVoltage;
 						//create and save bgreading
-						ModelLocator.addBGReading(
-							BgReading.
+						BgReading.
 							create(transmitterDataXdripDataPacket.rawData, transmitterDataXdripDataPacket.filteredData)
-							.saveToDatabaseSynchronous()
-						);
+							.saveToDatabaseSynchronous();
 						
 						//dispatch the event that there's new data
 						transmitterServiceEvent = new TransmitterServiceEvent(TransmitterServiceEvent.BGREADING_EVENT);
@@ -163,5 +162,14 @@ package services
 				}
 			}
 		}
+		
+		private static function dispatchInformation(informationResourceName:String):void {
+			transmitterServiceEvent = new TransmitterServiceEvent(TransmitterServiceEvent.TRANSMITTER_SERVICE_INFORMATION_EVENT);
+			transmitterServiceEvent.data = new Object();
+			transmitterServiceEvent.data.information = ModelLocator.resourceManagerInstance.getString('transmitterservice',informationResourceName);
+			_instance.dispatchEvent(transmitterServiceEvent);
+		}
+		
+
 	}
 }

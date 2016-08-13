@@ -28,8 +28,8 @@ package services
 	
 	import mx.collections.ArrayCollection;
 	
-	import model.ModelLocator;
-
+	import distriqtkey.DistriqtKey;
+	
 	/**
 	 * Will process all dialogs - goal is that any other service that wants to interact with the user will use this service<br> 
 	 * Reason for using this service is because some service may be generating requests to open dialogs, while a dialog is already open<br>
@@ -42,7 +42,10 @@ package services
 		private static var initialStart:Boolean = true;
 		private static var dialogViews:ArrayCollection;
 		private static var dialogViewsMaxDurations:ArrayCollection;
-		private static var dialogOpen:Boolean;
+		/**
+		 * the dialogview that is currently open, null if none is open 
+		 */
+		private static var openDialogView:DialogView;
 		private static var maxDurationTimer:Timer;
 		
 		public function DialogService()
@@ -58,18 +61,18 @@ package services
 			else
 				initialStart = false;
 			
-			Dialog.init(ModelLocator.resourceManagerInstance.getString('secrets','distriqt-key'));
+			Dialog.init(DistriqtKey.distriqtKey);
 			Dialog.service.root = stage;
 			dialogViews = new ArrayCollection();
 			dialogViewsMaxDurations = new ArrayCollection();
-			dialogOpen = false;
+			openDialogView = null;
 		}
 		
 		/**
 		 * if maxDurationInSeconds specified then the dialog will be closed after the specified time
 		 */
 		public static function addDialog(dialogView:DialogView, maxDurationInSeconds:Number = Number.NaN):void {
-			if (dialogOpen) {
+			if (openDialogView != null) {
 				dialogViews.addItem(dialogView);
 				dialogViewsMaxDurations.addItem(maxDurationInSeconds);
 				//dialog will be processed as soon as the dialog that is currently open is closed again
@@ -79,23 +82,22 @@ package services
 		}
 		
 		private static function maxDurationReached(event:Event = null):void {
+			openDialogView.dispose();
+			openDialogView = null;
 			if (dialogViews.length > 0) {
-				(dialogViews.getItemAt(0) as DialogView).dispose();
-				dialogOpen = false;
-				if (dialogViews.length > 0) {
-					var dialogViewToShow:DialogView = dialogViews.getItemAt(0) as DialogView;
-					dialogViews.removeItemAt(0);
-					dialogViewsMaxDurations.removeItemAt(0);
-					processNewDialog(dialogViewToShow);
-				}
+				var dialogViewToShow:DialogView = dialogViews.getItemAt(0) as DialogView;
+				dialogViews.removeItemAt(0);
+				var maxDuration:Number = dialogViewsMaxDurations.getItemAt(0) as Number;
+				dialogViewsMaxDurations.removeItemAt(0);
+				processNewDialog(dialogViewToShow, maxDuration);
 			}
 		}
 		
-		private static function processNewDialog(dialogView:DialogView, maxDurationInSeconds:Number = Number.NaN):void {
+		private static function processNewDialog(dialogView:DialogView, maxDurationInSeconds:Number):void {
 			dialogView.addEventListener(DialogViewEvent.CLOSED, dialogViewClosed);
 			//dialogView.addEventListener(DialogViewEvent.CANCELLED, dialogViewClosed);
 			dialogView.show();
-			dialogOpen = true;
+			openDialogView = dialogView;
 			if (!isNaN(maxDurationInSeconds)) {
 				if (maxDurationInSeconds > 0) {
 					disableMaxDurationTimer();
@@ -111,7 +113,7 @@ package services
 			
 			var alert:DialogView = DialogView(event.currentTarget);
 			alert.dispose();
-			dialogOpen = false;
+			openDialogView = null;
 			if (dialogViews.length > 0) {
 				var dialogViewToShow:DialogView = dialogViews.getItemAt(0) as DialogView;
 				dialogViews.removeItemAt(0);

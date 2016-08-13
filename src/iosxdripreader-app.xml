@@ -133,7 +133,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 		<!-- Display Resolution for the app (either "standard" or "high"). Optional, OSX-only. Default "standard" -->
 		<!-- <requestedDisplayResolution></requestedDisplayResolution> -->
 		<aspectRatio>portrait</aspectRatio> 
-		<autoOrients>false</autoOrients>
+		<autoOrients>true</autoOrients>
         <fullScreen>false</fullScreen>
         <visible>true</visible>
         <softKeyboardBehavior>none</softKeyboardBehavior>

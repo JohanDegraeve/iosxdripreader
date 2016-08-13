@@ -25,8 +25,9 @@ package databaseclasses
 	import spark.collections.Sort;
 	import spark.collections.SortField;
 	
+	import Utilities.Trace;
 	import Utilities.UniqueId;
-
+	
 	public class Calibration extends SuperDatabaseClass
 	{
 		private var _timestamp:Number;
@@ -40,7 +41,7 @@ package databaseclasses
 		}
 		
 		private var _sensorAgeAtTimeOfEstimation:Number;
-
+		
 		/**
 		 * in ms 
 		 */
@@ -48,198 +49,198 @@ package databaseclasses
 		{
 			return _sensorAgeAtTimeOfEstimation;
 		}
-
+		
 		private var _sensor:Sensor;
-
+		
 		public function get sensor():Sensor
 		{
 			return _sensor;
 		}
-
+		
 		private var _bg:Number;
-
+		
 		public function get bg():Number
 		{
 			return _bg;
 		}
-
+		
 		private var _rawValue:Number;
-
+		
 		public function get rawValue():Number
 		{
 			return _rawValue;
 		}
-
+		
 		private var _adjustedRawValue:Number;
-
+		
 		public function get adjustedRawValue():Number
 		{
 			return _adjustedRawValue;
 		}
-
+		
 		private var _sensorConfidence:Number;
-
+		
 		public function set sensorConfidence(value:Number):void
 		{
 			_sensorConfidence = value;
 			resetLastModifiedTimeStamp();
 		}
-
-
+		
+		
 		public function get sensorConfidence():Number
 		{
 			return _sensorConfidence;
 		}
-
+		
 		private var _slopeConfidence:Number;
-
+		
 		public function set slopeConfidence(value:Number):void
 		{
 			_slopeConfidence = value;
 			resetLastModifiedTimeStamp();
 		}
-
-
+		
+		
 		public function get slopeConfidence():Number
 		{
 			return _slopeConfidence;
 		}
-
+		
 		private var _rawTimestamp:Number;
-
+		
 		public function get rawTimestamp():Number
 		{
 			return _rawTimestamp;
 		}
-
+		
 		private var _slope:Number;
-
+		
 		public function set slope(value:Number):void
 		{
 			_slope = value;
 			resetLastModifiedTimeStamp();
 		}
-
-
+		
+		
 		public function get slope():Number
 		{
 			return _slope;
 		}
-
+		
 		private var _intercept:Number;
-
+		
 		public function set intercept(value:Number):void
 		{
 			_intercept = value;
 			resetLastModifiedTimeStamp();
 		}
-
-
+		
+		
 		public function get intercept():Number
 		{
 			return _intercept;
 		}
-
+		
 		private var _distanceFromEstimate:Number;
-
+		
 		public function get distanceFromEstimate():Number
 		{
 			return _distanceFromEstimate;
 		}
-
+		
 		private var _estimateRawAtTimeOfCalibration:Number;
-
+		
 		public function get estimateRawAtTimeOfCalibration():Number
 		{
 			return _estimateRawAtTimeOfCalibration;
 		}
-
+		
 		private var _estimateBgAtTimeOfCalibration:Number;
-
+		
 		public function get estimateBgAtTimeOfCalibration():Number
 		{
 			return _estimateBgAtTimeOfCalibration;
 		}
-
+		
 		private var _possibleBad:Boolean;
-
+		
 		public function set possibleBad(value:Boolean):void
 		{
 			_possibleBad = value;
 			resetLastModifiedTimeStamp();
 		}
-
-
+		
+		
 		public function get possibleBad():Boolean
 		{
 			return _possibleBad;
 		}
-
+		
 		private var _checkIn:Boolean;
-
+		
 		public function get checkIn():Boolean
 		{
 			return _checkIn;
 		}
-
+		
 		private var _firstDecay:Number;
-
+		
 		public function get firstDecay():Number
 		{
 			return _firstDecay;
 		}
-
+		
 		private var _secondDecay:Number;
-
+		
 		public function get secondDecay():Number
 		{
 			return _secondDecay;
 		}
-
+		
 		private var _firstSlope:Number;
-
+		
 		public function get firstSlope():Number
 		{
 			return _firstSlope;
 		}
-
+		
 		private var _secondSlope:Number;
-
+		
 		public function get secondSlope():Number
 		{
 			return _secondSlope;
 		}
-
+		
 		private var _firstIntercept:Number;
-
+		
 		public function get firstIntercept():Number
 		{
 			return _firstIntercept;
 		}
-
+		
 		private var _secondIntercept:Number;
-
+		
 		public function get secondIntercept():Number
 		{
 			return _secondIntercept;
 		}
-
+		
 		private var _firstScale:Number;
-
+		
 		public function get firstScale():Number
 		{
 			return _firstScale;
 		}
-
+		
 		private var _secondScale:Number;
-
+		
 		public function get secondScale():Number
 		{
 			return _secondScale;
 		}
 		
 		
-	
+		
 		/**
 		 * if calibrationid = null, then a new value will be assigned by the constructor<br>
 		 * if lastmodifiedtimestamp = Number.NaN, then current time will be assigned by the constructor 
@@ -284,7 +285,7 @@ package databaseclasses
 			_slopeConfidence = slopeConfidence;
 			_rawTimestamp = rawTimestamp;
 			_slope = slope,
-			_intercept = intercept;
+				_intercept = intercept;
 			_distanceFromEstimate = distanceFromEstimate;
 			_estimateRawAtTimeOfCalibration = estimateRawAtTimeOfCalibration;
 			_estimateBgAtTimeOfCalibration = estimateBgAtTimeOfCalibration;
@@ -346,6 +347,7 @@ package databaseclasses
 		}
 		
 		public static function initialCalibration(bg1:Number, bg2:Number):void {
+			myTrace("start initialCalibration");
 			//TODO take unit from settings
 			var unit:String = "mgdl";
 			if (unit != "mgdl") {
@@ -373,37 +375,15 @@ package databaseclasses
 				lowBgReading = bgReading1;
 			}
 			
-			//create and save high calibration
-			var higherCalibration:Calibration = new Calibration(
-				(new Date()).valueOf(),//timestamp
-				(new Date()).valueOf() - sensor.startedAt,//sensor age at time of estimation
-				sensor,
-				higherBg,//bg
-				highBgReading.rawData,//rawvalue
-				highBgReading.ageAdjustedRawValue,//adjustedrawvalue
-				((-0.0018 * higherBg * higherBg) + (0.6657 * higherBg) + 36.7505) / 100,//sensorconfidence,
-				0.5,//slopeconfidence,
-				highBgReading.timestamp,//rawtimestamp
-				1,//slope
-				higherBg,//intercept
-				0,//distancefromestimate,
-				highBgReading.ageAdjustedRawValue,//estimaterawattimeofcalibration
-				0,//estimatebgattimeofcalibration - default value, it seems never assigned a value in the android project
-				false,//possible bad defualt value
-				false,//checkin
-				new Number(0),//firstdecay
-				new Number(0),//seconddecay
-				new Number(0),//firstslope
-				new Number(0),//secondslope
-				new Number(0),//firstintercept
-				new Number(0),//secondintercept
-				new Number(0),//firstscale
-				new Number(0),//secondscale
-				(new Date()).valueOf(),
-				Utilities.UniqueId.createEventId()
-			);
-			higherCalibration.saveToDatabaseSynchronous();
-
+			highBgReading.calculatedValue = higherBg;
+			highBgReading.calibrationFlag = true;
+			lowBgReading.calculatedValue = lowerBg;
+			lowBgReading.calibrationFlag = true;
+			highBgReading.findNewCurve();
+			highBgReading.findNewRawCurve();
+			lowBgReading.findNewCurve();
+			lowBgReading.findNewRawCurve();
+			
 			//create and save low calibration
 			var lowerCalibration:Calibration = new Calibration(
 				(new Date()).valueOf(),//timestamp
@@ -433,27 +413,60 @@ package databaseclasses
 				(new Date()).valueOf(),
 				Utilities.UniqueId.createEventId()
 			);
-			lowerCalibration.saveToDatabaseSynchronous();
+			calculateWLS(lowerCalibration).saveToDatabaseSynchronous();
 			
-			highBgReading.calculatedValue = higherBg;
-			highBgReading.calibrationFlag = true;
+			//create and save high calibration
+			var higherCalibration:Calibration = new Calibration(
+				(new Date()).valueOf(),//timestamp
+				(new Date()).valueOf() - sensor.startedAt,//sensor age at time of estimation
+				sensor,
+				higherBg,//bg
+				highBgReading.rawData,//rawvalue
+				highBgReading.ageAdjustedRawValue,//adjustedrawvalue
+				((-0.0018 * higherBg * higherBg) + (0.6657 * higherBg) + 36.7505) / 100,//sensorconfidence,
+				0.5,//slopeconfidence
+				highBgReading.timestamp,//rawtimestamp
+				1,//slope
+				higherBg,//intercept
+				0,//distancefromestimate,
+				highBgReading.ageAdjustedRawValue,//estimaterawattimeofcalibration
+				0,//estimatebgattimeofcalibration - default value, it seems never assigned a value in the android project
+				false,//possible bad defualt value
+				false,//checkin
+				new Number(0),//firstdecay
+				new Number(0),//seconddecay
+				new Number(0),//firstslope
+				new Number(0),//secondslope
+				new Number(0),//firstintercept
+				new Number(0),//secondintercept
+				new Number(0),//firstscale
+				new Number(0),//secondscale
+				(new Date()).valueOf(),
+				Utilities.UniqueId.createEventId()
+			);
+			calculateWLS(higherCalibration).saveToDatabaseSynchronous();
+			
 			highBgReading.calibration = higherCalibration;
-			
-			lowBgReading.calculatedValue = lowerBg;
-			lowBgReading.calibrationFlag = true;
 			lowBgReading.calibration = lowerCalibration;
 			
-			highBgReading.findNewCurve();
-			highBgReading.findNewRawCurve();
-			lowBgReading.findNewCurve();
-			lowBgReading.findNewCurve();
-
 			highBgReading.updateInDatabaseSynchronous();
 			lowBgReading.updateInDatabaseSynchronous();
+			
+			/*myTrace("Calibration.intialCalibration before calculate_w_l_s");
+			myTrace("Calibration.intialCalibration after calculate_w_l_s");
+			myTrace("before adjustbgreadings highBgReading = " + highBgReading.print("   "));
+			myTrace("before adjustbgreadings lowBgReading = " + lowBgReading.print("   "));*/
+			var latest3Calibrations:ArrayCollection = new ArrayCollection();
+			latest3Calibrations.addItem(higherCalibration);//the higher is the latest, this one comes first, so it will be sorted from large to small
+			latest3Calibrations.addItem(lowerCalibration);
 
-			calculateWLS();
-			adjustRecentBgReadings(5);
+			adjustRecentBgReadings(5, latest3Calibrations);
 			CalibrationRequest.createOffset(lowerBg, 35);
+			myTrace("after adjustbgreadings");
+			myTrace("End of initialCalibration highBgReading = " + highBgReading.print("   "));
+			myTrace("End of initialCalibration lowBgReading = " + lowBgReading.print("   "));
+			myTrace("End of initialCalibration higherCalibration = " + higherCalibration.print("   "));
+			myTrace("End of initialCalibration lowerCalibration = " + lowerCalibration.print("   "));
 		}
 		
 		/**
@@ -461,6 +474,7 @@ package databaseclasses
 		 */
 		public static function create(bg:Number):Calibration {
 			//TODO take unit from settings
+			var calibration:Calibration;
 			var unit:String = "mgdl";
 			if (unit != "mgdl") {
 				bg = bg * BgReading.MMOLL_TO_MGDL;
@@ -472,7 +486,7 @@ package databaseclasses
 				var bgReading:BgReading = BgReading.latest(1) as BgReading;//TODO geeft dit wel degelijk de laatste ?
 				if (bgReading != null) {
 					var estimatedRawBg:Number = BgReading.estimatedRawBg((new Date()).valueOf());
-					var calibration:Calibration = new Calibration(
+					calibration = (new Calibration(
 						(new Date()).valueOf(),//timestamp
 						(new Date()).valueOf() - sensor.startedAt,//sensorageattimeofestimation
 						sensor,//sensor
@@ -499,24 +513,30 @@ package databaseclasses
 						new Number(0),//second scale
 						(new Date()).valueOf(),//lastmodifiedtimestamp
 						Utilities.UniqueId.createEventId()//eventid
-						);
+					));
+					calculateWLS(calibration);
 					bgReading.calibration = calibration;
 					bgReading.calibrationFlag = true;
 					bgReading.updateInDatabaseSynchronous();
-					calculateWLS();
-					adjustRecentBgReadings(1);//TODO to align with android version, make it configurable to adjust up to 30 days
+					var calibrations:ArrayCollection = Calibration.latest(2);
+					calibrations.addItemAt(calibration, 0);
+					adjustRecentBgReadings(1, calibrations);//TODO to align with android version, make it configurable to adjust up to 30 days
 					Calibration.requestCalibrationIfRangeTooNarrow();
 				}
 			}
-			return Calibration.last();
+			return calibration;
 		}
 		
 		/**
-		 * with database update 
+		 * Same as in Android version<br>
+		 * If calibration input parameter == null, then method will get the last calibration from the database<br>
+		 * returns the calibration to allow chaining which is either the original calibration in the parameter or the one from the database<br>
+		 * without database update<br> 
 		 */
-		private static function calculateWLS():void {
-		 	var sParams:SlopeParameters = new DexParameters();
+		private static function calculateWLS(calibration:Calibration):Calibration {
+			var sParams:SlopeParameters = new DexParameters();
 			if (Sensor.getActiveSensor()) {
+				myTrace("calculatewls : sensor is active");
 				var l:Number = 0;
 				var m:Number = 0;
 				var n:Number = 0;
@@ -524,48 +544,97 @@ package databaseclasses
 				var q:Number = 0;
 				var w:Number;
 				var calibrations:ArrayCollection = allForSensorInLastXDays(4);
+				
+				//check if this item is already in that list, if not add it
+				var calibrationItem:Calibration;
+				var itemfound:Boolean = false;
+				var calibcntr:int;
+				if (calibration != null) {
+					for (calibcntr = 0; calibcntr< calibrations.length; calibcntr++) {
+						if ((calibrations.getItemAt(calibcntr) as Calibration).uniqueId == calibration.uniqueId) {
+							itemfound = true;
+							break;
+						}
+					}
+				}
+				
+				if (!itemfound && calibration != null) {
+					calibrations.addItemAt(calibration, 0);
+					var dataSortFieldForReturnValue:SortField = new SortField();
+					dataSortFieldForReturnValue.name = "timestamp";
+					dataSortFieldForReturnValue.numeric = true;
+					dataSortFieldForReturnValue.descending = true;//ie from large to small
+					var dataSortForBGReadings:Sort = new Sort();
+					dataSortForBGReadings.fields=[dataSortFieldForReturnValue];
+					calibrations.sort = dataSortForBGReadings;
+					calibrations.refresh();
+				}
+				
+				if (calibration == null) {
+					trace("calling calibration.last");
+					calibration = Calibration.last();
+				}
+				
+				myTrace("calibrations length = " + calibrations.length);
 				if (calibrations.length <= 1) {
-					var calibration:Calibration = Calibration.last();
+					myTrace("calculatewls : length <= 1");
 					calibration.slope = 1;
+					myTrace("intercept checkpoint 1 = " + calibration.intercept);
 					calibration.intercept = calibration.bg - (calibration.rawValue * calibration.slope);
-					calibration.updateInDatabaseSynchronous();
+					myTrace("intercept checkpoint 2 = " + calibration.intercept);
 					CalibrationRequest.createOffset(calibration.bg, 25);
 				} else {
-					for each (var calibration:Calibration in calibrations) {
-						w = calibration.calculateWeight();
+					myTrace("calculatewls : length > 1");
+					for (calibcntr = 0; calibcntr< calibrations.length; calibcntr++) {
+						calibrationItem = calibrations.getItemAt(calibcntr) as Calibration;
+						w = calibrationItem.calculateWeight(calibrations);
 						l += (w);
-						m += (w * calibration.estimateRawAtTimeOfCalibration);
-						n += (w * calibration.estimateRawAtTimeOfCalibration * calibration.estimateRawAtTimeOfCalibration);
-						p += (w * calibration.bg);
-						q += (w * calibration.estimateRawAtTimeOfCalibration * calibration.bg);
+						m += (w * calibrationItem.estimateRawAtTimeOfCalibration);
+						n += (w * calibrationItem.estimateRawAtTimeOfCalibration * calibrationItem.estimateRawAtTimeOfCalibration);
+						p += (w * calibrationItem.bg);
+						q += (w * calibrationItem.estimateRawAtTimeOfCalibration * calibrationItem.bg);
 					}
-					var lastCalibration:Calibration = last();
-					w = (lastCalibration.calculateWeight() * (calibrations.length * 0.14));
+					myTrace("calculatewls 1 : w = " + w + ", l = " + l + ", m = " + m + ", n = " + n + ", p = " + p + ", q = " + q);
+					myTrace("calculatewls : lastcalibration has id = " + calibration.uniqueId);
+					w = (calibration.calculateWeight(calibrations) * (calibrations.length * 0.14));
 					l += (w);
-					m += (w * lastCalibration.estimateRawAtTimeOfCalibration);
-					n += (w * lastCalibration.estimateRawAtTimeOfCalibration * lastCalibration.estimateRawAtTimeOfCalibration);
-					p += (w * lastCalibration.bg);
-					q += (w * lastCalibration.estimateRawAtTimeOfCalibration * lastCalibration.bg);
-
+					m += (w * calibration.estimateRawAtTimeOfCalibration);
+					n += (w * calibration.estimateRawAtTimeOfCalibration * calibration.estimateRawAtTimeOfCalibration);
+					p += (w * calibration.bg);
+					q += (w * calibration.estimateRawAtTimeOfCalibration * calibration.bg);
+					myTrace("calculatewls 2 : w = " + w + ", l = " + l + ", m = " + m + ", n = " + n + ", p = " + p + ", q = " + q);
 					var d:Number = (l * n) - (m * m);
-					var calibration:Calibration = last();
+					myTrace("d = " + d);
+					myTrace("intercept checkpoint 3 = " + calibration.intercept);
 					calibration.intercept = ((n * p) - (m * q)) / d;
+					myTrace("intercept checkpoint 4 = " + calibration.intercept);
 					calibration.slope = ((l * q) - (m * p)) / d;
-					if ((calibrations.length == 2 && calibration.slope < sParams.LOW_SLOPE_1) || (calibration.slope < sParams.LOW_SLOPE_2)) { // I have not seen a case where a value below 7.5 proved to be accurate but we should keep an eye on this
-						calibration.slope = calibration.slopeOOBHandler(0);
+					myTrace("1 intercept = "+  calibration.intercept + ", slope = " + calibration.slope);
+					var latest3Calibrations:ArrayCollection = new ArrayCollection();
+					for (var cntr:int = 0; cntr < calibrations.length && cntr < 3; cntr++) {
+						latest3Calibrations.addItem(calibrations.getItemAt(cntr));
+					}
+					if ((calibrations.length == 2 && calibration.slope < sParams.LOW_SLOPE_1) || (calibration.slope < sParams.LOW_SLOPE_2)) { 
+						calibration.slope = calibration.slopeOOBHandler(0, latest3Calibrations);
 						if(calibrations.length > 2) { calibration.possibleBad = true; }
+						myTrace("intercept checkpoint 5 = " + calibration.intercept);
 						calibration.intercept = calibration.bg - (calibration.estimateRawAtTimeOfCalibration * calibration.slope);
+						myTrace("intercept checkpoint 6 = " + calibration.intercept);
 						CalibrationRequest.createOffset(calibration.bg, 25);
+						myTrace("2 intercept = "+  calibration.intercept + ", slope = " + calibration.slope);
 					}
 					if ((calibrations.length == 2 && calibration.slope > sParams.HIGH_SLOPE_1) || (calibration.slope > sParams.HIGH_SLOPE_2)) {
-						calibration.slope = calibration.slopeOOBHandler(1);
+						calibration.slope = calibration.slopeOOBHandler(1, latest3Calibrations);
 						if(calibrations.length > 2) { calibration.possibleBad = true; }
+						myTrace("intercept checkpoint 7 = " + calibration.intercept);
 						calibration.intercept = calibration.bg - (calibration.estimateRawAtTimeOfCalibration * calibration.slope);
+						myTrace("intercept checkpoint 8 = " + calibration.intercept);
 						CalibrationRequest.createOffset(calibration.bg, 25);
+						myTrace("3 intercept = "+  calibration.intercept + ", slope = " + calibration.slope);
 					}
-					calibration.updateInDatabaseSynchronous();					
 				}
 			}
+			return calibration;
 		}
 		
 		/**
@@ -579,11 +648,12 @@ package databaseclasses
 			return Database.getLatestCalibrations(number,sensorId);
 		}
 		
-		private function slopeOOBHandler(status:int):Number {
+		/**
+		 * calibrations should have maximum 3 calibrations, the latest,  from large to small ie descending
+		 */
+		private function slopeOOBHandler(status:int, calibrations:ArrayCollection):Number {
 			var sParams:SlopeParameters = new DexParameters();
 			
-			// If the last slope was reasonable and reasonably close, use that, otherwise use a slope that may be a little steep, but its best to play it safe when uncertain
-			var calibrations:ArrayCollection = Calibration.latest(3);
 			var thisCalibration:Calibration = calibrations.getItemAt(0) as Calibration;
 			if(status == 0) {
 				if (calibrations.length == 3) {
@@ -593,6 +663,10 @@ package databaseclasses
 						return Math.max(((-0.048) * (thisCalibration.sensorAgeAtTimeOfEstimation / (60000 * 60 * 24))) + 1.1, sParams.DEFAULT_LOW_SLOPE_LOW);
 					}
 				} else if (calibrations.length == 2) {
+					myTrace("thisCalibration.sensor_age_at_time_of_estimation = " + thisCalibration.sensorAgeAtTimeOfEstimation);
+					myTrace("(thisCalibration.sensor_age_at_time_of_estimation / (60000 * 60 * 24) = " + (thisCalibration.sensorAgeAtTimeOfEstimation / (60000 * 60 * 24)));
+					myTrace("sParams.getDefaultLowSlopeHigh() = " + sParams.DEFAULT_LOW_SLOPE_HIGH);
+					myTrace("return value = " + Math.max(((-0.048) * (thisCalibration.sensorAgeAtTimeOfEstimation / (60000 * 60 * 24))) + 1.1, sParams.DEFAULT_LOW_SLOPE_HIGH));
 					return Math.max(((-0.048) * (thisCalibration.sensorAgeAtTimeOfEstimation / (60000 * 60 * 24))) + 1.1, sParams.DEFAULT_LOW_SLOPE_HIGH);
 				}
 				return sParams.DEFAULT_SLOPE;
@@ -629,8 +703,14 @@ package databaseclasses
 		}
 		
 		/**
+		 * Returns calibrations in database for which <br>
+		 * - sensorConfidence != 0<br>
+		 * - slopeConfidence != 0 <br>
+		 * - sensorId == active sensor<br>
+		 * - timestamp within last days days<br>
 		 * same as  allForSensorInLastFiveDays in android version, but taking days as a parameter<br>
-		 * returnvalue will never be null but can have size 0 if there's no calibration matching
+		 * returnvalue will never be null but can have size 0 if there's no calibration matching<br>
+		 * order by timestamp, large to small (descending)
 		 */
 		public static function allForSensorInLastXDays(days:int):ArrayCollection {
 			var sensorId:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_ID_CURRENT_SENSOR_ID);
@@ -639,35 +719,91 @@ package databaseclasses
 			return Database.getCalibrationForSensorInLastXDays(days, sensorId);
 		}
 		
-		private function calculateWeight():Number {
-			var firstTimeStarted:Number = Calibration.first().sensorAgeAtTimeOfEstimation;
-			var lastTimeStarted:Number = Calibration.last().sensorAgeAtTimeOfEstimation;
+		/**
+		 * for calculation of first and last :<br>
+		 * - the method will combine all calibrations found in the database matching the sensor id and add the calibratoins in the supplied arraycollection calibrations<br>
+		 * From this list, the first and the last will be used.<br>
+		 * <br>
+		 * In this list, all calibrations are checked, ie the ones already stored in the database, and those that are not yet stored also.<br>
+		 * Prerequisites<br>
+		 * - calibrations in the supplied parameter do have a timestamp != 0<br>
+		 * - calibrations in the supplied timestamp must have the active sensorid<br>
+		 * - there's at least two calibrations when combining the ones in the database and the ones in the supplied parameter<br>
+		 * - calibrations need to be sorted from large to small (descending)<br>
+		 * - calibrations will not be modified
+		 */
+		private function calculateWeight(calibrations:ArrayCollection):Number {
+			//get the first calibration
+			var firstCalibration:Calibration = Calibration.first();
+			if (firstCalibration == null) {
+				firstCalibration = calibrations.getItemAt(calibrations.length - 1) as Calibration;
+			} else {
+				if (calibrations != null) {
+					if (calibrations.length > 0) {
+						if (firstCalibration.timestamp > (calibrations.getItemAt(calibrations.length - 1) as Calibration).timestamp) {
+							firstCalibration = calibrations.getItemAt(calibrations.length - 1) as Calibration;
+						}
+					}
+				}
+			}
+			
+			//get the last calibration
+			var lastCalibration:Calibration = Calibration.last();
+			if (lastCalibration == null) {
+				lastCalibration = calibrations.getItemAt(0) as Calibration;
+			} else {
+				if (calibrations != null) {
+					if (calibrations.length > 0) {
+						if (lastCalibration.timestamp < (calibrations.getItemAt(0) as Calibration).timestamp) {
+							lastCalibration = calibrations.getItemAt(0) as Calibration;
+						}
+					}
+				}
+			}
+
+			myTrace("id of firstcalibration = " + firstCalibration.uniqueId);
+			myTrace("id of last calibration = " + lastCalibration.uniqueId);
+			var firstTimeStarted:Number = firstCalibration.sensorAgeAtTimeOfEstimation;
+			var lastTimeStarted:Number = lastCalibration.sensorAgeAtTimeOfEstimation;
+			myTrace("calculateWeight: firstTimeStarted = " + firstTimeStarted);
+			myTrace("calculateWeight: lastTimeStarted = " + lastTimeStarted);
+			myTrace("sensor_age_at_time_of_estimation = " + sensorAgeAtTimeOfEstimation);
+			myTrace("sensor_age_at_time_of_estimation - firstTimeStarted = " + (sensorAgeAtTimeOfEstimation - firstTimeStarted));
+			myTrace("lastTimeStarted - firstTimeStarted" + (lastTimeStarted - firstTimeStarted));
+			myTrace("division = " + ((sensorAgeAtTimeOfEstimation - firstTimeStarted) / (lastTimeStarted - firstTimeStarted)));
 			var timePercentage:Number = Math.min(((sensorAgeAtTimeOfEstimation - firstTimeStarted) / (lastTimeStarted - firstTimeStarted)) / (0.85), 1);
 			timePercentage = (timePercentage + 0.01);
+			myTrace("calculateWeight: timePercentage = " + timePercentage);
+			myTrace("returnvalue = " + Math.max((((((slopeConfidence + sensorConfidence) * (timePercentage))) / 2) * 100), 1));
 			return Math.max((((((slopeConfidence + sensorConfidence) * (timePercentage))) / 2) * 100), 1);
 		}
 		
 		/**
-		 * with database update of the adjusted bgreadings
+		 * with database update of the adjusted bgreadings<br>
+		 * calibrations should be the latest, maximum 3, descending by timestamp, ie large to small
 		 */
-		public static function adjustRecentBgReadings(adjustCount:int):void {
-			var calibrations:ArrayCollection = Calibration.latest(3);
+		public static function adjustRecentBgReadings(adjustCount:int, calibrations:ArrayCollection):void {
 			var bgReadings:ArrayCollection= BgReading.latestUnCalculated(adjustCount);
+			var latestCalibration:Calibration;
+			var bgcntr:int;
+			var bgReading:BgReading;
+			var newYvalue:Number;
+			var oldYValue:Number;
 			if (calibrations.length == 3) {
 				var denom:int = bgReadings.length;
-				var latestCalibration:Calibration = calibrations.getItemAt(0) as Calibration;
+				latestCalibration = calibrations.getItemAt(0) as Calibration;
 				var i:int = 0;
-				for each (var bgReading:BgReading in bgReadings) {
-					var oldYValue:Number = bgReading.calculatedValue;
-					var newYvalue:Number = (bgReading.ageAdjustedRawValue * latestCalibration.slope) + latestCalibration.intercept;
+				for each (bgReading in bgReadings) {
+					oldYValue = bgReading.calculatedValue;
+					newYvalue = (bgReading.ageAdjustedRawValue * latestCalibration.slope) + latestCalibration.intercept;
 					bgReading.calculatedValue = ((newYvalue * (denom - i)) + (oldYValue * ( i ))) / denom;
 					bgReading.updateInDatabaseSynchronous();
 					i += 1;
 				}
 			} else if (calibrations.length == 2) {
-				var latestCalibration:Calibration = calibrations.getItemAt(0) as Calibration;
-				for each (var bgReading:BgReading in bgReadings) {
-					var newYvalue:Number = (bgReading.ageAdjustedRawValue * latestCalibration.slope) + latestCalibration.intercept;
+				latestCalibration = calibrations.getItemAt(0) as Calibration;
+				for each (bgReading in bgReadings) {
+					newYvalue = (bgReading.ageAdjustedRawValue * latestCalibration.slope) + latestCalibration.intercept;
 					bgReading.calculatedValue = newYvalue;
 					BgReading.updateCalculatedValue(bgReading);
 					bgReading.updateInDatabaseSynchronous();
@@ -675,7 +811,6 @@ package databaseclasses
 			}
 			(bgReadings.getItemAt(0) as BgReading).findNewRawCurve();
 			(bgReadings.getItemAt(0) as BgReading).findNewCurve();
-			(bgReadings.getItemAt(0) as BgReading).updateInDatabaseSynchronous();
 			(bgReadings.getItemAt(0) as BgReading).updateInDatabaseSynchronous();		
 		}
 		
@@ -722,7 +857,7 @@ package databaseclasses
 		public function rawValueOverride(rawValue:Number):Calibration {
 			_estimateRawAtTimeOfCalibration = rawValue;
 			resetLastModifiedTimeStamp();
-			calculateWLS();
+			calculateWLS(null).updateInDatabaseSynchronous();
 			return this;
 		}
 		
@@ -740,6 +875,41 @@ package databaseclasses
 			Database.deleteCalibrationSynchronous(this);
 			return this;
 		}
+		
+		private static function myTrace(log:String):void {
+			Trace.myTrace("xdrip-Calibration.as", log);
+		}
+		
+		public function print(indentation:String):String {
+			var r:String = "calibration = ";
+			r += "\n" + indentation + "uniqueid = " + uniqueId;
+			r += "\n" + indentation + "adjustedRawValue = " + adjustedRawValue;
+			r += "\n" + indentation + "bg = " + bg;
+			r += "\n" + indentation + "checkIn = " + checkIn;
+			r += "\n" + indentation + "distanceFromEstimate = " + distanceFromEstimate;
+			r += "\n" + indentation + "estimateBgAtTimeOfCalibration = " + estimateBgAtTimeOfCalibration;
+			r += "\n" + indentation + "estimateRawAtTimeOfCalibration = " + estimateRawAtTimeOfCalibration;
+			r += "\n" + indentation + "firstDecay = " + firstDecay;
+			r += "\n" + indentation + "firstIntercept = " + firstIntercept;
+			r += "\n" + indentation + "firstScale = " + firstScale;
+			r += "\n" + indentation + "firstSlope = " + firstSlope;
+			r += "\n" + indentation + "intercept = " + intercept;
+			r += "\n" + indentation + "possibleBad = " + possibleBad;
+			r += "\n" + indentation + "rawTimestamp = " + rawTimestamp;
+			r += "\n" + indentation + "rawValue = " + rawValue;
+			r += "\n" + indentation + "secondDecay = " + secondDecay;
+			r += "\n" + indentation + "secondIntercept = " + secondIntercept;
+			r += "\n" + indentation + "secondScale = " + secondScale;
+			r += "\n" + indentation + "secondSlope = " + secondSlope;
+			r += "\n" + indentation + "sensor = " + (sensor == null ? "null":sensor.print("         "));
+			r += "\n" + indentation + "sensorAgeAtTimeOfEstimation = " + sensorAgeAtTimeOfEstimation;
+			r += "\n" + indentation + "sensorConfidence = " + sensorConfidence;
+			r += "\n" + indentation + "slope = " + slope;
+			r += "\n" + indentation + "slopeConfidence = " + slopeConfidence;
+			r += "\n" + indentation + "timestamp = " + timestamp;
+			return r;
+		}
+		
 	}
 }
 
@@ -758,25 +928,25 @@ internal class SlopeParameters {
 	}
 	
 	protected var _LOW_SLOPE_2:Number;
-
+	
 	public function set LOW_SLOPE_2(value:Number):void
 	{
 		_LOW_SLOPE_2 = value;
 	}
-
+	
 	
 	public function get LOW_SLOPE_2():Number
 	{
 		return _LOW_SLOPE_2;
 	}
-
+	
 	protected var _HIGH_SLOPE_1:Number;
-
+	
 	public function set HIGH_SLOPE_1(value:Number):void
 	{
 		_HIGH_SLOPE_1 = value;
 	}
-
+	
 	
 	public function get HIGH_SLOPE_1():Number
 	{
@@ -784,12 +954,12 @@ internal class SlopeParameters {
 	}
 	
 	protected var _HIGH_SLOPE_2:Number;
-
+	
 	public function set HIGH_SLOPE_2(value:Number):void
 	{
 		_HIGH_SLOPE_2 = value;
 	}
-
+	
 	
 	public function get HIGH_SLOPE_2():Number
 	{
@@ -797,12 +967,12 @@ internal class SlopeParameters {
 	}
 	
 	protected var _DEFAULT_LOW_SLOPE_LOW:Number;
-
+	
 	public function set DEFAULT_LOW_SLOPE_LOW(value:Number):void
 	{
 		_DEFAULT_LOW_SLOPE_LOW = value;
 	}
-
+	
 	
 	public function get DEFAULT_LOW_SLOPE_LOW():Number
 	{
@@ -810,12 +980,12 @@ internal class SlopeParameters {
 	}
 	
 	protected var _DEFAULT_LOW_SLOPE_HIGH:Number;
-
+	
 	public function set DEFAULT_LOW_SLOPE_HIGH(value:Number):void
 	{
 		_DEFAULT_LOW_SLOPE_HIGH = value;
 	}
-
+	
 	
 	public function get DEFAULT_LOW_SLOPE_HIGH():Number
 	{
@@ -823,12 +993,12 @@ internal class SlopeParameters {
 	}
 	
 	protected var _DEFAULT_SLOPE:int;
-
+	
 	public function set DEFAULT_SLOPE(value:int):void
 	{
 		_DEFAULT_SLOPE = value;
 	}
-
+	
 	
 	public function get DEFAULT_SLOPE():int
 	{
@@ -836,12 +1006,12 @@ internal class SlopeParameters {
 	}
 	
 	protected var _DEFAULT_HIGH_SLOPE_HIGH:Number;
-
+	
 	public function set DEFAULT_HIGH_SLOPE_HIGH(value:Number):void
 	{
 		_DEFAULT_HIGH_SLOPE_HIGH = value;
 	}
-
+	
 	
 	public function get DEFAULT_HIGH_SLOPE_HIGH():Number
 	{
@@ -849,12 +1019,12 @@ internal class SlopeParameters {
 	}
 	
 	protected var _DEFAUL_HIGH_SLOPE_LOW:Number;
-
+	
 	public function set DEFAUL_HIGH_SLOPE_LOW(value:Number):void
 	{
 		_DEFAUL_HIGH_SLOPE_LOW = value;
 	}
-
+	
 	
 	public function get DEFAUL_HIGH_SLOPE_LOW():Number
 	{
@@ -879,16 +1049,16 @@ internal class DexParameters extends SlopeParameters {
 
 /* THIS IS FOR LIMITTER */
 /*internal class LiParameters extends SlopeParameters {
-	function LiParameters(){
-		LOW_SLOPE_1 = 1;
-		LOW_SLOPE_2 = 1;
-		HIGH_SLOPE_1 = 1;
-		HIGH_SLOPE_2 = 1;
-		DEFAULT_LOW_SLOPE_LOW = 1;
-		DEFAULT_LOW_SLOPE_HIGH = 1;
-		DEFAULT_SLOPE = 1;
-		DEFAULT_HIGH_SLOPE_HIGH = 1;
-		DEFAUL_HIGH_SLOPE_LOW = 1;
-	}
+function LiParameters(){
+LOW_SLOPE_1 = 1;
+LOW_SLOPE_2 = 1;
+HIGH_SLOPE_1 = 1;
+HIGH_SLOPE_2 = 1;
+DEFAULT_LOW_SLOPE_LOW = 1;
+DEFAULT_LOW_SLOPE_HIGH = 1;
+DEFAULT_SLOPE = 1;
+DEFAULT_HIGH_SLOPE_HIGH = 1;
+DEFAUL_HIGH_SLOPE_LOW = 1;
+}
 }*/
 

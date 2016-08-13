@@ -37,6 +37,13 @@ package databaseclasses
 		}
 		
 		private var _latestBatteryLevel:int;
+
+		public function set latestBatteryLevel(value:int):void
+		{
+			_latestBatteryLevel = value;
+			Database.updateSensor(this);
+		}
+
 		public function get latestBatteryLevel():int
 		{
 			return _latestBatteryLevel;
@@ -74,7 +81,7 @@ package databaseclasses
 				currentSensor.resetLastModifiedTimeStamp();
 				Database.updateSensor(currentSensor);
 			}
-			currentSensor = new Sensor((new Date()).valueOf(), 0, 0, null, Number.NaN);
+			currentSensor = new Sensor((new Date()).valueOf() - 2 * 60 * 60 * 1000, 0, 0, null, Number.NaN);
 			Database.insertSensor(currentSensor);
 			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_ID_CURRENT_SENSOR_ID, currentSensor.uniqueId);
 			CalibrationService.init();
@@ -92,6 +99,16 @@ package databaseclasses
 				Database.updateSensor(currentSensor);
 			}
 			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_ID_CURRENT_SENSOR_ID, "0");
+			CalibrationService.stop();
+		}
+		
+		public function print(indentation:String):String {
+			var r:String = "sensor = ";
+			r += "\n" + indentation + "uniqueid = " + uniqueId;
+			r += "\n" + indentation + "startedAt = " + (new Date(startedAt)).toLocaleString();
+			r += "\n" + indentation + "stoppedAt = " + (new Date(stoppedAt)).toLocaleString();
+			r += "\n" + indentation + "latestBatteryLevel = " + latestBatteryLevel;
+			return r;
 		}
 	}
 }

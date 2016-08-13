@@ -6,6 +6,8 @@ package services
 	import com.distriqt.extension.dialog.events.DialogViewEvent;
 	import com.distriqt.extension.dialog.objects.DialogAction;
 	
+	import Utilities.Trace;
+	
 	import databaseclasses.Calibration;
 	
 	import events.TransmitterServiceEvent;
@@ -40,6 +42,10 @@ package services
 			TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, transmitterServiceBGReadingEventReceived);
 		}
 		
+		public static function stop():void {
+			TransmitterService.instance.removeEventListener(TransmitterServiceEvent.BGREADING_EVENT, transmitterServiceBGReadingEventReceived);
+		}
+		
 		private static function transmitterServiceBGReadingEventReceived(be:TransmitterServiceEvent):void {
 			//we don't need to do anything with the bgreading, but we need to ask the user for a new bg metering
 
@@ -57,7 +63,7 @@ package services
 				.addOption("Cancel", DialogAction.STYLE_CANCEL, 1)
 				.build()
 			);
-			alert.addEventListener(DialogViewEvent.CLOSED, valueEntered);
+			alert.addEventListener(DialogViewEvent.CLOSED, intialCalibrationValueEntered);
 			alert.addEventListener(DialogViewEvent.CANCELLED, cancellation);
 			DialogService.addDialog(alert, 60);
 		}
@@ -65,7 +71,7 @@ package services
 		private static function cancellation(event:DialogViewEvent):void {
 		}
 		
-		private static function valueEntered(event:DialogViewEvent):void {
+		private static function intialCalibrationValueEntered(event:DialogViewEvent):void {
 			var asNumber:Number = new Number(event.values[0] as String);
 			if (isNaN(asNumber)) {
 				//add the warning message
@@ -88,6 +94,48 @@ package services
 					Calibration.initialCalibration(bgLevel1, asNumber);
 				}
 			}
+		}
+		
+		/**
+		 * will create an alertdialog to ask for a calibration 
+		 */
+		public static function calibrate():void {
+			var alert:DialogView = Dialog.service.create(
+				new AlertBuilder()
+				.setTitle(ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_calibration_title"))
+				.setMessage(ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_calibration"))
+				.addTextField("","Level")
+				.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
+				.addOption("Cancel", DialogAction.STYLE_CANCEL, 1)
+				.build()
+			);
+			alert.addEventListener(DialogViewEvent.CLOSED, calibrationValueEntered);
+			alert.addEventListener(DialogViewEvent.CANCELLED, cancellation);
+			DialogService.addDialog(alert, 60);
+		}
+		
+		private static function calibrationValueEntered(event:DialogViewEvent):void {
+			var asNumber:Number = new Number(event.values[0] as String);
+			if (isNaN(asNumber)) {
+				//add the warning message
+				var alert:DialogView = Dialog.service.create(
+					new AlertBuilder()
+					.setTitle(ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_calibration_title"))
+					.setMessage(ModelLocator.resourceManagerInstance.getString("calibrationservice","value_should_be_numeric"))
+					.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
+					.build()
+				);
+				DialogService.addDialog(alert);
+				//and ask again a value
+				calibrate();
+			} else {
+				var calibration:Calibration = Calibration.create(asNumber).saveToDatabaseSynchronous();
+				myTrace("Calibration created : " + calibration.print("   "));
+			}
+		}
+		
+		private static function myTrace(log:String):void {
+			Trace.myTrace("xdrip-CalibrationService.as", log);
 		}
 	}
 }

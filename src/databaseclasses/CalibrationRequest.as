@@ -20,6 +20,8 @@
  */
 package databaseclasses
 {
+	import Utilities.Trace;
+
 	public class CalibrationRequest extends SuperDatabaseClass
 	{
 		private static const MAX:int = 250;
@@ -54,6 +56,7 @@ package databaseclasses
 		
 		public function saveToDatabaseSynchronous():CalibrationRequest {
 			Database.insertCalibrationRequestSychronous(this);
+			
 			return this;
 		}
 		
@@ -78,8 +81,9 @@ package databaseclasses
 		 * with database insert 
 		 */
 		public static function createOffset(center:Number, distance:Number):void {
+			myTrace("in createOffset with center = " + center + ", distance = " + distance);
 			Database.insertCalibrationRequestSychronous(new CalibrationRequest(center + distance, MAX, null, Number.NaN));
-			Database.insertCalibrationRequestSychronous(new CalibrationRequest(MIN, center + distance, null, Number.NaN));
+			Database.insertCalibrationRequestSychronous(new CalibrationRequest(MIN, center - distance, null, Number.NaN));
 		}
 		
 		/**
@@ -93,6 +97,10 @@ package databaseclasses
 			return (Database.getCalibrationRequestsForValue(bgReading.calculatedValue).length > 0 
 				&&
 				Math.abs(bgReading.calculatedValueSlope * 60000) < 1);
+		}
+		
+		private static function myTrace(log:String):void {
+			Trace.myTrace("xdrip-CalibrationRequest.as", log);
 		}
 	}
 }

@@ -18,11 +18,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 -->
 <s:View xmlns:fx="http://ns.adobe.com/mxml/2009" 
 		xmlns:s="library://ns.adobe.com/flex/spark" title="HomeView"
+		initialize="initializeHandler(event)"
 		creationComplete="onCreationComplete(event)">
 	<fx:Script>
 		<![CDATA[
 			import mx.events.FlexEvent;
 			
+			import databaseclasses.BgReading;
 			import databaseclasses.Database;
 			
 			import events.BlueToothServiceEvent;
@@ -32,18 +34,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			import model.ModelLocator;
 			
 			import services.BluetoothService;
-			import services.NotificationService;
 			import services.TransmitterService;
 			
 			private static var initialStart:Boolean = true;
+			[Bindable]
+			private static var bloodglucsovalue:Number;
 
 			[ResourceBundle("general")]
 
 			protected function onCreationComplete(event:FlexEvent):void
 			{
-				//instantiate modellocator because event listeners are being added to the database class, to receive logging information
-				ModelLocator.instance;
-				
 				if (initialStart) {
 					Database.instance.addEventListener(DatabaseEvent.DATABASE_INIT_FINISHED_EVENT,onInitResult);
 					Database.instance.addEventListener(DatabaseEvent.ERROR_EVENT,onInitError);
@@ -75,21 +75,36 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			}
 			
 			private function blueToothStatusChanged(be:BlueToothServiceEvent):void {
-				trace("HomeView : blueToothStatusChanged, new status = " + be.data.status);
+				//trace("HomeView : blueToothStatusChanged, new status = " + be.data.status);
 			}
 			
 			private function blueToothServiceInformationReceived(be:BlueToothServiceEvent):void {
-				trace((new Date()).toTimeString() + " : HomeView : received bluetooth service information = " + be.data.information);
+				//trace((new Date()).toTimeString() + " : HomeView : received bluetooth service information = " + be.data.information);
 			}
 			
 			private function transmitterServiceBGReadingEventReceived(be:TransmitterServiceEvent):void {
-				trace((new Date()).toTimeString() + " : HomeView : received bgreading.");
+				//trace((new Date()).toTimeString() + " : HomeView : received bgreading.");
+				var lastbgreading:BgReading = BgReading.lastNoSensor();
+				if (lastbgreading == null) {
+					bloodglucsovalue = Number.NaN;
+				} else {
+						bloodglucsovalue = lastbgreading.calculatedValue;
+				}
 			}
 
 			private function databaseInformationEventReceived(be:DatabaseEvent):void {
-				trace((new Date()).toTimeString() + " : HomeView : received database  information = " + be.data.information);
+				//trace((new Date()).toTimeString() + " : HomeView : received database  information = " + be.data.information);
+			}
+			
+			protected function initializeHandler(event:FlexEvent):void
+			{
+				//instantiate modellocator because event listeners are being added to the database class, to receive logging information
+				ModelLocator.instance;
 			}
 			
 		]]>
 	</fx:Script>
+	<s:Label text="{bloodglucsovalue.toString()}">
+		
+	</s:Label>
 </s:View>

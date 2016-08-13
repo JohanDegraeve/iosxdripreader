@@ -114,7 +114,9 @@ package databaseclasses
 		
 		/**
 		 * if name contains BRIDGE (case insensitive) then returns true<br>
-		 * otherwise false
+		 * otherwise false<br><br>
+		 * THIS DOES NOT NECESSARILY MEAN THAT IT DOES NOT HAVE THE XBRIDGE SOFTWARE, IT MIGHT BE AN XDRIP THAT IS LATER ON UPGRADED TO XBRIDGE<BR>
+		 * To be really sure if it's an 
 		 */
 		public static function isXBridge():Boolean {
 			return _name.toUpperCase().indexOf("BRIDGE") > -1;

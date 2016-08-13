@@ -37,7 +37,6 @@ package model
 	import events.DatabaseEvent;
 	
 	import services.BluetoothService;
-	import services.CalibrationService;
 	import services.NotificationService;
 	import services.TransmitterService;
 
@@ -48,6 +47,8 @@ package model
 	{
 		private static var _instance:ModelLocator = new ModelLocator();
 		private static var dateFormatter:DateTimeFormatter;
+		private static var dataSortFieldForBGReadings:SortField;
+		private static var dataSortForBGReadings:Sort;
 
 
 		public static function get instance():ModelLocator
@@ -129,11 +130,11 @@ package model
 			
 			//bgreadings arraycollection
 			_bgReadings = new ArrayCollection();
-			var dataSortFieldForBGReadings:SortField = new SortField();
+			dataSortFieldForBGReadings = new SortField();
 			dataSortFieldForBGReadings.name = "timestamp";
 			dataSortFieldForBGReadings.numeric = true;
 			dataSortFieldForBGReadings.descending = false;//ie ascending = from small to large
-			var dataSortForBGReadings:Sort = new Sort();
+			dataSortForBGReadings = new Sort();
 			dataSortForBGReadings.fields=[dataSortFieldForBGReadings];
 			_bgReadings.sort = dataSortForBGReadings;
 			Database.instance.addEventListener(DatabaseEvent.DATABASE_INIT_FINISHED_EVENT,getBgReadingsAndLogsFromDatabase);
@@ -211,6 +212,5 @@ package model
 				firstBGReading = _bgReadings.getItemAt(0) as BgReading;
 			}
 		}
-		
 	}
 }

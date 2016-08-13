@@ -23,6 +23,7 @@ package databaseclasses
 	import mx.collections.ArrayCollection;
 	
 	import Utilities.BgGraphBuilder;
+	import Utilities.Trace;
 	
 	import model.ModelLocator;
 	
@@ -312,7 +313,7 @@ package databaseclasses
 		}
 		
 		public static function activeSlope():Number {
-			var bgReading:BgReading = lastNoSenssor();
+			var bgReading:BgReading = lastNoSensor();
 			if (bgReading != null) {
 				var slope:Number = (2 * bgReading.a * ((new Date()).valueOf() + BESTOFFSET)) + bgReading.b;
 				return slope;
@@ -321,7 +322,7 @@ package databaseclasses
 		}
 		
 		public static function activePrediction():Number {
-			var bgReading:BgReading = lastNoSenssor();
+			var bgReading:BgReading = lastNoSensor();
 			if (bgReading != null) {
 				var currentTime:Number = (new Date()).valueOf();
 				if (currentTime >=  bgReading.timestamp + (60000 * 7))  { 
@@ -331,26 +332,6 @@ package databaseclasses
 				return ((bgReading.a * time * time) + (bgReading.b * time) + bgReading.c);
 			}
 			return 0;
-		}
-		
-		/**
-		 * same as in android app, bgreading.java, name looks not very obvious
-		 * TODO : check name 
-		 */
-		public static function lastNoSenssor():BgReading {
-			if (ModelLocator.bgReadings.length == 0)
-				return null;
-			var cntr:int = ModelLocator.bgReadings.length;
-			var lastBGReading:BgReading = ModelLocator.bgReadings.getItemAt(cntr - 1) as BgReading;
-			while (lastBGReading.calculatedValue == new Number(0) || lastBGReading.rawData == new Number(0)) {
-				cntr--;
-				if (cntr < 0) {
-					lastBGReading = null;
-					break;
-				}
-				lastBGReading = ModelLocator.bgReadings.getItemAt(ModelLocator.bgReadings.length - 1) as BgReading;
-			}
-			return lastBGReading;
 		}
 		
 		/**
@@ -367,9 +348,9 @@ package databaseclasses
 		}
 		
 		public static function currentSlope():Number {
-			var last_2:ArrayCollection = latest(2);
-			if (last_2.length == 2) {
-				var slopePair:Array = calculateSlope(last_2.getItemAt(0) as BgReading, last_2.getItemAt(1) as BgReading);
+			var last2:ArrayCollection = latest(2);
+			if (last2.length == 2) {
+				var slopePair:Array = calculateSlope(last2.getItemAt(0) as BgReading, last2.getItemAt(1) as BgReading);
 				return slopePair[0] as Number;
 			} else{
 				return new Number(0);
@@ -470,6 +451,7 @@ package databaseclasses
 			while (cntr > -1) {
 				var bgReading:BgReading = ModelLocator.bgReadings.getItemAt(cntr) as BgReading;
 				if (bgReading.rawData != 0 && bgReading.calculatedValue != 0) {
+					returnValue = bgReading;
 					break;
 				}
 				cntr--;
@@ -482,47 +464,81 @@ package databaseclasses
 		 */
 		public function findNewCurve():void {
 			var last3:ArrayCollection = latest(3);
+			var log:String = "";
+			var y3:Number;
+			var x3:Number;
+			var y2:Number;
+			var x2:Number;
+			var y1:Number;
+			var x1:Number;
+			var latest:BgReading;
+			var second_latest:BgReading;
+			var third_latest:BgReading;
 			if (last3.length == 3) {
-				var second_latest:BgReading = last3.getItemAt(1) as BgReading;
-				var third_latest:BgReading = last3.getItemAt(2) as BgReading;
-				
-				var y3:Number = calculatedValue;
-				var x3:Number = timestamp;
-				var y2:Number = second_latest.calculatedValue;
-				var x2:Number = second_latest.timestamp;
-				var y1:Number = third_latest.calculatedValue;
-				var x1:Number = third_latest.timestamp;
+				myTrace("findNewCurve 3");
+				latest = last3.getItemAt(0) as BgReading;
+				second_latest = last3.getItemAt(1) as BgReading;
+				third_latest = last3.getItemAt(2) as BgReading;
+				/*myTrace("second_latest = " + second_latest.print("   "));
+				myTrace("third_latest = " + third_latest.print("   "));
+				myTrace("this = " + print("   "));*/
+				y3 = latest.calculatedValue;
+				x3 = latest.timestamp;
+				y2 = second_latest.calculatedValue;
+				x2 = second_latest.timestamp;
+				y1 = third_latest.calculatedValue;
+				x1 = third_latest.timestamp;
 				
 				_a = y1/((x1-x2)*(x1-x3))+y2/((x2-x1)*(x2-x3))+y3/((x3-x1)*(x3-x2));
+				log = "BgReading.find_new_curve, size = 3, before calculation of b";
+				
+				myTrace(log);
 				_b = (-y1*(x2+x3)/((x1-x2)*(x1-x3))-y2*(x1+x3)/((x2-x1)*(x2-x3))-y3*(x1+x2)/((x3-x1)*(x3-x2)));
+				log = "BgReading.find_new_curve, size = 3, after calculation of b, b = " + b;
+				myTrace(log);
 				_c = (y1*x2*x3/((x1-x2)*(x1-x3))+y2*x1*x3/((x2-x1)*(x2-x3))+y3*x1*x2/((x3-x1)*(x3-x2)));
 				
 				resetLastModifiedTimeStamp();
 			} else if (last3.length == 2) {
-				var latest:BgReading = last3.getItemAt(0) as BgReading;
-				var second_latest:BgReading = last3.getItemAt(1) as BgReading;
+				latest = last3.getItemAt(0) as BgReading;
+				second_latest = last3.getItemAt(1) as BgReading;
+				/*myTrace("findnewCurve only 2");
+				myTrace("second_latest = " + second_latest.print("   "));
+				myTrace("latest = " + latest.print("   "));
+				myTrace("this = " + print("   "));*/
 				
-				var y2:Number = latest.calculatedValue;
-				var x2:Number = timestamp;
-				var y1:Number = second_latest.calculatedValue;
-				var x1:Number = second_latest.timestamp;
+				y2 = latest.calculatedValue;
+				x2 = latest.timestamp;
+				y1 = second_latest.calculatedValue;
+				x1 = second_latest.timestamp;
 				
 				if (y1 == y2) {
+					log = "BgReading.find_new_curve, size = 2, y1 = y2";
+					myTrace(log);
 					_b = 0;
 				} else {
+					log = "BgReading.find_new_curve, size = 2, y1 != y2, before calculation of b";
+					myTrace(log);
 					_b = (y2 - y1)/(x2 - x1);
+					log = "BgReading.find_new_curve, size = 2, y1 != y2, after calculation of b";
+					myTrace(log);
 				}
 				_a = 0;
 				_c = -1 * ((latest.b * x1) - y1);
 				
 				resetLastModifiedTimeStamp();
 			} else {
+				log = "BgReading.find_new_curve, size is less than 2";
+				myTrace(log);
+
 				_a = 0;
 				_b = 0;
 				_c = calculatedValue;
 				
 				resetLastModifiedTimeStamp();
 			}
+			log = "BgReading.find_new_curve for bgreading with rawData = " + rawData + ", final a = " + a + ", b = " + b + ", c = " + c;
+			myTrace(log);
 		}
 		
 		/**
@@ -530,16 +546,26 @@ package databaseclasses
 		 */
 		public function findNewRawCurve():void {
 			var last3:ArrayCollection = BgReading.latest(3);
+			var y3:Number;
+			var x3:Number;
+			var y2:Number;
+			var x2:Number;
+			var y1:Number;
+			var x1:Number;
+			var latest:BgReading 
+			var second_latest:BgReading; 
+			var third_latest:BgReading;
 			if (last3.length == 3) {
-				var second_latest:BgReading = last3.getItemAt(1) as BgReading;
-				var third_latest:BgReading = last3.getItemAt(2) as BgReading;
+				latest = last3.getItemAt(0) as BgReading;
+				second_latest = last3.getItemAt(1) as BgReading;
+				third_latest = last3.getItemAt(2) as BgReading;
 				
-				var y3:Number = ageAdjustedRawValue;
-				var x3:Number = timestamp;
-				var y2:Number = second_latest.ageAdjustedRawValue;
-				var x2:Number = second_latest.timestamp;
-				var y1:Number = third_latest.ageAdjustedRawValue;
-				var x1:Number = third_latest.timestamp;
+				y3 = latest.ageAdjustedRawValue;
+				x3 = latest.timestamp;
+				y2 = second_latest.ageAdjustedRawValue;
+				x2 = second_latest.timestamp;
+				y1 = third_latest.ageAdjustedRawValue;
+				x1 = third_latest.timestamp;
 				
 				_ra = y1/((x1-x2)*(x1-x3))+y2/((x2-x1)*(x2-x3))+y3/((x3-x1)*(x3-x2));
 				_rb = (-y1*(x2+x3)/((x1-x2)*(x1-x3))-y2*(x1+x3)/((x2-x1)*(x2-x3))-y3*(x1+x2)/((x3-x1)*(x3-x2)));
@@ -548,13 +574,13 @@ package databaseclasses
 				resetLastModifiedTimeStamp();
 				
 			} else if (last3.length == 2) {
-				var latest:BgReading = last3.getItemAt(0) as BgReading;
-				var second_latest:BgReading = last3.getItemAt(1) as BgReading;
+				latest = last3.getItemAt(0) as BgReading;
+				second_latest = last3.getItemAt(1) as BgReading;
 				
-				var y2:Number = latest.ageAdjustedRawValue;
-				var x2:Number = timestamp;
-				var y1:Number = second_latest.ageAdjustedRawValue;
-				var x1:Number = second_latest.timestamp;
+				y2 = latest.ageAdjustedRawValue;
+				x2 = latest.timestamp;
+				y1 = second_latest.ageAdjustedRawValue;
+				x1 = second_latest.timestamp;
 				
 				if(y1 == y2) {
 					_rb = 0;
@@ -566,11 +592,11 @@ package databaseclasses
 				
 				resetLastModifiedTimeStamp();
 			} else {
-				var latestEntry:BgReading = BgReading.lastNoSensor();
+				latest = BgReading.lastNoSensor();
 				_ra = 0;
 				_rb = 0;
-				if (latestEntry != null) {
-					_rc = latestEntry.ageAdjustedRawValue;
+				if (latest != null) {
+					_rc = latest.ageAdjustedRawValue;
 				} else {
 					_rc = 105;
 				}
@@ -609,11 +635,14 @@ package databaseclasses
 		}
 		
 		/**
-		 * without insert in database ! 
+		 * stores in ModelLocator but not in database ! 
 		 */
 		public static function create(rawData:Number, filteredData:Number):BgReading {
+			myTrace("start of create bgreading with rawdata = " + rawData + ", and filtereddata = " + filteredData);
 			var sensor:Sensor = Sensor.getActiveSensor();
 			var calibration:Calibration = Calibration.last();
+			if (calibration != null) {
+			}
 			var timestamp:Number = (new Date()).valueOf();
 			
 			var bgReading:BgReading = (new BgReading(
@@ -639,9 +668,12 @@ package databaseclasses
 				Number.NaN,//lastmodifiedtimestamp wil be assigned by constructor
 				null//bgreading id will be assigned by constructor
 			)).calculateAgeAdjustedRawValue();
+			
+			ModelLocator.addBGReading(bgReading);
 
 			if (calibration == null) {
-
+				//No calibration yet
+				
 			} else {
 				if(calibration.checkIn) {
 					var firstAdjSlope:Number = calibration.firstSlope + (calibration.firstDecay * (Math.ceil((new Date()).valueOf() - calibration.timestamp)/(1000 * 60 * 10)));
@@ -656,7 +688,7 @@ package databaseclasses
 						if (lastBgReading.calibrationFlag == true && ((lastBgReading.timestamp + (60000 * 20)) > timestamp) && ((lastBgReading.calibration.timestamp + (60000 * 20)) > timestamp)) {
 							lastBgReading.calibration
 								.rawValueOverride(BgReading.weightedAverageRaw(lastBgReading.timestamp, timestamp, lastBgReading.calibration.timestamp, lastBgReading.ageAdjustedRawValue, bgReading.ageAdjustedRawValue))
-								.saveToDatabaseSynchronous();
+								.updateInDatabaseSynchronous();
 						}
 					}
 					bgReading.calculatedValue = ((calibration.slope * bgReading.ageAdjustedRawValue) + calibration.intercept);
@@ -665,6 +697,7 @@ package databaseclasses
 				updateCalculatedValue(bgReading);
 			}
 			bgReading.performCalculations();
+			myTrace("created bgreading with values : " + bgReading.print("   ")); 
 			return bgReading;
 		}
 		
@@ -729,12 +762,14 @@ package databaseclasses
 		 */
 		private function calculateAgeAdjustedRawValue():BgReading {
 			var adjust_for:Number = AGE_ADJUSTMENT_TIME - (timestamp - sensor.startedAt);
+			//myTrace("in beginning of calculateAgeAdjustedRawValue, adjust_for = " + adjust_for);
 			if (adjust_for <= 0) {
 				_ageAdjustedRawValue = rawData;
 			} else {
 				_ageAdjustedRawValue = ((AGE_ADJUSTMENT_FACTOR * (adjust_for / AGE_ADJUSTMENT_TIME)) * rawData) + rawData;
 			}
 			resetLastModifiedTimeStamp();
+			//myTrace("in end of calculateAgeAdjustedRawValue, adjust_for = " + adjust_for);
 			return this;
 		}
 		
@@ -767,5 +802,35 @@ package databaseclasses
 		public function deleteInDatabase():void {
 			Database.deleteBgReadingSynchronous(this);
 		}
+		
+		private static function myTrace(log:String):void {
+			Trace.myTrace("xdrip-BgReading.as", log);
+		}
+		
+		public function print(indentation:String):String {
+			var r:String = "bgreading = ";
+			r += "\n" + indentation + "uniqueid = " + uniqueId;
+			r += "\n" + indentation + "a = " + a;
+			r += "\n" + indentation + "ageAdjustedRawValue = " + ageAdjustedRawValue;
+			r += "\n" + indentation + "b = " + b;
+			r += "\n" + indentation + "c = " + c;
+			r += "\n" + indentation + "calculatedValue = " + calculatedValue;
+			r += "\n" + indentation + "calculatedValueSlope = " + calculatedValueSlope;
+			r += "\n" + indentation + "calibration = " + (calibration == null ? "null":calibration.print("      "));
+			r += "\n" + indentation + "calibrationFlag = " + calibrationFlag.toString();
+			r += "\n" + indentation + "filteredCalculatedValue = " + filteredCalculatedValue;
+			r += "\n" + indentation + "filteredData = " + filteredData;
+			r += "\n" + indentation + "hideSlope = " + hideSlope;
+			r += "\n" + indentation + "noise = " + noise;
+			r += "\n" + indentation + "ra = " + ra;
+			r += "\n" + indentation + "rawCalculated = " + rawCalculated;
+			r += "\n" + indentation + "rawData = " + rawData;
+			r += "\n" + indentation + "rb = " + rb;
+			r += "\n" + indentation + "rc = " + rc;
+			r += "\n" + indentation + "sensor = " + (sensor == null ? "null":sensor.print("      "));
+			r += "\n" + indentation + "timestamp = " + timestamp;
+			return r;
+		}
+
 	}
 }
