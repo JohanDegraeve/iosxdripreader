@@ -49,7 +49,6 @@ package services
 		}
 		
 		private static var initialStart:Boolean = true;
-		private static var transmitterServiceEvent:TransmitterServiceEvent;
 		/**
 		 * timestamp of last received packet, in ms 
 		 */
@@ -129,7 +128,7 @@ package services
 								.saveToDatabaseSynchronous();
 							
 							//dispatch the event that there's new data
-							transmitterServiceEvent = new TransmitterServiceEvent(TransmitterServiceEvent.BGREADING_EVENT);
+							var transmitterServiceEvent:TransmitterServiceEvent = new TransmitterServiceEvent(TransmitterServiceEvent.BGREADING_EVENT);
 							_instance.dispatchEvent(transmitterServiceEvent);
 						} else {
 							//TODO inform that bgreading is received but sensor not started ?
@@ -164,7 +163,7 @@ package services
 		}
 		
 		private static function dispatchInformation(informationResourceName:String):void {
-			transmitterServiceEvent = new TransmitterServiceEvent(TransmitterServiceEvent.TRANSMITTER_SERVICE_INFORMATION_EVENT);
+			var transmitterServiceEvent:TransmitterServiceEvent = new TransmitterServiceEvent(TransmitterServiceEvent.TRANSMITTER_SERVICE_INFORMATION_EVENT);
 			transmitterServiceEvent.data = new Object();
 			transmitterServiceEvent.data.information = ModelLocator.resourceManagerInstance.getString('transmitterservice',informationResourceName);
 			_instance.dispatchEvent(transmitterServiceEvent);

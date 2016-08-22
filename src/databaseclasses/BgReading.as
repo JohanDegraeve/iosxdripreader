@@ -390,34 +390,7 @@ package databaseclasses
 		 * - sensor = current sensor<br>
 		 * - rawData != 0<br>
 		 * - latest 'number' that match these requirements<br>
-		 * - descending timestamp, order TODO : check if the order is correct - should be because we start counting at the end, bgreadings list is order by timestamp ascending
-		 * <br>
-		 * could also be less than number, ie returnvalue could be arraycollection of size 0 
-		 */
-		public static function latestUnCalculated(number:int):ArrayCollection {
-			var returnValue:ArrayCollection = new ArrayCollection();
-			var currentSensorId:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_ID_CURRENT_SENSOR_ID);
-			if (currentSensorId != "0") {
-				var cntr:int = ModelLocator.bgReadings.length - 1;
-				var itemsAdded:int = 0;
-				while (cntr > -1 && itemsAdded < number) {
-					var bgReading:BgReading = ModelLocator.bgReadings.getItemAt(cntr) as BgReading;
-					if (bgReading.sensor.uniqueId == currentSensorId && bgReading.rawData != 0) {
-						returnValue.addItem(bgReading);
-						itemsAdded++;
-					}
-					cntr--;
-				}
-			}
-			return returnValue;
-		}
-		
-		/**
-		 * arraycollection will contain number of bgreadings with<br>
-		 * - sensor = current sensor<br>
-		 * - rawData != 0<br>
-		 * - latest 'number' that match these requirements<br>
-		 * - descending timestamp, order TODO : check if the order is correct - should be because we start counting at the end, bgreadings list is order by timestamp ascending
+		 * - descending timestamp, order
 		 * <br>
 		 * could also be less than number, ie returnvalue could be arraycollection of size 0 
 		 */
@@ -438,6 +411,38 @@ package databaseclasses
 			}
 			return returnValue;
 		}
+		
+		/**
+		 * arraycollection will contain bgreadings with<br>
+		 * - rawData != 0<br>
+		 * - calculatedValue != 0<br>
+		 * - descending timestamp, order
+		 * <br>
+		 * returnvalue could be arraycollection of size 0 
+		 */
+		public static function last30Minutes():ArrayCollection {
+			var returnValue:ArrayCollection = new ArrayCollection();
+			if (ModelLocator.bgReadings.length == 0)
+				return returnValue;
+			
+			var timestamp:Number = (new Date()).valueOf() - (60000 * 30);
+			var cntr:int = ModelLocator.bgReadings.length - 1;
+			var itemsAdded:int = 0;
+			var bgReading:BgReading = ModelLocator.bgReadings.getItemAt(cntr) as BgReading;
+			while (cntr > -1 && bgReading.timestamp > timestamp) {
+				if (bgReading.calculatedValue != 0 && bgReading.rawData != 0) {
+					returnValue.addItem(bgReading);
+					itemsAdded++;
+				}
+				cntr--;
+				if (cntr > -1)
+					bgReading = ModelLocator.bgReadings.getItemAt(cntr) as BgReading;
+			}
+			return returnValue;
+		}
+
+		
+		
 		
 		/**
 		 * - rawData != 0<br>
@@ -830,6 +835,28 @@ package databaseclasses
 			r += "\n" + indentation + "sensor = " + (sensor == null ? "null":sensor.print("      "));
 			r += "\n" + indentation + "timestamp = " + timestamp;
 			return r;
+		}
+		
+		public function slopeArrow():String{
+			return slopeToArrowSymbol(calculatedValueSlope * 60000);
+		}
+
+		public static function slopeToArrowSymbol(slope:Number):String {
+			if (slope <= (-3.5)) {
+				return "\u21ca";
+			} else if (slope <= (-2)) {
+				return "\u2193";
+			} else if (slope <= (-1)) {
+				return "\u2198";
+			} else if (slope <= (1)) {
+				return "\u2192";
+			} else if (slope <= (2)) {
+				return "\u2197";
+			} else if (slope <= (3.5)) {
+				return "\u2191";
+			} else {
+				return "\u21c8";
+			}
 		}
 
 	}

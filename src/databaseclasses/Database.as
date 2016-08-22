@@ -920,9 +920,9 @@ package databaseclasses
 				conn.close();
 				if (result.data != null) {
 					var numResults:int = result.data.length;
+					var tempReturnValue:ArrayCollection = new ArrayCollection();
 					for (var i:int = 0; i < numResults; i++) 
 					{ 
-						var tempReturnValue:ArrayCollection = new ArrayCollection();
 						tempReturnValue.addItem(
 							new Calibration(
 								result.data[i].timestamp,

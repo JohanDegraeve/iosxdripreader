@@ -483,7 +483,7 @@ package databaseclasses
 			CalibrationRequest.clearAllSynchronous();
 			var sensor:Sensor = Sensor.getActiveSensor();
 			if (sensor != null) {
-				var bgReading:BgReading = BgReading.latest(1) as BgReading;//TODO geeft dit wel degelijk de laatste ?
+				var bgReading:BgReading = (BgReading.latest(1))[0]  as BgReading;//TODO geeft dit wel degelijk de laatste ?
 				if (bgReading != null) {
 					var estimatedRawBg:Number = BgReading.estimatedRawBg((new Date()).valueOf());
 					calibration = (new Calibration(
@@ -498,7 +498,7 @@ package databaseclasses
 						bgReading.timestamp,//rawtimestamp
 						new Number(0),//slope
 						new Number(0),//intercept
-						Math.abs(calibration.bg - bgReading.calculatedValue),//distance from estimate
+						Math.abs(bg - bgReading.calculatedValue),//distance from estimate
 						Math.abs(estimatedRawBg - bgReading.ageAdjustedRawValue) > 20 ? bgReading.ageAdjustedRawValue : estimatedRawBg,//estimaterawattimeofcalibration
 						new Number(0),//estimatebgattimeofcalibration
 						false,//possiblebad
@@ -518,10 +518,10 @@ package databaseclasses
 					bgReading.calibration = calibration;
 					bgReading.calibrationFlag = true;
 					bgReading.updateInDatabaseSynchronous();
-					var calibrations:ArrayCollection = Calibration.latest(2);
-					calibrations.addItemAt(calibration, 0);
-					adjustRecentBgReadings(1, calibrations);//TODO to align with android version, make it configurable to adjust up to 30 days
-					Calibration.requestCalibrationIfRangeTooNarrow();
+					//not doing the adjustRecentBgReadings as in Android version
+					
+					//calling requestCalibrationIfRangeTooNarrow in the CalibrationService which handles also the save to database
+					
 				}
 			}
 			return calibration;
@@ -610,10 +610,32 @@ package databaseclasses
 					myTrace("intercept checkpoint 4 = " + calibration.intercept);
 					calibration.slope = ((l * q) - (m * p)) / d;
 					myTrace("1 intercept = "+  calibration.intercept + ", slope = " + calibration.slope);
-					var latest3Calibrations:ArrayCollection = new ArrayCollection();
-					for (var cntr:int = 0; cntr < calibrations.length && cntr < 3; cntr++) {
-						latest3Calibrations.addItem(calibrations.getItemAt(cntr));
+					
+					//getting the latest 3 calibrations from database
+					//then check if calibration is not null and of not if it's already in that list, if not add it, resort and get the latest 3
+					var latest3Calibrations:ArrayCollection = Calibration.latest(3);
+					if (calibration != null) {
+						for (calibcntr = 0; calibcntr < latest3Calibrations.length; calibcntr++) {
+							if ((latest3Calibrations.getItemAt(calibcntr) as Calibration).uniqueId == calibration.uniqueId) {
+								itemfound = true;
+								break;
+							}
+						}
+						if (!itemfound) {
+							latest3Calibrations.addItemAt(calibration, 0);
+							var dataSortFieldForReturnValue:SortField = new SortField();
+							dataSortFieldForReturnValue.name = "timestamp";
+							dataSortFieldForReturnValue.numeric = true;
+							dataSortFieldForReturnValue.descending = true;//ie from large to small
+							var dataSortForBGReadings:Sort = new Sort();
+							dataSortForBGReadings.fields=[dataSortFieldForReturnValue];
+							latest3Calibrations.sort = dataSortForBGReadings;
+							latest3Calibrations.refresh();
+							while (latest3Calibrations.length > 3)
+								latest3Calibrations.removeItemAt(latest3Calibrations.length - 1);
+						}
 					}
+
 					if ((calibrations.length == 2 && calibration.slope < sParams.LOW_SLOPE_1) || (calibration.slope < sParams.LOW_SLOPE_2)) { 
 						calibration.slope = calibration.slopeOOBHandler(0, latest3Calibrations);
 						if(calibrations.length > 2) { calibration.possibleBad = true; }
@@ -638,10 +660,10 @@ package databaseclasses
 		}
 		
 		/**
-		 * arraycollection with latest number of calibrations, descending<br>
+		 * arraycollection with latest number of calibrations that match the active sensorid, descending<br>
 		 * if there's none then empty arraycollection is returned 
 		 */
-		private static function latest(number:int):ArrayCollection {
+		public static function latest(number:int):ArrayCollection {
 			var sensorId:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_ID_CURRENT_SENSOR_ID);
 			if (sensorId == "0")
 				return new ArrayCollection();
@@ -656,17 +678,21 @@ package databaseclasses
 			
 			var thisCalibration:Calibration = calibrations.getItemAt(0) as Calibration;
 			if(status == 0) {
+				myTrace("in slopeOOBHandler, with status = 0");
+				myTrace("calibrations.size = " + calibrations.length);
 				if (calibrations.length == 3) {
-					if ((Math.abs(thisCalibration.bg - thisCalibration.estimateBgAtTimeOfCalibration) < 30) && (calibrations.getItemAt(1).possible_bad != null && calibrations.getItemAt(1).possible_bad == true)) {
+					if ((Math.abs(thisCalibration.bg - thisCalibration.estimateBgAtTimeOfCalibration) < 30) && ((calibrations.getItemAt(1) as Calibration).possibleBad == true)) {
+						myTrace("returnvalue for size 3, first branch = " + (calibrations.getItemAt(1) as Calibration).slope);
 						return calibrations.getItemAt(1).slope;
 					} else {
+						myTrace("returnvalue for size 3, second branch = " + Math.max(((-0.048) * (thisCalibration.sensorAgeAtTimeOfEstimation / (60000 * 60 * 24))) + 1.1, sParams.DEFAULT_LOW_SLOPE_LOW));
 						return Math.max(((-0.048) * (thisCalibration.sensorAgeAtTimeOfEstimation / (60000 * 60 * 24))) + 1.1, sParams.DEFAULT_LOW_SLOPE_LOW);
 					}
 				} else if (calibrations.length == 2) {
 					myTrace("thisCalibration.sensor_age_at_time_of_estimation = " + thisCalibration.sensorAgeAtTimeOfEstimation);
 					myTrace("(thisCalibration.sensor_age_at_time_of_estimation / (60000 * 60 * 24) = " + (thisCalibration.sensorAgeAtTimeOfEstimation / (60000 * 60 * 24)));
 					myTrace("sParams.getDefaultLowSlopeHigh() = " + sParams.DEFAULT_LOW_SLOPE_HIGH);
-					myTrace("return value = " + Math.max(((-0.048) * (thisCalibration.sensorAgeAtTimeOfEstimation / (60000 * 60 * 24))) + 1.1, sParams.DEFAULT_LOW_SLOPE_HIGH));
+					myTrace("return value for size 2 = " + Math.max(((-0.048) * (thisCalibration.sensorAgeAtTimeOfEstimation / (60000 * 60 * 24))) + 1.1, sParams.DEFAULT_LOW_SLOPE_HIGH));
 					return Math.max(((-0.048) * (thisCalibration.sensorAgeAtTimeOfEstimation / (60000 * 60 * 24))) + 1.1, sParams.DEFAULT_LOW_SLOPE_HIGH);
 				}
 				return sParams.DEFAULT_SLOPE;
@@ -767,8 +793,8 @@ package databaseclasses
 			var lastTimeStarted:Number = lastCalibration.sensorAgeAtTimeOfEstimation;
 			myTrace("calculateWeight: firstTimeStarted = " + firstTimeStarted);
 			myTrace("calculateWeight: lastTimeStarted = " + lastTimeStarted);
-			myTrace("sensor_age_at_time_of_estimation = " + sensorAgeAtTimeOfEstimation);
-			myTrace("sensor_age_at_time_of_estimation - firstTimeStarted = " + (sensorAgeAtTimeOfEstimation - firstTimeStarted));
+			myTrace("sensor_age_at_time_of_estimation = " + sensorAgeAtTimeOfEstimation);//calibration creation date - sensor started at, gewoonlijk 2 uur + 10 minuten = 7800000
+			myTrace("sensor_age_at_time_of_estimation - firstTimeStarted = " + (sensorAgeAtTimeOfEstimation - firstTimeStarted));//
 			myTrace("lastTimeStarted - firstTimeStarted" + (lastTimeStarted - firstTimeStarted));
 			myTrace("division = " + ((sensorAgeAtTimeOfEstimation - firstTimeStarted) / (lastTimeStarted - firstTimeStarted)));
 			var timePercentage:Number = Math.min(((sensorAgeAtTimeOfEstimation - firstTimeStarted) / (lastTimeStarted - firstTimeStarted)) / (0.85), 1);
@@ -783,7 +809,7 @@ package databaseclasses
 		 * calibrations should be the latest, maximum 3, descending by timestamp, ie large to small
 		 */
 		public static function adjustRecentBgReadings(adjustCount:int, calibrations:ArrayCollection):void {
-			var bgReadings:ArrayCollection= BgReading.latestUnCalculated(adjustCount);
+			var bgReadings:ArrayCollection= BgReading.latestBySize(adjustCount);
 			var latestCalibration:Calibration;
 			var bgcntr:int;
 			var bgReading:BgReading;
@@ -876,6 +902,15 @@ package databaseclasses
 			return this;
 		}
 		
+		public static function clearLastCalibration():void {
+			var lastCalibration:Calibration = Calibration.last();
+			if (lastCalibration == null)
+				return;
+			lastCalibration.sensorConfidence = 0;
+			lastCalibration.slopeConfidence = 0;
+			lastCalibration.updateInDatabaseSynchronous();
+		}
+
 		private static function myTrace(log:String):void {
 			Trace.myTrace("xdrip-Calibration.as", log);
 		}

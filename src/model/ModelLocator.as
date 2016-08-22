@@ -26,6 +26,8 @@ package model
 	
 	import spark.collections.Sort;
 	import spark.collections.SortField;
+	import spark.components.Image;
+	import spark.core.ContentCache;
 	import spark.formatters.DateTimeFormatter;
 	
 	import Utilities.UniqueId;
@@ -50,6 +52,8 @@ package model
 		private static var dataSortFieldForBGReadings:SortField;
 		private static var dataSortForBGReadings:Sort;
 
+		public static var image_calibrate_active:Image;
+		public static var iconCache:ContentCache;
 
 		public static function get instance():ModelLocator
 		{
@@ -182,7 +186,13 @@ package model
 						}
 					}
 			}
-
+			
+			iconCache = new ContentCache();
+			iconCache.enableCaching = true;
+			iconCache.enableQueueing = true;
+			image_calibrate_active = new Image();
+			image_calibrate_active.contentLoader = iconCache;
+			image_calibrate_active.source='../assets/image_calibrate_active.png';
 		}
 		
 		private static function addTimeStamp(source:String):String {

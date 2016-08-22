@@ -2,37 +2,20 @@
 @namespace s "library://ns.adobe.com/flex/spark";
 @namespace mx "library://ns.adobe.com/flex/mx";
 
-s|Application {fontSize:18pt} 
+s|Application {
+	backgroundColor:#212121;
+	fontSize:18pt;
+} 
 
-/* picker is for instance datepicker, timepicker, amountpicker */
-.textColorInPickerOnDarkBackground {
-	color:white
+s|TabbedViewNavigatorApplication 
+{
+	backgroundColor:#212121;
+	color:#FFFFFF;
 }
 
-/* typically for text that should be smaller than normal text */
-.fontSizeForSubElements {
-	fontSize:16pt;
-	paddingTop:4pt;	
-    paddingBottom:4pt; 
-	paddingLeft:4pt;
-	paddingRight:4pt;
+s|Label {
+	backgroundColor:#212121;
 }
-
-.removePaddingBottomForStyleableTextField {
-	/* StyleableTextFIeld seems to have a large paddingBottom which I was not able to remove so what i did : */
-	/* when a StyleableTextField is positioned, then the next field will be uplifted with a predefined number of pixels, so the next field actually overlaps the previous field */
-	/* the gap here defines the amount of pixels that a new field following a styleabletextfield is uplifed */
-	gap:5;
-}
-
-s|BorderContainer {
-	/* used here for example in timepicker, datepicker, insulinamountbicker*/
-	backgroundColor:#444444;
-	borderColor:#cccccc; 
-	borderWeight:4;
-	cornerRadius:10
-}
-
 
 s|TabbedViewNavigator #tabBar
 {/* tabbar will used a customized tabbartabskin, to have the background with gradient color */

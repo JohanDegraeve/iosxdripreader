@@ -17,31 +17,36 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 
 -->
 <s:View xmlns:fx="http://ns.adobe.com/mxml/2009" 
-		xmlns:s="library://ns.adobe.com/flex/spark" title="HomeView"
+		xmlns:s="library://ns.adobe.com/flex/spark" title=""
 		initialize="initializeHandler(event)"
 		creationComplete="onCreationComplete(event)">
 	<fx:Script>
 		<![CDATA[
+			
 			import mx.events.FlexEvent;
+			
+			import Utilities.BgGraphBuilder;
 			
 			import databaseclasses.BgReading;
 			import databaseclasses.Database;
 			
 			import events.BlueToothServiceEvent;
+			import events.CalibrationServiceEvent;
 			import events.DatabaseEvent;
 			import events.TransmitterServiceEvent;
 			
 			import model.ModelLocator;
 			
 			import services.BluetoothService;
+			import services.CalibrationService;
 			import services.TransmitterService;
 			
 			private static var initialStart:Boolean = true;
 			[Bindable]
-			private static var bloodglucsovalue:Number;
-
-			[ResourceBundle("general")]
-
+			private static var currentBgLabelText:String = "---";
+			[Bindable]
+			private static var _calibrateButtonActive:Boolean = false;
+			
 			protected function onCreationComplete(event:FlexEvent):void
 			{
 				if (initialStart) {
@@ -60,10 +65,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 					
 					//will initialise the bluetoothdevice
 					Database.getBlueToothDevice();
-
-					BluetoothService.instance.addEventListener(BlueToothServiceEvent.BLUETOOTH_STATUS_CHANGED_EVENT,blueToothStatusChanged);
-					BluetoothService.instance.addEventListener(BlueToothServiceEvent.BLUETOOTH_SERVICE_INFORMATION_EVENT,blueToothServiceInformationReceived);
+					
+					BluetoothService.instance.addEventListener(BlueToothServiceEvent.BLUETOOTH_STATUS_CHANGED_EVENT, blueToothStatusChanged);
+					BluetoothService.instance.addEventListener(BlueToothServiceEvent.BLUETOOTH_SERVICE_INFORMATION_EVENT, blueToothServiceInformationReceived);
 					TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, transmitterServiceBGReadingEventReceived);
+					CalibrationService.instance.addEventListener(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT, initialCalibrationEventReceived);
+					CalibrationService.instance.addEventListener(CalibrationServiceEvent.NEW_CALIBRATION_EVENT, newCalibrationEventReceived);
 				}
 				
 				function onInitError(event:Event):void
@@ -83,15 +90,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			}
 			
 			private function transmitterServiceBGReadingEventReceived(be:TransmitterServiceEvent):void {
-				//trace((new Date()).toTimeString() + " : HomeView : received bgreading.");
-				var lastbgreading:BgReading = BgReading.lastNoSensor();
-				if (lastbgreading == null) {
-					bloodglucsovalue = Number.NaN;
-				} else {
-						bloodglucsovalue = lastbgreading.calculatedValue;
-				}
+				displayCurrentInfoFromReading(BgReading.lastNoSensor());
 			}
-
+			
+			private function initialCalibrationEventReceived(be:CalibrationServiceEvent):void {
+				displayCurrentInfoFromReading(BgReading.lastNoSensor());
+				_calibrateButtonActive = true;
+			}
+			
+			private function newCalibrationEventReceived(be:CalibrationServiceEvent):void {
+				displayCurrentInfoFromReading(BgReading.lastNoSensor());
+			}
+			
 			private function databaseInformationEventReceived(be:DatabaseEvent):void {
 				//trace((new Date()).toTimeString() + " : HomeView : received database  information = " + be.data.information);
 			}
@@ -102,9 +112,93 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 				ModelLocator.instance;
 			}
 			
+			private function displayCurrentInfoFromReading(lastBgReading:BgReading):void {
+				var estimate:Number = new Number(0);
+				if (lastBgReading == null) {
+					currentBgLabelText = "---";
+					currentBgLabel.setStyle("lineThrough","false");
+				} else {
+					if ((new Date().getTime()) - (60000 * 11) - lastBgReading.timestamp > 0) {
+						//notificationText = ModelLocator.resourceManagerInstance.getString('homeview','signalmissed');
+						estimate = lastBgReading.calculatedValue;
+						currentBgLabelText = BgGraphBuilder.unitizedString(estimate, true);
+						currentBgLabel.setStyle("lineThrough","true");
+					} else {
+						/*if (notificationText.getText().length()==0){
+						notificationText.setTextColor(Color.WHITE);
+						}*/
+						estimate = lastBgReading.calculatedValue;
+						currentBgLabelText = BgGraphBuilder.unitizedString(estimate, true);
+						var slope_arrow:String = lastBgReading.slopeArrow();
+						if (lastBgReading.hideSlope) {
+							slope_arrow = "";
+						}
+						currentBgLabelText += " " + slope_arrow;
+						currentBgLabel.setStyle("lineThrough","true");
+					}
+					var minutes:Number = ((new Date()).valueOf() - lastBgReading.timestamp) / (60 * 1000);
+					var minutesString:String = minutes==1 ?" Minute ago":" Minutes ago";
+					
+					/// TODO complete this as in Android version
+					//notificationText.append("\n" + minutes + minutesString);
+					/*List<BgReading> bgReadingList = BgReading.latest(2);
+					if(bgReadingList != null && bgReadingList.size() == 2) {
+					// same logic as in xDripWidget (refactor that to BGReadings to avoid redundancy / later inconsistencies)?
+					if(BgGraphBuilder.isXLargeTablet(getApplicationContext()) || BgGraphBuilder.isLargeTablet(getApplicationContext())) {
+					notificationText.append("  ");
+					} else {
+					notificationText.append("\n");
+					}
+					notificationText.append(
+					bgGraphBuilder.unitizedDeltaString(true, true));
+					}
+					if(bgGraphBuilder.unitized(estimate) <= bgGraphBuilder.lowMark) {
+					currentBgLabelText.setTextColor(Color.parseColor("#FF0000"));
+					} else if (bgGraphBuilder.unitized(estimate) >= bgGraphBuilder.highMark) {
+					currentBgLabelText.setTextColor(Color.parseColor("#FFFF00"));
+					} else {
+					currentBgLabelText.setTextColor(Color.WHITE);
+					}*/
+				}
+			}
+			
+			private function calibrationButtonClicked(e:MouseEvent = null):void {
+				if (!_calibrateButtonActive)
+					return;
+				CalibrationService.calibrationOnRequest();
+			}
+			
 		]]>
 	</fx:Script>
-	<s:Label text="{bloodglucsovalue.toString()}">
-		
-	</s:Label>
+	<s:actionContent>
+		<s:Button icon="{ModelLocator.image_calibrate_active}" id="calibrateButton" alpha="{_calibrateButtonActive ? 1:0.25}" enabled="{_calibrateButtonActive}" click="calibrationButtonClicked(event)"/>
+	</s:actionContent>
+	
+	<s:Group y="0" x="0" width="100%" height="100%" left="5" top="5" right="5">
+		<s:layout>
+			<s:VerticalLayout/>
+		</s:layout>
+		<s:Group width="100%">
+			<s:layout>
+				<s:HorizontalLayout paddingTop="5" paddingBottom="5" paddingLeft="5" paddingRight="5" gap="5" 
+									horizontalAlign="right" verticalAlign="middle"/>
+			</s:layout>
+			<s:Group width="100%">
+				<s:layout>
+					<s:HorizontalLayout paddingTop="0" paddingBottom="0" paddingLeft="0" paddingRight="0" gap="0" 
+										horizontalAlign="left" verticalAlign="middle"/>
+				</s:layout>
+				<s:Group>
+					<s:layout>
+						<s:VerticalLayout>
+							
+						</s:VerticalLayout>
+					</s:layout>
+					<s:Label id = "notificationText" text="test1"/>
+					<s:Label id = "notificationText2" text="test2"/>
+				</s:Group>
+			</s:Group>
+			<s:Label id = "currentBgLabel" text="{currentBgLabelText}" fontSize="70"/>
+		</s:Group>
+	</s:Group>
 </s:View>
