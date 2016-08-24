@@ -353,6 +353,7 @@ package services
 		}
 		
 		private static function central_peripheralConnectHandler(event:PeripheralEvent):void {
+			currentReconnectTimesPointer = 0;
 			if (BlueToothDevice.address == "") {
 				BlueToothDevice.address = event.peripheral.uuid;
 				BlueToothDevice.name = event.peripheral.name;
@@ -412,7 +413,9 @@ package services
 			amountOfDiscoverServicesOrCharacteristicsAttempt = 0;
 			
 			if ((BluetoothLE.service.centralManager.state == BluetoothLEState.STATE_ON)) {
-				currentReconnectTimesPointer = 0;
+				currentReconnectTimesPointer++;
+				if (currentReconnectTimesPointer == reconnectAttemptInSeconds.length)
+					currentReconnectTimesPointer--;
 				var seconds:int = reconnectAttemptInSeconds[currentReconnectTimesPointer];
 				reconnectTimer = new Timer(seconds * 1000, 1);
 				reconnectTimer.addEventListener(TimerEvent.TIMER, tryReconnect);
