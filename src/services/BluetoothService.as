@@ -24,6 +24,9 @@ package services
 	import com.distriqt.extension.bluetoothle.events.PeripheralEvent;
 	import com.distriqt.extension.bluetoothle.objects.Characteristic;
 	import com.distriqt.extension.bluetoothle.objects.Peripheral;
+	import com.distriqt.extension.notifications.NotificationRepeatInterval;
+	import com.distriqt.extension.notifications.Notifications;
+	import com.distriqt.extension.notifications.builders.NotificationBuilder;
 	
 	import flash.events.Event;
 	import flash.events.EventDispatcher;
@@ -66,33 +69,22 @@ package services
 		{
 			return _instance;
 		}
-		
-		
+
 		private static var _activeBluetoothPeripheral:Peripheral;
 		
 		private static var initialStart:Boolean = true;
 		
-		
-		private static var reconnectTimer:Timer;
-		private static var reconnectTimesInSeconds:Array = [5,5,60,60,60,60,60,300,300,300,300,300,900,900,900,900,1800];
-		private static var currentReconnectTimesPointer:int = 0;
-		private static var checkReScanTimer:Timer;
+		private static var scanTimer:Timer;
+		private static var MAX_SCAN_TIME_IN_SECONDS:int = 15;
 		private static var discoverServiceOrCharacteristicTimer:Timer;
 		private static const DISCOVER_SERVICES_OR_CHARACTERISTICS_RETRY_TIME_IN_SECONDS:int = 1;
 		private static const MAX_RETRY_DISCOVER_SERVICES_OR_CHARACTERISTICS:int = 5;
 		private static var amountOfDiscoverServicesOrCharacteristicsAttempt:int = 0;
 		
-		/**
-		 * seconds after which new scan will be started 
-		 */
-		private static const rescanTimesInSeconds:Array = [60,60,60,60,60,300,300,300,300,300,900,900,900,900,1800];
-		private static var currentRescanTimesPointer:int = 0;
-		private static const secondsAfterWhichRunningScanWillBeStopped:int = 60;
+		private static var reconnectAttemptInSeconds:Array = [5,5,60,60,60,60,60,300,300,300,300,300,900];
+		private static var currentReconnectTimesPointer:int = 0;
+		private static var reconnectTimer:Timer;
 		
-		private static var testcounter:int = 0;
-		
-		private static var nrOfAttemptsToConnectToNewDevice:int = 0;
-		private static const maxNrOfAttemptsToConnectToNewDevice:int = 5;
 		private static const lengthOfDataPacket:int = 17;
 		private static const srcNameTable:Array = [ '0', '1', '2', '3', '4', '5', '6', '7',
 			'8', '9', 'A', 'B', 'C', 'D', 'E', 'F',
@@ -169,6 +161,7 @@ package services
 					case BluetoothLEState.STATE_ON:	
 						// We can use the Bluetooth LE functions
 						bluetoothStatusIsOn();
+						dispatchInformation('bluetooth_is_switched_on');
 						break;
 					case BluetoothLEState.STATE_OFF:
 						dispatchInformation('bluetooth_is_switched_off');
@@ -272,30 +265,20 @@ package services
 			switch (BluetoothLE.service.centralManager.state)
 			{
 				case BluetoothLEState.STATE_ON:	
-					currentReconnectTimesPointer = 0;//for next new attempt, whenever just in case
-					currentRescanTimesPointer = 0;
 					dispatchInformation('bluetooth_is_switched_on');
 					// We can use the Bluetooth LE functions
 					bluetoothStatusIsOn();
 					break;
 				case BluetoothLEState.STATE_OFF:
-					currentReconnectTimesPointer = 0;//for next new attempt, whenever just in case
-					currentRescanTimesPointer = 0;
 					dispatchInformation('bluetooth_is_switched_off');
 					break;//does the device automatically change to connected ? 
 				case BluetoothLEState.STATE_RESETTING:	
-					currentReconnectTimesPointer = 0;//for next new attempt, whenever just in case
-					currentRescanTimesPointer = 0;
 					break;
 				case BluetoothLEState.STATE_UNAUTHORISED:	
-					currentReconnectTimesPointer = 0;//for next new attempt, whenever just in case
-					currentRescanTimesPointer = 0;
 					break;
 				case BluetoothLEState.STATE_UNSUPPORTED:	
 					break;
 				case BluetoothLEState.STATE_UNKNOWN:
-					currentReconnectTimesPointer = 0;//for next new attempt, whenever just in case
-					currentRescanTimesPointer = 0;
 					break;
 			}
 		}
@@ -308,37 +291,41 @@ package services
 		/** as soon as bluetooth status is on<br>
 		 * &nbsp&nbsp (this may happen the first time that this class is instantiated, means it's instantiated while bluetooth is on<br>
 		 * &nbsp&nbsp or bluetooth was off before, while the app was running already, and it changed to on) <br>
-		 * First, if activebluetoothperipheral is already known, try to connect to it<br>
-		 * If no active bluetooth peripheral known, then scan, try to connect to the first peripheral with name drip or xbridge in it (not case sensitive)<br>
+		 * 
+		 * If a bluetooth peripheral already stored in database, check status and if not connected or connecting, then try to connect<br>
+		 * If no active bluetooth peripheral known, then do nothing
 		 */
 		private static function bluetoothStatusIsOn():void {
 			if (activeBluetoothPeripheral != null) {
-				BluetoothLE.service.centralManager.connect(activeBluetoothPeripheral);
-				dispatchInformation('trying_to_connect_to_known_device');
-				//make sure scanning is not going on anymore, to save energy
-				BluetoothLE.service.centralManager.stopScan();
-			} else {
-				nrOfAttemptsToConnectToNewDevice = 0;
-				if (!BluetoothLE.service.centralManager.isScanning) {
-					if (!BluetoothLE.service.centralManager.scanForPeripherals(uuids_HM_10_Service))
-					{
-						dispatchInformation('failed_to_start_scanning_for_peripherals');
-						return;
-					} else {
-						dispatchInformation('started_scanning_for_peripherals');
-						setCheckScanStatusTimer(true);
-					}
+					BluetoothLE.service.centralManager.connect(activeBluetoothPeripheral);
+					dispatchInformation('trying_to_connect_to_known_device');
+			}
+		}
+		
+		public static function startScanning():void {
+			if (!BluetoothLE.service.centralManager.isScanning) {
+				scanTimer = new Timer(MAX_SCAN_TIME_IN_SECONDS * 1000, 1);
+				scanTimer.addEventListener(TimerEvent.TIMER, stopScanning);
+				scanTimer.start();
+				if (!BluetoothLE.service.centralManager.scanForPeripherals(uuids_HM_10_Service))
+				{
+					dispatchInformation('failed_to_start_scanning_for_peripherals');
+					return;
 				} else {
-					//to save energy
-					BluetoothLE.service.centralManager.stopScan();
-					dispatchInformation('scanning_still_running_stopped_now');
-					setCheckScanStatusTimer(false);
+					dispatchInformation('started_scanning_for_peripherals');
 				}
+			}			
+		}
+		
+		private static function stopScanning(event:Event):void {
+			if (BluetoothLE.service.centralManager.isScanning) {
+				BluetoothLE.service.centralManager.stopScan();
+				dispatchInformation('stopped_scanning');	
 			}
 		}
 		
 		private static function central_peripheralDiscoveredHandler(event:PeripheralEvent):void {
-			if (debugMode) trace("passing in central_peripheralDiscoveredHandler for " + testcounter++ + "-th time");
+			if (debugMode) trace("passing in central_peripheralDiscoveredHandler");
 			
 			// event.peripheral will contain a Peripheral object with information about the Peripheral
 			if ((event.peripheral.name as String).toUpperCase().indexOf("DRIP") > -1 || (event.peripheral.name as String).toUpperCase().indexOf("BRIDGE") > -1) {
@@ -349,7 +336,6 @@ package services
 					" = " + event.peripheral.name;
 				_instance.dispatchEvent(blueToothServiceEvent);
 				
-				//var temp:String = BlueToothDevice.address;
 				if (BlueToothDevice.address != "") {
 					if (BlueToothDevice.address != event.peripheral.uuid) {
 						//a bluetooth device address is already stored, but it's not the one for which peripheraldiscoveredhandler is called
@@ -367,11 +353,6 @@ package services
 		}
 		
 		private static function central_peripheralConnectHandler(event:PeripheralEvent):void {
-			disableCheckScanTimer();
-			disableReconnectTimer();
-			nrOfAttemptsToConnectToNewDevice = 0;
-			currentReconnectTimesPointer = 0;//for next new attempt, whenever just in case
-			currentRescanTimesPointer = 0;
 			if (BlueToothDevice.address == "") {
 				BlueToothDevice.address = event.peripheral.uuid;
 				BlueToothDevice.name = event.peripheral.name;
@@ -408,34 +389,52 @@ package services
 		}
 		
 		private static function central_peripheralConnectFailHandler(event:PeripheralEvent):void {
-			if (activeBluetoothPeripheral == null) {
-				//it was an attempt to connect to a peripheral that was just scanned
-				if (BluetoothLE.service.state == BluetoothLEState.STATE_ON) {
-					//bluetooth state is on so retry
-					if (nrOfAttemptsToConnectToNewDevice == maxNrOfAttemptsToConnectToNewDevice) {
-						nrOfAttemptsToConnectToNewDevice = 0;
-						dispatchInformation('connection_failed_max_attempts_reached');
-						currentRescanTimesPointer = 0;
-						setCheckScanStatusTimer(false);
-					} else {
-						dispatchInformation('connection_failed_rescanning_will_start');
-						bluetoothStatusIsOn();
-						nrOfAttemptsToConnectToNewDevice++;
-					}
-				} else {
-					//
-					dispatchInformation('connection_failed_and_bluetooth_is_off');
-				}
-			} else {
-				dispatchInformation('connection_attempt_to_peripheral_failed');
-				setReconnectTimer();
+			dispatchInformation('connection_attempt_to_peripheral_failed');
+
+			//setting to 0 because i had a case where the maximum was reached after a few re and disconnects
+			amountOfDiscoverServicesOrCharacteristicsAttempt = 0;
+
+			if ((BluetoothLE.service.centralManager.state == BluetoothLEState.STATE_ON)) {
+				currentReconnectTimesPointer++;
+				if (currentReconnectTimesPointer == reconnectAttemptInSeconds.length)
+					currentReconnectTimesPointer--;
+				var seconds:int = reconnectAttemptInSeconds[currentReconnectTimesPointer];
+				reconnectTimer = new Timer(seconds * 1000, 1);
+				reconnectTimer.addEventListener(TimerEvent.TIMER, tryReconnect);
+				reconnectTimer.start();
 			}
 		}
 		
 		private static function central_peripheralDisconnectHandler(event:PeripheralEvent):void {
 			dispatchInformation('disconnected_from_device');
-			if (BluetoothLE.service.state == BluetoothLEState.STATE_ON)
-				setReconnectTimer();
+			
+			//setting to 0 because i had a case where the maximum was reached after a few re and disconnects
+			amountOfDiscoverServicesOrCharacteristicsAttempt = 0;
+			
+			if ((BluetoothLE.service.centralManager.state == BluetoothLEState.STATE_ON)) {
+				currentReconnectTimesPointer = 0;
+				var seconds:int = reconnectAttemptInSeconds[currentReconnectTimesPointer];
+				reconnectTimer = new Timer(seconds * 1000, 1);
+				reconnectTimer.addEventListener(TimerEvent.TIMER, tryReconnect);
+				reconnectTimer.start();
+				
+				var blueToothServiceEvent:BlueToothServiceEvent = new BlueToothServiceEvent(BlueToothServiceEvent.BLUETOOTH_SERVICE_INFORMATION_EVENT);
+				blueToothServiceEvent.data = new Object();
+				blueToothServiceEvent.data.information = 
+					ModelLocator.resourceManagerInstance.getString('bluetoothservice','will_try_to_reconnect_in') +
+					" " + seconds + " " +
+					ModelLocator.resourceManagerInstance.getString('bluetoothservice','seconds');
+				_instance.dispatchEvent(blueToothServiceEvent);
+			}
+		}
+		
+		private static function tryReconnect(event:Event = null):void {
+			if ((BluetoothLE.service.centralManager.state == BluetoothLEState.STATE_ON)) {
+				bluetoothStatusIsOn();
+			} else {
+				//no need to further retry, a reconnect will be done as soon as bluetooth is switched on
+				currentReconnectTimesPointer = 0;
+			}
 		}
 		
 		private static function peripheral_discoverServicesHandler(event:PeripheralEvent):void {
@@ -580,6 +579,19 @@ package services
 		private static function peripheral_characteristic_subscribeHandler(event:CharacteristicEvent):void {
 			if (debugMode) trace("BluetoothService.as : peripheral_characteristic_subscribeHandler: " + event.characteristic.uuid);
 			dispatchInformation("successfully_subscribed_to_characteristics");
+			//TEST TEST TEST TEST
+			Notifications.service.notify(
+				new NotificationBuilder()
+				.setId(NotificationService.ID_FOR_EXTRA_CALIBRATION_REQUEST)
+				.setAlert("calibration request alert")
+				.setTitle("calibration request title")
+				.setBody("caliration request body")
+				.setPayload(JSON.stringify("payload"))
+				//.setCategory(NotificationService.IDENTIFIER_STRING_FOR_CALIBRATION_REQUEST_CATEGORY)
+				.setRepeatInterval(NotificationRepeatInterval.REPEAT_NONE)
+				.build());
+			
+
 		}
 		
 		private static function peripheral_characteristic_subscribeErrorHandler(event:CharacteristicEvent):void {
@@ -598,117 +610,6 @@ package services
 			_instance.dispatchEvent(blueToothServiceEvent);
 		}
 		
-		private static function tryReconnect(event:Event = null):void {
-			if (activeBluetoothPeripheral != null) {
-				BluetoothLE.service.centralManager.connect(activeBluetoothPeripheral);
-				dispatchInformation('try_to_connect_to_device');
-				setReconnectTimer();
-			} else {
-				checkScanStatus(null);
-			}
-		}
-		
-		private static function disableReconnectTimer():void {
-			if (reconnectTimer != null) {
-				if (reconnectTimer.hasEventListener(TimerEvent.TIMER)) 
-					reconnectTimer.removeEventListener(TimerEvent.TIMER,tryReconnect);
-				reconnectTimer.stop();
-				reconnectTimer = null;
-			}
-		}
-		
-		/**
-		 * sets timer after which new attempt will be done to connect to known bluetoothdevice<br>
-		 * Also dispatch information
-		 */
-		private static function setReconnectTimer():void {
-			var seconds:int = 0;
-			if ((new Date()).valueOf() - timeStampOfLastDataPacketReceived < (4 * 60 + 45) * 1000) {
-				//less than 4 minutes and 45 seconds since last data packet
-				//new connect should happen in time for receiving the next packet, but not sooner
-				seconds = (timeStampOfLastDataPacketReceived + (4 * 60 + 45) * 1000 - (new Date()).valueOf())/1000;
-			} else {
-				seconds = reconnectTimesInSeconds[currentReconnectTimesPointer];
-				currentReconnectTimesPointer++;
-				if (currentReconnectTimesPointer == reconnectTimesInSeconds.length)
-					currentReconnectTimesPointer--;
-			}
-			if (debugMode) trace("seconds for reattempt set to = " + seconds);
-			
-			var blueToothServiceEvent:BlueToothServiceEvent = new BlueToothServiceEvent(BlueToothServiceEvent.BLUETOOTH_SERVICE_INFORMATION_EVENT);
-			blueToothServiceEvent.data = new Object();
-			blueToothServiceEvent.data.information = 
-				ModelLocator.resourceManagerInstance.getString('bluetoothservice','will_try_to_reconnect_in') +
-				" " + seconds + " " +
-				ModelLocator.resourceManagerInstance.getString('bluetoothservice','seconds');
-			_instance.dispatchEvent(blueToothServiceEvent);
-			
-			disableReconnectTimer();
-			reconnectTimer = new Timer(seconds * 1000, 1);
-			reconnectTimer.addEventListener(TimerEvent.TIMER, tryReconnect);
-			reconnectTimer.start();
-		}
-		
-		/**
-		 * checking scan means : check if scan is still running and if so stop it, or if not running restart it<br>
-		 * this timer will set the timer to launch the checkScanStatus<br>
-		 * If timer needs to be called for check running scan, then set checkForStopping = true<br> 
-		 * Dispatches information<br>
-		 * If timer started for checking when scanning needs to be restarted, then increments currentRescanTimesPointer<br>
-		 */
-		private static function setCheckScanStatusTimer(checkForStopping:Boolean):void {
-			var seconds:int = 0;
-			var blueToothServiceEvent:BlueToothServiceEvent = new BlueToothServiceEvent(BlueToothServiceEvent.BLUETOOTH_SERVICE_INFORMATION_EVENT);
-			blueToothServiceEvent.data = new Object();
-			if (checkForStopping) {
-				seconds = secondsAfterWhichRunningScanWillBeStopped;
-				blueToothServiceEvent.data.information = 
-					ModelLocator.resourceManagerInstance.getString('bluetoothservice','will_stop_scanning') +
-					" " + seconds + " " +
-					ModelLocator.resourceManagerInstance.getString('bluetoothservice','seconds');
-			}
-			else {
-				seconds = rescanTimesInSeconds[currentRescanTimesPointer];
-				blueToothServiceEvent.data.information = 
-					ModelLocator.resourceManagerInstance.getString('bluetoothservice','will_restart_scanning') +
-					" " + seconds + " " +
-					ModelLocator.resourceManagerInstance.getString('bluetoothservice','seconds');
-			}
-			_instance.dispatchEvent(blueToothServiceEvent);
-			
-			disableCheckScanTimer();
-			checkReScanTimer = new Timer(seconds * 1000, 1);
-			checkReScanTimer.addEventListener(TimerEvent.TIMER, checkScanStatus);
-			checkReScanTimer.start();
-			currentRescanTimesPointer++;
-			if (currentRescanTimesPointer == rescanTimesInSeconds.length)
-				currentRescanTimesPointer--;
-		}
-		
-		private static function checkScanStatus(event:Event):void {
-			if (BluetoothLE.service.centralManager.isScanning) {
-				//to save energy
-				BluetoothLE.service.centralManager.stopScan();
-				dispatchInformation('scanning_still_running_stopped_now');
-				setCheckScanStatusTimer(false);
-			} else {
-				if ((BluetoothLE.service.centralManager.state == BluetoothLEState.STATE_ON))
-					//this will cause a new scanning, information will be dispatched in bluetoothStatusIsOn
-					bluetoothStatusIsOn();
-				else
-					//else, no need to restart the scanning timer, whenever bluetooth is switched on, it will automatically restart
-					dispatchInformation('bluetooth_is_switched_off');
-			}
-		}
-		
-		private static function disableCheckScanTimer():void {
-			if (checkReScanTimer != null) {
-				if (checkReScanTimer.hasEventListener(TimerEvent.TIMER)) 
-					checkReScanTimer.removeEventListener(TimerEvent.TIMER,checkScanStatus);
-				checkReScanTimer.stop();
-				checkReScanTimer = null;
-			}
-		}
 		
 		/**
 		 * Disconnects the active bluetoothperipheral if any (otherwise returns without doing anything)<br>
@@ -720,13 +621,10 @@ package services
 			blueToothServiceEvent.data.information = ModelLocator.resourceManagerInstance.getString('settingsview','bluetoothdeviceforgotten');
 			_instance.dispatchEvent(blueToothServiceEvent);
 			
-			currentReconnectTimesPointer = 0;//for next new attempt, whenever just in case
-			currentRescanTimesPointer = 0;
 			if (activeBluetoothPeripheral == null)
 				return;
 			BluetoothLE.service.centralManager.disconnect(activeBluetoothPeripheral);
 			activeBluetoothPeripheral = null;
-			disableReconnectTimer();
 			if ((BluetoothLE.service.centralManager.state == BluetoothLEState.STATE_ON))
 				bluetoothStatusIsOn();
 		}
