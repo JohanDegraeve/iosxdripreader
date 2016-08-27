@@ -299,6 +299,11 @@ package services
 			if (activeBluetoothPeripheral != null) {
 					BluetoothLE.service.centralManager.connect(activeBluetoothPeripheral);
 					dispatchInformation('trying_to_connect_to_known_device');
+			} else {
+				if (BlueToothDevice.bluetoothDeviceKnown()) {
+					//we know a device from previous connection should we should try to connect
+					startScanning();
+				}
 			}
 		}
 		
@@ -582,19 +587,6 @@ package services
 		private static function peripheral_characteristic_subscribeHandler(event:CharacteristicEvent):void {
 			if (debugMode) trace("BluetoothService.as : peripheral_characteristic_subscribeHandler: " + event.characteristic.uuid);
 			dispatchInformation("successfully_subscribed_to_characteristics");
-			//TEST TEST TEST TEST
-			Notifications.service.notify(
-				new NotificationBuilder()
-				.setId(NotificationService.ID_FOR_EXTRA_CALIBRATION_REQUEST)
-				.setAlert("calibration request alert")
-				.setTitle("calibration request title")
-				.setBody("caliration request body")
-				.setPayload(JSON.stringify("payload"))
-				//.setCategory(NotificationService.IDENTIFIER_STRING_FOR_CALIBRATION_REQUEST_CATEGORY)
-				.setRepeatInterval(NotificationRepeatInterval.REPEAT_NONE)
-				.build());
-			
-
 		}
 		
 		private static function peripheral_characteristic_subscribeErrorHandler(event:CharacteristicEvent):void {
