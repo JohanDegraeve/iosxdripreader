@@ -22,40 +22,60 @@ package services
 	import com.distriqt.extension.notifications.NotificationRepeatInterval;
 	import com.distriqt.extension.notifications.Notifications;
 	import com.distriqt.extension.notifications.Service;
-	import com.distriqt.extension.notifications.actions.Category;
-	import com.distriqt.extension.notifications.builders.ActionBuilder;
-	import com.distriqt.extension.notifications.builders.CategoryBuilder;
 	import com.distriqt.extension.notifications.builders.NotificationBuilder;
 	import com.distriqt.extension.notifications.events.AuthorisationEvent;
 	import com.distriqt.extension.notifications.events.NotificationEvent;
 	
 	import flash.events.Event;
+	import flash.events.EventDispatcher;
 	import flash.events.TimerEvent;
 	import flash.utils.Timer;
 	
 	import distriqtkey.DistriqtKey;
 	
-	import model.ModelLocator;
+	import events.NotificationServiceEvent;
+	
 	
 	/**
-	 * This service registers notifications as required.<br>
+	 * This service<br>
+	 * - registers for notifications<br>
+	 * - defines id's<br>
 	 * At the same time this service will at regular intervals set a notification for the end-user<br>
 	 * each time again (period to be defined - probably in the settings) the notification will be reset later<br>
 	 * Goal is that whenevever the application stops, also this service will not run anymore, hence the notification will expire, the user
-	 * will know the application stopped and by just clicking it it will re-open and restart. 
+	 * will know the application stopped and by just clicking it it will re-open and restart.
+	 * 
+	 * It also dispatches the notifications as NotificationServiceEvent 
 	 */
-	public class NotificationService
+	public class NotificationService extends EventDispatcher
 	{
-		[ResourceBundle("notificationservice")]
 
-		private static var instance:NotificationService = new NotificationService();
+		private static var _instance:NotificationService = new NotificationService();
+
+		[ResourceBundle("notificationservice")]
+		public static function get instance():NotificationService
+		{
+			return _instance;
+		}
+
 		
 		private static var initialStart:Boolean = true;
 		
+		/*//categories
 		private static const IDENTIFIER_STRING_FOR_WAKEUP_CATEGORY:String = "WAKE_UP_CATEGORY";
-		private static const IDENTIFIER_STRING_FOR_ACCEPT_ACTION:String = "ACCEPT";
-		private static const ID_FOR_WAKEUP_CATEGORY:int = 1;
-		private static const debugMode:Boolean = false;
+		public static const IDENTIFIER_STRING_FOR_CALIBRATION_REQUEST_CATEGORY:String = "CALIBRATION_REQUEST_CATEGORY";*/
+		
+		//Notification ID's
+		/**
+		 * For wakeup notification - still under test<br>
+		 * This is the kind of notification that will be fired when the app has been killed - at least that's the aim 
+		 */
+		private static const ID_FOR_WAKEUP:int = 1;
+		/**
+		 * To request extra calibration 
+		 */
+		public static const ID_FOR_EXTRA_CALIBRATION_REQUEST:int = 2;
+		private static const debugMode:Boolean = true;
 		/**
 		* time in minutes, after which notification will fire<br>
 		* If application was killed in between setting the notification and the firing of it, it will effectively fire, and so the user can click it which will cause the 
@@ -78,7 +98,7 @@ package services
 		
 		public function NotificationService()
 		{
-			if (instance != null) {
+			if (_instance != null) {
 				throw new Error("RestartNotificationService class constructor can not be used");	
 			}
 		}
@@ -96,19 +116,7 @@ package services
 			}
 			
 			var service:Service = new Service();
-			
-			//Create and add category for wake up notification, ie the notification that will be fired when the app didn't run for more than x minutes
-			var wakeupCategory:Category = new CategoryBuilder()
-				.setIdentifier(IDENTIFIER_STRING_FOR_WAKEUP_CATEGORY)
-				.addAction(new ActionBuilder()
-						.setTitle(ModelLocator.resourceManagerInstance.getString('notificationservice','open'))
-						.setIdentifier(IDENTIFIER_STRING_FOR_ACCEPT_ACTION)
-						.build())
-				.build();
-			service.categories.push(wakeupCategory);
-			
-			//do the same as above example for alarm categories
-			//then store the integer that is returned, needed for future remove for example
+			service.enableNotificationsWhenActive = true;
 			
 			Notifications.service.setup(service);
 			
@@ -149,9 +157,7 @@ package services
 			 * will obviously register and also add eventlisteners
 			 */
 			function register():void {
-				Notifications.service.addEventListener(NotificationEvent.NOTIFICATION, notificationHandler);
 				Notifications.service.addEventListener(NotificationEvent.NOTIFICATION_SELECTED, notificationHandler);
-				Notifications.service.addEventListener(NotificationEvent.ACTION, actionHandler);
 				Notifications.service.register();
 				
 				timeOfLastWakeUpNotificationBeingSet = (new Date()).valueOf();
@@ -161,11 +167,11 @@ package services
 			
 			function notificationHandler(event:NotificationEvent):void {
 				if (debugMode) trace("in Notificationservice notificationHandler at " + (new Date()).toLocaleTimeString());
+				var notificationServiceEvent:NotificationServiceEvent = new NotificationServiceEvent(NotificationServiceEvent.NOTIFICATION_EVENT);
+				notificationServiceEvent.data = event;
+				_instance.dispatchEvent(notificationServiceEvent);
 			}
 			
-			function actionHandler(event:NotificationEvent):void {
-				if (debugMode) trace("in Notificationservice. actionHandler at " + (new Date()).toLocaleTimeString());
-			}
 		}
 		
 		/**
@@ -206,11 +212,10 @@ package services
 		 	if (debugMode) trace("setting notification at " + fireDate.toLocaleTimeString());
 			Notifications.service.notify(
 				new NotificationBuilder()
-				.setId(ID_FOR_WAKEUP_CATEGORY)
+				.setId(ID_FOR_WAKEUP)
 				.setAlert("notification alert")
 				.setTitle("notification title")
 				.setBody("notification body")
-				.setCategory(IDENTIFIER_STRING_FOR_WAKEUP_CATEGORY)
 				.setFireDate(fireDate)
 				.setRepeatInterval(NotificationRepeatInterval.REPEAT_NONE)
 				.build());

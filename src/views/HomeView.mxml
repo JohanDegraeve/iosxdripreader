@@ -86,7 +86,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			}
 			
 			private function blueToothServiceInformationReceived(be:BlueToothServiceEvent):void {
-				//trace((new Date()).toTimeString() + " : HomeView : received bluetooth service information = " + be.data.information);
+				trace((new Date()).toTimeString() + " : HomeView : received bluetooth service information = " + be.data.information);
 			}
 			
 			private function transmitterServiceBGReadingEventReceived(be:TransmitterServiceEvent):void {

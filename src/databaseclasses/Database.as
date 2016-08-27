@@ -869,7 +869,9 @@ package databaseclasses
 		
 		/**
 		 * get calibrationRequests with requestIfAbove < value and requestIfBelow > value<br>
-		 * synchronous
+		 * return value is not sorted<br>
+		 * synchronous<br>
+		 * 
 		 */
 		public static function getCalibrationRequestsForValue(value:Number):ArrayCollection {
 			var returnValue:ArrayCollection = new ArrayCollection();

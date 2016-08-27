@@ -21,6 +21,7 @@
 			import databaseclasses.BlueToothDevice;
 			import databaseclasses.Sensor;
 			
+			import services.BluetoothService;
 			import services.DialogService;
 			
 			private static var alertPopUp:AlertPopUp;
@@ -32,7 +33,8 @@
 			private var menuList:ArrayCollection = 	new ArrayCollection([
 				ModelLocator.resourceManagerInstance.getString("settingsview","forget_xdrip_or_xbridge"),
 				ModelLocator.resourceManagerInstance.getString("settingsview","show_logging"),
-				Sensor.getActiveSensor() == null ? ModelLocator.resourceManagerInstance.getString("settingsview","start_sensor") : ModelLocator.resourceManagerInstance.getString("settingsview","stop_sensor")
+				Sensor.getActiveSensor() == null ? ModelLocator.resourceManagerInstance.getString("settingsview","start_sensor") : ModelLocator.resourceManagerInstance.getString("settingsview","stop_sensor"),
+				"scan bluetooth"
 			]);	
 	
 			private function init():void {
@@ -74,6 +76,9 @@
 						DialogService.addDialog(alert);
 						if (!settingsList.hasEventListener(Event.CHANGE))
 							settingsList.addEventListener(Event.CHANGE,selectedElementChanged);
+						break;
+					case 3:
+						BluetoothService.startScanning();
 						break;
 				}
 				

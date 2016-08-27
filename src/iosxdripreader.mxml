@@ -38,7 +38,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 				deviceScreenHeight = height;
 				deviceScreenWidth = width;
 				this.stage.frameRate = 12;
-				
+				NativeApplication.nativeApplication.systemIdleMode = SystemIdleMode.KEEP_AWAKE;
+				NativeApplication.nativeApplication.executeInBackground = true;
 				DialogService.init(this.stage);
 			}
 			

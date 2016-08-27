@@ -108,6 +108,14 @@ package databaseclasses
 			BluetoothService.forgetBlueToothDevice();
 		}
 		
+		/**
+		 * is a bluetoothdevice known or not<br>
+		 * It will look at the address and if it's different from "" then returns true 
+		 */
+		public static function bluetoothDeviceKnown():Boolean {
+			return (_address != "");
+		}
+		
 		public static function setLastModifiedTimestamp(newtimestamp:Number):void {
 			instance.lastModifiedTimestamp = newtimestamp;
 		}

@@ -72,16 +72,20 @@ package databaseclasses
 		/**
 		 * starts a new sensor and inserts it in the database<br>
 		 * if a sensor is currently active then it will be stopped<br>
-		 * Also calls CalibrationService.init() 
+		 * Also calls CalibrationService.init()<br>
+		 * <br>
+		 *  If timestamp isNaN then start time will be set to current time, otherwise it's assigned value of timestamp
 		 */
-		public static function startSensor():void {
+		public static function startSensor(timestamp:Number = Number.NaN):void {
+			if (isNaN(timestamp))
+				timestamp = (new Date()).valueOf();
 			var currentSensor:Sensor = getActiveSensor();
 			if (currentSensor != null) {
 				currentSensor._stoppedAt = (new Date()).valueOf();
 				currentSensor.resetLastModifiedTimeStamp();
 				Database.updateSensor(currentSensor);
 			}
-			currentSensor = new Sensor((new Date()).valueOf() - 2 * 60 * 60 * 1000, 0, 0, null, Number.NaN);
+			currentSensor = new Sensor(timestamp, 0, 0, null, Number.NaN);
 			Database.insertSensor(currentSensor);
 			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_ID_CURRENT_SENSOR_ID, currentSensor.uniqueId);
 			CalibrationService.init();

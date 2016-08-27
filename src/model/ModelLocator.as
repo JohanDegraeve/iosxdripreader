@@ -87,6 +87,7 @@ package model
 		 * last 24 hour bg readings<br>
 		 * seperate method is there to add a bg reading, which will also there to clean up any items older dan 24 hours<br>
 		 * there's no guarantee that there are no items older dan 24 hours<br>
+		 * Sorted ascending, from small to large, ie latest element is also the last element
 		 */
 		public static function get bgReadings():ArrayCollection
 		{
@@ -180,7 +181,6 @@ package model
 							TransmitterService.init();
 							BluetoothService.init();
 							NotificationService.init();
-							//CalibrationService.init(); (only for test purposes)
 						} else {
 							_loggingList.addItem(de.data as String);
 						}

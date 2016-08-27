@@ -483,7 +483,7 @@ package databaseclasses
 			CalibrationRequest.clearAllSynchronous();
 			var sensor:Sensor = Sensor.getActiveSensor();
 			if (sensor != null) {
-				var bgReading:BgReading = (BgReading.latest(1))[0]  as BgReading;//TODO geeft dit wel degelijk de laatste ?
+				var bgReading:BgReading = (BgReading.latest(1))[0]  as BgReading;
 				if (bgReading != null) {
 					var estimatedRawBg:Number = BgReading.estimatedRawBg((new Date()).valueOf());
 					calibration = (new Calibration(
@@ -517,8 +517,12 @@ package databaseclasses
 					calculateWLS(calibration);
 					bgReading.calibration = calibration;
 					bgReading.calibrationFlag = true;
-					bgReading.updateInDatabaseSynchronous();
-					//not doing the adjustRecentBgReadings as in Android version
+					
+					//just doing an update of the latest bgreading, which may not be aligned with the Android version
+					//not doing a database update of the bgreading, because adjustRecentBgReadings is already doing that update
+					var latest3Calibrations:ArrayCollection = latest(2);
+					latest3Calibrations.addItemAt(calibration,0);
+					adjustRecentBgReadings(1, latest3Calibrations);
 					
 					//calling requestCalibrationIfRangeTooNarrow in the CalibrationService which handles also the save to database
 					
@@ -660,7 +664,8 @@ package databaseclasses
 		}
 		
 		/**
-		 * arraycollection with latest number of calibrations that match the active sensorid, descending<br>
+		 * arraycollection with latest number of calibrations that match the active sensorid<br>
+		 * descending timestamp, large to small<br>
 		 * if there's none then empty arraycollection is returned 
 		 */
 		public static function latest(number:int):ArrayCollection {
@@ -683,7 +688,7 @@ package databaseclasses
 				if (calibrations.length == 3) {
 					if ((Math.abs(thisCalibration.bg - thisCalibration.estimateBgAtTimeOfCalibration) < 30) && ((calibrations.getItemAt(1) as Calibration).possibleBad == true)) {
 						myTrace("returnvalue for size 3, first branch = " + (calibrations.getItemAt(1) as Calibration).slope);
-						return calibrations.getItemAt(1).slope;
+						return (calibrations.getItemAt(1) as Calibration).slope;
 					} else {
 						myTrace("returnvalue for size 3, second branch = " + Math.max(((-0.048) * (thisCalibration.sensorAgeAtTimeOfEstimation / (60000 * 60 * 24))) + 1.1, sParams.DEFAULT_LOW_SLOPE_LOW));
 						return Math.max(((-0.048) * (thisCalibration.sensorAgeAtTimeOfEstimation / (60000 * 60 * 24))) + 1.1, sParams.DEFAULT_LOW_SLOPE_LOW);
@@ -698,8 +703,8 @@ package databaseclasses
 				return sParams.DEFAULT_SLOPE;
 			} else {
 				if (calibrations.length == 3) {
-					if ((Math.abs(thisCalibration.bg - thisCalibration.estimateBgAtTimeOfCalibration) < 30) && (calibrations.getItemAt(1).possible_bad != null && calibrations.getItemAt(1).possible_bad == true)) {
-						return calibrations.getItemAt(1).slope;
+					if ((Math.abs(thisCalibration.bg - thisCalibration.estimateBgAtTimeOfCalibration) < 30) && ((calibrations.getItemAt(1) as Calibration).possibleBad)) {
+						return (calibrations.getItemAt(1) as Calibration).slope;
 					} else {
 						return sParams.DEFAULT_HIGH_SLOPE_HIGH;
 					}
