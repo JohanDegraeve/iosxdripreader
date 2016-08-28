@@ -74,11 +74,12 @@ package databaseclasses
 		 * if a sensor is currently active then it will be stopped<br>
 		 * Also calls CalibrationService.init()<br>
 		 * <br>
-		 *  If timestamp isNaN then start time will be set to current time, otherwise it's assigned value of timestamp
+		 *  If timestamp isNaN then start time will be set to current time - 2 hours, otherwise it's assigned value of timestamp<br>
+		 * Number.NaN is only to be used for testpurposes
 		 */
 		public static function startSensor(timestamp:Number = Number.NaN):void {
 			if (isNaN(timestamp))
-				timestamp = (new Date()).valueOf();
+				timestamp = (new Date()).valueOf() - 2 * 60 * 60 * 1000;
 			var currentSensor:Sensor = getActiveSensor();
 			if (currentSensor != null) {
 				currentSensor._stoppedAt = (new Date()).valueOf();

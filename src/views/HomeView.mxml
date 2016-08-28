@@ -22,12 +22,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 		creationComplete="onCreationComplete(event)">
 	<fx:Script>
 		<![CDATA[
-			
 			import mx.events.FlexEvent;
+			
+			import spark.components.Image;
 			
 			import Utilities.BgGraphBuilder;
 			
 			import databaseclasses.BgReading;
+			import databaseclasses.Calibration;
 			import databaseclasses.Database;
 			
 			import events.BlueToothServiceEvent;
@@ -46,6 +48,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			private static var currentBgLabelText:String = "---";
 			[Bindable]
 			private static var _calibrateButtonActive:Boolean = false;
+			[Bindable]
+			private static var calibration
+			[Bindable]
+			private static var _bluetoothButtonActive:Boolean = false;
+			[Bindable]
+			private static var bluetoothIcon:Image;
 			
 			protected function onCreationComplete(event:FlexEvent):void
 			{
@@ -53,24 +61,48 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 					Database.instance.addEventListener(DatabaseEvent.DATABASE_INIT_FINISHED_EVENT,onInitResult);
 					Database.instance.addEventListener(DatabaseEvent.ERROR_EVENT,onInitError);
 					Database.instance.addEventListener(DatabaseEvent.DATABASE_INFORMATION_EVENT, databaseInformationEventReceived);
+					//need to know when modellocator is populated, then we can also update display
+					Database.instance.addEventListener(DatabaseEvent.BGREADING_RETRIEVAL_EVENT, bgReadingReceivedFromDatabase);
 					Database.init();
 					initialStart = false;
 				}
+				
+				function bgReadingReceivedFromDatabase(de:DatabaseEvent):void {
+					if (de.data != null)
+						if (de.data is String) {
+							if (de.data as String == Database.END_OF_RESULT) {
+								Database.instance.removeEventListener(DatabaseEvent.BGREADING_RETRIEVAL_EVENT, bgReadingReceivedFromDatabase);
+								displayCurrentInfoFromReading(BgReading.lastNoSensor());
+							}
+						}
+				} 
 				
 				function onInitResult(event:Event):void
 				{
 					trace("HomeView : database init result ok");
 					Database.instance.removeEventListener(DatabaseEvent.ERROR_EVENT, onInitError);
 					Database.instance.removeEventListener(DatabaseEvent.DATABASE_INIT_FINISHED_EVENT, onInitResult);
+					//at this moment the database is intialised, but the logs, bgreadings, ... might still be read in the ModelLocator, Modellocator is listening to the same event
 					
 					//will initialise the bluetoothdevice
 					Database.getBlueToothDevice();
+					
+					
+					
+					//set calibration button in the correct state
+					if (Calibration.allForSensor().length > 1) {
+						_calibrateButtonActive = true;
+					}
+					
+					//displayCurrentInfoFromReading(BgReading.lastNoSensor());
 					
 					BluetoothService.instance.addEventListener(BlueToothServiceEvent.BLUETOOTH_STATUS_CHANGED_EVENT, blueToothStatusChanged);
 					BluetoothService.instance.addEventListener(BlueToothServiceEvent.BLUETOOTH_SERVICE_INFORMATION_EVENT, blueToothServiceInformationReceived);
 					TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, transmitterServiceBGReadingEventReceived);
 					CalibrationService.instance.addEventListener(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT, initialCalibrationEventReceived);
 					CalibrationService.instance.addEventListener(CalibrationServiceEvent.NEW_CALIBRATION_EVENT, newCalibrationEventReceived);
+					
+					//set correct bluetooth icon
 				}
 				
 				function onInitError(event:Event):void
@@ -134,7 +166,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 							slope_arrow = "";
 						}
 						currentBgLabelText += " " + slope_arrow;
-						currentBgLabel.setStyle("lineThrough","true");
+						//currentBgLabel.setStyle("lineThrough","false");
 					}
 					var minutes:Number = ((new Date()).valueOf() - lastBgReading.timestamp) / (60 * 1000);
 					var minutesString:String = minutes==1 ?" Minute ago":" Minutes ago";
@@ -168,10 +200,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 				CalibrationService.calibrationOnRequest();
 			}
 			
+			private function bluetoothButtonClicked(e:MouseEvent = null):void {
+				if (!_calibrateButtonActive)
+					return;
+				CalibrationService.calibrationOnRequest();
+			}
+			
 		]]>
 	</fx:Script>
 	<s:actionContent>
 		<s:Button icon="{ModelLocator.image_calibrate_active}" id="calibrateButton" alpha="{_calibrateButtonActive ? 1:0.25}" enabled="{_calibrateButtonActive}" click="calibrationButtonClicked(event)"/>
+		<s:Button icon="{ModelLocator.image_bluetooth_red}" id="bluetoothButton" alpha="{_bluetoothButtonActive ? 1:0.25}" enabled="{_bluetoothButtonActive}" click="bluetoothButtonClicked(event)"/>
 	</s:actionContent>
 	
 	<s:Group y="0" x="0" width="100%" height="100%" left="5" top="5" right="5">

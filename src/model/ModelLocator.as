@@ -53,6 +53,9 @@ package model
 		private static var dataSortForBGReadings:Sort;
 
 		public static var image_calibrate_active:Image;
+		public static var image_bluetooth_red:Image;
+		public static var image_bluetooth_green:Image;
+		public static var image_bluetooth_orange:Image
 		public static var iconCache:ContentCache;
 
 		public static function get instance():ModelLocator
@@ -169,6 +172,7 @@ package model
 				//logs created after app start time are not needed because they are already added in the logginglist
 				Database.getLoggings(_appStartTimestamp);
 			}
+			
 			function logReceivedFromDatabase(de:DatabaseEvent):void {
 				if (de.data != null)
 					if (de.data is String) {
@@ -190,9 +194,22 @@ package model
 			iconCache = new ContentCache();
 			iconCache.enableCaching = true;
 			iconCache.enableQueueing = true;
+			
 			image_calibrate_active = new Image();
 			image_calibrate_active.contentLoader = iconCache;
-			image_calibrate_active.source='../assets/image_calibrate_active.png';
+			image_calibrate_active.source = '../assets/image_calibrate_active.png';
+			
+			image_bluetooth_red = new Image();
+			image_bluetooth_red.contentLoader = iconCache;
+			image_bluetooth_red.source = "../assets/image_bluetooth_red.png";
+			
+			image_bluetooth_orange = new Image();
+			image_bluetooth_orange.contentLoader = iconCache;
+			image_bluetooth_orange.source = "../assets/image_bluetooth_orange.png";
+			
+			image_bluetooth_green = new Image();
+			image_bluetooth_green.contentLoader = iconCache;
+			image_bluetooth_green.source = "../assets/image_bluetooth_green.png";
 		}
 		
 		private static function addTimeStamp(source:String):String {

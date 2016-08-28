@@ -690,7 +690,12 @@ package databaseclasses
 				} else {
 					var lastBgReading:BgReading = (BgReading.latest(1))[0] as BgReading;
 					if (lastBgReading != null && lastBgReading.calibration != null) {
+						myTrace("lastBgReading.calibrationFlag = " + lastBgReading.calibrationFlag);
+						myTrace("timestamp =                                            " + timestamp);
+						myTrace("(lastBgReading.timestamp + (60000 * 20)) =             " + (lastBgReading.timestamp + (60000 * 20)));
+						myTrace("(lastBgReading.calibration.timestamp + (60000 * 20)) = " + (lastBgReading.calibration.timestamp + (60000 * 20)));
 						if (lastBgReading.calibrationFlag == true && ((lastBgReading.timestamp + (60000 * 20)) > timestamp) && ((lastBgReading.calibration.timestamp + (60000 * 20)) > timestamp)) {
+							myTrace("overriding lastbgreading.calibration");
 							lastBgReading.calibration
 								.rawValueOverride(BgReading.weightedAverageRaw(lastBgReading.timestamp, timestamp, lastBgReading.calibration.timestamp, lastBgReading.ageAdjustedRawValue, bgReading.ageAdjustedRawValue))
 								.updateInDatabaseSynchronous();

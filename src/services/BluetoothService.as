@@ -607,21 +607,19 @@ package services
 		
 		
 		/**
-		 * Disconnects the active bluetoothperipheral if any (otherwise returns without doing anything)<br>
-		 * If bluetooth status = on, then immediately will call bluetoothstatus is on (ie scanning, ...) 
+		 * Disconnects the active bluetooth peripheral if any and sets it to null(otherwise returns without doing anything)<br>
 		 */
 		public static function forgetBlueToothDevice():void {
+			if (activeBluetoothPeripheral == null)
+				return;
+			
+			BluetoothLE.service.centralManager.disconnect(activeBluetoothPeripheral);
+			activeBluetoothPeripheral = null;
+			
 			var blueToothServiceEvent:BlueToothServiceEvent = new BlueToothServiceEvent(BlueToothServiceEvent.BLUETOOTH_SERVICE_INFORMATION_EVENT);
 			blueToothServiceEvent.data = new Object();
 			blueToothServiceEvent.data.information = ModelLocator.resourceManagerInstance.getString('settingsview','bluetoothdeviceforgotten');
 			_instance.dispatchEvent(blueToothServiceEvent);
-			
-			if (activeBluetoothPeripheral == null)
-				return;
-			BluetoothLE.service.centralManager.disconnect(activeBluetoothPeripheral);
-			activeBluetoothPeripheral = null;
-			if ((BluetoothLE.service.centralManager.state == BluetoothLEState.STATE_ON))
-				bluetoothStatusIsOn();
 		}
 		
 		/**

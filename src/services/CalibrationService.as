@@ -132,6 +132,10 @@ package services
 		}
 		
 		private static function intialCalibrationValueEntered(event:DialogViewEvent):void {
+			if (event.index == 1) {
+				cancellation(event);
+				return;
+			}
 			var asNumber:Number = new Number(event.values[0] as String);
 			if (isNaN(asNumber)) {
 				//add the warning message
@@ -191,7 +195,7 @@ package services
 		 * For calibration requests, override should 
 		 */
 		public static function calibrationOnRequest(override:Boolean = true, checklast30minutes:Boolean = true):void {
-			//check if there's readings the last 30 minutes
+			//check if there's 2 readings the last 30 minutes
 			if (BgReading.last30Minutes().length < 2) {
 				var alert:DialogView = Dialog.service.create(
 					new AlertBuilder()
@@ -221,24 +225,28 @@ package services
 					}
 					
 					function bgValueOverride(event:DialogViewEvent):void {
-						var asNumber:Number = new Number(event.values[0] as String);
-						if (isNaN(asNumber)) {
-							var alert:DialogView = Dialog.service.create(
-								new AlertBuilder()
-								.setTitle(ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_calibration_title"))
-								.setMessage(ModelLocator.resourceManagerInstance.getString("calibrationservice","value_should_be_numeric"))
-								.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
-								.build()
-							);
-							DialogService.addDialog(alert);
-							//and ask again a value
-							calibrationOnRequest();
+						if (event.index == 1) {
+							cancellation(event);
 						} else {
-							Calibration.clearLastCalibration();
-							var newcalibration:Calibration = Calibration.create(asNumber).saveToDatabaseSynchronous();
-							var calibrationServiceEvent:CalibrationServiceEvent = new CalibrationServiceEvent(CalibrationServiceEvent.NEW_CALIBRATION_EVENT);
-							_instance.dispatchEvent(calibrationServiceEvent);
-							myTrace("calibration override, new one = created : " + newcalibration.print("   "));
+							var asNumber:Number = new Number(event.values[0] as String);
+							if (isNaN(asNumber)) {
+								var alert:DialogView = Dialog.service.create(
+									new AlertBuilder()
+									.setTitle(ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_calibration_title"))
+									.setMessage(ModelLocator.resourceManagerInstance.getString("calibrationservice","value_should_be_numeric"))
+									.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
+									.build()
+								);
+								DialogService.addDialog(alert);
+								//and ask again a value
+								calibrationOnRequest();
+							} else {
+								Calibration.clearLastCalibration();
+								var newcalibration:Calibration = Calibration.create(asNumber).saveToDatabaseSynchronous();
+								var calibrationServiceEvent:CalibrationServiceEvent = new CalibrationServiceEvent(CalibrationServiceEvent.NEW_CALIBRATION_EVENT);
+								_instance.dispatchEvent(calibrationServiceEvent);
+								myTrace("calibration override, new one = created : " + newcalibration.print("   "));
+							}
 						}
 					}
 				} else {
@@ -260,6 +268,10 @@ package services
 					}
 					
 					function bgValueWithoutOverride(event:DialogViewEvent):void {
+						if (event.index == 1) {
+							cancellation2(event);
+							return;
+						}
 						var asNumber:Number = new Number(event.values[0] as String);
 						if (isNaN(asNumber)) {
 							var alert:DialogView = Dialog.service.create(
@@ -282,6 +294,10 @@ package services
 		}
 		
 		private static function calibrationValueEntered(event:DialogViewEvent):void {
+			if (event.index == 1) {
+				cancellation(event);
+				return;
+			}
 			var asNumber:Number = new Number(event.values[0] as String);
 			if (isNaN(asNumber)) {
 				//add the warning message
