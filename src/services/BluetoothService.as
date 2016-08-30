@@ -17,6 +17,7 @@
  */
 package services
 {
+	import com.distriqt.extension.bluetoothle.AuthorisationStatus;
 	import com.distriqt.extension.bluetoothle.BluetoothLE;
 	import com.distriqt.extension.bluetoothle.BluetoothLEState;
 	import com.distriqt.extension.bluetoothle.events.BluetoothLEEvent;
@@ -66,7 +67,7 @@ package services
 		{
 			return _instance;
 		}
-
+		
 		private static var _activeBluetoothPeripheral:Peripheral;
 		
 		private static var initialStart:Boolean = true;
@@ -111,7 +112,7 @@ package services
 					_activeBluetoothPeripheral.addEventListener(CharacteristicEvent.UNSUBSCRIBE, peripheral_characteristic_unsubscribeHandler);
 					_activeBluetoothPeripheral.addEventListener(CharacteristicEvent.WRITE_SUCCESS, peripheral_characteristic_writeHandler);
 					_activeBluetoothPeripheral.addEventListener(CharacteristicEvent.WRITE_ERROR, peripheral_characteristic_writeErrorHandler);
-
+					
 				}
 			} else {
 				if (_activeBluetoothPeripheral.hasEventListener(PeripheralEvent.DISCOVER_SERVICES)) {
@@ -170,107 +171,50 @@ package services
 			BluetoothLE.init(DistriqtKey.distriqtKey);
 			if (BluetoothLE.isSupported) {
 				if (debugMode) trace("passing bluetoothservice.issupported");
-				BluetoothLE.service.centralManager.addEventListener(PeripheralEvent.DISCOVERED, central_peripheralDiscoveredHandler);
-				BluetoothLE.service.centralManager.addEventListener( PeripheralEvent.CONNECT, central_peripheralConnectHandler );
-				BluetoothLE.service.centralManager.addEventListener( PeripheralEvent.CONNECT_FAIL, central_peripheralConnectFailHandler );
-				BluetoothLE.service.centralManager.addEventListener( PeripheralEvent.DISCONNECT, central_peripheralDisconnectHandler );
-				BluetoothLE.service.addEventListener(BluetoothLEEvent.STATE_CHANGED, bluetoothStateChangedHandler);
+				switch (BluetoothLE.service.authorisationStatus()) {
+					case AuthorisationStatus.NOT_DETERMINED:
+					case AuthorisationStatus.SHOULD_EXPLAIN:
+						BluetoothLE.service.requestAuthorisation();
+						break;
+					case AuthorisationStatus.DENIED:
+					case AuthorisationStatus.RESTRICTED:
+					case AuthorisationStatus.UNKNOWN:
+						break;
+			
+					case AuthorisationStatus.AUTHORISED:				
+						BluetoothLE.service.centralManager.addEventListener(PeripheralEvent.DISCOVERED, central_peripheralDiscoveredHandler);
+						BluetoothLE.service.centralManager.addEventListener( PeripheralEvent.CONNECT, central_peripheralConnectHandler );
+						BluetoothLE.service.centralManager.addEventListener( PeripheralEvent.CONNECT_FAIL, central_peripheralConnectFailHandler );
+						BluetoothLE.service.centralManager.addEventListener( PeripheralEvent.DISCONNECT, central_peripheralDisconnectHandler );
+						BluetoothLE.service.addEventListener(BluetoothLEEvent.STATE_CHANGED, bluetoothStateChangedHandler);
+						
+						var blueToothServiceEvent:BlueToothServiceEvent = new BlueToothServiceEvent(BlueToothServiceEvent.BLUETOOTH_SERVICE_INITIATED);
+						_instance.dispatchEvent(blueToothServiceEvent);
+						
+						switch (BluetoothLE.service.centralManager.state)
+						{
+							case BluetoothLEState.STATE_ON:	
+								// We can use the Bluetooth LE functions
+								bluetoothStatusIsOn();
+								dispatchInformation('bluetooth_is_switched_on');
+								break;
+							case BluetoothLEState.STATE_OFF:
+								dispatchInformation('bluetooth_is_switched_off');
+								break;
+							case BluetoothLEState.STATE_RESETTING:	
+								break;
+							case BluetoothLEState.STATE_UNAUTHORISED:
+								break;
+							case BluetoothLEState.STATE_UNSUPPORTED:
+								break;
+							case BluetoothLEState.STATE_UNKNOWN:
+								break;
+						}
+				}
 				
-				var blueToothServiceEvent:BlueToothServiceEvent = new BlueToothServiceEvent(BlueToothServiceEvent.BLUETOOTH_SERVICE_INITIATED);
-				_instance.dispatchEvent(blueToothServiceEvent);
-
-				switch (BluetoothLE.service.centralManager.state)
-				{
-					case BluetoothLEState.STATE_ON:	
-						// We can use the Bluetooth LE functions
-						bluetoothStatusIsOn();
-						dispatchInformation('bluetooth_is_switched_on');
-						break;
-					case BluetoothLEState.STATE_OFF:
-						dispatchInformation('bluetooth_is_switched_off');
-						break;
-					case BluetoothLEState.STATE_RESETTING:	
-						break;
-					case BluetoothLEState.STATE_UNAUTHORISED:
-						break;
-					case BluetoothLEState.STATE_UNSUPPORTED:
-						break;
-					case BluetoothLEState.STATE_UNKNOWN:
-						break;
-				}				
 			} else {
 				myTrace("Unfortunately your android version does not support Bluetooth Low Energy");
 				dispatchInformation('bluetooth_not_supported');
-				
-				//var buffer:ByteArray = new ByteArray();
-				/*buffer.writeByte(17);//(0x11);
-				buffer.writeByte(0);//(0x00);
-				buffer.writeByte(128);//(0x80);
-				buffer.writeByte(179);//(0xB3);
-				buffer.writeByte(1);//(0x01);
-				
-				buffer.writeByte(0);//(0x00);
-				buffer.writeByte(240);//(0xF0);
-				buffer.writeByte(208);//(0xD0);
-				buffer.writeByte(1);//(0x01);
-				buffer.writeByte(0);//(0x00);
-				
-				buffer.writeByte(215);//(0xD7);
-				buffer.writeByte(0);//(0x00);
-				buffer.writeByte(97);//0x61);
-				buffer.writeByte(202);//(0xCA);
-				buffer.writeByte(102);//(0x66);
-				
-				buffer.writeByte(0);//(0x00);
-				buffer.writeByte(1);//(0x01);*/
-				
-				//f1 
-				/*buffer.writeByte(0x07);//(0x07);
-				buffer.writeByte(0xF1);//
-				buffer.writeByte(0x61);//(0xB3);
-				buffer.writeByte(0xCA);//(0x01);
-				
-				buffer.writeByte(0x66);//(0x00);
-				buffer.writeByte(0x00);//(0xF0);
-				buffer.writeByte(0x01);//(0xF0);
-				
-				
-				
-				buffer.position = 0;
-				buffer.endian = Endian.LITTLE_ENDIAN;
-				
-				buffer.readUnsignedByte();
-				buffer.readUnsignedByte();
-				var txid:Number = buffer.readInt();
-				if (debugMode) trace("txid = " + decodeTxID(txid));*/
-				
-				/*var DexSrc:int;
-				var firstByte:int = buffer.readUnsignedByte();
-				var rawData:Number;
-				var filteredData:Number;
-				//positin = 1
-				var secondByte:int = buffer.readUnsignedByte();
-				//position = 2
-				if (firstByte == 7 && secondByte == -15) {
-				//beacon packet
-				DexSrc = buffer.readInt();
-				//position = 6	
-				} else {
-				if (firstByte == 17 && secondByte == 0) {
-				//data packet
-				if (packetLength >= lengthOfDataPacket) {
-				//we're still at position 2
-				rawData = buffer.readInt();
-				//position = 6
-				filteredData = buffer.readInt();
-				//position = 10
-				//transmitterData.sensor_battery_level = txData.get(10) & 0xff;
-				}
-				} else {
-				//seems to be some other kind of packet
-				//TODO dispatch information event
-				}
-				}*/
 			}
 		}
 		
@@ -310,8 +254,8 @@ package services
 		 */
 		private static function bluetoothStatusIsOn():void {
 			if (activeBluetoothPeripheral != null) {
-					BluetoothLE.service.centralManager.connect(activeBluetoothPeripheral);
-					dispatchInformation('trying_to_connect_to_known_device');
+				BluetoothLE.service.centralManager.connect(activeBluetoothPeripheral);
+				dispatchInformation('trying_to_connect_to_known_device');
 			} else {
 				if (BlueToothDevice.known()) {
 					//we know a device from previous connection should we should try to connect
@@ -398,7 +342,7 @@ package services
 				blueToothServiceEvent.data = new Object();
 				blueToothServiceEvent.data.information = ModelLocator.resourceManagerInstance.getString('bluetoothservice','launching_discoverservices_attempt_amount') + " " + amountOfDiscoverServicesOrCharacteristicsAttempt;
 				_instance.dispatchEvent(blueToothServiceEvent);
-
+				
 				activeBluetoothPeripheral.discoverServices(uuids_HM_10_Service);
 				discoverServiceOrCharacteristicTimer = new Timer(DISCOVER_SERVICES_OR_CHARACTERISTICS_RETRY_TIME_IN_SECONDS * 1000, 1);
 				discoverServiceOrCharacteristicTimer.addEventListener(TimerEvent.TIMER, discoverServices);
@@ -410,10 +354,10 @@ package services
 		
 		private static function central_peripheralConnectFailHandler(event:PeripheralEvent):void {
 			dispatchInformation('connection_attempt_to_peripheral_failed');
-
+			
 			//setting to 0 because i had a case where the maximum was reached after a few re and disconnects
 			amountOfDiscoverServicesOrCharacteristicsAttempt = 0;
-
+			
 			if ((BluetoothLE.service.centralManager.state == BluetoothLEState.STATE_ON)) {
 				currentReconnectTimesPointer++;
 				if (currentReconnectTimesPointer == reconnectAttemptInSeconds.length)
@@ -527,7 +471,7 @@ package services
 			}
 			dispatchInformation("characteristics_discovered");
 			amountOfDiscoverServicesOrCharacteristicsAttempt = 0;
-
+			
 			activeBluetoothPeripheral = event.peripheral;
 			
 			//find the index of the service that has uuid = the one used by xdrip/xbridge
@@ -539,7 +483,7 @@ package services
 				}
 				servicesIndex++;
 			}
-
+			
 			var characteristicsIndex:int;
 			for each (o in activeBluetoothPeripheral.services[servicesIndex].characteristics) {
 				if (o.uuid == HM10Attributes.HM_RX_TX) {
@@ -732,7 +676,7 @@ package services
 					value.writeByte(0x01);
 					value.writeInt(encodeTxID("6DJK1"));
 					if (!activeBluetoothPeripheral.writeValueForCharacteristic(characteristic, value)) {
-						dispatchInformation("write_value_for_characteristic_failed_due_to_invalid_state");
+					dispatchInformation("write_value_for_characteristic_failed_due_to_invalid_state");
 					}*/
 					break;
 			}
