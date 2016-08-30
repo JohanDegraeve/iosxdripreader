@@ -22,15 +22,25 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 		creationComplete="onCreationComplete(event)">
 	<fx:Script>
 		<![CDATA[
-			import mx.events.FlexEvent;
+			import com.distriqt.extension.bluetoothle.BluetoothLE;
+			import com.distriqt.extension.bluetoothle.BluetoothLEState;
+			import com.distriqt.extension.bluetoothle.events.BluetoothLEEvent;
+			import com.distriqt.extension.bluetoothle.events.PeripheralEvent;
+			import com.distriqt.extension.bluetoothle.objects.PeripheralState;
+			import com.distriqt.extension.dialog.Dialog;
+			import com.distriqt.extension.dialog.DialogView;
+			import com.distriqt.extension.dialog.builders.ActionSheetBuilder;
+			import com.distriqt.extension.dialog.events.DialogViewEvent;
 			
-			import spark.components.Image;
+			import mx.events.FlexEvent;
 			
 			import Utilities.BgGraphBuilder;
 			
 			import databaseclasses.BgReading;
+			import databaseclasses.BlueToothDevice;
 			import databaseclasses.Calibration;
 			import databaseclasses.Database;
+			import databaseclasses.Sensor;
 			
 			import events.BlueToothServiceEvent;
 			import events.CalibrationServiceEvent;
@@ -48,12 +58,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			private static var currentBgLabelText:String = "---";
 			[Bindable]
 			private static var _calibrateButtonActive:Boolean = false;
-			[Bindable]
-			private static var calibration
-			[Bindable]
-			private static var _bluetoothButtonActive:Boolean = false;
-			[Bindable]
-			private static var bluetoothIcon:Image;
+			private static var bluetoothButtonActionIndexArray:Array;
+			private static const ACTION_SHEET_INDEX_FOR_SCAN_FOR_DEVICE:int = 0;
+			private static const ACTION_SHEET_INDEX_FOR_FORGET_DEVICE:int = 1;
+			private static const ACTION_SHEET_INDEX_FOR_START_SENSOR:int = 2;
+			private static const ACTION_SHEET_INDEX_FOR_STOP_SENSOR:int = 3;
+			private static const ACTION_SHEET_INDEX_FOR_STATUS:int = 4;
+			private static const ACTION_SHEET_INDEX_FOR_CONNECT_TO_DEVICE:int = 5;
+			
+			[ResourceBundle("homeview")]
 			
 			protected function onCreationComplete(event:FlexEvent):void
 			{
@@ -65,6 +78,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 					Database.instance.addEventListener(DatabaseEvent.BGREADING_RETRIEVAL_EVENT, bgReadingReceivedFromDatabase);
 					Database.init();
 					initialStart = false;
+				} else {
+					//force now a check if the icon needs tobe changed by calling bluetoothStateChangedHandler, even though it may not have changed
+					bluetoothStateChangedHandler(null);
 				}
 				
 				function bgReadingReceivedFromDatabase(de:DatabaseEvent):void {
@@ -87,22 +103,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 					//will initialise the bluetoothdevice
 					Database.getBlueToothDevice();
 					
-					
-					
 					//set calibration button in the correct state
 					if (Calibration.allForSensor().length > 1) {
 						_calibrateButtonActive = true;
 					}
 					
-					//displayCurrentInfoFromReading(BgReading.lastNoSensor());
-					
-					BluetoothService.instance.addEventListener(BlueToothServiceEvent.BLUETOOTH_STATUS_CHANGED_EVENT, blueToothStatusChanged);
 					BluetoothService.instance.addEventListener(BlueToothServiceEvent.BLUETOOTH_SERVICE_INFORMATION_EVENT, blueToothServiceInformationReceived);
+					BluetoothService.instance.addEventListener(BlueToothServiceEvent.BLUETOOTH_SERVICE_INITIATED, blueToothServiceInitiated);
+
 					TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, transmitterServiceBGReadingEventReceived);
+					
 					CalibrationService.instance.addEventListener(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT, initialCalibrationEventReceived);
 					CalibrationService.instance.addEventListener(CalibrationServiceEvent.NEW_CALIBRATION_EVENT, newCalibrationEventReceived);
-					
-					//set correct bluetooth icon
 				}
 				
 				function onInitError(event:Event):void
@@ -113,12 +125,55 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 				}
 			}
 			
-			private function blueToothStatusChanged(be:BlueToothServiceEvent):void {
-				//trace("HomeView : blueToothStatusChanged, new status = " + be.data.status);
+			private function central_peripheralConnectHandler(event:PeripheralEvent):void {
+				bluetoothButton.setStyle("icon", ModelLocator.image_bluetooth_green);
+			}
+			
+			private function central_peripheralDisconnectHandler(event:PeripheralEvent):void {
+				if ((BluetoothLE.service.centralManager.state == BluetoothLEState.STATE_ON) && BlueToothDevice.known()) {
+					bluetoothButton.setStyle("icon", ModelLocator.image_bluetooth_orange);
+				} else {
+					bluetoothButton.setStyle("icon", ModelLocator.image_bluetooth_red);
+				}
+			}
+			
+			private function bluetoothStateChangedHandler(event:BluetoothLEEvent):void {
+				if (BluetoothLE.service.centralManager.state == BluetoothLEState.STATE_ON) {
+					if (BluetoothService.bluetoothPeripheralActive()) {
+						if (BluetoothService.getActiveBluetoothPeripheral().state == PeripheralState.CONNECTED) {
+							//peripheral is known in bluetoothservice and it is connected
+							bluetoothButton.setStyle("icon", ModelLocator.image_bluetooth_green);
+						} else {
+							//peripheral is known, but not active, orange
+							bluetoothButton.setStyle("icon", ModelLocator.image_bluetooth_orange);
+						}
+					} else {//bluetoothperipheral not known in bluetoothservice, but maybe a device name is known in bluetoothdevice
+						if (BlueToothDevice.known()) {
+							//we know a device, we just didn't scan it yet, good for orange
+							bluetoothButton.setStyle("icon", ModelLocator.image_bluetooth_orange);
+						} else {
+							//we don't know a device yet, scanning for new device still needs to happen, that's red 
+							bluetoothButton.setStyle("icon", ModelLocator.image_bluetooth_red);
+						}
+					}
+				} else {
+					//definitely a case for red, because bluetooth is not on
+					bluetoothButton.setStyle("icon", ModelLocator.image_bluetooth_red);
+				}
 			}
 			
 			private function blueToothServiceInformationReceived(be:BlueToothServiceEvent):void {
 				trace((new Date()).toTimeString() + " : HomeView : received bluetooth service information = " + be.data.information);
+			}
+			
+			private function blueToothServiceInitiated(be:BlueToothServiceEvent):void {
+				BluetoothService.instance.removeEventListener(BlueToothServiceEvent.BLUETOOTH_SERVICE_INITIATED, blueToothServiceInitiated);
+				BluetoothLE.service.centralManager.addEventListener(PeripheralEvent.CONNECT, central_peripheralConnectHandler);
+				BluetoothLE.service.centralManager.addEventListener(PeripheralEvent.DISCONNECT, central_peripheralDisconnectHandler);
+				BluetoothLE.service.addEventListener(BluetoothLEEvent.STATE_CHANGED, bluetoothStateChangedHandler);
+				//bluetooth service is initiated
+				//force now a check if the icon needs tobe changed by calling bluetoothStateChangedHandler, even though it may not have changed
+				bluetoothStateChangedHandler(null);
 			}
 			
 			private function transmitterServiceBGReadingEventReceived(be:TransmitterServiceEvent):void {
@@ -201,16 +256,76 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			}
 			
 			private function bluetoothButtonClicked(e:MouseEvent = null):void {
-				if (!_calibrateButtonActive)
-					return;
-				CalibrationService.calibrationOnRequest();
+				var actionsheetBuilder:ActionSheetBuilder = new ActionSheetBuilder();;
+					
+				bluetoothButtonActionIndexArray = [];
+				
+				var indexcntr:int = 1;//the first action being added has index 1
+				actionsheetBuilder.addAction(ModelLocator.resourceManagerInstance.getString('homeview','view_device_status'));
+				bluetoothButtonActionIndexArray[indexcntr] = ACTION_SHEET_INDEX_FOR_STATUS;
+				indexcntr++;
+					
+				if (!BluetoothService.bluetoothPeripheralActive()) {
+					//this is the case where bluetoothdevice is known or not, time for a scan
+					actionsheetBuilder.addAction(ModelLocator.resourceManagerInstance.getString('homeview','scan_for_device'));
+					bluetoothButtonActionIndexArray[indexcntr] = ACTION_SHEET_INDEX_FOR_SCAN_FOR_DEVICE;
+					indexcntr++;
+				} else {
+					//TODO hier zit nog iets verkeerd, die state blijft precies connected, ook al is 'm niet connected
+					trace("BluetoothService.getActiveBluetoothPeripheral().state = " + BluetoothService.getActiveBluetoothPeripheral().state);
+					trace("PeripheralState.CONNECTED && BluetoothLE.service.centralManager.state  = " + PeripheralState.CONNECTED && BluetoothLE.service.centralManager.state );
+					if (BluetoothService.getActiveBluetoothPeripheral().state != PeripheralState.CONNECTED && BluetoothLE.service.centralManager.state == BluetoothLEState.STATE_ON) {
+						actionsheetBuilder.addAction(ModelLocator.resourceManagerInstance.getString('homeview','connect_now'));
+						bluetoothButtonActionIndexArray[indexcntr] = ACTION_SHEET_INDEX_FOR_CONNECT_TO_DEVICE;
+						indexcntr++;
+					}
+				}
+				
+				if (BlueToothDevice.known()) {
+					actionsheetBuilder.addAction(ModelLocator.resourceManagerInstance.getString('homeview','forget_device'));
+					bluetoothButtonActionIndexArray[indexcntr] = ACTION_SHEET_INDEX_FOR_FORGET_DEVICE;
+					indexcntr++;
+				}
+				
+				if (Sensor.getActiveSensor() == null) {
+					actionsheetBuilder.addAction(ModelLocator.resourceManagerInstance.getString('homeview','start_sensor'));
+					bluetoothButtonActionIndexArray[indexcntr] = ACTION_SHEET_INDEX_FOR_START_SENSOR;
+					indexcntr++;
+				} else {
+					actionsheetBuilder.addAction(ModelLocator.resourceManagerInstance.getString('homeview','stop_sensor'));
+					bluetoothButtonActionIndexArray[indexcntr] = ACTION_SHEET_INDEX_FOR_STOP_SENSOR;
+					indexcntr++;
+				}
+				
+				var actionSheet:DialogView = Dialog.service.create(actionsheetBuilder.build());
+				actionSheet.addEventListener(DialogViewEvent.CLOSED, actionSheet_closedHandler);
+				actionSheet.show();
+			}
+			
+			private function actionSheet_closedHandler( event:DialogViewEvent ):void {
+				var actionSheet:DialogView = DialogView(event.currentTarget);
+				actionSheet.removeEventListener(DialogViewEvent.CLOSED, actionSheet_closedHandler);
+				actionSheet.dispose();
+				
+				if (bluetoothButtonActionIndexArray[event.index] == ACTION_SHEET_INDEX_FOR_SCAN_FOR_DEVICE) {
+					//TODO add a check if bluetooth is on, if not give warning message and don't start scanning
+					BluetoothService.startScanning();
+				} else if (bluetoothButtonActionIndexArray[event.index] == ACTION_SHEET_INDEX_FOR_FORGET_DEVICE) {
+					BlueToothDevice.forgetBlueToothDevice();
+				} else if (bluetoothButtonActionIndexArray[event.index] == ACTION_SHEET_INDEX_FOR_START_SENSOR) {
+					Sensor.startSensor();
+				} else if (bluetoothButtonActionIndexArray[event.index] == ACTION_SHEET_INDEX_FOR_STOP_SENSOR) {
+					Sensor.stopSensor();
+				} else if (bluetoothButtonActionIndexArray[event.index] == ACTION_SHEET_INDEX_FOR_CONNECT_TO_DEVICE) {
+					BluetoothService.tryReconnect();
+				}
 			}
 			
 		]]>
 	</fx:Script>
 	<s:actionContent>
+		<s:Button icon="{ModelLocator.image_bluetooth_red}" id="bluetoothButton" click="bluetoothButtonClicked(event)"/>
 		<s:Button icon="{ModelLocator.image_calibrate_active}" id="calibrateButton" alpha="{_calibrateButtonActive ? 1:0.25}" enabled="{_calibrateButtonActive}" click="calibrationButtonClicked(event)"/>
-		<s:Button icon="{ModelLocator.image_bluetooth_red}" id="bluetoothButton" alpha="{_bluetoothButtonActive ? 1:0.25}" enabled="{_bluetoothButtonActive}" click="bluetoothButtonClicked(event)"/>
 	</s:actionContent>
 	
 	<s:Group y="0" x="0" width="100%" height="100%" left="5" top="5" right="5">

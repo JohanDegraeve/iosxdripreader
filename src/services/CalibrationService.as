@@ -133,7 +133,6 @@ package services
 		
 		private static function intialCalibrationValueEntered(event:DialogViewEvent):void {
 			if (event.index == 1) {
-				cancellation(event);
 				return;
 			}
 			var asNumber:Number = new Number(event.values[0] as String);
@@ -226,7 +225,7 @@ package services
 					
 					function bgValueOverride(event:DialogViewEvent):void {
 						if (event.index == 1) {
-							cancellation(event);
+							//it's a cancel
 						} else {
 							var asNumber:Number = new Number(event.values[0] as String);
 							if (isNaN(asNumber)) {
@@ -269,7 +268,6 @@ package services
 					
 					function bgValueWithoutOverride(event:DialogViewEvent):void {
 						if (event.index == 1) {
-							cancellation2(event);
 							return;
 						}
 						var asNumber:Number = new Number(event.values[0] as String);
@@ -295,7 +293,6 @@ package services
 		
 		private static function calibrationValueEntered(event:DialogViewEvent):void {
 			if (event.index == 1) {
-				cancellation(event);
 				return;
 			}
 			var asNumber:Number = new Number(event.values[0] as String);

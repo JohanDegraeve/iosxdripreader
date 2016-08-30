@@ -24,9 +24,6 @@ package services
 	import com.distriqt.extension.bluetoothle.events.PeripheralEvent;
 	import com.distriqt.extension.bluetoothle.objects.Characteristic;
 	import com.distriqt.extension.bluetoothle.objects.Peripheral;
-	import com.distriqt.extension.notifications.NotificationRepeatInterval;
-	import com.distriqt.extension.notifications.Notifications;
-	import com.distriqt.extension.notifications.builders.NotificationBuilder;
 	
 	import flash.events.Event;
 	import flash.events.EventDispatcher;
@@ -81,7 +78,11 @@ package services
 		private static const MAX_RETRY_DISCOVER_SERVICES_OR_CHARACTERISTICS:int = 5;
 		private static var amountOfDiscoverServicesOrCharacteristicsAttempt:int = 0;
 		
-		private static var reconnectAttemptInSeconds:Array = [5,5,60,60,60,60,60,300,300,300,300,300,900];
+		//not really useful to have an array if it's all the same values
+		//took the value of Android version for an dexbridge (DexCollectionService.java setRetryTimer
+		//for an xdrip the value is 65
+		private static var reconnectAttemptInSeconds:Array = [25, 25, 25, 25];
+		
 		private static var currentReconnectTimesPointer:int = 0;
 		private static var reconnectTimer:Timer;
 		
@@ -98,8 +99,8 @@ package services
 		
 		private static function set activeBluetoothPeripheral(value:Peripheral):void
 		{
-			_activeBluetoothPeripheral = value;
 			if (value != null) {
+				_activeBluetoothPeripheral = value;
 				if (!_activeBluetoothPeripheral.hasEventListener(PeripheralEvent.DISCOVER_SERVICES)) {
 					_activeBluetoothPeripheral.addEventListener(PeripheralEvent.DISCOVER_SERVICES, peripheral_discoverServicesHandler );
 					_activeBluetoothPeripheral.addEventListener(PeripheralEvent.DISCOVER_CHARACTERISTICS, peripheral_discoverCharacteristicsHandler );
@@ -112,10 +113,28 @@ package services
 					_activeBluetoothPeripheral.addEventListener(CharacteristicEvent.WRITE_ERROR, peripheral_characteristic_writeErrorHandler);
 
 				}
+			} else {
+				if (_activeBluetoothPeripheral.hasEventListener(PeripheralEvent.DISCOVER_SERVICES)) {
+					_activeBluetoothPeripheral.removeEventListener(PeripheralEvent.DISCOVER_SERVICES, peripheral_discoverServicesHandler );
+					_activeBluetoothPeripheral.removeEventListener(PeripheralEvent.DISCOVER_CHARACTERISTICS, peripheral_discoverCharacteristicsHandler );
+					_activeBluetoothPeripheral.removeEventListener(CharacteristicEvent.UPDATE, peripheral_characteristic_updatedHandler);
+					_activeBluetoothPeripheral.removeEventListener(CharacteristicEvent.UPDATE_ERROR, peripheral_characteristic_errorHandler);
+					_activeBluetoothPeripheral.removeEventListener(CharacteristicEvent.SUBSCRIBE, peripheral_characteristic_subscribeHandler);
+					_activeBluetoothPeripheral.removeEventListener(CharacteristicEvent.SUBSCRIBE_ERROR, peripheral_characteristic_subscribeErrorHandler);
+					_activeBluetoothPeripheral.removeEventListener(CharacteristicEvent.UNSUBSCRIBE, peripheral_characteristic_unsubscribeHandler);
+					_activeBluetoothPeripheral.removeEventListener(CharacteristicEvent.WRITE_SUCCESS, peripheral_characteristic_writeHandler);
+					_activeBluetoothPeripheral.removeEventListener(CharacteristicEvent.WRITE_ERROR, peripheral_characteristic_writeErrorHandler);
+					
+				}
+				_activeBluetoothPeripheral = null;
 			}
 		}
 		
 		private static function get activeBluetoothPeripheral():Peripheral {
+			return _activeBluetoothPeripheral;
+		}
+		
+		public static function getActiveBluetoothPeripheral():Peripheral {
 			return _activeBluetoothPeripheral;
 		}
 		
@@ -156,6 +175,10 @@ package services
 				BluetoothLE.service.centralManager.addEventListener( PeripheralEvent.CONNECT_FAIL, central_peripheralConnectFailHandler );
 				BluetoothLE.service.centralManager.addEventListener( PeripheralEvent.DISCONNECT, central_peripheralDisconnectHandler );
 				BluetoothLE.service.addEventListener(BluetoothLEEvent.STATE_CHANGED, bluetoothStateChangedHandler);
+				
+				var blueToothServiceEvent:BlueToothServiceEvent = new BlueToothServiceEvent(BlueToothServiceEvent.BLUETOOTH_SERVICE_INITIATED);
+				_instance.dispatchEvent(blueToothServiceEvent);
+
 				switch (BluetoothLE.service.centralManager.state)
 				{
 					case BluetoothLEState.STATE_ON:	
@@ -178,11 +201,6 @@ package services
 			} else {
 				myTrace("Unfortunately your android version does not support Bluetooth Low Energy");
 				dispatchInformation('bluetooth_not_supported');
-				
-				var blueToothServiceEvent:BlueToothServiceEvent = new BlueToothServiceEvent(BlueToothServiceEvent.BLUETOOTH_STATUS_CHANGED_EVENT);
-				blueToothServiceEvent.data = new Object();
-				blueToothServiceEvent.data.status = BluetoothLEState.STATE_UNSUPPORTED;
-				_instance.dispatchEvent(blueToothServiceEvent);
 				
 				//var buffer:ByteArray = new ByteArray();
 				/*buffer.writeByte(17);//(0x11);
@@ -257,11 +275,6 @@ package services
 		}
 		
 		private static function treatNewBlueToothStatus(newStatus:String):void {
-			var blueToothServiceEvent:BlueToothServiceEvent = new BlueToothServiceEvent(BlueToothServiceEvent.BLUETOOTH_STATUS_CHANGED_EVENT);
-			blueToothServiceEvent.data = new Object();
-			blueToothServiceEvent.data.status = BluetoothLE.service.centralManager.state;
-			_instance.dispatchEvent(blueToothServiceEvent);
-			
 			switch (BluetoothLE.service.centralManager.state)
 			{
 				case BluetoothLEState.STATE_ON:	
@@ -300,7 +313,7 @@ package services
 					BluetoothLE.service.centralManager.connect(activeBluetoothPeripheral);
 					dispatchInformation('trying_to_connect_to_known_device');
 			} else {
-				if (BlueToothDevice.bluetoothDeviceKnown()) {
+				if (BlueToothDevice.known()) {
 					//we know a device from previous connection should we should try to connect
 					startScanning();
 				}
@@ -417,7 +430,7 @@ package services
 			//setting to 0 because i had a case where the maximum was reached after a few re and disconnects
 			amountOfDiscoverServicesOrCharacteristicsAttempt = 0;
 			
-			if ((BluetoothLE.service.centralManager.state == BluetoothLEState.STATE_ON)) {
+			if ((BluetoothLE.service.centralManager.state == BluetoothLEState.STATE_ON) && activeBluetoothPeripheral != null) {
 				currentReconnectTimesPointer++;
 				if (currentReconnectTimesPointer == reconnectAttemptInSeconds.length)
 					currentReconnectTimesPointer--;
@@ -436,7 +449,17 @@ package services
 			}
 		}
 		
-		private static function tryReconnect(event:Event = null):void {
+		public static function tryReconnect(event:Event = null):void {
+			if (event == null) {
+				//called explcitly, example from homeview, in order to force a reconnect
+				currentReconnectTimesPointer = 0;
+				if (reconnectTimer != null) {
+					if (reconnectTimer.running) {
+						reconnectTimer.stop();
+					}
+					reconnectTimer = null;
+				}
+			}
 			if ((BluetoothLE.service.centralManager.state == BluetoothLEState.STATE_ON)) {
 				bluetoothStatusIsOn();
 			} else {
@@ -716,6 +739,13 @@ package services
 		
 		private static function myTrace(log:String):void {
 			Trace.myTrace("xdrip-BluetoothService.as", log);
+		}
+		
+		/**
+		 * returns true if activeBluetoothPeripheral != null
+		 */
+		public static function bluetoothPeripheralActive():Boolean {
+			return activeBluetoothPeripheral != null;
 		}
 	}
 	

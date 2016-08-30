@@ -24,6 +24,7 @@ package events
 	[Event(name="BluetoothStatusChangedEvent",type="events.BlueToothServiceEvent")]
 	[Event(name="BluetoothServiceInformation",type="events.BlueToothServiceEvent")]
 	[Event(name="TransmitterData",type="events.BlueToothServiceEvent")]
+	[Event(name="BluetoothServiceInitiated",type="events.BlueToothServiceEvent")]
 
 	/**
 	 * used by bluetoothservice to notify on all kinds of events : information messages like bluetooth state change, bluetooth state change,
@@ -41,19 +42,6 @@ package events
 		 */
 		public static const ERROR_EVENT:String = "ErrorEvent";
 		/**
-		* to publish the bluetooth status and also device status change<br>
-		 * data.status will be a string that contains the status which can be :<br>
-		 * &nbsp&nbsp&nbsp 	STATE_ON A constant for this state is BluetoothLEState.STATE_ON<br>
-		 * &nbsp&nbsp&nbsp 	STATE_OFF A constant for this state is BluetoothLEState.STATE_OFF<br>
-		 * &nbsp&nbsp&nbsp 	STATE_RESETTING A constant for this state is BluetoothLEState.STATE_RESETTING<br>
-		 * &nbsp&nbsp&nbsp 	STATE_UNAUTHORISED A constant for this state is BluetoothLEState.STATE_UNAUTHORISED<br>
-		 * &nbsp&nbsp&nbsp 	STATE_UNSUPPORTED A constant for this state is BluetoothLEState.STATE_UNSUPPORTED<br>
-		 * &nbsp&nbsp&nbsp 	STATE_UNKNOWN A constant for this state is BluetoothLEState.STATE_UNKNOWN<br>
-		 * &nbsp&nbsp&nbsp 	DEVICE_DISCONNECTED A constant for this state is BluetoothService.BLUETOOTH_DEVICE_DISCONNECTED<br>
-		 * &nbsp&nbsp&nbsp 	DEVICE_CONNECTED A constant for this state is BluetoothService.BLUETOOTH_DEVICE_CONNECTED<br>
-		*/
-		public static const BLUETOOTH_STATUS_CHANGED_EVENT:String = "BluetoothStatusChangedEvent";
-		/**
 		 * To pass status information, this is just text that can be shown to the user to display progress info<br>
 		 * data.information will be a string with this info. 
 		 */
@@ -66,6 +54,10 @@ package events
 		 * This is the responsibility of the service that processes the transmitter data (ie TransmitterService)
 		 */
 		public static const TRANSMITTER_DATA:String = "Transmitterdata";
+		/**
+		 * will be dispatches as soon as blue tooth service is initiated and distriqt classes can be used 
+		 */
+		public static const BLUETOOTH_SERVICE_INITIATED:String = "BluetoothServiceInitiated";
 		
 		public var data:*;
 

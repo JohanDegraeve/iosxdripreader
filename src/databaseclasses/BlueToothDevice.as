@@ -112,7 +112,7 @@ package databaseclasses
 		 * is a bluetoothdevice known or not<br>
 		 * It will look at the address and if it's different from "" then returns true 
 		 */
-		public static function bluetoothDeviceKnown():Boolean {
+		public static function known():Boolean {
 			return (_address != "");
 		}
 		
