@@ -30,7 +30,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			import com.distriqt.extension.dialog.Dialog;
 			import com.distriqt.extension.dialog.DialogView;
 			import com.distriqt.extension.dialog.builders.ActionSheetBuilder;
+			import com.distriqt.extension.dialog.builders.AlertBuilder;
 			import com.distriqt.extension.dialog.events.DialogViewEvent;
+			import com.distriqt.extension.dialog.objects.DialogAction;
 			
 			import mx.events.FlexEvent;
 			
@@ -51,6 +53,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			
 			import services.BluetoothService;
 			import services.CalibrationService;
+			import services.DialogService;
 			import services.TransmitterService;
 			
 			private static var initialStart:Boolean = true;
@@ -58,15 +61,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			private static var currentBgLabelText:String = "---";
 			[Bindable]
 			private static var _calibrateButtonActive:Boolean = false;
-			private static var bluetoothButtonActionIndexArray:Array;
 			private static const ACTION_SHEET_INDEX_FOR_SCAN_FOR_DEVICE:int = 0;
 			private static const ACTION_SHEET_INDEX_FOR_FORGET_DEVICE:int = 1;
 			private static const ACTION_SHEET_INDEX_FOR_START_SENSOR:int = 2;
 			private static const ACTION_SHEET_INDEX_FOR_STOP_SENSOR:int = 3;
 			private static const ACTION_SHEET_INDEX_FOR_STATUS:int = 4;
 			private static const ACTION_SHEET_INDEX_FOR_CONNECT_TO_DEVICE:int = 5;
+			private static const ACTION_SHEET_INDEX_FOR_CANCEL:int = 5;
 			
 			[ResourceBundle("homeview")]
+			[ResourceBundle("general")]
 			
 			protected function onCreationComplete(event:FlexEvent):void
 			{
@@ -258,44 +262,29 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			private function bluetoothButtonClicked(e:MouseEvent = null):void {
 				var actionsheetBuilder:ActionSheetBuilder = new ActionSheetBuilder();;
 					
-				bluetoothButtonActionIndexArray = [];
-				
-				var indexcntr:int = 1;//the first action being added has index 1
-				actionsheetBuilder.addAction(ModelLocator.resourceManagerInstance.getString('homeview','view_device_status'));
-				bluetoothButtonActionIndexArray[indexcntr] = ACTION_SHEET_INDEX_FOR_STATUS;
-				indexcntr++;
+				actionsheetBuilder.addAction(ModelLocator.resourceManagerInstance.getString('homeview','view_device_status'), DialogAction.STYLE_DEFAULT, ACTION_SHEET_INDEX_FOR_STATUS);
 					
 				if (!BluetoothService.bluetoothPeripheralActive()) {
 					//this is the case where bluetoothdevice is known or not, time for a scan
-					actionsheetBuilder.addAction(ModelLocator.resourceManagerInstance.getString('homeview','scan_for_device'));
-					bluetoothButtonActionIndexArray[indexcntr] = ACTION_SHEET_INDEX_FOR_SCAN_FOR_DEVICE;
-					indexcntr++;
+					actionsheetBuilder.addAction(ModelLocator.resourceManagerInstance.getString('homeview','scan_for_device'), DialogAction.STYLE_DEFAULT, ACTION_SHEET_INDEX_FOR_SCAN_FOR_DEVICE);
 				} else {
 					//TODO hier zit nog iets verkeerd, die state blijft precies connected, ook al is 'm niet connected
-					trace("BluetoothService.getActiveBluetoothPeripheral().state = " + BluetoothService.getActiveBluetoothPeripheral().state);
-					trace("PeripheralState.CONNECTED && BluetoothLE.service.centralManager.state  = " + PeripheralState.CONNECTED && BluetoothLE.service.centralManager.state );
 					if (BluetoothService.getActiveBluetoothPeripheral().state != PeripheralState.CONNECTED && BluetoothLE.service.centralManager.state == BluetoothLEState.STATE_ON) {
-						actionsheetBuilder.addAction(ModelLocator.resourceManagerInstance.getString('homeview','connect_now'));
-						bluetoothButtonActionIndexArray[indexcntr] = ACTION_SHEET_INDEX_FOR_CONNECT_TO_DEVICE;
-						indexcntr++;
+						actionsheetBuilder.addAction(ModelLocator.resourceManagerInstance.getString('homeview','connect_now'), DialogAction.STYLE_DEFAULT, ACTION_SHEET_INDEX_FOR_CONNECT_TO_DEVICE);
 					}
 				}
 				
 				if (BlueToothDevice.known()) {
-					actionsheetBuilder.addAction(ModelLocator.resourceManagerInstance.getString('homeview','forget_device'));
-					bluetoothButtonActionIndexArray[indexcntr] = ACTION_SHEET_INDEX_FOR_FORGET_DEVICE;
-					indexcntr++;
+					actionsheetBuilder.addAction(ModelLocator.resourceManagerInstance.getString('homeview','forget_device'), DialogAction.STYLE_DEFAULT, ACTION_SHEET_INDEX_FOR_FORGET_DEVICE);
 				}
 				
 				if (Sensor.getActiveSensor() == null) {
-					actionsheetBuilder.addAction(ModelLocator.resourceManagerInstance.getString('homeview','start_sensor'));
-					bluetoothButtonActionIndexArray[indexcntr] = ACTION_SHEET_INDEX_FOR_START_SENSOR;
-					indexcntr++;
+					actionsheetBuilder.addAction(ModelLocator.resourceManagerInstance.getString('homeview','start_sensor'), DialogAction.STYLE_DEFAULT, ACTION_SHEET_INDEX_FOR_START_SENSOR);
 				} else {
-					actionsheetBuilder.addAction(ModelLocator.resourceManagerInstance.getString('homeview','stop_sensor'));
-					bluetoothButtonActionIndexArray[indexcntr] = ACTION_SHEET_INDEX_FOR_STOP_SENSOR;
-					indexcntr++;
+					actionsheetBuilder.addAction(ModelLocator.resourceManagerInstance.getString('homeview','stop_sensor'), DialogAction.STYLE_DEFAULT, ACTION_SHEET_INDEX_FOR_STOP_SENSOR);
 				}
+				
+				actionsheetBuilder.addAction(ModelLocator.resourceManagerInstance.getString('general','cancel'),DialogAction.STYLE_CANCEL, ACTION_SHEET_INDEX_FOR_CANCEL);
 				
 				var actionSheet:DialogView = Dialog.service.create(actionsheetBuilder.build());
 				actionSheet.addEventListener(DialogViewEvent.CLOSED, actionSheet_closedHandler);
@@ -307,19 +296,51 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 				actionSheet.removeEventListener(DialogViewEvent.CLOSED, actionSheet_closedHandler);
 				actionSheet.dispose();
 				
-				if (bluetoothButtonActionIndexArray[event.index] == ACTION_SHEET_INDEX_FOR_SCAN_FOR_DEVICE) {
+				if (event.index == ACTION_SHEET_INDEX_FOR_SCAN_FOR_DEVICE) {
 					//TODO add a check if bluetooth is on, if not give warning message and don't start scanning
-					BluetoothService.startScanning();
-				} else if (bluetoothButtonActionIndexArray[event.index] == ACTION_SHEET_INDEX_FOR_FORGET_DEVICE) {
+					if (BluetoothLE.service.centralManager.state == BluetoothLEState.STATE_ON) {
+						BluetoothService.instance.addEventListener(BlueToothServiceEvent.STOPPED_SCANNING, scanningStopped);
+						BluetoothService.startScanning();
+					} else {
+						var alert:DialogView = Dialog.service.create(
+							new AlertBuilder()
+							.setTitle(ModelLocator.resourceManagerInstance.getString("homeview","scanning_failed_tile"))
+							.setMessage(ModelLocator.resourceManagerInstance.getString("homeview","bluetooth_not_switched_on"))
+							.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
+							.build()
+						);
+						DialogService.addDialog(alert, 30);
+					}
+				} else if (event.index == ACTION_SHEET_INDEX_FOR_FORGET_DEVICE) {
 					BlueToothDevice.forgetBlueToothDevice();
-				} else if (bluetoothButtonActionIndexArray[event.index] == ACTION_SHEET_INDEX_FOR_START_SENSOR) {
+				} else if (event.index == ACTION_SHEET_INDEX_FOR_START_SENSOR) {
 					Sensor.startSensor();
-				} else if (bluetoothButtonActionIndexArray[event.index] == ACTION_SHEET_INDEX_FOR_STOP_SENSOR) {
+				} else if (event.index == ACTION_SHEET_INDEX_FOR_STOP_SENSOR) {
 					Sensor.stopSensor();
-				} else if (bluetoothButtonActionIndexArray[event.index] == ACTION_SHEET_INDEX_FOR_CONNECT_TO_DEVICE) {
+				} else if (event.index == ACTION_SHEET_INDEX_FOR_CONNECT_TO_DEVICE) {
 					BluetoothService.tryReconnect();
 				}
 			}
+			
+			private static function scanningStopped(event:Event):void {
+				BluetoothService.instance.removeEventListener(BlueToothServiceEvent.STOPPED_SCANNING, scanningStopped);
+				if (!BluetoothService.bluetoothPeripheralActive()) {
+					//create alert to get the user's input
+					var alert:DialogView = Dialog.service.create(
+						new AlertBuilder()
+						.setTitle(ModelLocator.resourceManagerInstance.getString("homeview","scanning_failed_tile"))
+						.setMessage(ModelLocator.resourceManagerInstance.getString("homeview","scanning_failed")
+							+
+							(BlueToothDevice.known() ? (" " + ModelLocator.resourceManagerInstance.getString("homeview","with_name") + " " + BlueToothDevice.name) + 
+								"\n\n" + ModelLocator.resourceManagerInstance.getString("homeview","explain_expected_device_name"): "")
+						)
+						.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
+						.build()
+					);
+					DialogService.addDialog(alert, 30);
+				}
+			}
+
 			
 		]]>
 	</fx:Script>

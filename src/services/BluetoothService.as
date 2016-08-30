@@ -72,7 +72,7 @@ package services
 		private static var initialStart:Boolean = true;
 		
 		private static var scanTimer:Timer;
-		private static var MAX_SCAN_TIME_IN_SECONDS:int = 15;
+		public static var MAX_SCAN_TIME_IN_SECONDS:int = 15;
 		private static var discoverServiceOrCharacteristicTimer:Timer;
 		private static const DISCOVER_SERVICES_OR_CHARACTERISTICS_RETRY_TIME_IN_SECONDS:int = 1;
 		private static const MAX_RETRY_DISCOVER_SERVICES_OR_CHARACTERISTICS:int = 5;
@@ -339,6 +339,7 @@ package services
 			if (BluetoothLE.service.centralManager.isScanning) {
 				BluetoothLE.service.centralManager.stopScan();
 				dispatchInformation('stopped_scanning');	
+				_instance.dispatchEvent(new BlueToothServiceEvent(BlueToothServiceEvent.STOPPED_SCANNING));
 			}
 		}
 		

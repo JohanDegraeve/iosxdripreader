@@ -25,6 +25,7 @@ package events
 	[Event(name="BluetoothServiceInformation",type="events.BlueToothServiceEvent")]
 	[Event(name="TransmitterData",type="events.BlueToothServiceEvent")]
 	[Event(name="BluetoothServiceInitiated",type="events.BlueToothServiceEvent")]
+	[Event(name="StoppedScanning",type="events.BlueToothServiceEvent")]
 
 	/**
 	 * used by bluetoothservice to notify on all kinds of events : information messages like bluetooth state change, bluetooth state change,
@@ -46,6 +47,10 @@ package events
 		 * data.information will be a string with this info. 
 		 */
 		public static const BLUETOOTH_SERVICE_INFORMATION_EVENT:String = "BluetoothServiceInformation";
+		/**
+		 * To inform that scanning is programmatically stopped after timer expiry
+		 */
+		public static const STOPPED_SCANNING:String = "StoppedScanning";
 		
 		/**
 		 * To pass transmitter data<br>
