@@ -346,7 +346,10 @@ package databaseclasses
 			return returnValue;
 		}
 		
-		public static function initialCalibration(bg1:Number, bg2:Number):void {
+		/**
+		 * bg1 must be before bg2, this is not checked by initialCalibration 
+		 */
+		public static function initialCalibration(bg1:Number, timestampCalibration1:Number, bg2:Number, timestampCalibration2:Number):void {
 			myTrace("start initialCalibration");
 			//TODO take unit from settings
 			var unit:String = "mgdl";
@@ -362,43 +365,33 @@ package databaseclasses
 			var bgReadings:ArrayCollection = BgReading.latestBySize(2);
 			var bgReading1:BgReading = bgReadings.getItemAt(0) as BgReading;
 			var bgReading2:BgReading = bgReadings.getItemAt(1) as BgReading;
-			var highBgReading:BgReading;
-			var lowBgReading:BgReading;
-			var higherBg:Number = Math.max(bg1, bg2);
-			var lowerBg:Number = Math.min(bg1,bg2);
 			
-			if (bgReading1.rawData > bgReading2.rawData) {
-				highBgReading = bgReading1;
-				lowBgReading = bgReading2;
-			} else {
-				highBgReading = bgReading2;
-				lowBgReading = bgReading1;
-			}
+			bgReading1.calculatedValue = bg1;
+			bgReading1.calibrationFlag = true;
 			
-			highBgReading.calculatedValue = higherBg;
-			highBgReading.calibrationFlag = true;
-			lowBgReading.calculatedValue = lowerBg;
-			lowBgReading.calibrationFlag = true;
-			highBgReading.findNewCurve();
-			highBgReading.findNewRawCurve();
-			lowBgReading.findNewCurve();
-			lowBgReading.findNewRawCurve();
+			bgReading2.calculatedValue = bg2;
+			bgReading2.calibrationFlag = true;
+			
+			bgReading1.findNewCurve();
+			bgReading1.findNewRawCurve();
+			bgReading2.findNewCurve();
+			bgReading2.findNewRawCurve();
 			
 			//create and save low calibration
-			var lowerCalibration:Calibration = new Calibration(
-				(new Date()).valueOf(),//timestamp
+			var calibration1:Calibration = new Calibration(
+				timestampCalibration1,//timestamp
 				(new Date()).valueOf() - sensor.startedAt,//sensor age at time of estimation
 				sensor,
-				lowerBg,//bg
-				lowBgReading.rawData,//rawvalue
-				lowBgReading.ageAdjustedRawValue,//adjustedrawvalue
-				((-0.0018 * lowerBg * lowerBg) + (0.6657 * lowerBg) + 36.7505) / 100,//sensorconfidence,
+				bg1,//bg
+				bgReading1.rawData,//rawvalue
+				bgReading1.ageAdjustedRawValue,//adjustedrawvalue
+				((-0.0018 * bg1 * bg1) + (0.6657 * bg1) + 36.7505) / 100,//sensorconfidence,
 				0.5,//slopeconfidence,
-				lowBgReading.timestamp,//rawtimestamp
+				bgReading1.timestamp,//rawtimestamp
 				1,//slope
-				lowerBg,//intercept
+				bg1,//intercept
 				0,//distancefromestimate,
-				lowBgReading.ageAdjustedRawValue,//estimaterawattimeofcalibration
+				bgReading1.ageAdjustedRawValue,//estimaterawattimeofcalibration
 				0,//estimatebgattimeofcalibration - default value, it seems never assigned a value in the android project
 				false,//possible bad defualt value
 				false,//checkin
@@ -413,23 +406,23 @@ package databaseclasses
 				(new Date()).valueOf(),
 				Utilities.UniqueId.createEventId()
 			);
-			calculateWLS(lowerCalibration).saveToDatabaseSynchronous();
+			calculateWLS(calibration1).saveToDatabaseSynchronous();
 			
 			//create and save high calibration
-			var higherCalibration:Calibration = new Calibration(
-				(new Date()).valueOf(),//timestamp
+			var calibration2:Calibration = new Calibration(
+				timestampCalibration2,//timestamp
 				(new Date()).valueOf() - sensor.startedAt,//sensor age at time of estimation
 				sensor,
-				higherBg,//bg
-				highBgReading.rawData,//rawvalue
-				highBgReading.ageAdjustedRawValue,//adjustedrawvalue
-				((-0.0018 * higherBg * higherBg) + (0.6657 * higherBg) + 36.7505) / 100,//sensorconfidence,
+				bg2,//bg
+				bgReading2.rawData,//rawvalue
+				bgReading2.ageAdjustedRawValue,//adjustedrawvalue
+				((-0.0018 * bg2 * bg2) + (0.6657 * bg2) + 36.7505) / 100,//sensorconfidence,
 				0.5,//slopeconfidence
-				highBgReading.timestamp,//rawtimestamp
+				bgReading2.timestamp,//rawtimestamp
 				1,//slope
-				higherBg,//intercept
+				bg2,//intercept
 				0,//distancefromestimate,
-				highBgReading.ageAdjustedRawValue,//estimaterawattimeofcalibration
+				bgReading2.ageAdjustedRawValue,//estimaterawattimeofcalibration
 				0,//estimatebgattimeofcalibration - default value, it seems never assigned a value in the android project
 				false,//possible bad defualt value
 				false,//checkin
@@ -444,29 +437,29 @@ package databaseclasses
 				(new Date()).valueOf(),
 				Utilities.UniqueId.createEventId()
 			);
-			calculateWLS(higherCalibration).saveToDatabaseSynchronous();
+			calculateWLS(calibration2).saveToDatabaseSynchronous();
 			
-			highBgReading.calibration = higherCalibration;
-			lowBgReading.calibration = lowerCalibration;
+			bgReading1.calibration = calibration1;
+			bgReading2.calibration = calibration2;
 			
-			highBgReading.updateInDatabaseSynchronous();
-			lowBgReading.updateInDatabaseSynchronous();
+			bgReading1.updateInDatabaseSynchronous();
+			bgReading2.updateInDatabaseSynchronous();
 			
 			/*myTrace("Calibration.intialCalibration before calculate_w_l_s");
 			myTrace("Calibration.intialCalibration after calculate_w_l_s");
 			myTrace("before adjustbgreadings highBgReading = " + highBgReading.print("   "));
 			myTrace("before adjustbgreadings lowBgReading = " + lowBgReading.print("   "));*/
 			var latest3Calibrations:ArrayCollection = new ArrayCollection();
-			latest3Calibrations.addItem(higherCalibration);//the higher is the latest, this one comes first, so it will be sorted from large to small
-			latest3Calibrations.addItem(lowerCalibration);
+			latest3Calibrations.addItem(calibration2);//the second is the latest, this one comes first, so it will be sorted from large to small
+			latest3Calibrations.addItem(calibration1);
 
 			adjustRecentBgReadings(5, latest3Calibrations);
-			CalibrationRequest.createOffset(lowerBg, 35);
+			CalibrationRequest.createOffset(Math.min(bg1,bg2), 35);
 			myTrace("after adjustbgreadings");
-			myTrace("End of initialCalibration highBgReading = " + highBgReading.print("   "));
-			myTrace("End of initialCalibration lowBgReading = " + lowBgReading.print("   "));
-			myTrace("End of initialCalibration higherCalibration = " + higherCalibration.print("   "));
-			myTrace("End of initialCalibration lowerCalibration = " + lowerCalibration.print("   "));
+			myTrace("End of initialCalibration bgReading1 = " + bgReading1.print("   "));
+			myTrace("End of initialCalibration bgReading2 = " + bgReading2.print("   "));
+			myTrace("End of initialCalibration calibration1 = " + calibration1.print("   "));
+			myTrace("End of initialCalibration calibration2 = " + calibration2.print("   "));
 		}
 		
 		/**

@@ -23,6 +23,7 @@ package services
 	
 	import flash.display.Stage;
 	import flash.events.Event;
+	import flash.events.EventDispatcher;
 	import flash.events.TimerEvent;
 	import flash.utils.Timer;
 	
@@ -30,15 +31,23 @@ package services
 	
 	import distriqtkey.DistriqtKey;
 	
+	import events.DialogServiceEvent;
+	
 	/**
 	 * Will process all dialogs - goal is that any other service that wants to interact with the user will use this service<br> 
 	 * Reason for using this service is because some service may be generating requests to open dialogs, while a dialog is already open<br>
 	 * This service is going to keep track if there's already a dialog open, in whcih case it's added to a queue.
 	 * 
 	 */
-	public class DialogService
+	public class DialogService extends EventDispatcher
 	{
 		private static var _instance:DialogService = new DialogService();
+
+		public static function get instance():DialogService
+		{
+			return _instance;
+		}
+
 		private static var initialStart:Boolean = true;
 		private static var dialogViews:ArrayCollection;
 		private static var dialogViewsMaxDurations:ArrayCollection;

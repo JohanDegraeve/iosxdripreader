@@ -73,7 +73,7 @@ package services
 		private static var initialStart:Boolean = true;
 		
 		private static var scanTimer:Timer;
-		public static var MAX_SCAN_TIME_IN_SECONDS:int = 15;
+		private static const MAX_SCAN_TIME_IN_SECONDS:int = 15;
 		private static var discoverServiceOrCharacteristicTimer:Timer;
 		private static const DISCOVER_SERVICES_OR_CHARACTERISTICS_RETRY_TIME_IN_SECONDS:int = 1;
 		private static const MAX_RETRY_DISCOVER_SERVICES_OR_CHARACTERISTICS:int = 5;
@@ -171,8 +171,8 @@ package services
 			BluetoothLE.init(DistriqtKey.distriqtKey);
 			if (BluetoothLE.isSupported) {
 				if (debugMode) trace("passing bluetoothservice.issupported");
+				trace("authorisation status = " + BluetoothLE.service.authorisationStatus());
 				switch (BluetoothLE.service.authorisationStatus()) {
-					case AuthorisationStatus.NOT_DETERMINED:
 					case AuthorisationStatus.SHOULD_EXPLAIN:
 						BluetoothLE.service.requestAuthorisation();
 						break;
@@ -181,6 +181,7 @@ package services
 					case AuthorisationStatus.UNKNOWN:
 						break;
 			
+					case AuthorisationStatus.NOT_DETERMINED:
 					case AuthorisationStatus.AUTHORISED:				
 						BluetoothLE.service.centralManager.addEventListener(PeripheralEvent.DISCOVERED, central_peripheralDiscoveredHandler);
 						BluetoothLE.service.centralManager.addEventListener( PeripheralEvent.CONNECT, central_peripheralConnectHandler );
@@ -448,7 +449,7 @@ package services
 				//find the index of the service that has uuid = the one used by xdrip/xbridge
 				var index:int;
 				for each (var o:Object in activeBluetoothPeripheral.services) {
-					if (o.uuid == HM10Attributes.HM_10_SERVICE) {
+					if (HM10Attributes.HM_10_SERVICE.indexOf(o.uuid as String) > -1) {
 						break;
 					}
 					index++;
@@ -478,7 +479,7 @@ package services
 			var servicesIndex:int;
 			var o:Object;
 			for each (o in activeBluetoothPeripheral.services) {
-				if (o.uuid == HM10Attributes.HM_10_SERVICE) {
+				if (HM10Attributes.HM_10_SERVICE.indexOf(o.uuid as String) > -1) {
 					break;
 				}
 				servicesIndex++;
@@ -486,7 +487,7 @@ package services
 			
 			var characteristicsIndex:int;
 			for each (o in activeBluetoothPeripheral.services[servicesIndex].characteristics) {
-				if (o.uuid == HM10Attributes.HM_RX_TX) {
+				if (HM10Attributes.HM_RX_TX.indexOf(o.uuid as String) > -1) {
 					break;
 				}
 				characteristicsIndex++;
@@ -569,7 +570,7 @@ package services
 		private static function dispatchInformation(informationResourceName:String):void {
 			var blueToothServiceEvent:BlueToothServiceEvent = new BlueToothServiceEvent(BlueToothServiceEvent.BLUETOOTH_SERVICE_INFORMATION_EVENT);
 			blueToothServiceEvent.data = new Object();
-			blueToothServiceEvent.data.information = ModelLocator.resourceManagerInstance.getString('bluetoothservice',informationResourceName);
+			blueToothServiceEvent.data.information = ModelLocator.resourceManagerInstance.getString("bluetoothservice",informationResourceName);
 			_instance.dispatchEvent(blueToothServiceEvent);
 		}
 		

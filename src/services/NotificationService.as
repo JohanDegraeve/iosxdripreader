@@ -19,7 +19,6 @@ package services
 {
 	import com.distriqt.extension.core.Core;
 	import com.distriqt.extension.notifications.AuthorisationStatus;
-	import com.distriqt.extension.notifications.NotificationRepeatInterval;
 	import com.distriqt.extension.notifications.Notifications;
 	import com.distriqt.extension.notifications.Service;
 	import com.distriqt.extension.notifications.builders.NotificationBuilder;
@@ -28,13 +27,17 @@ package services
 	
 	import flash.events.Event;
 	import flash.events.EventDispatcher;
-	import flash.events.TimerEvent;
-	import flash.utils.Timer;
+	
+	import Utilities.BgGraphBuilder;
+	
+	import databaseclasses.BgReading;
 	
 	import distriqtkey.DistriqtKey;
 	
+	import events.CalibrationServiceEvent;
 	import events.NotificationServiceEvent;
-	
+	import events.TimerServiceEvent;
+	import events.TransmitterServiceEvent;
 	
 	/**
 	 * This service<br>
@@ -50,9 +53,10 @@ package services
 	public class NotificationService extends EventDispatcher
 	{
 
+		[ResourceBundle("notificationservice")]
+
 		private static var _instance:NotificationService = new NotificationService();
 
-		[ResourceBundle("notificationservice")]
 		public static function get instance():NotificationService
 		{
 			return _instance;
@@ -61,41 +65,19 @@ package services
 		
 		private static var initialStart:Boolean = true;
 		
-		/*//categories
-		private static const IDENTIFIER_STRING_FOR_WAKEUP_CATEGORY:String = "WAKE_UP_CATEGORY";
-		public static const IDENTIFIER_STRING_FOR_CALIBRATION_REQUEST_CATEGORY:String = "CALIBRATION_REQUEST_CATEGORY";*/
-		
 		//Notification ID's
-		/**
-		 * For wakeup notification - still under test<br>
-		 * This is the kind of notification that will be fired when the app has been killed - at least that's the aim 
-		 */
-		private static const ID_FOR_WAKEUP:int = 1;
 		/**
 		 * To request extra calibration 
 		 */
-		public static const ID_FOR_EXTRA_CALIBRATION_REQUEST:int = 2;
-		private static const debugMode:Boolean = true;
+		public static const ID_FOR_EXTRA_CALIBRATION_REQUEST:int = 1;
 		/**
-		* time in minutes, after which notification will fire<br>
-		* If application was killed in between setting the notification and the firing of it, it will effectively fire, and so the user can click it which will cause the 
-		* application to launch again 
-		*/
-		private static const DELAY_FOR_WAKEUP_CATEGORY_IN_MINUTES:int = 1;
-		/**
-		 * when this timer fires, the wakeup notification will be reset to a later timestamp 
+		 * for the notification with currently measured bg value<br>
+		 * this is the always on notification
 		 */
-		private static var wakeUpTimer:Timer;
-		/**
-		 * last time the wakeup notification was being set, means not the fireDate of the notification<br>
-		 * in ms 
-		 */
-		private static var timeOfLastWakeUpNotificationBeingSet:Number;
-		/**
-		 * timer will be set a numbe rof seconds before notification would fire<br> 
-		 */
-		private static const timeDifferenceBetweenWakeUpTimerAndWakeUpNotificationInMilliSeconds:int = 5000
-		
+		public static const ID_FOR_BG_VALUE:int = 2;
+
+		private static const debugMode:Boolean = false;
+
 		public function NotificationService()
 		{
 			if (_instance != null) {
@@ -132,7 +114,7 @@ package services
 					// You are yet to ask for authorisation to display notifications
 					// At this point you should consider your strategy to get your user to authorise
 					// notifications by explaining what the application will provide
-					Notifications.service.addEventListener( AuthorisationEvent.CHANGED, authorisationChangedHandler );
+					Notifications.service.addEventListener(AuthorisationEvent.CHANGED, authorisationChangedHandler);
 					Notifications.service.requestAuthorisation();
 					break;
 				
@@ -158,11 +140,15 @@ package services
 			 */
 			function register():void {
 				Notifications.service.addEventListener(NotificationEvent.NOTIFICATION_SELECTED, notificationHandler);
+				TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, updateNotificationWithBgLevel);
+				TimerService.instance.addEventListener(TimerServiceEvent.BG_READING_NOT_RECEIVED_ON_TIME, bgReadingNotReceivedOnTime);
+				CalibrationService.instance.addEventListener(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT, updateNotificationWithBgLevel);
 				Notifications.service.register();
-				
-				timeOfLastWakeUpNotificationBeingSet = (new Date()).valueOf();
-				//setupWakeUpNotification(new Date(timeOfLastWakeUpNotificationBeingSet + DELAY_FOR_WAKEUP_CATEGORY_IN_MINUTES * 60 * 1000));
-				//setupWakeUpTimer(new Date(timeOfLastWakeUpNotificationBeingSet + DELAY_FOR_WAKEUP_CATEGORY_IN_MINUTES * 60 * 1000 - timeDifferenceBetweenWakeUpTimerAndWakeUpNotificationInMilliSeconds));//5 seconds sooner
+				_instance.dispatchEvent(new NotificationServiceEvent(NotificationServiceEvent.NOTIFICATION_SERVICE_INITIATED_EVENT));
+			}
+			
+			function bgReadingNotReceivedOnTime(event:TimerServiceEvent):void {
+				updateNotificationWithBgLevel(null);
 			}
 			
 			function notificationHandler(event:NotificationEvent):void {
@@ -171,53 +157,38 @@ package services
 				notificationServiceEvent.data = event;
 				_instance.dispatchEvent(notificationServiceEvent);
 			}
-			
 		}
 		
-		/**
-		 * time should be later than now, otherwise it will be set to now, which means the timer will fire immediately ? 
-		 */
-		private static function setupWakeUpTimer(time:Date):void {
-			if (wakeUpTimer != null) {
-				if (wakeUpTimer.running)
-					wakeUpTimer.stop();
+		public static function removeBGNotification():void {
+			Notifications.service.cancel(NotificationService.ID_FOR_BG_VALUE);
+		}
+		
+		public static function updateNotificationWithBgLevel(be:Event):void {
+			var lastBgReading:BgReading = BgReading.lastNoSensor(); 
+			var valueToShow:String = "";
+			if (lastBgReading != null) {
+				if (lastBgReading.calculatedValue != 0) {
+					if ((new Date().getTime()) - (60000 * 11) - lastBgReading.timestamp > 0) {
+						valueToShow = "---"
+					} else {
+						valueToShow = BgGraphBuilder.unitizedString(lastBgReading.calculatedValue, true);
+						if (!lastBgReading.hideSlope) {
+							valueToShow += " " + lastBgReading.slopeArrow();
+						}
+					}
+				}
+			} else {
+				valueToShow = "---"
 			}
-			
-			var delayToSet:Number = time.valueOf() - (new Date()).valueOf();
-			if (delayToSet < 0)
-				delayToSet = 0;
-			
-			if (debugMode) trace("setting wakeuptimer with delay of (ms) " + delayToSet);
-			wakeUpTimer = new Timer(delayToSet, 1);
-			wakeUpTimer.addEventListener(TimerEvent.TIMER, handleWakeUpTimerEvent);
-			wakeUpTimer.start();
-		}
-		
-		private static function handleWakeUpTimerEvent(event:Event):void {
-			if (debugMode) trace("in handleWakeUpTimerEvent at " + (new Date()).toLocaleTimeString()); 
-			
-			//normally (the time now) = timeOfLastWakeUpNotificationBeingSet + DELAY_FOR_WAKEUP_CATEGORY_IN_MINUTES * 60 * 1000 - 5 seconds
-			// so (the time now) + 5 seconds = timeOfLastWakeUpNotificationBeingSet + DELAY_FOR_WAKEUP_CATEGORY_IN_MINUTES * 60 * 1000
-			// or timeOfLastWakeUpNotificationBeingSet + DELAY_FOR_WAKEUP_CATEGORY_IN_MINUTES * 60 * 1000  = (the time now) + 5 seconds
-			timeOfLastWakeUpNotificationBeingSet = timeOfLastWakeUpNotificationBeingSet + (DELAY_FOR_WAKEUP_CATEGORY_IN_MINUTES * 60 * 1000);
-			//so no timeOfLastWakeUpNotificationBeingSet = the time now + 5 seconds
-			//so not setting timeOfLastWakeUpNotificationBeingSet to now, but setting it exactly DELAY_FOR_WAKEUP_CATEGORY_IN_MINUTES further then previous wake up notification
-			
-			setupWakeUpNotification(new Date(timeOfLastWakeUpNotificationBeingSet +  (DELAY_FOR_WAKEUP_CATEGORY_IN_MINUTES * 60 * 1000)));
-			setupWakeUpTimer(new Date(timeOfLastWakeUpNotificationBeingSet + DELAY_FOR_WAKEUP_CATEGORY_IN_MINUTES * 60 * 1000 - timeDifferenceBetweenWakeUpTimerAndWakeUpNotificationInMilliSeconds * 2));//two times -5000 because timeOfLastWakeUpNotificationBeingSet = the time now + 5 seconds
-		}
-		
-		private static function setupWakeUpNotification(fireDate:Date):void {
-			if (debugMode) trace("in setupWakeUpNotification at " + (new Date()).toLocaleTimeString());
-		 	if (debugMode) trace("setting notification at " + fireDate.toLocaleTimeString());
+			//Notifications.service.cancel(NotificationService.ID_FOR_BG_VALUE);
 			Notifications.service.notify(
 				new NotificationBuilder()
-				.setId(ID_FOR_WAKEUP)
-				.setAlert("notification alert")
-				.setTitle("notification title")
-				.setBody("notification body")
-				.setFireDate(fireDate)
-				.setRepeatInterval(NotificationRepeatInterval.REPEAT_NONE)
+				.setId(NotificationService.ID_FOR_BG_VALUE)
+				.setAlert("koekoek")
+				.setTitle(valueToShow)
+				.setSound("")
+				.enableVibration(false)
+				.setOngoing(true)
 				.build());
 		}
 	}

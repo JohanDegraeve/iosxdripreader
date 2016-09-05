@@ -40,11 +40,13 @@
 		  * 0 means level not known
 		  */
 		 public static const COMMON_SETTING_BRIDGE_BATTERY_PERCENTAGE_ID:int = 2;
+		 public static const COMMON_SETTING_INITIAL_INFO_SCREEN_1_SHOWN_ID:int = 3;
 		 
 		 private static var commonSettings:Array = [
 			 "0",//COMMON_SETTING_ID_CURRENT_SENSOR_ID
 			 "0",//COMMON_SETTING_TRANSMITTER_BATTERY_VOLTAGE_ID
-			 "0"//COMMON_SETTING_BRIDGE_BATTERY_PERCENTAGE_ID
+			 "0",//COMMON_SETTING_BRIDGE_BATTERY_PERCENTAGE_ID
+			 "false"//COMMON_SETTING_INITIAL_INFO_SCREEN_1_SHOWN_ID
 		 ];
 		 
 		 public function CommonSettings()

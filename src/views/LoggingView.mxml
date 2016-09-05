@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 <s:View xmlns:fx="http://ns.adobe.com/mxml/2009" 
 		initialize="view1_initializeHandler(event)"
 		creationComplete="view1_creationCompleteHandler(event)"
-		xmlns:s="library://ns.adobe.com/flex/spark" title="LoggingView">
+		xmlns:s="library://ns.adobe.com/flex/spark" title="Logs">
 	<fx:Script>
 		<![CDATA[
 			import mx.events.FlexEvent;
@@ -44,7 +44,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 		<s:Button   label="{back_label}" click="navigator.popView()" height="48"/>
 	</s:navigationContent>
 
-	<s:List id="loggingList" left="0" right="0" top="0" bottom="0" scrollSnappingMode="leadingEdge"
+	<s:List id="loggingList" left="0" right="0" top="0" bottom="0" scrollSnappingMode="leadingEdge" 
 			dataProvider="{ModelLocator.loggingList}" itemRenderer="renderers.WrapText">
 	</s:List>
 

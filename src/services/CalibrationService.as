@@ -154,7 +154,7 @@ package services
 					timeStampOfFirstBgLevel = (new Date()).valueOf();
 				} else {
 					TransmitterService.instance.removeEventListener(TransmitterServiceEvent.BGREADING_EVENT, transmitterServiceBGReadingEventReceivedInitialCalibration);
-					Calibration.initialCalibration(bgLevel1, asNumber);
+					Calibration.initialCalibration(bgLevel1, timeStampOfFirstBgLevel, asNumber, (new Date()).valueOf());
 					var calibrationServiceEvent:CalibrationServiceEvent = new CalibrationServiceEvent(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT);
 					_instance.dispatchEvent(calibrationServiceEvent);
 					init();

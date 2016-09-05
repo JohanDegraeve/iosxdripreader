@@ -53,7 +53,7 @@ package databaseclasses
 		private static const dbFileName:String = "xdripreader.db";
 		private static var dbFile:File  ;
 		private static var xmlFileName:String;
-		private static var databaseWasCopiedFromSampleFile:Boolean = false;
+		private static var databaseWasCopiedFromSampleFile:Boolean = true;
 		private static const maxDaysToKeepLogfiles:int = 2;
 		public static const END_OF_RESULT:String = "END_OF_RESULT";
 		private static const debugMode:Boolean = false;

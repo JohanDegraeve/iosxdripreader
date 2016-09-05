@@ -190,6 +190,20 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 		<image732x412></image732x412>
 		<image1024x1024></image1024x1024>
 	</icon> -->
+	<icon>
+		<image29x29><![CDATA[assets/app-icon_29x29.png]]></image29x29>
+		<image36x36><![CDATA[assets/app-icon_36x36.png]]></image36x36>
+		<image48x48><![CDATA[assets/app-icon_48x48.png]]></image48x48>
+		<image57x57><![CDATA[assets/app-icon_57x57.png]]></image57x57>
+		<image72x72><![CDATA[assets/app-icon_72x72.png]]></image72x72>
+		<image76x76><![CDATA[assets/app-icon_76x76.png]]></image76x76>
+		<image114x114><![CDATA[assets/app-icon_114x114.png]]></image114x114>
+		<image120x120><![CDATA[assets/app-icon_120x120.png]]></image120x120>
+		<image152x152><![CDATA[assets/app-icon_152x152.png]]></image152x152>
+		<image180x180><![CDATA[assets/app-icon_180x180.png]]></image180x180>
+		<image512x512><![CDATA[assets/app-icon_512x512.png]]></image512x512>
+	</icon>
+	
 
 	<!-- Whether the application handles the update when a user double-clicks an update version
 	of the AIR file (true), or the default AIR application installer handles the update (false).

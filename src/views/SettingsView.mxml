@@ -1,133 +1,33 @@
 <?xml version="1.0" encoding="utf-8"?>
 <s:View xmlns:fx="http://ns.adobe.com/mxml/2009" 
-		initialize="init()"
-		xmlns:s="library://ns.adobe.com/flex/spark" title="SettingsView">
+		actionBarVisible="true"
+		initialize="onInitialize()"
+		xmlns:s="library://ns.adobe.com/flex/spark" >
 	<fx:Script>
 		<![CDATA[
-			import com.distriqt.extension.dialog.Dialog;
-			import com.distriqt.extension.dialog.DialogView;
-			import com.distriqt.extension.dialog.builders.AlertBuilder;
-			import com.distriqt.extension.dialog.events.DialogViewEvent;
-			import com.distriqt.extension.dialog.objects.DialogAction;
-			
-			import mx.collections.ArrayCollection;
-			import mx.managers.PopUpManager;
-			
-			import spark.events.IndexChangeEvent;
-			import spark.events.PopUpEvent;
-			
-			import Utilities.AlertPopUp;
-			
-			import databaseclasses.BlueToothDevice;
-			import databaseclasses.Sensor;
-			
-			import services.BluetoothService;
-			import services.DialogService;
-			
-			private static var alertPopUp:AlertPopUp;
-			private var textToShow:String ;
-			
 			import model.ModelLocator;
 			[ResourceBundle("settingsview")]
 			
-			private var menuList:ArrayCollection = 	new ArrayCollection([
-				ModelLocator.resourceManagerInstance.getString("settingsview","forget_xdrip_or_xbridge"),
-				ModelLocator.resourceManagerInstance.getString("settingsview","show_logging"),
-				Sensor.getActiveSensor() == null ? ModelLocator.resourceManagerInstance.getString("settingsview","start_sensor") : ModelLocator.resourceManagerInstance.getString("settingsview","stop_sensor"),
-				"scan bluetooth"
-			]);	
-	
-			private function init():void {
-				/* add event listener for clicking item */
-				settingsList.addEventListener(Event.CHANGE,selectedElementChanged);
+			private function onInitialize():void {
+				title = ModelLocator.resourceManagerInstance.getString('settingsview','title');
 			}
 			
-			private function selectedElementChanged(event:IndexChangeEvent):void {
-				switch (event.newIndex) {
-					case 0:
-						if (BlueToothDevice.address != "") {
-							BlueToothDevice.forgetBlueToothDevice();
-							alertPopUp = new AlertPopUp();
-							alertPopUp.addEventListener(PopUpEvent.CLOSE, okClicked);
-							textToShow = ModelLocator.resourceManagerInstance.getString('settingsview','bluetoothdeviceforgotten') ;
-							alertPopUp.show(this);
-							alertPopUp.setMessage(textToShow);
-						}
-						if (!settingsList.hasEventListener(Event.CHANGE))
-							settingsList.addEventListener(Event.CHANGE,selectedElementChanged);
-
-						break;
-					case 1:
-						navigator.pushView(LoggingView);
-						break;
-					case 2:
-						var alert:DialogView = Dialog.service.create(
-								new AlertBuilder()
-									.setTitle(Sensor.getActiveSensor() == null ? ModelLocator.resourceManagerInstance.getString("settingsview","start_sensor") : ModelLocator.resourceManagerInstance.getString("settingsview","stop_sensor"))
-									.setMessage(Sensor.getActiveSensor() == null ?
-											ModelLocator.resourceManagerInstance.getString("settingsview","start_sensor_warning") :
-											ModelLocator.resourceManagerInstance.getString("settingsview","stop_sensor_warning")
-										)
-									.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
-									.addOption("Cancel", DialogAction.STYLE_CANCEL, 1)
-									.build()
-							);
-						alert.addEventListener(DialogViewEvent.CLOSED, sensorAlertCloseHandler);
-						DialogService.addDialog(alert);
-						if (!settingsList.hasEventListener(Event.CHANGE))
-							settingsList.addEventListener(Event.CHANGE,selectedElementChanged);
-						break;
-					case 3:
-						BluetoothService.startScanning();
-						break;
-				}
-				
-				function sensorAlertCloseHandler(event:DialogViewEvent):void {
-					if (event.index == 1)
-						return;
-					if (Sensor.getActiveSensor() == null) {
-						if (event.index == 0) {
-							Sensor.startSensor();
-							menuList.removeItemAt(2);
-							menuList.addItemAt(ModelLocator.resourceManagerInstance.getString("settingsview","stop_sensor"),2);
-
-							var alert:DialogView = Dialog.service.create(
-								new AlertBuilder()
-								.setTitle(ModelLocator.resourceManagerInstance.getString("settingsview","attention"))
-								.setMessage(ModelLocator.resourceManagerInstance.getString("settingsview","inform_about_calibration"))
-								.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
-								.build()
-							);
-							DialogService.addDialog(alert);
-						}
-					} else {
-						if (event.index == 0) {
-							Sensor.stopSensor();
-							menuList.removeItemAt(2);
-							menuList.addItemAt(ModelLocator.resourceManagerInstance.getString("settingsview","start_sensor"),2);
-						}
-					}
-					if (!settingsList.hasEventListener(Event.CHANGE))
-						settingsList.addEventListener(Event.CHANGE,selectedElementChanged);
-				}
-				
-				function okClicked(event: PopUpEvent):void {
-					if (alertPopUp != null) {
-						PopUpManager.removePopUp(alertPopUp);
-						if (alertPopUp.hasEventListener(PopUpEvent.CLOSE)) {
-							alertPopUp.removeEventListener(PopUpEvent.CLOSE, okClicked);
-						}
-					}
-					if (!settingsList.hasEventListener(Event.CHANGE))
-						settingsList.addEventListener(Event.CHANGE,selectedElementChanged);
-
-				}
+			protected function hgroup1_clickHandler(event:MouseEvent):void
+			{
+				navigator.pushView(LoggingView);
 			}
+			
 		]]>
 	</fx:Script>
-	<s:List id="settingsList" left="0" right="0" top="0" bottom="0" itemRenderer="renderers.MenuElementItemRenderer"
-			dataProvider="{menuList}">
-	</s:List>
+	<s:VGroup click="hgroup1_clickHandler(event)" width="100%">
+		<s:Label id="logviewlabel" text = "{ModelLocator.resourceManagerInstance.getString('settingsview','show_logging')}"
+				 width="100%" paddingLeft="3" paddingRight="3" paddingTop="20" paddingBottom="10" fontSize="24" fontWeight="bold"/>
+		<s:Line width="100%">
+			<s:stroke>
+				<s:SolidColorStroke color="0xFFFFFF" weight="1"/>
+			</s:stroke>
+		</s:Line>	
+	</s:VGroup>
 	
 </s:View>
 
