@@ -46,7 +46,7 @@
   <buildCSSFiles/>
   <flashCatalyst validateFlashCatalystCompatibility="false"/>
   <buildTargets>
-    <buildTarget buildTargetName="device" iosSettingsVersion="2" isCurrent="true" platformId="com.adobe.flexide.multiplatform.ios.platform" provisioningFile="G:/Allerlei/developmentiphonesehildexdripreader.mobileprovision" releasePackageType="ipa-ad-hoc">
+    <buildTarget buildTargetName="device" iosSettingsVersion="2" isCurrent="true" platformId="com.adobe.flexide.multiplatform.ios.platform" provisioningFile="G:/Allerlei/xdripreaderBeta.mobileprovision" releasePackageType="ipa-ad-hoc">
       <multiPlatformSettings enabled="true" hideAneLibSymbols="0" includePlatformLibs="false" nativeSDKPathString="G:\Adobe FB Projects\FB 47\iosxdripreader\iPhoneOS9.3.sdk" platformID="com.adobe.flexide.multiplatform.ios.platform" reducedSizePackaging="false" version="1"/>
       <airSettings airCertificatePath="G:/Allerlei/iphone developer sebastien rigot.p12" airTimestamp="true" anePathSet="true" version="1">
         <airExcludes/>

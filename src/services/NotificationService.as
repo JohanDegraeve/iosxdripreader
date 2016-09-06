@@ -151,11 +151,15 @@ package services
 			 */
 			function register():void {
 				Notifications.service.addEventListener(NotificationEvent.NOTIFICATION_SELECTED, notificationHandler);
-				TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, updateAllNotifications);
 				TimerService.instance.addEventListener(TimerServiceEvent.BG_READING_NOT_RECEIVED_ON_TIME, bgReadingNotReceivedOnTime);
 				CalibrationService.instance.addEventListener(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT, updateAllNotifications);
 				Notifications.service.register();
 				_instance.dispatchEvent(new NotificationServiceEvent(NotificationServiceEvent.NOTIFICATION_SERVICE_INITIATED_EVENT));
+			}
+			
+			function initialCalibrationEventReceived(event:CalibrationServiceEvent):void {
+				TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, updateAllNotifications);
+				updateAllNotifications(null);
 			}
 			
 			function bgReadingNotReceivedOnTime(event:TimerServiceEvent):void {

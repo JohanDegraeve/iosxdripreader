@@ -98,6 +98,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			
 			private static var bluetoothbuttonIcon:Image;
 			
+			/**
+			 * connected or not. Should be replaced by if (BluetoothService.getActiveBluetoothPeripheral().state == PeripheralState.CONNECTED)<br>
+			 * but this last one is not working see https://github.com/distriqt/ANE-BluetoothLE/issues/8
+			 */
+			private static var peripheralConnected:Boolean = false;
+			
 			[ResourceBundle("homeview")]
 			[ResourceBundle("general")]
 			[ResourceBundle("bluetoothservice")]
@@ -194,6 +200,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			
 			private function central_peripheralConnectHandler(event:PeripheralEvent):void {
 				currentState = "bluetoothgreen";
+				peripheralConnected = true;
 			}
 			
 			private function userInitiatedScanningSucceeded(event:PeripheralEvent):void {
@@ -210,6 +217,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			}
 			
 			private function central_peripheralDisconnectHandler(event:PeripheralEvent):void {
+				peripheralConnected = false;
 				if ((BluetoothLE.service.centralManager.state == BluetoothLEState.STATE_ON) && BlueToothDevice.known()) {
 					currentState = "bluetoothorange";
 				} else {
@@ -221,7 +229,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			private function bluetoothStateChangedHandler(event:BluetoothLEEvent):void {
 				if (BluetoothLE.service.centralManager.state == BluetoothLEState.STATE_ON) {
 					if (BluetoothService.bluetoothPeripheralActive()) {
-						if (BluetoothService.getActiveBluetoothPeripheral().state == PeripheralState.CONNECTED) {
+						if (peripheralConnected) {
 							//peripheral is known in bluetoothservice and it is connected
 							currentState = "bluetoothgreen";
 						} else {
@@ -350,7 +358,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 					actionsheetBuilder.addAction(ModelLocator.resourceManagerInstance.getString('homeview','scan_for_device'), DialogAction.STYLE_DEFAULT, ACTION_SHEET_INDEX_FOR_SCAN_FOR_DEVICE);
 				} else {
 					//TODO hier zit nog iets verkeerd, die state blijft precies connected, ook al is 'm niet connected
-					if (BluetoothService.getActiveBluetoothPeripheral().state != PeripheralState.CONNECTED && BluetoothLE.service.centralManager.state == BluetoothLEState.STATE_ON) {
+					if (!peripheralConnected && BluetoothLE.service.centralManager.state == BluetoothLEState.STATE_ON) {
 						actionsheetBuilder.addAction(ModelLocator.resourceManagerInstance.getString('homeview','connect_now'), DialogAction.STYLE_DEFAULT, ACTION_SHEET_INDEX_FOR_CONNECT_TO_DEVICE);
 					}
 				}
