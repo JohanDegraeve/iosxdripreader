@@ -59,8 +59,6 @@ package services
 				TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, transmitterServiceBGReadingEventReceivedInitialCalibration);
 				NotificationService.instance.addEventListener(NotificationServiceEvent.NOTIFICATION_EVENT, notificationReceived);
 			} else {
-				//initial calibration done, listen for bgreading events to check if calibrationrequest is needed
-				TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, transmitterServiceBGReadingEventReceivedCheckCalibrationRequest);
 			}
 		}
 		
@@ -85,26 +83,8 @@ package services
 			}
 		}
 		
-		private static function transmitterServiceBGReadingEventReceivedCheckCalibrationRequest(be:TransmitterServiceEvent):void {
-			//check if calibration request is needed and if yes create a notification
-			if (CalibrationRequest.shouldRequestCalibration(ModelLocator.bgReadings.getItemAt(ModelLocator.bgReadings.length - 1) as BgReading)) {
-				Notifications.service.notify(
-					new NotificationBuilder()
-					.setId(NotificationService.ID_FOR_EXTRA_CALIBRATION_REQUEST)
-					.setAlert(ModelLocator.resourceManagerInstance.getString("calibrationservice","calibration_request_alert"))
-					.setTitle(ModelLocator.resourceManagerInstance.getString("calibrationservice","calibration_request_title"))
-					.setBody(ModelLocator.resourceManagerInstance.getString("calibrationservice","calibration_request_body"))
-					.setRepeatInterval(NotificationRepeatInterval.REPEAT_NONE)
-					.build());
-
-			} else {
-				Notifications.service.cancel(NotificationService.ID_FOR_EXTRA_CALIBRATION_REQUEST);
-			}
-		}
-		
 		public static function stop():void {
 			TransmitterService.instance.removeEventListener(TransmitterServiceEvent.BGREADING_EVENT, transmitterServiceBGReadingEventReceivedInitialCalibration);
-			TransmitterService.instance.removeEventListener(TransmitterServiceEvent.BGREADING_EVENT, transmitterServiceBGReadingEventReceivedCheckCalibrationRequest);
 		}
 		
 		private static function transmitterServiceBGReadingEventReceivedInitialCalibration(be:TransmitterServiceEvent):void {
@@ -126,6 +106,19 @@ package services
 			alert.addEventListener(DialogViewEvent.CLOSED, intialCalibrationValueEntered);
 			alert.addEventListener(DialogViewEvent.CANCELLED, cancellation);
 			DialogService.addDialog(alert, 60);
+			
+			//also launch a notification
+			//don't do it via the notificationservice, this could result in the notification being cleared but not recreated (NotificationService.updateAllNotifications)
+			//the notification doesn't need to open any action, the dialog is already there
+			Notifications.service.notify(
+				new NotificationBuilder()
+				.setId(NotificationService.ID_FOR_REQUEST_CALIBRATION)
+				.setAlert(ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_calibration_title"))
+				.setTitle(ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_calibration_title"))
+				.enableVibration(true)
+				.enableLights(true)
+				.build());
+
 		}
 		
 		private static function cancellation(event:DialogViewEvent):void {
@@ -135,6 +128,10 @@ package services
 			if (event.index == 1) {
 				return;
 			}
+			
+			//this will force clear of calibration request notification, if it exists
+			NotificationService.updateAllNotifications(null);
+			
 			var asNumber:Number = new Number(event.values[0] as String);
 			if (isNaN(asNumber)) {
 				//add the warning message
@@ -284,6 +281,7 @@ package services
 							calibrationOnRequest();
 						} else {
 							var newcalibration:Calibration = Calibration.create(asNumber).saveToDatabaseSynchronous();
+							_instance.dispatchEvent(new CalibrationServiceEvent(CalibrationServiceEvent.NEW_CALIBRATION_EVENT));
 							myTrace("Calibration created : " + newcalibration.print("   "));
 						}
 					}

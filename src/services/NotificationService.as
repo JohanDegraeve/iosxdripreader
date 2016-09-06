@@ -19,6 +19,7 @@ package services
 {
 	import com.distriqt.extension.core.Core;
 	import com.distriqt.extension.notifications.AuthorisationStatus;
+	import com.distriqt.extension.notifications.NotificationRepeatInterval;
 	import com.distriqt.extension.notifications.Notifications;
 	import com.distriqt.extension.notifications.Service;
 	import com.distriqt.extension.notifications.builders.NotificationBuilder;
@@ -31,6 +32,9 @@ package services
 	import Utilities.BgGraphBuilder;
 	
 	import databaseclasses.BgReading;
+	import databaseclasses.Calibration;
+	import databaseclasses.CalibrationRequest;
+	import databaseclasses.Sensor;
 	
 	import distriqtkey.DistriqtKey;
 	
@@ -38,6 +42,8 @@ package services
 	import events.NotificationServiceEvent;
 	import events.TimerServiceEvent;
 	import events.TransmitterServiceEvent;
+	
+	import model.ModelLocator;
 	
 	/**
 	 * This service<br>
@@ -52,16 +58,17 @@ package services
 	 */
 	public class NotificationService extends EventDispatcher
 	{
-
+		
 		[ResourceBundle("notificationservice")]
-
+		[ResourceBundle("calibrationservice")]
+		
 		private static var _instance:NotificationService = new NotificationService();
-
+		
 		public static function get instance():NotificationService
 		{
 			return _instance;
 		}
-
+		
 		
 		private static var initialStart:Boolean = true;
 		
@@ -75,9 +82,13 @@ package services
 		 * this is the always on notification
 		 */
 		public static const ID_FOR_BG_VALUE:int = 2;
-
+		/**
+		 * to request initial calibration
+		 */
+		public static const ID_FOR_REQUEST_CALIBRATION:int = 3;
+		
 		private static const debugMode:Boolean = false;
-
+		
 		public function NotificationService()
 		{
 			if (_instance != null) {
@@ -140,15 +151,15 @@ package services
 			 */
 			function register():void {
 				Notifications.service.addEventListener(NotificationEvent.NOTIFICATION_SELECTED, notificationHandler);
-				TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, updateNotificationWithBgLevel);
+				TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, updateAllNotifications);
 				TimerService.instance.addEventListener(TimerServiceEvent.BG_READING_NOT_RECEIVED_ON_TIME, bgReadingNotReceivedOnTime);
-				CalibrationService.instance.addEventListener(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT, updateNotificationWithBgLevel);
+				CalibrationService.instance.addEventListener(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT, updateAllNotifications);
 				Notifications.service.register();
 				_instance.dispatchEvent(new NotificationServiceEvent(NotificationServiceEvent.NOTIFICATION_SERVICE_INITIATED_EVENT));
 			}
 			
 			function bgReadingNotReceivedOnTime(event:TimerServiceEvent):void {
-				updateNotificationWithBgLevel(null);
+				updateAllNotifications(null);
 			}
 			
 			function notificationHandler(event:NotificationEvent):void {
@@ -163,33 +174,56 @@ package services
 			Notifications.service.cancel(NotificationService.ID_FOR_BG_VALUE);
 		}
 		
-		public static function updateNotificationWithBgLevel(be:Event):void {
-			var lastBgReading:BgReading = BgReading.lastNoSensor(); 
-			var valueToShow:String = "";
-			if (lastBgReading != null) {
-				if (lastBgReading.calculatedValue != 0) {
-					if ((new Date().getTime()) - (60000 * 11) - lastBgReading.timestamp > 0) {
-						valueToShow = "---"
-					} else {
-						valueToShow = BgGraphBuilder.unitizedString(lastBgReading.calculatedValue, true);
-						if (!lastBgReading.hideSlope) {
-							valueToShow += " " + lastBgReading.slopeArrow();
-						}
-					}
-				}
-			} else {
-				valueToShow = "---"
-			}
-			//Notifications.service.cancel(NotificationService.ID_FOR_BG_VALUE);
-			Notifications.service.notify(
-				new NotificationBuilder()
-				.setId(NotificationService.ID_FOR_BG_VALUE)
-				.setAlert("koekoek")
-				.setTitle(valueToShow)
-				.setSound("")
-				.enableVibration(false)
-				.setOngoing(true)
-				.build());
-		}
+		/**
+		 * will clear all existing notifications and recreate<br>
+		 * - notification with bloodglucose level<br>
+		 * - check calibrationrequest notification<br>
+		 * 
+		 */
+		public static function updateAllNotifications(be:Event):void {
+			 Notifications.service.cancelAll();
+			 
+			 //start with bgreading notification
+			 var lastBgReading:BgReading = BgReading.lastNoSensor(); 
+			 var valueToShow:String = "";
+			 if (lastBgReading != null) {
+				 if (lastBgReading.calculatedValue != 0) {
+					 if ((new Date().getTime()) - (60000 * 11) - lastBgReading.timestamp > 0) {
+						 valueToShow = "---"
+					 } else {
+						 valueToShow = BgGraphBuilder.unitizedString(lastBgReading.calculatedValue, true);
+						 if (!lastBgReading.hideSlope) {
+							 valueToShow += " " + lastBgReading.slopeArrow();
+						 }
+					 }
+				 }
+			 } else {
+				 valueToShow = "---"
+			 }
+			 Notifications.service.notify(
+				 new NotificationBuilder()
+				 .setId(NotificationService.ID_FOR_BG_VALUE)
+				 .setAlert("")
+				 .setTitle(valueToShow)
+				 .setSound("")
+				 .enableVibration(false)
+				 .setOngoing(true)
+				 .build());
+			 
+			 //next is the calibrationrequest notification
+			 if (Calibration.allForSensor().length >= 2) {
+				 if (CalibrationRequest.shouldRequestCalibration(ModelLocator.bgReadings.getItemAt(ModelLocator.bgReadings.length - 1) as BgReading)) {
+					 Notifications.service.notify(
+						 new NotificationBuilder()
+						 .setId(NotificationService.ID_FOR_EXTRA_CALIBRATION_REQUEST)
+						 .setAlert(ModelLocator.resourceManagerInstance.getString("calibrationservice","calibration_request_alert"))
+						 .setTitle(ModelLocator.resourceManagerInstance.getString("calibrationservice","calibration_request_title"))
+						 .setBody(ModelLocator.resourceManagerInstance.getString("calibrationservice","calibration_request_body"))
+						 .setRepeatInterval(NotificationRepeatInterval.REPEAT_NONE)
+						 .build());
+					 
+				 }
+			 }
+		 }
 	}
 }

@@ -57,6 +57,14 @@ package services
 		private static var openDialogView:DialogView;
 		private static var maxDurationTimer:Timer;
 		
+		private static var _isInitiated:Boolean = false;
+
+		public static function get isInitiated():Boolean
+		{
+			return _isInitiated;
+		}
+
+		
 		public function DialogService()
 		{
 			if (_instance != null) {
@@ -75,6 +83,9 @@ package services
 			dialogViews = new ArrayCollection();
 			dialogViewsMaxDurations = new ArrayCollection();
 			openDialogView = null;
+			
+			_isInitiated = true;
+			_instance.dispatchEvent(new DialogServiceEvent(DialogServiceEvent.DIALOG_SERVICE_INITIATED_EVENT));
 		}
 		
 		/**

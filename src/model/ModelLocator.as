@@ -40,6 +40,7 @@ package model
 	import events.NotificationServiceEvent;
 	
 	import services.BluetoothService;
+	import services.CalibrationService;
 	import services.NotificationService;
 	import services.TransmitterService;
 	
@@ -194,6 +195,8 @@ package model
 
 							NotificationService.instance.addEventListener(NotificationServiceEvent.NOTIFICATION_SERVICE_INITIATED_EVENT, HomeView.notificationServiceInitiated);
 							NotificationService.init();
+							
+							CalibrationService.init();
 						} else {
 							_loggingList.addItem(de.data as String);
 						}

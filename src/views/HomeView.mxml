@@ -86,7 +86,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			private static const ACTION_SHEET_INDEX_FOR_STOP_SENSOR:int = 3;
 			private static const ACTION_SHEET_INDEX_FOR_STATUS:int = 4;
 			private static const ACTION_SHEET_INDEX_FOR_CONNECT_TO_DEVICE:int = 5;
-			private static const ACTION_SHEET_INDEX_FOR_CANCEL:int = 5;
+			private static const ACTION_SHEET_INDEX_FOR_CANCEL:int = 6;
 			
 			//local time, ie if it's here and now 12:20 the 2nd of April 2017, then Hours = 12, ...
 			private static var sensorStartSeconds:int = 0;
@@ -164,8 +164,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			
 			public static function notificationServiceInitiated(ev:NotificationServiceEvent):void {
 				NotificationService.instance.removeEventListener(NotificationServiceEvent.NOTIFICATION_SERVICE_INITIATED_EVENT, HomeView.notificationServiceInitiated);
-				NotificationService.updateNotificationWithBgLevel(null);
-				
+				NotificationService.updateAllNotifications(null);
+
+				if (DialogService.isInitiated) {
+					dialogServiceInitiated(null);
+				} else {
+					DialogService.instance.addEventListener(DialogServiceEvent.DIALOG_SERVICE_INITIATED_EVENT, dialogServiceInitiated);
+				}
+			}
+			
+			private static function dialogServiceInitiated(ev:DialogServiceEvent):void {
+				DialogService.instance.removeEventListener(DialogServiceEvent.DIALOG_SERVICE_INITIATED_EVENT, dialogServiceInitiated);
+					
 				//initial info screen
 				//this seems to be the right time to start using the database - here it is used actually
 				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_INITIAL_INFO_SCREEN_1_SHOWN_ID) == "false") {
@@ -203,7 +213,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 				if ((BluetoothLE.service.centralManager.state == BluetoothLEState.STATE_ON) && BlueToothDevice.known()) {
 					currentState = "bluetoothorange";
 				} else {
-					currentState = "bluetoothred";
 					currentState = "bluetoothred";
 				}
 				
@@ -276,14 +285,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 				var estimate:Number = new Number(0);
 				if (lastBgReading == null) {
 					currentBgLabelText = "---";
-					currentBgLabel.setStyle("lineThrough","false");
+					//currentBgLabel.setStyle("lineThrough","false");
 					currentBgLabel.invalidateSize();
 				} else {
 					if ((new Date().getTime()) - (60000 * 11) - lastBgReading.timestamp > 0) {
 						//notificationText = ModelLocator.resourceManagerInstance.getString('homeview','signalmissed');
 						estimate = lastBgReading.calculatedValue;
 						currentBgLabelText = BgGraphBuilder.unitizedString(estimate, true);
-						currentBgLabel.setStyle("lineThrough","true");
+						//currentBgLabel.setStyle("lineThrough","true");
 						currentBgLabel.invalidateSize();
 					} else {
 						/*if (notificationText.getText().length()==0){
@@ -296,7 +305,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 							slope_arrow = "";
 						}
 						currentBgLabelText += " " + slope_arrow;
-						currentBgLabel.setStyle("lineThrough","false");
+						//currentBgLabel.setStyle("lineThrough","false");
 						currentBgLabel.invalidateSize();
 					}
 					var minutes:Number = ((new Date()).valueOf() - lastBgReading.timestamp) / (60 * 1000);
