@@ -32,7 +32,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			import com.distriqt.extension.bluetoothle.BluetoothLEState;
 			import com.distriqt.extension.bluetoothle.events.BluetoothLEEvent;
 			import com.distriqt.extension.bluetoothle.events.PeripheralEvent;
-			import com.distriqt.extension.bluetoothle.objects.PeripheralState;
 			import com.distriqt.extension.dialog.DateTimeDialogView;
 			import com.distriqt.extension.dialog.Dialog;
 			import com.distriqt.extension.dialog.DialogType;
@@ -46,7 +45,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			
 			import mx.events.FlexEvent;
 			
-			import spark.components.Image;
 			import spark.formatters.DateTimeFormatter;
 			
 			import Utilities.BgGraphBuilder;
@@ -85,7 +83,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			private static const ACTION_SHEET_INDEX_FOR_START_SENSOR:int = 2;
 			private static const ACTION_SHEET_INDEX_FOR_STOP_SENSOR:int = 3;
 			private static const ACTION_SHEET_INDEX_FOR_STATUS:int = 4;
-			private static const ACTION_SHEET_INDEX_FOR_CONNECT_TO_DEVICE:int = 5;
 			private static const ACTION_SHEET_INDEX_FOR_CANCEL:int = 6;
 			
 			//local time, ie if it's here and now 12:20 the 2nd of April 2017, then Hours = 12, ...
@@ -96,17 +93,22 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			private static var sensorStartYear:int = 0;
 			private static var sensorStartMonth:int = 0;//starts at 0 for January
 			
-			private static var bluetoothbuttonIcon:Image;
-			
 			/**
 			 * connected or not. Should be replaced by if (BluetoothService.getActiveBluetoothPeripheral().state == PeripheralState.CONNECTED)<br>
 			 * but this last one is not working see https://github.com/distriqt/ANE-BluetoothLE/issues/8
 			 */
 			private static var peripheralConnected:Boolean = false;
+			/**
+			 * timestamp that has changed connection status<br> 
+			 */
+			private static var peripheralConnectionStatusChangeTimestamp:Number = (new Date()).valueOf();
 			
 			[ResourceBundle("homeview")]
 			[ResourceBundle("general")]
 			[ResourceBundle("bluetoothservice")]
+			
+			[Bindable]
+			private static var currentBgLabellinethrough:Boolean = false;
 			
 			protected function onCreationComplete(event:FlexEvent):void
 			{
@@ -127,6 +129,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 				
 				function bgReadingNotReceivedOnTime(event:TimerServiceEvent):void {
 					displayCurrentInfoFromReading(BgReading.lastNoSensor());
+					NotificationService.updateAllNotifications(null);
+					if (!peripheralConnected) {
+						if ((new Date().valueOf() - peripheralConnectionStatusChangeTimestamp) > TimerService.DELAY_FOR_CHECKING_BGREADING_IN_SECONDS) {
+							currentState = "bluetoothred"; 
+						}
+					}
 				}
 				
 				function bgReadingReceivedFromDatabase(de:DatabaseEvent):void {
@@ -201,6 +209,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			private function central_peripheralConnectHandler(event:PeripheralEvent):void {
 				currentState = "bluetoothgreen";
 				peripheralConnected = true;
+				peripheralConnectionStatusChangeTimestamp = (new Date()).valueOf();
 			}
 			
 			private function userInitiatedScanningSucceeded(event:PeripheralEvent):void {
@@ -218,12 +227,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			
 			private function central_peripheralDisconnectHandler(event:PeripheralEvent):void {
 				peripheralConnected = false;
+				peripheralConnectionStatusChangeTimestamp = (new Date()).valueOf();
 				if ((BluetoothLE.service.centralManager.state == BluetoothLEState.STATE_ON) && BlueToothDevice.known()) {
 					currentState = "bluetoothorange";
 				} else {
 					currentState = "bluetoothred";
 				}
-				
 			}
 			
 			private function bluetoothStateChangedHandler(event:BluetoothLEEvent):void {
@@ -293,14 +302,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 				var estimate:Number = new Number(0);
 				if (lastBgReading == null) {
 					currentBgLabelText = "---";
-					//currentBgLabel.setStyle("lineThrough","false");
+					currentBgLabellinethrough = false;//currentBgLabel.setStyle("lineThrough","false");
 					currentBgLabel.invalidateSize();
 				} else {
 					if ((new Date().getTime()) - (60000 * 11) - lastBgReading.timestamp > 0) {
 						//notificationText = ModelLocator.resourceManagerInstance.getString('homeview','signalmissed');
 						estimate = lastBgReading.calculatedValue;
 						currentBgLabelText = BgGraphBuilder.unitizedString(estimate, true);
-						//currentBgLabel.setStyle("lineThrough","true");
+						currentBgLabellinethrough = true;//currentBgLabel.setStyle("lineThrough","true");
 						currentBgLabel.invalidateSize();
 					} else {
 						/*if (notificationText.getText().length()==0){
@@ -313,7 +322,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 							slope_arrow = "";
 						}
 						currentBgLabelText += " " + slope_arrow;
-						//currentBgLabel.setStyle("lineThrough","false");
+						currentBgLabellinethrough = false;//currentBgLabel.setStyle("lineThrough","false");
 						currentBgLabel.invalidateSize();
 					}
 					var minutes:Number = ((new Date()).valueOf() - lastBgReading.timestamp) / (60 * 1000);
@@ -356,12 +365,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 				if (!BluetoothService.bluetoothPeripheralActive()) {
 					//this is the case where bluetoothdevice is known or not, time for a scan
 					actionsheetBuilder.addAction(ModelLocator.resourceManagerInstance.getString('homeview','scan_for_device'), DialogAction.STYLE_DEFAULT, ACTION_SHEET_INDEX_FOR_SCAN_FOR_DEVICE);
-				} else {
-					//TODO hier zit nog iets verkeerd, die state blijft precies connected, ook al is 'm niet connected
-					if (!peripheralConnected && BluetoothLE.service.centralManager.state == BluetoothLEState.STATE_ON) {
-						actionsheetBuilder.addAction(ModelLocator.resourceManagerInstance.getString('homeview','connect_now'), DialogAction.STYLE_DEFAULT, ACTION_SHEET_INDEX_FOR_CONNECT_TO_DEVICE);
-					}
-				}
+				} 
 				
 				if (BlueToothDevice.known()) {
 					actionsheetBuilder.addAction(ModelLocator.resourceManagerInstance.getString('homeview','forget_device'), DialogAction.STYLE_DEFAULT, ACTION_SHEET_INDEX_FOR_FORGET_DEVICE);
@@ -406,20 +410,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 					currentState = "bluetoothred";
 					
 				} else if (event.index == ACTION_SHEET_INDEX_FOR_START_SENSOR) {
-					sensorStartYear = 0; sensorStartMonth = 0; sensorStartDate = 0; sensorStartHours = 0; sensorStartMinutes = 0; sensorStartSeconds = 0;
-					var dateTime:DateTimeDialogView = Dialog.service.create(
-						new DateTimeDialogBuilder()
-						.setMode(DialogType.MODE_DATE)
-						.setTitle(ModelLocator.resourceManagerInstance.getString("homeview","start_sensor_title_get_date"))
-						.setAcceptLabel("Ok")
-						.setCancelable(true)
-						.setCancelLabel(ModelLocator.resourceManagerInstance.getString('general','cancel'))
+					var alert:DialogView = Dialog.service.create(
+						new AlertBuilder()
+						.setTitle(ModelLocator.resourceManagerInstance.getString("homeview","start_sensor"))
+						.setMessage(ModelLocator.resourceManagerInstance.getString("homeview","start_sensor_warning_correct_timing"))
+						.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
+						.addOption(ModelLocator.resourceManagerInstance.getString("general","cancel"), DialogAction.STYLE_CANCEL, 1)
 						.build()
 					);
-					dateTime.addEventListener(DialogViewEvent.CLOSED, date_closedRequestHandler);
-					dateTime.addEventListener(DialogDateTimeEvent.SELECTED, date_selectedHandler);
-					//dateTime.addEventListener(DialogDateTimeEvent.CHANGED, dateTime_changedHandler);Not needed, this is triggered whenever the user clicks another date, but hasn't closed
-					DialogService.addDialog(dateTime);
+					alert.addEventListener(DialogViewEvent.CLOSED, startSensorWarningConfirmed);
+					alert.addEventListener(DialogViewEvent.CANCELLED, startSensorWarningCancelled);
+					DialogService.addDialog(alert, 60);
 				} else if (event.index == ACTION_SHEET_INDEX_FOR_STOP_SENSOR) {
 					var alert:DialogView = Dialog.service.create(
 						new AlertBuilder()
@@ -432,9 +433,30 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 					alert.addEventListener(DialogViewEvent.CLOSED, stopSensorConfirmation);
 					alert.addEventListener(DialogViewEvent.CANCELLED, stopSensorcancellation);
 					DialogService.addDialog(alert, 60);
-				} else if (event.index == ACTION_SHEET_INDEX_FOR_CONNECT_TO_DEVICE) {
-					BluetoothService.tryReconnect();
+				} 
+			}
+			
+			private function startSensorWarningCancelled(event:DialogViewEvent):void {
+			}
+			
+			private function startSensorWarningConfirmed(event:DialogViewEvent):void {
+				if (event.index == 1) {
+					return;
 				}
+				sensorStartYear = 0; sensorStartMonth = 0; sensorStartDate = 0; sensorStartHours = 0; sensorStartMinutes = 0; sensorStartSeconds = 0;
+				var dateTime:DateTimeDialogView = Dialog.service.create(
+					new DateTimeDialogBuilder()
+					.setMode(DialogType.MODE_DATE)
+					.setTitle(ModelLocator.resourceManagerInstance.getString("homeview","start_sensor_title_get_date"))
+					.setAcceptLabel("Ok")
+					.setCancelable(true)
+					.setCancelLabel(ModelLocator.resourceManagerInstance.getString('general','cancel'))
+					.build()
+				);
+				dateTime.addEventListener(DialogViewEvent.CLOSED, date_closedRequestHandler);
+				dateTime.addEventListener(DialogDateTimeEvent.SELECTED, date_selectedHandler);
+				//dateTime.addEventListener(DialogDateTimeEvent.CHANGED, dateTime_changedHandler);Not needed, this is triggered whenever the user clicks another date, but hasn't closed
+				DialogService.addDialog(dateTime);
 			}
 			
 			private static function stopSensorcancellation(event:DialogViewEvent):void {
@@ -445,7 +467,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 					return;
 				}
 				Sensor.stopSensor();
-				NotificationService.removeBGNotification();
+				NotificationService.updateAllNotifications(null);
 				_calibrateButtonActive = false;
 			}
 			
@@ -589,7 +611,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 					<s:Label id = "notificationText2" text="test2"/>
 				</s:Group>
 			</s:Group>
-			<s:Label id = "currentBgLabel" text="{currentBgLabelText}" fontSize="70"/>
+			<s:Label id = "currentBgLabel" text="{currentBgLabelText}" fontSize="70" lineThrough="{currentBgLabellinethrough}"/>
 		</s:Group>
 	</s:Group>
 </s:View>

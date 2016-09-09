@@ -79,13 +79,11 @@ package services
 		private static const MAX_RETRY_DISCOVER_SERVICES_OR_CHARACTERISTICS:int = 5;
 		private static var amountOfDiscoverServicesOrCharacteristicsAttempt:int = 0;
 		
-		//not really useful to have an array if it's all the same values
-		//took the value of Android version for an dexbridge (DexCollectionService.java setRetryTimer
-		//for an xdrip the value is 65
-		private static var reconnectAttemptInSeconds:Array = [25, 25, 25, 25];
-		
-		private static var currentReconnectTimesPointer:int = 0;
+		private static const reconnectAttemptPeriodInSeconds:int = 25;
 		private static var reconnectTimer:Timer;
+		private static var reconnectAttemptTimeStamp:Number = 0;
+		
+		private static var connectionAttemptCheckTimer:Timer;
 		
 		private static const lengthOfDataPacket:int = 17;
 		private static const srcNameTable:Array = [ '0', '1', '2', '3', '4', '5', '6', '7',
@@ -182,7 +180,7 @@ package services
 					case AuthorisationStatus.AUTHORISED:				
 						BluetoothLE.service.centralManager.addEventListener(PeripheralEvent.DISCOVERED, central_peripheralDiscoveredHandler);
 						BluetoothLE.service.centralManager.addEventListener( PeripheralEvent.CONNECT, central_peripheralConnectHandler );
-						BluetoothLE.service.centralManager.addEventListener( PeripheralEvent.CONNECT_FAIL, central_peripheralConnectFailHandler );
+						BluetoothLE.service.centralManager.addEventListener( PeripheralEvent.CONNECT_FAIL, central_peripheralDisconnectHandler );
 						BluetoothLE.service.centralManager.addEventListener( PeripheralEvent.DISCONNECT, central_peripheralDisconnectHandler );
 						BluetoothLE.service.addEventListener(BluetoothLEEvent.STATE_CHANGED, bluetoothStateChangedHandler);
 						
@@ -254,6 +252,10 @@ package services
 			if (activeBluetoothPeripheral != null) {
 				BluetoothLE.service.centralManager.connect(activeBluetoothPeripheral);
 				dispatchInformation('trying_to_connect_to_known_device');
+				connectionAttemptCheckTimer = new Timer(reconnectAttemptPeriodInSeconds * 1000 - 2000, 1);
+				connectionAttemptCheckTimer.addEventListener(TimerEvent.TIMER, central_peripheralDisconnectHandler);
+				connectionAttemptCheckTimer.start();
+				reconnectAttemptTimeStamp = (new Date()).valueOf();
 			} else {
 				if (BlueToothDevice.known()) {
 					//we know a device from previous connection should we should try to connect
@@ -314,7 +316,23 @@ package services
 		}
 		
 		private static function central_peripheralConnectHandler(event:PeripheralEvent):void {
-			currentReconnectTimesPointer = 0;
+			if (reconnectTimer != null) {
+				if (reconnectTimer.running) {
+					reconnectTimer.stop();
+				}
+				reconnectTimer = null;
+			}
+			
+			if (connectionAttemptCheckTimer  != null) {
+				if (connectionAttemptCheckTimer.running) {
+					connectionAttemptCheckTimer.stop();
+				}
+				connectionAttemptCheckTimer = null;
+			}
+
+
+			reconnectAttemptTimeStamp = 0;
+			
 			if (BlueToothDevice.address == "") {
 				BlueToothDevice.address = event.peripheral.uuid;
 				BlueToothDevice.name = event.peripheral.name;
@@ -351,64 +369,83 @@ package services
 			}
 		}
 		
-		private static function central_peripheralConnectFailHandler(event:PeripheralEvent):void {
-			dispatchInformation('connection_attempt_to_peripheral_failed');
-			
-			//setting to 0 because i had a case where the maximum was reached after a few re and disconnects
-			amountOfDiscoverServicesOrCharacteristicsAttempt = 0;
-			
-			if ((BluetoothLE.service.centralManager.state == BluetoothLEState.STATE_ON)) {
-				currentReconnectTimesPointer++;
-				if (currentReconnectTimesPointer == reconnectAttemptInSeconds.length)
-					currentReconnectTimesPointer--;
-				var seconds:int = reconnectAttemptInSeconds[currentReconnectTimesPointer];
-				reconnectTimer = new Timer(seconds * 1000, 1);
-				reconnectTimer.addEventListener(TimerEvent.TIMER, tryReconnect);
-				reconnectTimer.start();
-			}
-		}
-		
-		private static function central_peripheralDisconnectHandler(event:PeripheralEvent):void {
+		private static function central_peripheralDisconnectHandler(event:Event = null):void {
 			dispatchInformation('disconnected_from_device');
+
+			if (reconnectTimer != null) {
+				if (reconnectTimer.running) {
+					reconnectTimer.stop();
+				}
+				reconnectTimer = null;
+			}
+			
+			if (connectionAttemptCheckTimer  != null) {
+				if (connectionAttemptCheckTimer.running) {
+					connectionAttemptCheckTimer.stop();
+				}
+				connectionAttemptCheckTimer = null;
+			}
+			
 			
 			//setting to 0 because i had a case where the maximum was reached after a few re and disconnects
 			amountOfDiscoverServicesOrCharacteristicsAttempt = 0;
 			
 			if ((BluetoothLE.service.centralManager.state == BluetoothLEState.STATE_ON) && activeBluetoothPeripheral != null) {
-				currentReconnectTimesPointer++;
-				if (currentReconnectTimesPointer == reconnectAttemptInSeconds.length)
-					currentReconnectTimesPointer--;
-				var seconds:int = reconnectAttemptInSeconds[currentReconnectTimesPointer];
-				reconnectTimer = new Timer(seconds * 1000, 1);
-				reconnectTimer.addEventListener(TimerEvent.TIMER, tryReconnect);
-				reconnectTimer.start();
-				
-				var blueToothServiceEvent:BlueToothServiceEvent = new BlueToothServiceEvent(BlueToothServiceEvent.BLUETOOTH_SERVICE_INFORMATION_EVENT);
-				blueToothServiceEvent.data = new Object();
-				blueToothServiceEvent.data.information = 
-					ModelLocator.resourceManagerInstance.getString('bluetoothservice','will_try_to_reconnect_in') +
-					" " + seconds + " " +
-					ModelLocator.resourceManagerInstance.getString('bluetoothservice','seconds');
-				_instance.dispatchEvent(blueToothServiceEvent);
+				if (reconnectAttemptTimeStamp != 0) {
+					var lastReconnectDifInms:Number = (new Date().valueOf() - reconnectAttemptTimeStamp);
+					if (lastReconnectDifInms > reconnectAttemptPeriodInSeconds * 1000) {
+						tryReconnect();
+						dispatchInformation('will_try_to_reconnect_now');
+					} else {
+						var reconnectinms:Number = reconnectAttemptPeriodInSeconds * 1000 - lastReconnectDifInms;
+						reconnectTimer = new Timer(reconnectinms, 1);
+						reconnectTimer.addEventListener(TimerEvent.TIMER, tryReconnect);
+						reconnectTimer.start();
+						var blueToothServiceEvent:BlueToothServiceEvent = new BlueToothServiceEvent(BlueToothServiceEvent.BLUETOOTH_SERVICE_INFORMATION_EVENT);
+						blueToothServiceEvent.data = new Object();
+						var reconnectins:int = reconnectinms/1000;
+						blueToothServiceEvent.data.information = 
+						ModelLocator.resourceManagerInstance.getString('bluetoothservice','will_try_to_reconnect_in') +
+						" " + reconnectins + " " +
+						ModelLocator.resourceManagerInstance.getString('bluetoothservice','seconds');
+						_instance.dispatchEvent(blueToothServiceEvent);
+					}
+				} else {
+					reconnectTimer = new Timer(reconnectAttemptPeriodInSeconds * 1000, 1);
+					reconnectTimer.addEventListener(TimerEvent.TIMER, tryReconnect);
+					reconnectTimer.start();
+					var blueToothServiceEvent:BlueToothServiceEvent = new BlueToothServiceEvent(BlueToothServiceEvent.BLUETOOTH_SERVICE_INFORMATION_EVENT);
+					blueToothServiceEvent.data = new Object();
+					blueToothServiceEvent.data.information = 
+						ModelLocator.resourceManagerInstance.getString('bluetoothservice','will_try_to_reconnect_in') +
+						" " + reconnectAttemptPeriodInSeconds + " " +
+						ModelLocator.resourceManagerInstance.getString('bluetoothservice','seconds');
+					_instance.dispatchEvent(blueToothServiceEvent);
+				}
 			}
 		}
 		
 		public static function tryReconnect(event:Event = null):void {
-			if (event == null) {
-				//called explcitly, example from homeview, in order to force a reconnect
-				currentReconnectTimesPointer = 0;
-				if (reconnectTimer != null) {
-					if (reconnectTimer.running) {
-						reconnectTimer.stop();
-					}
-					reconnectTimer = null;
+
+			if (reconnectTimer != null) {
+				if (reconnectTimer.running) {
+					reconnectTimer.stop();
 				}
+				reconnectTimer = null;
 			}
+			
+			if (connectionAttemptCheckTimer  != null) {
+				if (connectionAttemptCheckTimer.running) {
+					connectionAttemptCheckTimer.stop();
+				}
+				connectionAttemptCheckTimer = null;
+			}
+
+			
 			if ((BluetoothLE.service.centralManager.state == BluetoothLEState.STATE_ON)) {
 				bluetoothStatusIsOn();
 			} else {
 				//no need to further retry, a reconnect will be done as soon as bluetooth is switched on
-				currentReconnectTimesPointer = 0;
 			}
 		}
 		

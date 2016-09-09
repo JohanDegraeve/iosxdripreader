@@ -153,13 +153,19 @@ package services
 				Notifications.service.addEventListener(NotificationEvent.NOTIFICATION_SELECTED, notificationHandler);
 				TimerService.instance.addEventListener(TimerServiceEvent.BG_READING_NOT_RECEIVED_ON_TIME, bgReadingNotReceivedOnTime);
 				CalibrationService.instance.addEventListener(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT, updateAllNotifications);
+				TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, bgReadingEventReceived);
 				Notifications.service.register();
 				_instance.dispatchEvent(new NotificationServiceEvent(NotificationServiceEvent.NOTIFICATION_SERVICE_INITIATED_EVENT));
 			}
 			
 			function initialCalibrationEventReceived(event:CalibrationServiceEvent):void {
-				TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, updateAllNotifications);
 				updateAllNotifications(null);
+			}
+			
+			function bgReadingEventReceived(event:TransmitterServiceEvent):void {
+				if (Calibration.allForSensor().length >= 2) {
+					updateAllNotifications(null);
+				}
 			}
 			
 			function bgReadingNotReceivedOnTime(event:TimerServiceEvent):void {
@@ -172,10 +178,6 @@ package services
 				notificationServiceEvent.data = event;
 				_instance.dispatchEvent(notificationServiceEvent);
 			}
-		}
-		
-		public static function removeBGNotification():void {
-			Notifications.service.cancel(NotificationService.ID_FOR_BG_VALUE);
 		}
 		
 		/**
@@ -204,6 +206,7 @@ package services
 			 } else {
 				 valueToShow = "---"
 			 }
+			 
 			 Notifications.service.notify(
 				 new NotificationBuilder()
 				 .setId(NotificationService.ID_FOR_BG_VALUE)

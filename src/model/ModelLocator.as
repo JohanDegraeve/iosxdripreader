@@ -42,6 +42,7 @@ package model
 	import services.BluetoothService;
 	import services.CalibrationService;
 	import services.NotificationService;
+	import services.TimerService;
 	import services.TransmitterService;
 	
 	import views.HomeView;
@@ -197,6 +198,7 @@ package model
 							NotificationService.init();
 							
 							CalibrationService.init();
+							TimerService.init();
 						} else {
 							_loggingList.addItem(de.data as String);
 						}

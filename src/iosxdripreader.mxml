@@ -48,6 +48,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 		]]>
 	</fx:Script>
 	
-	<s:ViewNavigator icon="@Embed('assets/ic_tab_settings_unselected.png')" width="100%" height="100%" firstView="views.HomeView"/>
-	<s:ViewNavigator icon="@Embed('assets/ic_tab_settings_unselected.png')" width="100%" height="100%" firstView="views.SettingsView"/>
+	<s:ViewNavigator icon="@Embed('assets/home-white.png')" width="100%" height="100%" firstView="views.HomeView"/>
+	<s:ViewNavigator icon="@Embed('assets/settings-white.png')" width="100%" height="100%" firstView="views.SettingsView"/>
 </s:TabbedViewNavigatorApplication>
