@@ -38,6 +38,7 @@ package services
 	
 	import distriqtkey.DistriqtKey;
 	
+	import events.BlueToothServiceEvent;
 	import events.CalibrationServiceEvent;
 	import events.NotificationServiceEvent;
 	import events.TimerServiceEvent;
@@ -180,57 +181,67 @@ package services
 			}
 		}
 		
+		private static function dispatchInformation(information:String):void {
+			var notificationserviceEvent:NotificationServiceEvent = new NotificationServiceEvent(NotificationServiceEvent.LOG_INFO);
+			notificationserviceEvent.data = new Object();
+			notificationserviceEvent.data.information = information;
+			_instance.dispatchEvent(notificationserviceEvent);
+		}
+		
 		/**
 		 * will clear all existing notifications and recreate<br>
 		 * - notification with bloodglucose level<br>
 		 * - check calibrationrequest notification<br>
 		 * 
 		 */
-		public static function updateAllNotifications(be:Event):void {
-			 Notifications.service.cancelAll();
-			 
-			 //start with bgreading notification
-			 var lastBgReading:BgReading = BgReading.lastNoSensor(); 
-			 var valueToShow:String = "";
-			 if (lastBgReading != null) {
-				 if (lastBgReading.calculatedValue != 0) {
-					 if ((new Date().getTime()) - (60000 * 11) - lastBgReading.timestamp > 0) {
-						 valueToShow = "---"
-					 } else {
-						 valueToShow = BgGraphBuilder.unitizedString(lastBgReading.calculatedValue, true);
-						 if (!lastBgReading.hideSlope) {
-							 valueToShow += " " + lastBgReading.slopeArrow();
-						 }
-					 }
-				 }
-			 } else {
-				 valueToShow = "---"
-			 }
-			 
-			 Notifications.service.notify(
-				 new NotificationBuilder()
-				 .setId(NotificationService.ID_FOR_BG_VALUE)
-				 .setAlert("")
-				 .setTitle(valueToShow)
-				 .setSound("")
-				 .enableVibration(false)
-				 .setOngoing(true)
-				 .build());
-			 
-			 //next is the calibrationrequest notification
-			 if (Calibration.allForSensor().length >= 2) {
-				 if (CalibrationRequest.shouldRequestCalibration(ModelLocator.bgReadings.getItemAt(ModelLocator.bgReadings.length - 1) as BgReading)) {
-					 Notifications.service.notify(
-						 new NotificationBuilder()
-						 .setId(NotificationService.ID_FOR_EXTRA_CALIBRATION_REQUEST)
-						 .setAlert(ModelLocator.resourceManagerInstance.getString("calibrationservice","calibration_request_alert"))
-						 .setTitle(ModelLocator.resourceManagerInstance.getString("calibrationservice","calibration_request_title"))
-						 .setBody(ModelLocator.resourceManagerInstance.getString("calibrationservice","calibration_request_body"))
-						 .setRepeatInterval(NotificationRepeatInterval.REPEAT_NONE)
-						 .build());
-					 
-				 }
-			 }
-		 }
+		public static function updateAllNotifications(be:Event, loginfo:String = null):void {
+			if (loginfo != null) {
+				dispatchInformation("log info received from " + loginfo);
+			}
+			Notifications.service.cancelAll();
+			
+			//start with bgreading notification
+			var lastBgReading:BgReading = BgReading.lastNoSensor(); 
+			var valueToShow:String = "";
+			if (lastBgReading != null) {
+				if (lastBgReading.calculatedValue != 0) {
+					if ((new Date().getTime()) - (60000 * 11) - lastBgReading.timestamp > 0) {
+						valueToShow = "---"
+					} else {
+						valueToShow = BgGraphBuilder.unitizedString(lastBgReading.calculatedValue, true);
+						if (!lastBgReading.hideSlope) {
+							valueToShow += " " + lastBgReading.slopeArrow();
+						}
+					}
+				}
+			} else {
+				valueToShow = "---"
+			}
+			
+			Notifications.service.notify(
+				new NotificationBuilder()
+				.setId(NotificationService.ID_FOR_BG_VALUE)
+				.setAlert("")
+				.setTitle(valueToShow)
+				.setSound("")
+				.enableVibration(false)
+				.setOngoing(true)
+				.build());
+			
+			//next is the calibrationrequest notification
+			if (Calibration.allForSensor().length >= 2) {
+				if (CalibrationRequest.shouldRequestCalibration(ModelLocator.bgReadings.getItemAt(ModelLocator.bgReadings.length - 1) as BgReading)) {
+					Notifications.service.notify(
+						new NotificationBuilder()
+						.setId(NotificationService.ID_FOR_EXTRA_CALIBRATION_REQUEST)
+						.setAlert(ModelLocator.resourceManagerInstance.getString("calibrationservice","calibration_request_alert"))
+						.setTitle(ModelLocator.resourceManagerInstance.getString("calibrationservice","calibration_request_title"))
+						.setBody(ModelLocator.resourceManagerInstance.getString("calibrationservice","calibration_request_body"))
+						.setRepeatInterval(NotificationRepeatInterval.REPEAT_NONE)
+						.build());
+					
+				}
+			}
+		}
 	}
 }

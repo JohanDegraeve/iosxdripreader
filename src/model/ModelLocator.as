@@ -123,6 +123,7 @@ package model
 			_resourceManagerInstance = ResourceManager.getInstance();
 			//event listeners for receiving bluetooth service dand database information events and to store them in the logging
 			BluetoothService.instance.addEventListener(BlueToothServiceEvent.BLUETOOTH_SERVICE_INFORMATION_EVENT,blueToothServiceInformationReceived);
+			NotificationService.instance.addEventListener(NotificationServiceEvent.LOG_INFO, notificationServiceLogInfoReceived);
 			Database.instance.addEventListener(DatabaseEvent.DATABASE_INFORMATION_EVENT, databaseInformationEventReceived);
 			function databaseInformationEventReceived(be:DatabaseEvent):void {
 				_loggingList.addItem(addTimeStamp(" DB : " + be.data.information));
@@ -130,6 +131,11 @@ package model
 			}
 			function blueToothServiceInformationReceived(be:BlueToothServiceEvent):void {
 				_loggingList.addItem(addTimeStamp(" BT : " + be.data.information));
+				Database.insertLogging(Utilities.UniqueId.createEventId(), _loggingList.getItemAt(_loggingList.length - 1) as String, (new Date()).valueOf(),(new Date()).valueOf(),null);
+			}
+			
+			function notificationServiceLogInfoReceived(be:NotificationServiceEvent) {
+				_loggingList.addItem(addTimeStamp(" NI : " + be.data.information));
 				Database.insertLogging(Utilities.UniqueId.createEventId(), _loggingList.getItemAt(_loggingList.length - 1) as String, (new Date()).valueOf(),(new Date()).valueOf(),null);
 			}
 			

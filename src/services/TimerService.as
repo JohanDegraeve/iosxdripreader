@@ -60,7 +60,7 @@ package services
 			
 			//this is a situation where it's been more than 6 minutes that a bgreading was received
 			//now we wait only 5 minutes
-			bgReadingCheckTimer = new Timer(5 * 1000, 1);
+			bgReadingCheckTimer = new Timer(5 * 60 * 1000, 1);
 			bgReadingCheckTimer.addEventListener(TimerEvent.TIMER, bgReadingNotReceivedOnTime);
 			bgReadingCheckTimer.start();
 			_instance.dispatchEvent(new TimerServiceEvent(TimerServiceEvent.BG_READING_NOT_RECEIVED_ON_TIME));
