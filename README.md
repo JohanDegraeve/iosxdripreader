@@ -13,9 +13,9 @@ To compile :
 - create a folder named ane under iosxdripreader
 - download the zip package, extract, and copy the file com.distriqt.BluetoothLE.ane to the folder ane
 - on the site of airnativeextensions.com, create an application key, application id = net.johandegraeve.iosxdripreader (you can use another application id if you want, but then change the name also in iosxdripreader-app.xml)
-- create a folder named src/locale/en_US under iosxdripreader
-- create a file in that folder named secrets.properties
-- edit secrets.properties and add one line with "distriqt-key=the-application-key-from-airnativeextensions.com"
+- create a folder named src/distriqtkey under iosxdripreader
+- create a new class in that package, DistriqtKey.as
+- add a public static const distriqtKey:String = your key from distriqt
 - as explained here http://airnativeextensions.com/knowledgebase/tutorial/1#ios
 - donwload the ios sdk (there should be a zip corresponding to the latest ios version) and put it in a new folder under iosxdripreader
 - and add it in the flash builder project properties (also explained on  http://airnativeextensions.com/knowledgebase/tutorial/1#ios)
