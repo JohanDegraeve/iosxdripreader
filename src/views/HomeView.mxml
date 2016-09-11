@@ -203,8 +203,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			
 			private function central_peripheralConnectHandler(event:PeripheralEvent):void {
 				currentState = "bluetoothgreen";
-				peripheralConnected = true;
-				peripheralConnectionStatusChangeTimestamp = (new Date()).valueOf();
+				if (!peripheralConnected) {
+					peripheralConnected = true;
+					peripheralConnectionStatusChangeTimestamp = (new Date()).valueOf();
+				}
 			}
 			
 			private function userInitiatedScanningSucceeded(event:PeripheralEvent):void {
@@ -223,9 +225,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			}
 			
 			private function central_peripheralDisconnectHandler(event:PeripheralEvent):void {
-				peripheralConnected = false;
-				peripheralConnectionStatusChangeTimestamp = (new Date()).valueOf();
-				if ((BluetoothLE.service.centralManager.state == BluetoothLEState.STATE_ON) && BlueToothDevice.known()) {
+				if (peripheralConnected) {
+					peripheralConnected = false;
+					peripheralConnectionStatusChangeTimestamp = (new Date()).valueOf();
+				}
+				if ((BluetoothLE.service.centralManager.state == BluetoothLEState.STATE_ON) && BlueToothDevice.known() && ((new Date().valueOf() - peripheralConnectionStatusChangeTimestamp) < TimerService.DELAY_FOR_CHECKING_BGREADING_IN_SECONDS)) {
 					currentState = "bluetoothorange";
 				} else {
 					currentState = "bluetoothred";
@@ -239,11 +243,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 							//peripheral is known in bluetoothservice and it is connected
 							currentState = "bluetoothgreen";
 						} else {
-							//peripheral is known, but not active, orange
-							currentState = "bluetoothorange";
+							if ((new Date().valueOf() - peripheralConnectionStatusChangeTimestamp) > TimerService.DELAY_FOR_CHECKING_BGREADING_IN_SECONDS) {
+								//peripheral is known, but not active, and inactive since more than max time
+								currentState = "bluetoothred";
+							} else {
+								//peripheral is known, but not active, orange
+								currentState = "bluetoothorange";
+							}
 						}
 					} else {//bluetoothperipheral not known in bluetoothservice, but maybe a device name is known in bluetoothdevice
-						if (BlueToothDevice.known()) {
+						if (BlueToothDevice.known() && ((new Date().valueOf() - peripheralConnectionStatusChangeTimestamp) < TimerService.DELAY_FOR_CHECKING_BGREADING_IN_SECONDS)) {
 							//we know a device, we just didn't scan it yet, good for orange
 							currentState = "bluetoothorange";
 						} else {

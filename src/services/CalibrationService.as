@@ -116,6 +116,10 @@ package services
 			//if there's already more than two calibrations, then there's no need anymore to request initial calibration
 			//same if sensor not active, then length will be 0
 			if (Calibration.allForSensor().length < 2) {
+
+				//because the timer based function timerForWaitCalibration doesn't always work as expected
+				NotificationService.updateAllNotifications(null);
+
 				//launch a notifcation but wait maximum MAXIMUM_WAIT_FOR_CALIBRATION_IN_SECONDS
 				if (timerForWaitCalibration != null) {
 					if (timerForWaitCalibration.running) {
@@ -143,12 +147,13 @@ package services
 				
 			}
 			
-			function removeInitialCalibrationRequestNotification (event:TimerEvent):void {
-				//user didn't give input on time, dialog is closed by DialogService
-				//but also notification needs to be removed, call to update will remove this notification
-				trace("in removeInitialCalibrationRequestNotification");
-				NotificationService.updateAllNotifications(null);
-			}
+		}
+		
+		private static function removeInitialCalibrationRequestNotification (event:TimerEvent):void {
+			//user didn't give input on time, dialog is closed by DialogService
+			//but also notification needs to be removed, call to update will remove this notification
+			trace("in removeInitialCalibrationRequestNotification");
+			NotificationService.updateAllNotifications(null);
 		}
 		
 		private static function cancellation(event:DialogViewEvent):void {

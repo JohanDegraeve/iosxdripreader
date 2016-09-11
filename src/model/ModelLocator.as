@@ -243,7 +243,14 @@ package model
 				dateFormatter.setStyle("locale",Capabilities.language.substr(0,2));
 			}
 			
-			var returnValue:String = dateFormatter.format((new Date())) + " " + source;
+			var date:Date = new Date();
+			var milliSeconds:String = date.milliseconds.toString();
+			if (milliSeconds.length < 3)
+				milliSeconds = "0" + milliSeconds;
+			if (milliSeconds.length < 3)
+				milliSeconds = "0" + milliSeconds;
+			
+			var returnValue:String = dateFormatter.format(date) + " " + milliSeconds + " " + source;
 			return returnValue;
 		}
 		
