@@ -21,6 +21,7 @@
 package databaseclasses
 {
 	import services.CalibrationService;
+	import services.NotificationService;
 
 	public class Sensor extends SuperDatabaseClass
 	{
@@ -105,6 +106,7 @@ package databaseclasses
 			}
 			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_ID_CURRENT_SENSOR_ID, "0");
 			CalibrationService.stop();
+			NotificationService.clearAllNotifications();
 		}
 		
 		public function print(indentation:String):String {

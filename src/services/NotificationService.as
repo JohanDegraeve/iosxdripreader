@@ -17,6 +17,8 @@
  */
 package services
 {
+	import com.distriqt.extension.application.Application;
+	import com.distriqt.extension.application.events.ApplicationStateEvent;
 	import com.distriqt.extension.core.Core;
 	import com.distriqt.extension.notifications.AuthorisationStatus;
 	import com.distriqt.extension.notifications.NotificationRepeatInterval;
@@ -34,11 +36,9 @@ package services
 	import databaseclasses.BgReading;
 	import databaseclasses.Calibration;
 	import databaseclasses.CalibrationRequest;
-	import databaseclasses.Sensor;
 	
 	import distriqtkey.DistriqtKey;
 	
-	import events.BlueToothServiceEvent;
 	import events.CalibrationServiceEvent;
 	import events.NotificationServiceEvent;
 	import events.TimerServiceEvent;
@@ -87,6 +87,8 @@ package services
 		 * to request initial calibration
 		 */
 		public static const ID_FOR_REQUEST_CALIBRATION:int = 3;
+		
+		public static const ID_FOR_TEST:int = 4;
 		
 		private static const debugMode:Boolean = false;
 		
@@ -152,11 +154,38 @@ package services
 			 */
 			function register():void {
 				Notifications.service.addEventListener(NotificationEvent.NOTIFICATION_SELECTED, notificationHandler);
+				Notifications.service.addEventListener(NotificationEvent.NOTIFICATION, notificationHandler);
 				TimerService.instance.addEventListener(TimerServiceEvent.BG_READING_NOT_RECEIVED_ON_TIME, bgReadingNotReceivedOnTime);
 				CalibrationService.instance.addEventListener(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT, updateAllNotifications);
 				TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, bgReadingEventReceived);
+				if (Application.isSupported) {
+					Application.service.addEventListener(ApplicationStateEvent.DEACTIVATE, application_deactivateHandler);
+				}
 				Notifications.service.register();
 				_instance.dispatchEvent(new NotificationServiceEvent(NotificationServiceEvent.NOTIFICATION_SERVICE_INITIATED_EVENT));
+				
+			}
+			
+			function application_deactivateHandler(event:ApplicationStateEvent):void {
+				trace("in application_deactivateHandler, event.code = " + event.code);
+				switch (event.code) 
+				{
+					case ApplicationStateEvent.CODE_LOCK:
+					//if user locks the device, then immediately (in case the sensor is already calibrated), the always on notification will again be shown
+					if (Calibration.allForSensor().length >= 2) {
+						var lastBgReading:BgReading = BgReading.lastNoSensor();
+						if (lastBgReading != null) {
+							if (lastBgReading.calculatedValue != 0) {
+								if ((new Date().getTime()) - (60000 * 11) - lastBgReading.timestamp > 0) {
+								} else {
+									updateAllNotifications(null);
+								}
+							}
+						} else {
+						}
+					}
+					break;
+				}
 			}
 			
 			function initialCalibrationEventReceived(event:CalibrationServiceEvent):void {
@@ -170,7 +199,9 @@ package services
 			}
 			
 			function bgReadingNotReceivedOnTime(event:TimerServiceEvent):void {
-				updateAllNotifications(null);
+				if (Calibration.allForSensor().length >= 2) {
+					updateAllNotifications(null);
+				}
 			}
 			
 			function notificationHandler(event:NotificationEvent):void {
@@ -189,8 +220,15 @@ package services
 		}
 		
 		/**
+		 * simply clears all notifications 
+		 */
+		public static function clearAllNotifications():void {
+			Notifications.service.cancelAll();
+		}
+		
+		/**
 		 * will clear all existing notifications and recreate<br>
-		 * - notification with bloodglucose level<br>
+		 * - notification with bloodglucose level, on the condition that there's a least two calibrations for the current sensor<br>
 		 * - check calibrationrequest notification<br>
 		 * 
 		 */
@@ -198,35 +236,38 @@ package services
 			if (loginfo != null) {
 				dispatchInformation("log info received from " + loginfo);
 			}
+			trace("cancel all notifications");
 			Notifications.service.cancelAll();
 			
 			//start with bgreading notification
-			var lastBgReading:BgReading = BgReading.lastNoSensor(); 
-			var valueToShow:String = "";
-			if (lastBgReading != null) {
-				if (lastBgReading.calculatedValue != 0) {
-					if ((new Date().getTime()) - (60000 * 11) - lastBgReading.timestamp > 0) {
-						valueToShow = "---"
-					} else {
-						valueToShow = BgGraphBuilder.unitizedString(lastBgReading.calculatedValue, true);
-						if (!lastBgReading.hideSlope) {
-							valueToShow += " " + lastBgReading.slopeArrow();
+			if (Calibration.allForSensor().length >= 2) {
+				var lastBgReading:BgReading = BgReading.lastNoSensor(); 
+				var valueToShow:String = "";
+				if (lastBgReading != null) {
+					if (lastBgReading.calculatedValue != 0) {
+						if ((new Date().getTime()) - (60000 * 11) - lastBgReading.timestamp > 0) {
+							valueToShow = "---"
+						} else {
+							valueToShow = BgGraphBuilder.unitizedString(lastBgReading.calculatedValue, true);
+							if (!lastBgReading.hideSlope) {
+								valueToShow += " " + lastBgReading.slopeArrow();
+							}
 						}
 					}
+				} else {
+					valueToShow = "---"
 				}
-			} else {
-				valueToShow = "---"
+				
+				Notifications.service.notify(
+					new NotificationBuilder()
+					.setId(NotificationService.ID_FOR_BG_VALUE)
+					.setAlert("")
+					.setTitle(valueToShow)
+					.setSound("")
+					.enableVibration(false)
+					.enableLights(false)
+					.build());
 			}
-			
-			Notifications.service.notify(
-				new NotificationBuilder()
-				.setId(NotificationService.ID_FOR_BG_VALUE)
-				.setAlert("")
-				.setTitle(valueToShow)
-				.setSound("")
-				.enableVibration(false)
-				.setOngoing(true)
-				.build());
 			
 			//next is the calibrationrequest notification
 			if (Calibration.allForSensor().length >= 2) {
@@ -238,6 +279,8 @@ package services
 						.setTitle(ModelLocator.resourceManagerInstance.getString("calibrationservice","calibration_request_title"))
 						.setBody(ModelLocator.resourceManagerInstance.getString("calibrationservice","calibration_request_body"))
 						.setRepeatInterval(NotificationRepeatInterval.REPEAT_NONE)
+						.enableLights(true)
+						.enableVibration(true)
 						.build());
 					
 				}

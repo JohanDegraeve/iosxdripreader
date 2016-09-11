@@ -103,6 +103,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			 */
 			private static var peripheralConnectionStatusChangeTimestamp:Number = (new Date()).valueOf();
 			
+			private static var scanningWasUserInitiated:Boolean = false;
+			
 			[ResourceBundle("homeview")]
 			[ResourceBundle("general")]
 			[ResourceBundle("bluetoothservice")]
@@ -141,7 +143,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 					if (de.data != null)
 						if (de.data is String) {
 							if (de.data as String == Database.END_OF_RESULT) {
-								Database.instance.removeEventListener(DatabaseEvent.BGREADING_RETRIEVAL_EVENT, bgReadingReceivedFromDatabase);
 								displayCurrentInfoFromReading(BgReading.lastNoSensor());
 							}
 						}
@@ -150,8 +151,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 				function onInitResult(event:Event):void
 				{
 					trace("HomeView : database init result ok");
-					Database.instance.removeEventListener(DatabaseEvent.ERROR_EVENT, onInitError);
-					Database.instance.removeEventListener(DatabaseEvent.DATABASE_INIT_FINISHED_EVENT, onInitResult);
 					//at this moment the database is intialised, but the logs, bgreadings, ... might still be read in the ModelLocator, Modellocator is listening to the same event
 					
 					//set calibration button in the correct state
@@ -170,14 +169,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 				
 				function onInitError(event:Event):void
 				{	
-					Database.instance.removeEventListener(DatabaseEvent.ERROR_EVENT, onInitError);
-					Database.instance.removeEventListener(DatabaseEvent.DATABASE_INIT_FINISHED_EVENT, onInitResult);
 					trace("HomeView : database init error");
 				}
 			}
 			
 			public static function notificationServiceInitiated(ev:NotificationServiceEvent):void {
-				NotificationService.instance.removeEventListener(NotificationServiceEvent.NOTIFICATION_SERVICE_INITIATED_EVENT, HomeView.notificationServiceInitiated);
 				NotificationService.updateAllNotifications(null);
 
 				if (DialogService.isInitiated) {
@@ -188,7 +184,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			}
 			
 			private static function dialogServiceInitiated(ev:DialogServiceEvent):void {
-				DialogService.instance.removeEventListener(DialogServiceEvent.DIALOG_SERVICE_INITIATED_EVENT, dialogServiceInitiated);
 					
 				//initial info screen
 				//this seems to be the right time to start using the database - here it is used actually
@@ -213,16 +208,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			}
 			
 			private function userInitiatedScanningSucceeded(event:PeripheralEvent):void {
-				BluetoothLE.service.centralManager.removeEventListener(PeripheralEvent.CONNECT, userInitiatedScanningSucceeded);
-				var alert:DialogView = Dialog.service.create(
-					new AlertBuilder()
-					.setTitle(ModelLocator.resourceManagerInstance.getString("homeview","scan_for_device"))
-					.setMessage(ModelLocator.resourceManagerInstance.getString("homeview","connected_to_peripheral_device_id_stored"))
-					.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
-					
-					.build()
-				);
-				DialogService.addDialog(alert, 30);
+				if (scanningWasUserInitiated) {
+					scanningWasUserInitiated = false;
+					var alert:DialogView = Dialog.service.create(
+						new AlertBuilder()
+						.setTitle(ModelLocator.resourceManagerInstance.getString("homeview","scan_for_device"))
+						.setMessage(ModelLocator.resourceManagerInstance.getString("homeview","connected_to_peripheral_device_id_stored"))
+						.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
+						
+						.build()
+					);
+					DialogService.addDialog(alert, 30);
+				}
 			}
 			
 			private function central_peripheralDisconnectHandler(event:PeripheralEvent):void {
@@ -266,7 +263,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			}
 			
 			private function blueToothServiceInitiated(be:BlueToothServiceEvent):void {
-				BluetoothService.instance.removeEventListener(BlueToothServiceEvent.BLUETOOTH_SERVICE_INITIATED, blueToothServiceInitiated);
 				BluetoothLE.service.centralManager.addEventListener(PeripheralEvent.CONNECT, central_peripheralConnectHandler);
 				BluetoothLE.service.centralManager.addEventListener(PeripheralEvent.DISCONNECT, central_peripheralDisconnectHandler);
 				BluetoothLE.service.addEventListener(BluetoothLEEvent.STATE_CHANGED, bluetoothStateChangedHandler);
@@ -386,7 +382,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			
 			private function actionSheet_closedHandler( event:DialogViewEvent ):void {
 				var actionSheet:DialogView = DialogView(event.currentTarget);
-				actionSheet.removeEventListener(DialogViewEvent.CLOSED, actionSheet_closedHandler);
 				actionSheet.dispose();
 				
 				if (event.index == ACTION_SHEET_INDEX_FOR_SCAN_FOR_DEVICE) {
@@ -394,6 +389,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 					if (BluetoothLE.service.centralManager.state == BluetoothLEState.STATE_ON) {
 						BluetoothService.instance.addEventListener(BlueToothServiceEvent.STOPPED_SCANNING, scanningStopped);
 						BluetoothLE.service.centralManager.addEventListener(PeripheralEvent.CONNECT, userInitiatedScanningSucceeded);
+						scanningWasUserInitiated = true;
 						BluetoothService.startScanning();
 					} else {
 						var alert:DialogView = Dialog.service.create(
@@ -485,8 +481,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 					return;
 				}
 				var dateTime:DateTimeDialogView = DateTimeDialogView(event.currentTarget);
-				dateTime.removeEventListener(DialogViewEvent.CLOSED, date_closedRequestHandler);
-				dateTime.removeEventListener(DialogDateTimeEvent.SELECTED, date_selectedHandler);
 				dateTime.dispose();
 				dateTime = Dialog.service.create(
 					new DateTimeDialogBuilder()
@@ -517,8 +511,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 				}
 				
 				var dateTime:DateTimeDialogView = DateTimeDialogView(event.currentTarget);
-				dateTime.removeEventListener(DialogViewEvent.CLOSED, date_closedRequestHandler);
-				dateTime.removeEventListener(DialogDateTimeEvent.SELECTED, date_selectedHandler);
 				dateTime.dispose();
 				
 				//ready to start the sensor
@@ -561,7 +553,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			}
 			
 			private static function scanningStopped(event:Event):void {
-				BluetoothService.instance.removeEventListener(BlueToothServiceEvent.STOPPED_SCANNING, scanningStopped);
 				if (!BluetoothService.bluetoothPeripheralActive()) {
 					//create alert to get the user's input
 					var alert:DialogView = Dialog.service.create(

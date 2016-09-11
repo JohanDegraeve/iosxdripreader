@@ -145,8 +145,6 @@ package services
 		
 		private static function disableMaxDurationTimer():void {
 			if (maxDurationTimer != null) {
-				if (maxDurationTimer.hasEventListener(TimerEvent.TIMER)) 
-					maxDurationTimer.removeEventListener(TimerEvent.TIMER,maxDurationReached);
 				maxDurationTimer.stop();
 				maxDurationTimer = null;
 			}

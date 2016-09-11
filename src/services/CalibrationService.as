@@ -11,6 +11,8 @@ package services
 	import com.distriqt.extension.notifications.events.NotificationEvent;
 	
 	import flash.events.EventDispatcher;
+	import flash.events.TimerEvent;
+	import flash.utils.Timer;
 	
 	import Utilities.Trace;
 	
@@ -36,6 +38,9 @@ package services
 		private static var _instance:CalibrationService = new CalibrationService();
 		private static var bgLevel1:Number;
 		private static var timeStampOfFirstBgLevel:Number;
+		private static var timerForWaitCalibration:Timer;
+		
+		private static const MAXIMUM_WAIT_FOR_CALIBRATION_IN_SECONDS:int = 60;
 		
 		
 		public static function get instance():CalibrationService {
@@ -79,46 +84,71 @@ package services
 					} else {
 						calibrationOnRequest(false);
 					}
+				} else if (notificationEvent.id == NotificationService.ID_FOR_REQUEST_CALIBRATION) {
+					//we don't need to do anything with the bgreading, but we need to ask the user for a calibration
+					if (((new Date()).valueOf() - timeStampOfFirstBgLevel) > (7 * 60 * 1000 + 100)) { //previous measurement was more than 7 minutes ago , restart
+						timeStampOfFirstBgLevel = new Number(0);
+						bgLevel1 = Number.NaN;
+					}
+					//create alert to get the user's input
+					var alert:DialogView = Dialog.service.create(
+						new AlertBuilder()
+						.setTitle(isNaN(bgLevel1) ? ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_first_calibration_title") : ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_second_calibration_title"))
+						.setMessage(ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_calibration"))
+						.addTextField("","Level")
+						.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
+						.addOption(ModelLocator.resourceManagerInstance.getString("general","cancel"), DialogAction.STYLE_CANCEL, 1)
+						.build()
+					);
+					alert.addEventListener(DialogViewEvent.CLOSED, intialCalibrationValueEntered);
+					alert.addEventListener(DialogViewEvent.CANCELLED, cancellation);
+					//setting maximum wait which means in fact user will have two times this period to calibrate
+					//because also the notification remains 60 seconds
+					DialogService.addDialog(alert, MAXIMUM_WAIT_FOR_CALIBRATION_IN_SECONDS);
 				}
 			}
 		}
 		
 		public static function stop():void {
-			TransmitterService.instance.removeEventListener(TransmitterServiceEvent.BGREADING_EVENT, transmitterServiceBGReadingEventReceivedInitialCalibration);
 		}
 		
 		private static function transmitterServiceBGReadingEventReceivedInitialCalibration(be:TransmitterServiceEvent):void {
-			//we don't need to do anything with the bgreading, but we need to ask the user for a new bg metering
-			if (((new Date()).valueOf() - timeStampOfFirstBgLevel) > (7 * 60 * 1000 + 100)) { //previous measurement was more than 7 minutes ago , restart
-				timeStampOfFirstBgLevel = new Number(0);
-				bgLevel1 = Number.NaN;
+			//if there's already more than two calibrations, then there's no need anymore to request initial calibration
+			//same if sensor not active, then length will be 0
+			if (Calibration.allForSensor().length < 2) {
+				//launch a notifcation but wait maximum MAXIMUM_WAIT_FOR_CALIBRATION_IN_SECONDS
+				if (timerForWaitCalibration != null) {
+					if (timerForWaitCalibration.running) {
+						timerForWaitCalibration.stop();					
+					}
+				}
+				timerForWaitCalibration = new Timer(MAXIMUM_WAIT_FOR_CALIBRATION_IN_SECONDS * 1000, 1);
+				timerForWaitCalibration.addEventListener(TimerEvent.TIMER, removeInitialCalibrationRequestNotification);
+				timerForWaitCalibration.start();
+				
+				//launch a notification
+				//don't do it via the notificationservice, this could result in the notification being cleared but not recreated (NotificationService.updateAllNotifications)
+				//the notification doesn't need to open any action, the dialog is already there
+				//Only do this if be!= null, because if be == null, then it means this function was called after having entered an invalid number in the dialog, so user is using the app, no need for a dialog
+				if (be != null) {
+					Notifications.service.notify(
+						new NotificationBuilder()
+						.setId(NotificationService.ID_FOR_REQUEST_CALIBRATION)
+						.setAlert(ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_calibration_title"))
+						.setTitle(ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_calibration_title"))
+						.enableVibration(true)
+						.enableLights(true)
+						.build());
+				}
+				
 			}
-			//create alert to get the user's input
-			var alert:DialogView = Dialog.service.create(
-				new AlertBuilder()
-				.setTitle(isNaN(bgLevel1) ? ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_first_calibration_title") : ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_second_calibration_title"))
-				.setMessage(ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_calibration"))
-				.addTextField("","Level")
-				.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
-				.addOption(ModelLocator.resourceManagerInstance.getString("general","cancel"), DialogAction.STYLE_CANCEL, 1)
-				.build()
-			);
-			alert.addEventListener(DialogViewEvent.CLOSED, intialCalibrationValueEntered);
-			alert.addEventListener(DialogViewEvent.CANCELLED, cancellation);
-			DialogService.addDialog(alert, 60);
 			
-			//also launch a notification
-			//don't do it via the notificationservice, this could result in the notification being cleared but not recreated (NotificationService.updateAllNotifications)
-			//the notification doesn't need to open any action, the dialog is already there
-			Notifications.service.notify(
-				new NotificationBuilder()
-				.setId(NotificationService.ID_FOR_REQUEST_CALIBRATION)
-				.setAlert(ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_calibration_title"))
-				.setTitle(ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_calibration_title"))
-				.enableVibration(true)
-				.enableLights(true)
-				.build());
-
+			function removeInitialCalibrationRequestNotification (event:TimerEvent):void {
+				//user didn't give input on time, dialog is closed by DialogService
+				//but also notification needs to be removed, call to update will remove this notification
+				trace("in removeInitialCalibrationRequestNotification");
+				NotificationService.updateAllNotifications(null);
+			}
 		}
 		
 		private static function cancellation(event:DialogViewEvent):void {
@@ -150,7 +180,6 @@ package services
 					bgLevel1 = asNumber;
 					timeStampOfFirstBgLevel = (new Date()).valueOf();
 				} else {
-					TransmitterService.instance.removeEventListener(TransmitterServiceEvent.BGREADING_EVENT, transmitterServiceBGReadingEventReceivedInitialCalibration);
 					Calibration.initialCalibration(bgLevel1, timeStampOfFirstBgLevel, asNumber, (new Date()).valueOf());
 					var calibrationServiceEvent:CalibrationServiceEvent = new CalibrationServiceEvent(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT);
 					_instance.dispatchEvent(calibrationServiceEvent);

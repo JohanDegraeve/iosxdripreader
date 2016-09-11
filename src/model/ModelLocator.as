@@ -17,6 +17,8 @@
  */
 package model
 {
+	import com.distriqt.extension.application.Application;
+	
 	import flash.events.EventDispatcher;
 	import flash.system.Capabilities;
 	
@@ -34,6 +36,8 @@ package model
 	
 	import databaseclasses.BgReading;
 	import databaseclasses.Database;
+	
+	import distriqtkey.DistriqtKey;
 	
 	import events.BlueToothServiceEvent;
 	import events.DatabaseEvent;
@@ -171,7 +175,6 @@ package model
 					} else if (de.data is String) {
 						if (de.data as String == Database.END_OF_RESULT) {
 							_bgReadings.refresh();
-							Database.instance.removeEventListener(DatabaseEvent.BGREADING_RETRIEVAL_EVENT, bgReadingReceivedFromDatabase);
 							getLogsFromDatabase();
 						}
 					}
@@ -189,7 +192,6 @@ package model
 					if (de.data is String) {
 						if (de.data as String == Database.END_OF_RESULT) {
 							_loggingList.refresh();
-							Database.instance.removeEventListener(DatabaseEvent.LOGRETRIEVED_EVENT, logReceivedFromDatabase);
 
 							//now is the time to start the bluetoothservice because as soon as this service is started, 
 							//new bgreadings may come in, being created synchronously in the database, there should be no more async transactions in the database
@@ -197,6 +199,7 @@ package model
 							//will initialise the bluetoothdevice
 							Database.getBlueToothDevice();
 
+							Application.init(DistriqtKey.distriqtKey);
 							TransmitterService.init();
 							BluetoothService.init();
 

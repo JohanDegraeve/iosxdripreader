@@ -346,8 +346,6 @@ package services
 		
 		private static function discoverServices(event:Event = null):void {
 			if (discoverServiceOrCharacteristicTimer != null) {
-				if (discoverServiceOrCharacteristicTimer.hasEventListener(TimerEvent.TIMER)) 
-					discoverServiceOrCharacteristicTimer.removeEventListener(TimerEvent.TIMER,discoverServices);
 				discoverServiceOrCharacteristicTimer.stop();
 				discoverServiceOrCharacteristicTimer = null;
 			}
@@ -451,8 +449,6 @@ package services
 		
 		private static function peripheral_discoverServicesHandler(event:PeripheralEvent):void {
 			if (discoverServiceOrCharacteristicTimer != null) {
-				if (discoverServiceOrCharacteristicTimer.hasEventListener(TimerEvent.TIMER)) 
-					discoverServiceOrCharacteristicTimer.removeEventListener(TimerEvent.TIMER,discoverServices);
 				discoverServiceOrCharacteristicTimer.stop();
 				discoverServiceOrCharacteristicTimer = null;
 			}
@@ -468,8 +464,6 @@ package services
 		
 		private static function discoverCharacteristics(event:Event = null):void {
 			if (discoverServiceOrCharacteristicTimer != null) {
-				if (discoverServiceOrCharacteristicTimer.hasEventListener(TimerEvent.TIMER)) 
-					discoverServiceOrCharacteristicTimer.removeEventListener(TimerEvent.TIMER,discoverCharacteristics);
 				discoverServiceOrCharacteristicTimer.stop();
 				discoverServiceOrCharacteristicTimer = null;
 			}
@@ -500,8 +494,6 @@ package services
 		
 		private static function peripheral_discoverCharacteristicsHandler(event:PeripheralEvent):void {
 			if (discoverServiceOrCharacteristicTimer != null) {
-				if (discoverServiceOrCharacteristicTimer.hasEventListener(TimerEvent.TIMER)) 
-					discoverServiceOrCharacteristicTimer.removeEventListener(TimerEvent.TIMER,discoverCharacteristics);
 				discoverServiceOrCharacteristicTimer.stop();
 				discoverServiceOrCharacteristicTimer = null;
 			}
