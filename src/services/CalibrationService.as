@@ -5,7 +5,6 @@ package services
 	import com.distriqt.extension.dialog.builders.AlertBuilder;
 	import com.distriqt.extension.dialog.events.DialogViewEvent;
 	import com.distriqt.extension.dialog.objects.DialogAction;
-	import com.distriqt.extension.notifications.NotificationRepeatInterval;
 	import com.distriqt.extension.notifications.Notifications;
 	import com.distriqt.extension.notifications.builders.NotificationBuilder;
 	import com.distriqt.extension.notifications.events.NotificationEvent;

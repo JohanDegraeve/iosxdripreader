@@ -63,7 +63,12 @@ package events
 		 * will be dispatches as soon as blue tooth service is initiated and distriqt classes can be used 
 		 */
 		public static const BLUETOOTH_SERVICE_INITIATED:String = "BluetoothServiceInitiated";
-		
+	
+		/**
+		 * Dispatched when successfully subscribed to characteristics - this is the final step in the process of connecting to a device<br> 
+		 */
+		public static const BLUETOOTH_DEVICE_CONNECTION_COMPLETED = "BluetoothDeviceConnectionCompleted";
+
 		public var data:*;
 
 		public function BlueToothServiceEvent(type:String, bubbles:Boolean=false, cancelable:Boolean=false) {

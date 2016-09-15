@@ -98,18 +98,8 @@ package services
 		
 		private static function set activeBluetoothPeripheral(value:Peripheral):void
 		{
-			if (_activeBluetoothPeripheral != null) {
-				//first removing then re-adding yes - keep it like this
-					_activeBluetoothPeripheral.removeEventListener(PeripheralEvent.DISCOVER_SERVICES, peripheral_discoverServicesHandler );
-					_activeBluetoothPeripheral.removeEventListener(PeripheralEvent.DISCOVER_CHARACTERISTICS, peripheral_discoverCharacteristicsHandler );
-					_activeBluetoothPeripheral.removeEventListener(CharacteristicEvent.UPDATE, peripheral_characteristic_updatedHandler);
-					_activeBluetoothPeripheral.removeEventListener(CharacteristicEvent.UPDATE_ERROR, peripheral_characteristic_errorHandler);
-					_activeBluetoothPeripheral.removeEventListener(CharacteristicEvent.SUBSCRIBE, peripheral_characteristic_subscribeHandler);
-					_activeBluetoothPeripheral.removeEventListener(CharacteristicEvent.SUBSCRIBE_ERROR, peripheral_characteristic_subscribeErrorHandler);
-					_activeBluetoothPeripheral.removeEventListener(CharacteristicEvent.UNSUBSCRIBE, peripheral_characteristic_unsubscribeHandler);
-					_activeBluetoothPeripheral.removeEventListener(CharacteristicEvent.WRITE_SUCCESS, peripheral_characteristic_writeHandler);
-					_activeBluetoothPeripheral.removeEventListener(CharacteristicEvent.WRITE_ERROR, peripheral_characteristic_writeErrorHandler);
-			}
+			if (value == _activeBluetoothPeripheral)
+				return;
 			
 			_activeBluetoothPeripheral = value;
 			
@@ -364,6 +354,7 @@ package services
 			} else {
 				dispatchInformation("max_amount_of_discover_services_attempt_reached");
 				amountOfDiscoverServicesOrCharacteristicsAttempt = 0;
+				tryReconnect();
 			}
 		}
 		
@@ -489,6 +480,7 @@ package services
 				discoverServiceOrCharacteristicTimer.start();
 			} else {
 				dispatchInformation("max_amount_of_discover_characteristics_attempt_reached");
+				tryReconnect();
 			}
 		}
 		
@@ -583,6 +575,7 @@ package services
 		private static function peripheral_characteristic_subscribeHandler(event:CharacteristicEvent):void {
 			if (debugMode) trace("BluetoothService.as : peripheral_characteristic_subscribeHandler: " + event.characteristic.uuid);
 			dispatchInformation("successfully_subscribed_to_characteristics");
+			_instance.dispatchEvent(new BlueToothServiceEvent(BlueToothServiceEvent.BLUETOOTH_DEVICE_CONNECTION_COMPLETED));
 		}
 		
 		private static function peripheral_characteristic_subscribeErrorHandler(event:CharacteristicEvent):void {

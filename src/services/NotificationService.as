@@ -30,6 +30,7 @@ package services
 	
 	import flash.events.Event;
 	import flash.events.EventDispatcher;
+	import flash.filesystem.FileMode;
 	
 	import Utilities.BgGraphBuilder;
 	
@@ -270,7 +271,7 @@ package services
 			}
 			
 			//next is the calibrationrequest notification
-			if (Calibration.allForSensor().length >= 2) {
+			if (Calibration.allForSensor().length >= 2 && BgReading.last30Minutes().length >= 2) {
 				if (CalibrationRequest.shouldRequestCalibration(ModelLocator.bgReadings.getItemAt(ModelLocator.bgReadings.length - 1) as BgReading)) {
 					Notifications.service.notify(
 						new NotificationBuilder()
@@ -282,7 +283,6 @@ package services
 						.enableLights(true)
 						.enableVibration(true)
 						.build());
-					
 				}
 			}
 		}

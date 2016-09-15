@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 <s:View xmlns:fx="http://ns.adobe.com/mxml/2009" 
 		xmlns:s="library://ns.adobe.com/flex/spark" title=""
 		initialize="initializeHandler(event)"
+		destructionPolicy="never"
 		creationComplete="onCreationComplete(event)">
 	
 	<s:states>
@@ -134,7 +135,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 					NotificationService.updateAllNotifications(null);
 					if (!peripheralConnected) {
 						if ((new Date().valueOf() - peripheralConnectionStatusChangeTimestamp) > TimerService.DELAY_FOR_CHECKING_BGREADING_IN_SECONDS) {
-							currentState = "bluetoothred"; 
+							currentState = "bluetoothred";
+							
 						}
 					}
 				}
@@ -201,7 +203,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			}
 			
 			
-			private function central_peripheralConnectHandler(event:PeripheralEvent):void {
+			private function bluetoothDeviceConnectionCompleted(event:BlueToothServiceEvent):void {
 				currentState = "bluetoothgreen";
 				if (!peripheralConnected) {
 					peripheralConnected = true;
@@ -272,7 +274,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			}
 			
 			private function blueToothServiceInitiated(be:BlueToothServiceEvent):void {
-				BluetoothLE.service.centralManager.addEventListener(PeripheralEvent.CONNECT, central_peripheralConnectHandler);
+				BluetoothService.instance.addEventListener(BlueToothServiceEvent.BLUETOOTH_DEVICE_CONNECTION_COMPLETED, bluetoothDeviceConnectionCompleted);
 				BluetoothLE.service.centralManager.addEventListener(PeripheralEvent.DISCONNECT, central_peripheralDisconnectHandler);
 				BluetoothLE.service.addEventListener(BluetoothLEEvent.STATE_CHANGED, bluetoothStateChangedHandler);
 				//bluetooth service is initiated
@@ -575,7 +577,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 						.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
 						.build()
 					);
-					DialogService.addDialog(alert, 30);
+					DialogService.addDialog(alert, 30);			
 				}
 			}
 			
