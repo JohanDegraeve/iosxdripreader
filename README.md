@@ -20,4 +20,4 @@ To compile :
 - donwload the ios sdk (there should be a zip corresponding to the latest ios version) and put it in a new folder under iosxdripreader
 - and add it in the flash builder project properties (also explained on  http://airnativeextensions.com/knowledgebase/tutorial/1#ios)
 - (explained : right click in project, properties, flex build path, native extensions, browse to the ane folder and add the new ane, then go to flex build packaging, ios, native extensions, add the file com.distriqt.BluetoothLE.ane as native extensions, check the "package" check box, also add the Apple iOS SDK that was downloaded
-- in the same way as above, do this also for the Notifications, Dialog, Application, AndroidSupport and core ane.
+- in the same way as above, do this also for the Notifications, Dialog, Application, Message,  AndroidSupport and core ane.
