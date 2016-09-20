@@ -17,18 +17,39 @@
  */
 package databaseclasses
 {
+	import flash.events.EventDispatcher;
+	
+	import events.SettingsServiceEvent;
+
 	/**
 	 * local settings are settings specific to this device, ie settings that will not be synchronized among different devices.
 	 */
-	 public class LocalSettings
+	 public class LocalSettings extends EventDispatcher
 	{
-		private static var instance:LocalSettings = new LocalSettings();
-		private static var localSettings:Array = [];
+		private static var _instance:LocalSettings = new LocalSettings();
 
+		public static function get instance():LocalSettings
+		{
+			return _instance;
+		}
+
+		/**
+		 * detailed tracing enabled or not
+		 */
+		public static const LOCAL_SETTING_ID_DETAILED_TRACING_ENABLED_ID:int = 0; 
+		/**
+		 * filename for local tracing, empty string if currently no tracing 
+		 */
+		public static const LOCAL_SETTING_ID_TRACE_FILE_NAME_ID:int = 1;
+
+		private static var localSettings:Array = [
+			"false",//LOCAL_SETTING_ID_DETAILED_TRACING_ID
+			""//LOCAL_SETTING_ID_TRACE_FILE_NAME_ID
+		];
 		
 		public function LocalSettings()
 		{
-			if (instance != null) {
+			if (_instance != null) {
 				throw new Error("LocalSettings class constructor can not be used");	
 			}
 		}
@@ -37,9 +58,14 @@ package databaseclasses
 		}
 
 		public static function setLocalSetting(localSettingId:int, newValue:String, updateDatabase:Boolean = true):void {
-			localSettings[localSettingId] = newValue;
-			if (updateDatabase)
-				Database.updateLocalSetting(localSettingId, newValue);
+			if (localSettings[localSettingId] != newValue) {
+				localSettings[localSettingId] = newValue;
+				if (updateDatabase)
+					Database.updateLocalSetting(localSettingId, newValue);
+				var settingChangedEvent:SettingsServiceEvent = new SettingsServiceEvent(SettingsServiceEvent.SETTING_CHANGED);
+				settingChangedEvent.data = localSettingId;
+				_instance.dispatchEvent(settingChangedEvent);
+			}
 		}
 		
 		public static function getNumberOfSettings():int {

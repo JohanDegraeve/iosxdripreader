@@ -2,32 +2,109 @@
 <s:View xmlns:fx="http://ns.adobe.com/mxml/2009" 
 		actionBarVisible="true"
 		initialize="onInitialize()"
+		destructionPolicy="never"
 		xmlns:s="library://ns.adobe.com/flex/spark" >
 	<fx:Script>
 		<![CDATA[
+			import Utilities.Trace;
+			
+			import databaseclasses.LocalSettings;
+			
 			import model.ModelLocator;
 			[ResourceBundle("settingsview")]
 			
+			[Bindable]
+			private static var detailedTracingOnOrOffText:String = "";
+			
 			private function onInitialize():void {
 				title = ModelLocator.resourceManagerInstance.getString('settingsview','title');
+				if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_ID_DETAILED_TRACING_ENABLED_ID) == "true") {
+					detailedTracingOnOrOffText = ModelLocator.resourceManagerInstance.getString('settingsview','detailed_tracing_on');
+					groupEnableAndDisableTracing.alpha = 0.25;
+					groupsendTracingViaEmail.alpha = 1;
+				} else {
+					detailedTracingOnOrOffText = ModelLocator.resourceManagerInstance.getString('settingsview','detailed_tracing_off');
+					groupEnableAndDisableTracing.alpha = 1;
+					groupsendTracingViaEmail.alpha = 0.25;
+				}
 			}
 			
-			protected function hgroup1_clickHandler(event:MouseEvent):void
+			protected function showLogging_clickHandler(event:MouseEvent):void
 			{
 				navigator.pushView(LoggingView);
 			}
 			
+			protected function sendTracingViaEmail_clickHandler(event:MouseEvent):void {
+				Trace.sendTraceFile();
+				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_ID_DETAILED_TRACING_ENABLED_ID, "false");
+				detailedTracingOnOrOffText = ModelLocator.resourceManagerInstance.getString('settingsview','detailed_tracing_off');
+				groupEnableAndDisableTracing.alpha = 1;
+				groupsendTracingViaEmail.alpha = 0.25;
+			}
+			
+			protected function detailedTracing_clickHandler(event:MouseEvent):void {
+				if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_ID_DETAILED_TRACING_ENABLED_ID) == "true") {
+				} else {
+					LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_ID_DETAILED_TRACING_ENABLED_ID, "true");
+					detailedTracingOnOrOffText = ModelLocator.resourceManagerInstance.getString('settingsview','detailed_tracing_on');
+					groupEnableAndDisableTracing.alpha = 0.25;
+					groupsendTracingViaEmail.alpha = 1;
+				}
+			}
+			
 		]]>
 	</fx:Script>
-	<s:VGroup click="hgroup1_clickHandler(event)" width="100%">
-		<s:Label id="logviewlabel" text = "{ModelLocator.resourceManagerInstance.getString('settingsview','show_logging')}"
-				 width="100%" paddingLeft="3" paddingRight="3" paddingTop="20" paddingBottom="10" fontSize="24" fontWeight="bold"/>
-		<s:Line width="100%">
-			<s:stroke>
-				<s:SolidColorStroke color="0xFFFFFF" weight="1"/>
-			</s:stroke>
-		</s:Line>	
-	</s:VGroup>
-	
+	<s:Scroller width="100%" height="100%" >
+		<s:VGroup width="100%" paddingTop="10">
+			
+			<!-- Chapter Logging and Tracing-->
+			<s:Label text = "{ModelLocator.resourceManagerInstance.getString('settingsview','show_logging_title')}" textAlign="center"
+					 width="100%" paddingLeft="3" paddingRight="3" fontSize="20" fontWeight="bold"/>
+			<s:Line width="100%">
+				<s:stroke>
+					<s:SolidColorStroke color="0xFFFFFF" weight="2"/>
+				</s:stroke>
+			</s:Line>
+			<!-- Chapter Logging and Tracing  Subection Show logging -->
+			<s:VGroup click="showLogging_clickHandler(event)" width="100%">
+				<s:Label text = "{ModelLocator.resourceManagerInstance.getString('settingsview','show_logging')}"
+						 width="100%" paddingLeft="15" paddingRight="3" paddingTop="10" paddingBottom="10" fontSize="18"/>
+				<s:Line width="100%">
+					<s:stroke>
+						<s:SolidColorStroke color="0xFFFFFF" weight="1"/>
+					</s:stroke>
+				</s:Line>	
+			</s:VGroup>
+			<!-- Chapter Logging and Tracing  Subsection Tracing --> 
+			<s:VGroup width="100%">
+				<!-- button to enable tracing -->
+				<s:HGroup id="groupEnableAndDisableTracing" click="detailedTracing_clickHandler(event)" width="100%" >
+					<s:Label text = "{ModelLocator.resourceManagerInstance.getString('settingsview','detailed_tracing')}" 
+							 width="100%" paddingLeft="15" paddingRight="3" paddingTop="10" paddingBottom="10" fontSize="18"/>
+					<s:Label text = "{detailedTracingOnOrOffText}"  
+							paddingLeft="15" paddingRight="10" paddingTop="10" paddingBottom="10" fontSize="18"/>
+				</s:HGroup>
+				<s:Line width="100%">
+					<s:stroke>
+						<s:SolidColorStroke color="0xFFFFFF" weight="1"/>
+					</s:stroke>
+				</s:Line>
+				<!-- button to send tracing via e-mail -->
+				<s:HGroup id="groupsendTracingViaEmail" click="sendTracingViaEmail_clickHandler(event)" width="100%" >
+					<s:Label text = "{ModelLocator.resourceManagerInstance.getString('settingsview','send_tracing_via_email')}" 
+							 width="100%" paddingLeft="15" paddingRight="3" paddingTop="10" paddingBottom="10" fontSize="18"/>
+				</s:HGroup>
+				<s:Line width="100%">
+					<s:stroke>
+						<s:SolidColorStroke color="0xFFFFFF" weight="1"/>
+					</s:stroke>
+				</s:Line>	
+			</s:VGroup>
+			
+			<!-- Chapter XYZ-->
+		</s:VGroup>
+		
+		
+	</s:Scroller>
 </s:View>
 

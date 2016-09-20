@@ -18,6 +18,7 @@
 package model
 {
 	import com.distriqt.extension.application.Application;
+	import com.distriqt.extension.message.Message;
 	
 	import flash.events.EventDispatcher;
 	import flash.system.Capabilities;
@@ -138,7 +139,7 @@ package model
 				Database.insertLogging(Utilities.UniqueId.createEventId(), _loggingList.getItemAt(_loggingList.length - 1) as String, (new Date()).valueOf(),(new Date()).valueOf(),null);
 			}
 			
-			function notificationServiceLogInfoReceived(be:NotificationServiceEvent) {
+			function notificationServiceLogInfoReceived(be:NotificationServiceEvent):void {
 				_loggingList.addItem(addTimeStamp(" NI : " + be.data.information));
 				Database.insertLogging(Utilities.UniqueId.createEventId(), _loggingList.getItemAt(_loggingList.length - 1) as String, (new Date()).valueOf(),(new Date()).valueOf(),null);
 			}
@@ -200,6 +201,7 @@ package model
 							Database.getBlueToothDevice();
 
 							Application.init(DistriqtKey.distriqtKey);
+							Message.init(DistriqtKey.distriqtKey);
 							TransmitterService.init();
 							BluetoothService.init();
 
@@ -208,6 +210,7 @@ package model
 							
 							CalibrationService.init();
 							TimerService.init();
+							
 						} else {
 							_loggingList.addItem(de.data as String);
 						}

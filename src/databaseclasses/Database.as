@@ -420,8 +420,8 @@ package databaseclasses
 				if (settingId == LocalSettings.getNumberOfSettings()) {
 					createBlueToothDeviceTable();
 				} else {
-					insertCommonSetting(settingId, LocalSettings.getLocalSetting(settingId));
-					addMissingCommonSetting(settingId +1);
+					insertLocalSetting(settingId, LocalSettings.getLocalSetting(settingId));
+					addMissingLocalSetting(settingId +1);
 				}
 			}
 		}

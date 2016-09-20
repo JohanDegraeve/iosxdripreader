@@ -49,6 +49,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			import spark.formatters.DateTimeFormatter;
 			
 			import Utilities.BgGraphBuilder;
+			import Utilities.Trace;
 			
 			import databaseclasses.BgReading;
 			import databaseclasses.BlueToothDevice;
@@ -116,6 +117,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			protected function onCreationComplete(event:FlexEvent):void
 			{
 				if (initialStart) {
+					Trace.init();
 					Database.instance.addEventListener(DatabaseEvent.DATABASE_INIT_FINISHED_EVENT,onInitResult);
 					Database.instance.addEventListener(DatabaseEvent.ERROR_EVENT,onInitError);
 					Database.instance.addEventListener(DatabaseEvent.DATABASE_INFORMATION_EVENT, databaseInformationEventReceived);

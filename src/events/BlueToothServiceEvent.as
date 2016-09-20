@@ -67,7 +67,7 @@ package events
 		/**
 		 * Dispatched when successfully subscribed to characteristics - this is the final step in the process of connecting to a device<br> 
 		 */
-		public static const BLUETOOTH_DEVICE_CONNECTION_COMPLETED = "BluetoothDeviceConnectionCompleted";
+		public static const BLUETOOTH_DEVICE_CONNECTION_COMPLETED:String = "BluetoothDeviceConnectionCompleted";
 
 		public var data:*;
 

@@ -16,12 +16,22 @@
  
  */package databaseclasses
  {
+ 	import flash.events.EventDispatcher;
+ 	
+ 	import events.SettingsServiceEvent;
+
 	 /**
 	  * common settings are settings that are shared with other devices, ie settings that will be synchronized
 	  */
-	 public class CommonSettings
+	 public class CommonSettings extends EventDispatcher
 	 {
-		 private static var instance:CommonSettings = new CommonSettings();
+		 private static var _instance:CommonSettings = new CommonSettings();
+
+		 public static function get instance():CommonSettings
+		 {
+			 return _instance;
+		 }
+
 		 
 		 //LIST OF SETTINGID's
 		 /**
@@ -51,7 +61,7 @@
 		 
 		 public function CommonSettings()
 		 {
-			 if (instance != null) {
+			 if (_instance != null) {
 				 throw new Error("CommonSettings class  constructor can not be used");	
 			 }
 		 }
@@ -61,9 +71,14 @@
 		 }
 		 
 		 public static function setCommonSetting(commonSettingId:int, newValue:String, updateDatabase:Boolean = true):void {
-			 commonSettings[commonSettingId] = newValue;
-			 if (updateDatabase)
-			 	Database.updateCommonSetting(commonSettingId, newValue);
+			 if (commonSettings[commonSettingId] != newValue) {
+				 commonSettings[commonSettingId] = newValue;
+				 if (updateDatabase)
+					 Database.updateCommonSetting(commonSettingId, newValue);
+				 var settingChangedEvent:SettingsServiceEvent = new SettingsServiceEvent(SettingsServiceEvent.SETTING_CHANGED);
+				 settingChangedEvent.data = commonSettingId;
+				 _instance.dispatchEvent(settingChangedEvent);
+			 }
 		 }
 		 
 		 public static function getNumberOfSettings():int {

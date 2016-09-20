@@ -445,10 +445,10 @@ package databaseclasses
 			bgReading1.updateInDatabaseSynchronous();
 			bgReading2.updateInDatabaseSynchronous();
 			
-			/*myTrace("Calibration.intialCalibration before calculate_w_l_s");
+			myTrace("Calibration.intialCalibration before calculate_w_l_s");
 			myTrace("Calibration.intialCalibration after calculate_w_l_s");
-			myTrace("before adjustbgreadings highBgReading = " + highBgReading.print("   "));
-			myTrace("before adjustbgreadings lowBgReading = " + lowBgReading.print("   "));*/
+			myTrace("before adjustbgreadings bgReading1 = " + bgReading1.print("   "));
+			myTrace("before adjustbgreadings bgReading2 = " + bgReading2.print("   "));
 			var latest3Calibrations:ArrayCollection = new ArrayCollection();
 			latest3Calibrations.addItem(calibration2);//the second is the latest, this one comes first, so it will be sorted from large to small
 			latest3Calibrations.addItem(calibration1);
