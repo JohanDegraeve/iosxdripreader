@@ -41,8 +41,8 @@ package Utilities
 		}
 		
 		private static function localSettingChanged(event:SettingsServiceEvent):void {
-			if (event.data == LocalSettings.LOCAL_SETTING_ID_DETAILED_TRACING_ENABLED_ID) {
-				if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_ID_DETAILED_TRACING_ENABLED_ID) == "true") {
+			if (event.data == LocalSettings.LOCAL_SETTING_DETAILED_TRACING_ENABLED) {
+				if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_DETAILED_TRACING_ENABLED) == "true") {
 					writeFileStream = getSaveStream(); 
 				}
 			}
@@ -59,7 +59,7 @@ package Utilities
 			if (debugMode)
 				trace(traceText);
 			
-			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_ID_DETAILED_TRACING_ENABLED_ID) == "false") {
+			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_DETAILED_TRACING_ENABLED) == "false") {
 			} else {
 				if (writeFileStream == null) {
 					writeFileStream = getSaveStream();
@@ -84,7 +84,7 @@ package Utilities
 		public static function sendTraceFile():void {
 			///will send the current file via e-mail
 			///after sending deletes the current file,removes the current name
-			var fileName:String = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_ID_TRACE_FILE_NAME_ID);
+			var fileName:String = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_TRACE_FILE_NAME);
 			if (fileName != "") {
 				if (writeFileStream != null) {
 					writeFileStream.close();
@@ -94,7 +94,7 @@ package Utilities
 				var body:String = "Hi,\n\nFind attached trace file " + fileName + "\n\nregards.";
 				Message.service.sendMailWithOptions("Trace file", body, "johan.degraeve@gmail.com","","",[attachment],false);
 				f.deleteFileAsync();
-				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_ID_TRACE_FILE_NAME_ID, "");
+				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_TRACE_FILE_NAME, "");
 			}
 		}
 		
@@ -104,7 +104,7 @@ package Utilities
 		 * also stores the new filename in the settings
 		 */
 		private static function getSaveStream():FileStream {
-			var fileName:String = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_ID_TRACE_FILE_NAME_ID);
+			var fileName:String = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_TRACE_FILE_NAME);
 			var newFile:Boolean = false;
 			if (fileName == "") {
 				newFile = true;
@@ -123,7 +123,7 @@ package Utilities
 				if (newFile) {
 					fs.writeUTFBytes(new String("New file created with name " + fileName + "\n"));
 				}
-				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_ID_TRACE_FILE_NAME_ID, fileName);
+				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_TRACE_FILE_NAME, fileName);
 			}
 			catch(e:Error) {
 				return null;

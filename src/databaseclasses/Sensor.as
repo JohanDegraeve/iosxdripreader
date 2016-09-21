@@ -64,7 +64,7 @@ package databaseclasses
 		 * to be used in stead of isActive (used in the android project) 
 		 */
 		public static function getActiveSensor():Sensor {
-			var sensorId:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_ID_CURRENT_SENSOR_ID);
+			var sensorId:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CURRENT_SENSOR);
 			if (sensorId == "0")
 				return null;
 			return Database.getSensor(sensorId);
@@ -89,7 +89,7 @@ package databaseclasses
 			}
 			currentSensor = new Sensor(timestamp, 0, 0, null, Number.NaN);
 			Database.insertSensor(currentSensor);
-			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_ID_CURRENT_SENSOR_ID, currentSensor.uniqueId);
+			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_CURRENT_SENSOR, currentSensor.uniqueId);
 			CalibrationService.init();
 		}
 		
@@ -104,7 +104,7 @@ package databaseclasses
 				currentSensor.resetLastModifiedTimeStamp();
 				Database.updateSensor(currentSensor);
 			}
-			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_ID_CURRENT_SENSOR_ID, "0");
+			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_CURRENT_SENSOR, "0");
 			CalibrationService.stop();
 			NotificationService.clearAllNotifications();
 		}

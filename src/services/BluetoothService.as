@@ -94,7 +94,7 @@ package services
 		private static var timeStampOfLastDataPacketReceived:Number = 0;
 		private static const uuids_HM_10_Service:Vector.<String> = new <String>[HM10Attributes.HM_10_SERVICE];
 		private static const uuids_HM_RX_TX:Vector.<String> = new <String>[HM10Attributes.HM_RX_TX];
-		private static const debugMode:Boolean = true;
+		private static const debugMode:Boolean = false;
 		
 		private static function set activeBluetoothPeripheral(value:Peripheral):void
 		{

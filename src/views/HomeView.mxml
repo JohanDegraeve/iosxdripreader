@@ -191,7 +191,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 					
 				//initial info screen
 				//this seems to be the right time to start using the database - here it is used actually
-				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_INITIAL_INFO_SCREEN_1_SHOWN_ID) == "false") {
+				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_INITIAL_INFO_SCREEN_1_SHOWN) == "false") {
 					var alert:DialogView = Dialog.service.create(
 						new AlertBuilder()
 						.setTitle(ModelLocator.resourceManagerInstance.getString("homeview","info"))
@@ -200,7 +200,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 						.build()
 					);
 					DialogService.addDialog(alert);
-					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_INITIAL_INFO_SCREEN_1_SHOWN_ID,"true");
+					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_INITIAL_INFO_SCREEN_1_SHOWN,"true");
 				}
 			}
 			

@@ -369,7 +369,7 @@ package databaseclasses
 		 */
 		public static function latest(number:int):ArrayCollection {
 			var returnValue:ArrayCollection = new ArrayCollection();
-			var currentSensorId:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_ID_CURRENT_SENSOR_ID);
+			var currentSensorId:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CURRENT_SENSOR);
 			if (currentSensorId != "0") {
 				var cntr:int = ModelLocator.bgReadings.length - 1;
 				var itemsAdded:int = 0;
@@ -396,7 +396,7 @@ package databaseclasses
 		 */
 		public static function latestBySize(number:int):ArrayCollection {
 			var returnValue:ArrayCollection = new ArrayCollection();
-			var currentSensorId:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_ID_CURRENT_SENSOR_ID);
+			var currentSensorId:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CURRENT_SENSOR);
 			if (currentSensorId != "0") {
 				var cntr:int = ModelLocator.bgReadings.length - 1;
 				var itemsAdded:int = 0;

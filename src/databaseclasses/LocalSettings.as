@@ -36,15 +36,15 @@ package databaseclasses
 		/**
 		 * detailed tracing enabled or not
 		 */
-		public static const LOCAL_SETTING_ID_DETAILED_TRACING_ENABLED_ID:int = 0; 
+		public static const LOCAL_SETTING_DETAILED_TRACING_ENABLED:int = 0; 
 		/**
 		 * filename for local tracing, empty string if currently no tracing 
 		 */
-		public static const LOCAL_SETTING_ID_TRACE_FILE_NAME_ID:int = 1;
+		public static const LOCAL_SETTING_TRACE_FILE_NAME:int = 1;
 
 		private static var localSettings:Array = [
-			"false",//LOCAL_SETTING_ID_DETAILED_TRACING_ID
-			""//LOCAL_SETTING_ID_TRACE_FILE_NAME_ID
+			"false",//LOCAL_SETTING_DETAILED_TRACING_ENABLED
+			""//LOCAL_SETTING_TRACE_FILE_NAME
 		];
 		
 		public function LocalSettings()

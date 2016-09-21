@@ -6,19 +6,36 @@
 		xmlns:s="library://ns.adobe.com/flex/spark" >
 	<fx:Script>
 		<![CDATA[
+			import com.distriqt.extension.dialog.Dialog;
+			import com.distriqt.extension.dialog.DialogView;
+			import com.distriqt.extension.dialog.builders.AlertBuilder;
+			import com.distriqt.extension.dialog.events.DialogViewEvent;
+			import com.distriqt.extension.dialog.objects.DialogAction;
+			
+			import spark.primitives.Rect;
+			
 			import Utilities.Trace;
 			
+			import databaseclasses.CommonSettings;
 			import databaseclasses.LocalSettings;
 			
 			import model.ModelLocator;
+			
+			import services.DialogService;
 			[ResourceBundle("settingsview")]
 			
 			[Bindable]
 			private static var detailedTracingOnOrOffText:String = "";
+			[Bindable]
+			private static var nightScoutUrl:String = "";
+			[Bindable]
+			private static var nightScoutAPI_SECRET:String = "";
+			
+			private static var resetColorTimer:Timer;
 			
 			private function onInitialize():void {
 				title = ModelLocator.resourceManagerInstance.getString('settingsview','title');
-				if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_ID_DETAILED_TRACING_ENABLED_ID) == "true") {
+				if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_DETAILED_TRACING_ENABLED) == "true") {
 					detailedTracingOnOrOffText = ModelLocator.resourceManagerInstance.getString('settingsview','detailed_tracing_on');
 					groupEnableAndDisableTracing.alpha = 0.25;
 					groupsendTracingViaEmail.alpha = 1;
@@ -27,28 +44,116 @@
 					groupEnableAndDisableTracing.alpha = 1;
 					groupsendTracingViaEmail.alpha = 0.25;
 				}
+				nightScoutUrl = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME);
+				nightScoutAPI_SECRET = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_API_SECRET);
 			}
 			
 			protected function showLogging_clickHandler(event:MouseEvent):void
 			{
+				rect5.color = uint("0xD3D3D3");
+				rect6.color = uint("0xD3D3D3");
+				setResetColorTimer();
 				navigator.pushView(LoggingView);
 			}
 			
 			protected function sendTracingViaEmail_clickHandler(event:MouseEvent):void {
+				rect9.color = uint("0xD3D3D3");
+				rect10.color = uint("0xD3D3D3");
+				setResetColorTimer();
 				Trace.sendTraceFile();
-				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_ID_DETAILED_TRACING_ENABLED_ID, "false");
+				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_DETAILED_TRACING_ENABLED, "false");
 				detailedTracingOnOrOffText = ModelLocator.resourceManagerInstance.getString('settingsview','detailed_tracing_off');
 				groupEnableAndDisableTracing.alpha = 1;
 				groupsendTracingViaEmail.alpha = 0.25;
 			}
 			
 			protected function detailedTracing_clickHandler(event:MouseEvent):void {
-				if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_ID_DETAILED_TRACING_ENABLED_ID) == "true") {
+				rect7.color = uint("0xD3D3D3");
+				rect8.color = uint("0xD3D3D3");
+				setResetColorTimer();
+				
+				if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_DETAILED_TRACING_ENABLED) == "true") {
 				} else {
-					LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_ID_DETAILED_TRACING_ENABLED_ID, "true");
+					LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_DETAILED_TRACING_ENABLED, "true");
 					detailedTracingOnOrOffText = ModelLocator.resourceManagerInstance.getString('settingsview','detailed_tracing_on');
 					groupEnableAndDisableTracing.alpha = 0.25;
 					groupsendTracingViaEmail.alpha = 1;
+				}
+			}
+			
+			private function nightScoutUrl_clickHandler(event:MouseEvent):void {
+				rect1.color = uint("0xD3D3D3");
+				rect2.color = uint("0xD3D3D3");
+				setResetColorTimer();
+				
+				var alert:DialogView = Dialog.service.create(
+					new AlertBuilder()
+					.setTitle(ModelLocator.resourceManagerInstance.getString("settingsview","enter_nightscout_url_title"))
+					.setMessage(ModelLocator.resourceManagerInstance.getString("settingsview","enter_nightscout_url_message"))
+					.addTextField(nightScoutUrl,"")
+					.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
+					.addOption(ModelLocator.resourceManagerInstance.getString("general","cancel"), DialogAction.STYLE_CANCEL, 1)
+					.build()
+				);
+				DialogService.addDialog(alert);
+				alert.addEventListener(DialogViewEvent.CLOSED, nightscouturlentered);
+				
+				function nightscouturlentered(event:DialogViewEvent):void {
+					if (event.index == 1) {
+						return;
+					}
+					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME, event.values[0] as String);
+					nightScoutUrl = event.values[0] as String;
+				}
+			}
+			
+			private function nightScoutApiSecret_clickHandler(event:MouseEvent):void {
+				rect3.color = uint("0xD3D3D3");
+				rect4.color = uint("0xD3D3D3");
+				setResetColorTimer();
+				
+				var alert:DialogView = Dialog.service.create(
+					new AlertBuilder()
+					.setTitle(ModelLocator.resourceManagerInstance.getString("settingsview","enter_nightscout_api_secret_title"))
+					.setMessage(ModelLocator.resourceManagerInstance.getString("settingsview","enter_nightscout_api_secret_message"))
+					.addTextField(nightScoutAPI_SECRET,"")
+					.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
+					.addOption(ModelLocator.resourceManagerInstance.getString("general","cancel"), DialogAction.STYLE_CANCEL, 1)
+					.build()
+				);
+				DialogService.addDialog(alert);
+				alert.addEventListener(DialogViewEvent.CLOSED, apisecretentered);
+				
+				function apisecretentered(event:DialogViewEvent):void {
+					if (event.index == 1) {
+						return;
+					}
+					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_API_SECRET, event.values[0] as String);
+					nightScoutAPI_SECRET = event.values[0] as String;
+				}
+			}
+			
+			private function setResetColorTimer():void {
+				if (resetColorTimer != null)
+					if (resetColorTimer.running) {
+						resetColorTimer.stop();					
+					}
+				
+				resetColorTimer = new Timer(100, 1);
+				resetColorTimer.addEventListener(TimerEvent.TIMER, resetColor);
+				resetColorTimer.start();
+				
+				function resetColor(event:Event):void {
+					rect1.color = uint("0x212121");
+					rect2.color = uint("0x212121");
+					rect3.color = uint("0x212121");
+					rect4.color = uint("0x212121");
+					rect5.color = uint("0x212121");
+					rect6.color = uint("0x212121");
+					rect7.color = uint("0x212121");
+					rect8.color = uint("0x212121");
+					rect9.color = uint("0x212121");
+					rect10.color = uint("0x212121");
 				}
 			}
 			
@@ -57,42 +162,134 @@
 	<s:Scroller width="100%" height="100%" >
 		<s:VGroup width="100%" paddingTop="10">
 			
-			<!-- Chapter Logging and Tracing-->
-			<s:Label text = "{ModelLocator.resourceManagerInstance.getString('settingsview','show_logging_title')}" textAlign="center"
-					 width="100%" paddingLeft="3" paddingRight="3" fontSize="20" fontWeight="bold"/>
+			
+			<!-- Chapter NightScout -->
+			<s:Label text = "{ModelLocator.resourceManagerInstance.getString('settingsview','show_nightscout_title')}" textAlign="center" color="#3B6999" 
+					 width="100%" paddingLeft="3" paddingRight="0" fontSize="20" fontWeight="bold"/>
 			<s:Line width="100%">
 				<s:stroke>
-					<s:SolidColorStroke color="0xFFFFFF" weight="2"/>
+					<s:SolidColorStroke  color="#3B6999"  weight="3"/>
 				</s:stroke>
 			</s:Line>
+			
+			<!-- Chapter Nightscout url and api secret --> 
+			<s:VGroup width="100%">
+				<!-- button to change url -->
+				<s:HGroup click="nightScoutUrl_clickHandler(event)" width="100%" verticalAlign="bottom" id="targetGroup">
+					<s:Rect height="100%" width="5" >
+						<s:fill>
+							<s:SolidColor color="#212121" id="rect1"/>
+						</s:fill>
+					</s:Rect>
+					<s:Label text = "{ModelLocator.resourceManagerInstance.getString('settingsview','url')}" 
+							 width="100%" paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
+					<s:Label text = "{nightScoutUrl}"  
+							 paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="14"/>
+					<s:Rect height="100%" width="5" >
+						<s:fill>
+							<s:SolidColor color="#212121" id="rect2"/>
+						</s:fill>
+					</s:Rect>
+				</s:HGroup>
+				<s:Line width="100%">
+					<s:stroke>
+						<s:SolidColorStroke color="0xFFFFFF" weight="1" alpha="0.25"/>
+					</s:stroke>
+				</s:Line>
+				<!-- button to change api secret -->
+				<s:HGroup click="nightScoutApiSecret_clickHandler(event)" width="100%" verticalAlign="bottom">
+					<s:Rect height="100%" width="5" >
+						<s:fill>
+							<s:SolidColor color="#212121" id="rect3"/>
+						</s:fill>
+					</s:Rect>
+					<s:Label text = "{ModelLocator.resourceManagerInstance.getString('settingsview','api_secret')}" 
+							 width="100%" paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
+					<s:Label text = "{nightScoutAPI_SECRET}"  
+							 paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="14"/>
+					<s:Rect height="100%" width="5" >
+						<s:fill>
+							<s:SolidColor color="#212121" id="rect4"/>
+						</s:fill>
+					</s:Rect>
+				</s:HGroup>
+				<s:Line width="100%">
+					<s:stroke>
+						<s:SolidColorStroke color="#3B6999"  weight="2"/>
+					</s:stroke>
+				</s:Line>	
+			</s:VGroup>
+			
+			<!-- Chapter Logging and Tracing-->
+			<s:Label text = "{ModelLocator.resourceManagerInstance.getString('settingsview','show_logging_title')}" textAlign="center"  color="#3B6999" 
+					 width="100%" paddingLeft="3" paddingRight="0" fontSize="20" fontWeight="bold" paddingTop="3"/>
+			<s:Line width="100%">
+				<s:stroke>
+					<s:SolidColorStroke color="#3B6999"  weight="2"/>
+				</s:stroke>
+			</s:Line>
+			
 			<!-- Chapter Logging and Tracing  Subection Show logging -->
 			<s:VGroup click="showLogging_clickHandler(event)" width="100%">
-				<s:Label text = "{ModelLocator.resourceManagerInstance.getString('settingsview','show_logging')}"
-						 width="100%" paddingLeft="15" paddingRight="3" paddingTop="10" paddingBottom="10" fontSize="18"/>
+				<s:HGroup width="100%">
+					<s:Rect height="100%" width="5" >
+						<s:fill>
+							<s:SolidColor color="#212121" id="rect5"/>
+						</s:fill>
+					</s:Rect>
+					<s:Label text = "{ModelLocator.resourceManagerInstance.getString('settingsview','show_logging')}"
+							 width="100%" paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
+					<s:Rect height="100%" width="5" >
+						<s:fill>
+							<s:SolidColor color="#212121" id="rect6"/>
+						</s:fill>
+					</s:Rect>
+				</s:HGroup>
 				<s:Line width="100%">
 					<s:stroke>
 						<s:SolidColorStroke color="0xFFFFFF" weight="1"/>
 					</s:stroke>
 				</s:Line>	
 			</s:VGroup>
+			
 			<!-- Chapter Logging and Tracing  Subsection Tracing --> 
 			<s:VGroup width="100%">
 				<!-- button to enable tracing -->
 				<s:HGroup id="groupEnableAndDisableTracing" click="detailedTracing_clickHandler(event)" width="100%" >
+					<s:Rect height="100%" width="5" >
+						<s:fill>
+							<s:SolidColor color="#212121" id="rect7"/>
+						</s:fill>
+					</s:Rect>
 					<s:Label text = "{ModelLocator.resourceManagerInstance.getString('settingsview','detailed_tracing')}" 
-							 width="100%" paddingLeft="15" paddingRight="3" paddingTop="10" paddingBottom="10" fontSize="18"/>
+							 width="100%" paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
 					<s:Label text = "{detailedTracingOnOrOffText}"  
-							paddingLeft="15" paddingRight="10" paddingTop="10" paddingBottom="10" fontSize="18"/>
+							 paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
+					<s:Rect height="100%" width="5" >
+						<s:fill>
+							<s:SolidColor color="#212121" id="rect8"/>
+						</s:fill>
+					</s:Rect>
 				</s:HGroup>
 				<s:Line width="100%">
 					<s:stroke>
-						<s:SolidColorStroke color="0xFFFFFF" weight="1"/>
+						<s:SolidColorStroke color="0xFFFFFF" weight="1" alpha="0.25"/>
 					</s:stroke>
 				</s:Line>
 				<!-- button to send tracing via e-mail -->
 				<s:HGroup id="groupsendTracingViaEmail" click="sendTracingViaEmail_clickHandler(event)" width="100%" >
+					<s:Rect height="100%" width="5" >
+						<s:fill>
+							<s:SolidColor color="#212121" id="rect9"/>
+						</s:fill>
+					</s:Rect>
 					<s:Label text = "{ModelLocator.resourceManagerInstance.getString('settingsview','send_tracing_via_email')}" 
-							 width="100%" paddingLeft="15" paddingRight="3" paddingTop="10" paddingBottom="10" fontSize="18"/>
+							 width="100%" paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
+					<s:Rect height="100%" width="5" >
+						<s:fill>
+							<s:SolidColor color="#212121" id="rect10"/>
+						</s:fill>
+					</s:Rect>
 				</s:HGroup>
 				<s:Line width="100%">
 					<s:stroke>
@@ -103,8 +300,6 @@
 			
 			<!-- Chapter XYZ-->
 		</s:VGroup>
-		
-		
 	</s:Scroller>
 </s:View>
 

@@ -39,24 +39,28 @@
 		  * value "0" means there's no sensor active
 		  *  
 		  */
-		 public static const COMMON_SETTING_ID_CURRENT_SENSOR_ID:int = 0; 
+		 public static const COMMON_SETTING_CURRENT_SENSOR:int = 0; 
 		 /**
 		  * transmitter battery level (ie 215, 214,...)<br>
 		  * 0 means level not known
 		  */
-		 public static const COMMON_SETTING_TRANSMITTER_BATTERY_VOLTAGE_ID:int = 1;
+		 public static const COMMON_SETTING_TRANSMITTER_BATTERY_VOLTAGE:int = 1;
 		 /**
 		  * bridge battery level<br>
 		  * 0 means level not known
 		  */
-		 public static const COMMON_SETTING_BRIDGE_BATTERY_PERCENTAGE_ID:int = 2;
-		 public static const COMMON_SETTING_INITIAL_INFO_SCREEN_1_SHOWN_ID:int = 3;
+		 public static const COMMON_SETTING_BRIDGE_BATTERY_PERCENTAGE:int = 2;
+		 public static const COMMON_SETTING_INITIAL_INFO_SCREEN_1_SHOWN:int = 3;
+		 public static const COMMON_SETTING_AZURE_WEBSITE_NAME:int = 4;
+		 public static const COMMON_SETTING_API_SECRET:int = 5;
 		 
 		 private static var commonSettings:Array = [
-			 "0",//COMMON_SETTING_ID_CURRENT_SENSOR_ID
-			 "0",//COMMON_SETTING_TRANSMITTER_BATTERY_VOLTAGE_ID
-			 "0",//COMMON_SETTING_BRIDGE_BATTERY_PERCENTAGE_ID
-			 "false"//COMMON_SETTING_INITIAL_INFO_SCREEN_1_SHOWN_ID
+			 "0",//COMMON_SETTING_CURRENT_SENSOR
+			 "0",//COMMON_SETTING_TRANSMITTER_BATTERY_VOLTAGE
+			 "0",//COMMON_SETTING_BRIDGE_BATTERY_PERCENTAGE
+			 "false",//COMMON_SETTING_INITIAL_INFO_SCREEN_1_SHOWN
+			 "YOUR_SITE.azurewebsites.net",//COMMON_SETTING_AZURE_WEBSITE_NAME
+			 "API_SECRET"//COMMON_SETTING_API_SECRET
 		 ];
 		 
 		 public function CommonSettings()

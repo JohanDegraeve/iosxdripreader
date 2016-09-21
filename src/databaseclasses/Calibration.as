@@ -321,10 +321,10 @@ package databaseclasses
 		 * the calibrations will be order in descending order by timestamp
 		 */
 		public static function allForSensor():ArrayCollection {
-			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_ID_CURRENT_SENSOR_ID) == "0")
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CURRENT_SENSOR) == "0")
 				return new ArrayCollection();//an empty arraycollection
 			
-			var returnValue:ArrayCollection = Database.getCalibrationForSensorId(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_ID_CURRENT_SENSOR_ID));
+			var returnValue:ArrayCollection = Database.getCalibrationForSensorId(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CURRENT_SENSOR));
 			for (var i:int = 0; i < returnValue.length; i++) {
 				var calibration:Calibration = returnValue.getItemAt(i) as Calibration;
 				if (calibration.slopeConfidence == 0 || calibration.sensorConfidence == 0) {
@@ -360,7 +360,7 @@ package databaseclasses
 			
 			clearAllExistingCalibrations();
 			
-			var sensorId:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_ID_CURRENT_SENSOR_ID);
+			var sensorId:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CURRENT_SENSOR);
 			var sensor:Sensor = Database.getSensor(sensorId);
 			var bgReadings:ArrayCollection = BgReading.latestBySize(2);
 			var bgReading1:BgReading = bgReadings.getItemAt(0) as BgReading;
@@ -662,7 +662,7 @@ package databaseclasses
 		 * if there's none then empty arraycollection is returned 
 		 */
 		public static function latest(number:int):ArrayCollection {
-			var sensorId:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_ID_CURRENT_SENSOR_ID);
+			var sensorId:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CURRENT_SENSOR);
 			if (sensorId == "0")
 				return new ArrayCollection();
 			return Database.getLatestCalibrations(number,sensorId);
@@ -713,7 +713,7 @@ package databaseclasses
 		 * returns null if there's none
 		 */
 		public static function last():Calibration {
-			var sensorId:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_ID_CURRENT_SENSOR_ID);
+			var sensorId:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CURRENT_SENSOR);
 			return Database.getLastOrFirstCalibration(sensorId, false);
 		}
 		
@@ -722,7 +722,7 @@ package databaseclasses
 		 * returns null if there's none
 		 */
 		public static function first():Calibration {
-			var sensorId:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_ID_CURRENT_SENSOR_ID);
+			var sensorId:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CURRENT_SENSOR);
 			return Database.getLastOrFirstCalibration(sensorId, true);
 		}
 		
@@ -737,7 +737,7 @@ package databaseclasses
 		 * order by timestamp, large to small (descending)
 		 */
 		public static function allForSensorInLastXDays(days:int):ArrayCollection {
-			var sensorId:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_ID_CURRENT_SENSOR_ID);
+			var sensorId:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CURRENT_SENSOR);
 			if (sensorId == "0")
 				return new ArrayCollection();
 			return Database.getCalibrationForSensorInLastXDays(days, sensorId);
