@@ -31,6 +31,9 @@
 		 {
 			 return _instance;
 		 }
+		 
+		 public static const DEFAULT_SITE_NAME:String = "YOUR_SITE.azurewebsites.net";
+		 public static const DEFAULT_API_SECRET:String = "API_SECRET";
 
 		 
 		 //LIST OF SETTINGID's
@@ -59,8 +62,8 @@
 			 "0",//COMMON_SETTING_TRANSMITTER_BATTERY_VOLTAGE
 			 "0",//COMMON_SETTING_BRIDGE_BATTERY_PERCENTAGE
 			 "false",//COMMON_SETTING_INITIAL_INFO_SCREEN_1_SHOWN
-			 "YOUR_SITE.azurewebsites.net",//COMMON_SETTING_AZURE_WEBSITE_NAME
-			 "API_SECRET"//COMMON_SETTING_API_SECRET
+			 DEFAULT_SITE_NAME,//COMMON_SETTING_AZURE_WEBSITE_NAME
+			 DEFAULT_API_SECRET//COMMON_SETTING_API_SECRET
 		 ];
 		 
 		 public function CommonSettings()
