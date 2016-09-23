@@ -3,7 +3,6 @@ package Utilities
 	import com.distriqt.extension.message.Message;
 	import com.distriqt.extension.message.MessageAttachment;
 	
-	import flash.events.Event;
 	import flash.filesystem.File;
 	import flash.filesystem.FileMode;
 	import flash.filesystem.FileStream;

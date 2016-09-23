@@ -11,6 +11,8 @@
 			import com.distriqt.extension.dialog.builders.AlertBuilder;
 			import com.distriqt.extension.dialog.events.DialogViewEvent;
 			import com.distriqt.extension.dialog.objects.DialogAction;
+			import com.hurlant.crypto.hash.SHA1;
+			import com.hurlant.util.Hex;
 			
 			import spark.primitives.Rect;
 			
@@ -128,6 +130,9 @@
 					if (event.index == 1) {
 						return;
 					}
+					var hash:SHA1 = new SHA1();
+					var result:String = Hex.fromArray(hash.hash(Hex.toArray(Hex.fromString(event.values[0] as String))));
+
 					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_API_SECRET, event.values[0] as String);
 					nightScoutAPI_SECRET = event.values[0] as String;
 				}

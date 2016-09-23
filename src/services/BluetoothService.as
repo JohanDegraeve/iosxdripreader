@@ -120,10 +120,6 @@ package services
 			return _activeBluetoothPeripheral;
 		}
 		
-		public static function getActiveBluetoothPeripheral():Peripheral {
-			return _activeBluetoothPeripheral;
-		}
-		
 		private static var _characteristic:Characteristic;
 		
 		private static function get characteristic():Characteristic
@@ -296,10 +292,16 @@ package services
 						dispatchInformation('stored_uuid_does_not_match');
 						return;
 					}
+				} else {
+					//we store also this device, as of now, all future connect attempts will be only to this one, until the user choses "forget device"
+					BlueToothDevice.address = event.peripheral.uuid;
+					BlueToothDevice.name = event.peripheral.name;
+					dispatchInformation('connected_to_peripheral_device_id_stored');
 				}
 				
 				//we want to connect to this device, so stop scanning
 				BluetoothLE.service.centralManager.stopScan();
+				
 				BluetoothLE.service.centralManager.connect(event.peripheral);
 				dispatchInformation('stop_scanning_and_try_to_connect');
 			}
@@ -320,21 +322,20 @@ package services
 				connectionAttemptCheckTimer = null;
 			}
 
-
 			reconnectAttemptTimeStamp = 0;
 			
-			if (BlueToothDevice.address == "") {
-				BlueToothDevice.address = event.peripheral.uuid;
-				BlueToothDevice.name = event.peripheral.name;
-				dispatchInformation('connected_to_peripheral_device_id_stored');
-			} else {
-				dispatchInformation('connected_to_peripheral');
-			}			
-			activeBluetoothPeripheral = event.peripheral;
+			dispatchInformation('connected_to_peripheral');
+
+			if (activeBluetoothPeripheral == null)
+				activeBluetoothPeripheral = event.peripheral;
+
 			discoverServices();
 		}
 		
 		private static function discoverServices(event:Event = null):void {
+			if (activeBluetoothPeripheral == null)//rare case, user might have done forgetxdrip while waiting for rettempt
+				return;
+			
 			if (discoverServiceOrCharacteristicTimer != null) {
 				discoverServiceOrCharacteristicTimer.stop();
 				discoverServiceOrCharacteristicTimer = null;
@@ -448,12 +449,14 @@ package services
 			
 			if (event.peripheral.services.length > 0)
 			{
-				activeBluetoothPeripheral = event.peripheral;
 				discoverCharacteristics();
 			}
 		}
 		
 		private static function discoverCharacteristics(event:Event = null):void {
+			if (activeBluetoothPeripheral == null)//rare case, user might have done forget xdrip while waiting to reattempt
+				return;
+			
 			if (discoverServiceOrCharacteristicTimer != null) {
 				discoverServiceOrCharacteristicTimer.stop();
 				discoverServiceOrCharacteristicTimer = null;
@@ -491,8 +494,6 @@ package services
 			}
 			dispatchInformation("characteristics_discovered");
 			amountOfDiscoverServicesOrCharacteristicsAttempt = 0;
-			
-			activeBluetoothPeripheral = event.peripheral;
 			
 			//find the index of the service that has uuid = the one used by xdrip/xbridge
 			var servicesIndex:int;
