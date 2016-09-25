@@ -23,7 +23,7 @@ package Utilities
 	{
 		private static var dateFormatter:DateTimeFormatter;
 		private static var writeFileStream:FileStream;
-		private static const debugMode:Boolean = false;
+		private static const debugMode:Boolean = true;
 		private static var initialStart:Boolean = true;
 		
 		public function Trace()

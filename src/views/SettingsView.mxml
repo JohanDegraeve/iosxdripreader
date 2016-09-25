@@ -118,7 +118,7 @@
 					new AlertBuilder()
 					.setTitle(ModelLocator.resourceManagerInstance.getString("settingsview","enter_nightscout_api_secret_title"))
 					.setMessage(ModelLocator.resourceManagerInstance.getString("settingsview","enter_nightscout_api_secret_message"))
-					.addTextField(nightScoutAPI_SECRET,"")
+					.addTextField(nightScoutAPI_SECRET, "")
 					.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
 					.addOption(ModelLocator.resourceManagerInstance.getString("general","cancel"), DialogAction.STYLE_CANCEL, 1)
 					.build()

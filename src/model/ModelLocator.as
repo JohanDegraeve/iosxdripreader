@@ -19,6 +19,7 @@ package model
 {
 	import com.distriqt.extension.application.Application;
 	import com.distriqt.extension.message.Message;
+	import com.distriqt.extension.networkinfo.NetworkInfo;
 	
 	import flash.events.EventDispatcher;
 	import flash.system.Capabilities;
@@ -42,10 +43,12 @@ package model
 	
 	import events.BlueToothServiceEvent;
 	import events.DatabaseEvent;
+	import events.NightScoutServiceEvent;
 	import events.NotificationServiceEvent;
 	
 	import services.BluetoothService;
 	import services.CalibrationService;
+	import services.NightScoutService;
 	import services.NotificationService;
 	import services.TimerService;
 	import services.TransmitterService;
@@ -130,6 +133,11 @@ package model
 			BluetoothService.instance.addEventListener(BlueToothServiceEvent.BLUETOOTH_SERVICE_INFORMATION_EVENT,blueToothServiceInformationReceived);
 			NotificationService.instance.addEventListener(NotificationServiceEvent.LOG_INFO, notificationServiceLogInfoReceived);
 			Database.instance.addEventListener(DatabaseEvent.DATABASE_INFORMATION_EVENT, databaseInformationEventReceived);
+			NightScoutService.instance.addEventListener(NightScoutServiceEvent.NIGHTSCOUT_SERVICE_INFORMATION_EVENT, nightScoutServiceInformationReceived);
+			function nightScoutServiceInformationReceived(be:NightScoutServiceEvent):void {
+				_loggingList.addItem(addTimeStamp(" NS : " + be.data.information));
+				Database.insertLogging(Utilities.UniqueId.createEventId(), _loggingList.getItemAt(_loggingList.length - 1) as String, (new Date()).valueOf(),(new Date()).valueOf(),null);				
+			}
 			function databaseInformationEventReceived(be:DatabaseEvent):void {
 				_loggingList.addItem(addTimeStamp(" DB : " + be.data.information));
 				Database.insertLogging(Utilities.UniqueId.createEventId(), _loggingList.getItemAt(_loggingList.length - 1) as String, (new Date()).valueOf(),(new Date()).valueOf(),null);				
@@ -210,7 +218,8 @@ package model
 							
 							CalibrationService.init();
 							TimerService.init();
-							
+							NetworkInfo.init(DistriqtKey.distriqtKey);
+							NightScoutService.init();
 						} else {
 							_loggingList.addItem(de.data as String);
 						}
