@@ -20,13 +20,14 @@
  */
 package databaseclasses
 {
+	import com.hurlant.util.der.Integer;
+	
 	import mx.collections.ArrayCollection;
 	
 	import Utilities.BgGraphBuilder;
 	import Utilities.Trace;
 	
 	import model.ModelLocator;
-	
 	
 	public class BgReading extends SuperDatabaseClass
 	{
@@ -863,6 +864,48 @@ package databaseclasses
 				return "\u21c8";
 			}
 		}
+		
+		public function slopeName():String {
+			var slope_by_minute:Number = calculatedValueSlope * 60000;
+			var arrow:String = "NONE";
+			if (slope_by_minute <= (-3.5)) {
+				arrow = "DoubleDown";
+			} else if (slope_by_minute <= (-2)) {
+				arrow = "SingleDown";
+			} else if (slope_by_minute <= (-1)) {
+				arrow = "FortyFiveDown";
+			} else if (slope_by_minute <= (1)) {
+				arrow = "Flat";
+			} else if (slope_by_minute <= (2)) {
+				arrow = "FortyFiveUp";
+			} else if (slope_by_minute <= (3.5)) {
+				arrow = "SingleUp";
+			} else if (slope_by_minute <= (40)) {
+				arrow = "DoubleUp";
+			}
 
+			if(hideSlope) {
+				arrow = "NOT COMPUTABLE";
+			}
+			return arrow;
+		}
+		
+		public function noiseValue():int {
+			if(noise == null || noise == "") {
+				return 1;
+			} else {
+				return new Number(noise);
+			}
+		}
+	
+		public function currentSlope():Number {
+			var last_2:ArrayCollection = BgReading.latest(2);
+			if (last_2.length == 2) {
+				var slopePair:Array = calculateSlope(last_2.getItemAt(0) as BgReading, last_2.getItemAt(1) as BgReading);
+				return slopePair[0] as Number;
+			} else{
+				return new Number(0);
+			}
+		}
 	}
 }

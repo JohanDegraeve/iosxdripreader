@@ -296,7 +296,7 @@ package services
 					//we store also this device, as of now, all future connect attempts will be only to this one, until the user choses "forget device"
 					BlueToothDevice.address = event.peripheral.uuid;
 					BlueToothDevice.name = event.peripheral.name;
-					dispatchInformation('connected_to_peripheral_device_id_stored');
+					dispatchInformation('device_id_stored');
 				}
 				
 				//we want to connect to this device, so stop scanning
@@ -333,7 +333,7 @@ package services
 		}
 		
 		private static function discoverServices(event:Event = null):void {
-			if (activeBluetoothPeripheral == null)//rare case, user might have done forgetxdrip while waiting for rettempt
+			if (activeBluetoothPeripheral == null)//rare case, user might have done forget xdrip while waiting for rettempt
 				return;
 			
 			if (discoverServiceOrCharacteristicTimer != null) {
@@ -355,7 +355,23 @@ package services
 			} else {
 				dispatchInformation("max_amount_of_discover_services_attempt_reached");
 				amountOfDiscoverServicesOrCharacteristicsAttempt = 0;
-				tryReconnect();
+
+				//i just happens that retrying doesn't help anymore
+				//so disconnecting and rescanning seems the only solution ?
+
+				//disconnect will cause central_peripheralDisconnectHandler to be called (although not sure because setting activeBluetoothPeripheral to null, i would expect that removes also the eventlisteners
+				//central_peripheralDisconnectHandler will see that activeBluetoothPeripheral == null and so 
+				var temp:Peripheral = activeBluetoothPeripheral;
+				activeBluetoothPeripheral = null;
+				BluetoothLE.service.centralManager.disconnect(temp);
+				
+				var blueToothServiceEvent:BlueToothServiceEvent = new BlueToothServiceEvent(BlueToothServiceEvent.BLUETOOTH_SERVICE_INFORMATION_EVENT);
+				blueToothServiceEvent.data = new Object();
+				blueToothServiceEvent.data.information = ModelLocator.resourceManagerInstance.getString('bluetoothservice','will_re_scan_for_device');
+				_instance.dispatchEvent(blueToothServiceEvent);
+				
+				//this will cause rescan
+				bluetoothStatusIsOn();
 			}
 		}
 		
@@ -608,7 +624,7 @@ package services
 			
 			var blueToothServiceEvent:BlueToothServiceEvent = new BlueToothServiceEvent(BlueToothServiceEvent.BLUETOOTH_SERVICE_INFORMATION_EVENT);
 			blueToothServiceEvent.data = new Object();
-			blueToothServiceEvent.data.information = ModelLocator.resourceManagerInstance.getString('settingsview','bluetoothdeviceforgotten');
+			blueToothServiceEvent.data.information = ModelLocator.resourceManagerInstance.getString('bluetoothservice','bluetoothdeviceforgotten');
 			_instance.dispatchEvent(blueToothServiceEvent);
 		}
 		
@@ -690,7 +706,7 @@ package services
 					
 					xBridgeProtocolLevel = buffer.readUnsignedByte();//not needed for the moment
 					
-					//TODO do this somewher else
+					//TODO do this somewhere else
 					
 					/*var value:ByteArray = new ByteArray();
 					value.endian = Endian.LITTLE_ENDIAN;

@@ -35,9 +35,12 @@ package services
 		
 		public static function init():void {
 			TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, bgReadingReceived);
+			
+			//immediately after launch of application, start setting that timer
+			bgReadingReceived(null);
 		}
 		
-		private static function bgReadingReceived(be:TransmitterServiceEvent):void {
+		private static function bgReadingReceived(be:TransmitterServiceEvent = null):void {
 			if (bgReadingCheckTimer != null) {
 				if (bgReadingCheckTimer.running) {
 					bgReadingCheckTimer.stop();

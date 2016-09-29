@@ -104,6 +104,10 @@
 					if (event.index == 1) {
 						return;
 					}
+					
+					if (event.values.length < 1)
+						return;
+					
 					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME, event.values[0] as String);
 					nightScoutUrl = event.values[0] as String;
 				}

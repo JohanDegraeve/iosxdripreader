@@ -236,7 +236,6 @@ package services
 			if (loginfo != null) {
 				dispatchInformation("log info received from " + loginfo);
 			}
-			trace("cancel all notifications");
 			Notifications.service.cancelAll();
 			
 			//start with bgreading notification

@@ -60,8 +60,7 @@
 	<initialWindow>
 		<!-- The main SWF or HTML file of the application. Required. -->
 		<!-- Note: In Flash Builder, the SWF reference is set automatically. -->
-		<content>[This value will be overwritten by Flash Builder in the
-			output app.xml]</content>
+		<content>iosxdripreader.swf</content>
 
 		<!-- The title of the main window. Optional. -->
 		<!-- <title></title> -->
@@ -324,6 +323,6 @@
 		<extensionID>com.distriqt.AndroidSupport</extensionID>
 		<extensionID>com.distriqt.Application</extensionID>
 		<extensionID>com.distriqt.Message</extensionID>
-	<extensionID>com.distriqt.NetworkInfo</extensionID>
-    </extensions>
+		<extensionID>com.distriqt.NetworkInfo</extensionID>
+	</extensions>
 </application>

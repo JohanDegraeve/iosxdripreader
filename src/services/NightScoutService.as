@@ -4,8 +4,6 @@ package services
 	import com.distriqt.extension.dialog.DialogView;
 	import com.distriqt.extension.dialog.builders.AlertBuilder;
 	import com.distriqt.extension.dialog.objects.DialogAction;
-	import com.distriqt.extension.networkinfo.NetworkInfo;
-	import com.distriqt.extension.networkinfo.events.NetworkInfoEvent;
 	import com.hurlant.crypto.hash.SHA1;
 	import com.hurlant.util.Hex;
 	
@@ -18,11 +16,14 @@ package services
 	import flash.net.URLRequestMethod;
 	import flash.net.URLVariables;
 	
+	import spark.formatters.DateTimeFormatter;
+	
 	import Utilities.DateTimeUtilities;
 	import Utilities.Trace;
 	import Utilities.UniqueId;
 	
 	import databaseclasses.BgReading;
+	import databaseclasses.BlueToothDevice;
 	import databaseclasses.Calibration;
 	import databaseclasses.CommonSettings;
 	
@@ -76,14 +77,15 @@ package services
 			CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, settingChanged);
 			TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, bgreadingEventReceived);
 			TimerService.instance.addEventListener(TimerServiceEvent.BG_READING_NOT_RECEIVED_ON_TIME, bgReadingNotReceived);
-			NetworkInfo.networkInfo.addEventListener(NetworkInfoEvent.CHANGE, networkChanged);
+			//NetworkInfo.networkInfo.addEventListener(NetworkInfoEvent.CHANGE, networkChanged);
+			sync();
 			
-			function bgreadingEventReceived(event:BgReading):void {
+			function bgreadingEventReceived(event:TransmitterServiceEvent):void {
 				sync();
 			}
 			
-			function networkChanged(event:NetworkInfoEvent):void {
-				if (NetworkInfo.networkInfo.isReachable()) {
+/*			function networkChanged(event:NetworkInfoEvent):void {
+				//if (NetworkInfo.networkInfo.isReachable()) {
 					if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME) != CommonSettings.DEFAULT_SITE_NAME
 						&&
 						CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_API_SECRET) != CommonSettings.DEFAULT_API_SECRET
@@ -94,8 +96,8 @@ package services
 					} else {
 						sync();
 					}
-				} 
-			}
+				//} 
+			}*/
 			
 			function settingChanged(event:SettingsServiceEvent):void {
 				if (event.data == CommonSettings.COMMON_SETTING_API_SECRET) {
@@ -118,18 +120,18 @@ package services
 		
 		private static function bgReadingNotReceived(event:Event):void {
 			//just doing a get from nightscout, to see if that works to keep the app running in the background always
-			if (NetworkInfo.networkInfo.isReachable() &&
+			if (//NetworkInfo.networkInfo.isReachable() &&
 				CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_URL_AND_API_SECRET_TESTED) == "true") {
 				var urlVariables:URLVariables = new URLVariables();
 				urlVariables["find[created_at][$gte]"] = DateTimeUtilities.createNSFormattedDateAndTime(new Date());
-				createAndLoadURLRequest(nightScoutEventsUrl, URLRequestMethod.GET,urlVariables,null,null,null);
+				createAndLoadURLRequest(nightScoutEventsUrl, URLRequestMethod.GET,urlVariables,null,null,nightScoutAPICallFailed);
 				dispatchInformation("call_to_nightscout_to_keep_app_alive");
 			}
 		}
 		
 		private static function testNightScoutUrlAndSecret():void {
 			//test if network is available
-			if (NetworkInfo.networkInfo.isReachable()) {
+			//if (NetworkInfo.networkInfo.isReachable()) {
 				var testEvent:Object = new Object();
 				testUniqueId = UniqueId.createEventId();
 				testEvent["_id"] = testUniqueId;
@@ -137,11 +139,11 @@ package services
 				testEvent["duration"] = 20;
 				testEvent["notes"] = "to test nightscout url";
 				var nightScoutTreatmentsUrl:String = "https://" + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME) + "/api/v1/treatments";
-				createAndLoadURLRequest(nightScoutTreatmentsUrl, URLRequestMethod.PUT,null,JSON.stringify(testEvent),nightScoutUrlTestSuccess,nightScoutUrlTestError);
+				createAndLoadURLRequest(nightScoutTreatmentsUrl, URLRequestMethod.PUT,null,JSON.stringify(testEvent), nightScoutUrlTestSuccess, nightScoutUrlTestError);
 				dispatchInformation("call_to_nightscout_to_verify_url_and_secret");
-			} else {
+			/*} else {
 				dispatchInformation("call_to_nightscout_to_verify_url_and_secret_can_not_be_made");
-			}
+			}*/
 		}
 		
 		private static function nightScoutUrlTestSuccess(event:Event):void {
@@ -183,13 +185,73 @@ package services
 				||
 				CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_API_SECRET) == CommonSettings.DEFAULT_API_SECRET) {
 				return;
-			} else {
-				trace("sync still to be implemented");
-				enkel syncenals we als gekalibereerd hebben
-				ook eens opkuis van logging database loggen, (ja den tijd dat dat in beslag neemt)
-				en die logopkuis om de 24 uur doen, met timerservice
-				
 			}
+
+			if (Calibration.allForSensor().length < 2) {
+				return;
+			}
+			
+			//var testdata:String = "[{\"direction\":\"NOT COMPUTABLE\",\"xDrip_filtered\":189.6,\"sgv\":180,\"xDrip_raw\":184.96,\"xDrip_hide_slope\":true,\"noise\":1,\"xDrip_age_adjusted_raw_value\":184.96,\"xDrip_calculated_value\":180,\"date\":1475006213914,\"dateString\":\"2016-09-27T19:56:53.000+0000\",\"xDrip_calculated_current_slope\":-0.0000039255230669482775,\"device\":\"xBridgeaa94\",\"rssi\":100,\"type\":\"sgv\",\"filtered\":189600,\"sysTime\":\"2016-09-27T19:56:53.000+0000\",\"xDrip_filtered_calculated_value\":0,\"unfiltered\":184960}]";
+			//createAndLoadURLRequest(nightScoutEventsUrl, URLRequestMethod.POST, null, testdata, nightScoutUploadSuccess, nightScoutUploadFailed);
+			
+			var listOfReadingsAsArray:Array = [];
+			var lastSyncTimeStamp:Number = new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_SYNC_TIMESTAMP));
+			var formatter:DateTimeFormatter = new DateTimeFormatter();
+			formatter.dateTimePattern = "yyyy-MM-dd'T'HH:mm:ss.SSSZ";
+			formatter.setStyle("locale", "en_US");
+			formatter.useUTC = true;
+				
+			var cntr:int = ModelLocator.bgReadings.length - 1;
+			var arrayCntr:int = 0;
+			while (cntr > -1) {
+				var bgReading:BgReading = ModelLocator.bgReadings.getItemAt(cntr) as BgReading;
+				if (bgReading.timestamp > lastSyncTimeStamp) {
+					if (bgReading.calculatedValue != 0) {
+						var newReading:Object = new Object();
+						newReading["device"] = BlueToothDevice.name;
+						newReading["date"] = bgReading.timestamp;
+						newReading["dateString"] = formatter.format(bgReading.timestamp);
+						newReading["sgv"] = Math.round(bgReading.calculatedValue);
+						newReading["direction"] = bgReading.slopeName();
+						newReading["type"] = "sgv";
+						newReading["filtered"] = bgReading.ageAdjustedFiltered() * 1000;
+						newReading["unfiltered"] = bgReading.usedRaw() * 1000;
+						newReading["rssi"] = 100;
+						newReading["noise"] = bgReading.noiseValue();
+						newReading["xDrip_filtered_calculated_value"] = bgReading.filteredCalculatedValue;
+						newReading["xDrip_raw"] = bgReading.rawData;
+						newReading["xDrip_filtered"] = bgReading.filteredData;
+						newReading["xDrip_calculated_value"] = bgReading.calculatedValue;
+						newReading["xDrip_age_adjusted_raw_value"] = bgReading.ageAdjustedRawValue;
+						newReading["xDrip_calculated_current_slope"] = bgReading.currentSlope();
+						newReading["xDrip_hide_slope"] = bgReading.hideSlope;
+						newReading["sysTime"] = formatter.format(bgReading.timestamp);
+						listOfReadingsAsArray[arrayCntr] = newReading;
+					}
+				} else {
+					break;
+				}
+				cntr--;
+			}			
+			
+			if (listOfReadingsAsArray.length > 0)
+				createAndLoadURLRequest(nightScoutEventsUrl, URLRequestMethod.POST, null, JSON.stringify(listOfReadingsAsArray), nightScoutUploadSuccess, nightScoutUploadFailed);
+		}
+		
+		private static function nightScoutUploadSuccess(event:Event):void {
+			dispatchInformation("upload_to_nightscout_successfull");
+			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_SYNC_TIMESTAMP, (new Date()).valueOf().toString());
+		}
+		
+		private static function nightScoutUploadFailed(event:Event):void {
+			var errorMessage:String;
+			if (event.currentTarget.data) {
+				if (event.currentTarget.data is String)
+					errorMessage = ModelLocator.resourceManagerInstance.getString("nightscoutservice","upload_to_nightscout_unsuccessfull") + "\n" + event.currentTarget.data;
+			} else {
+				errorMessage = ModelLocator.resourceManagerInstance.getString("nightscoutservice","upload_to_nightscout_unsuccessfull");
+			}
+			dispatchInformation("upload_to_nightscout_unsuccessfull : " + errorMessage);
 		}
 		
 		/**
@@ -258,5 +320,6 @@ package services
 			nightScoutServiceEvent.data.information = ModelLocator.resourceManagerInstance.getString('nightscoutservice',informationResourceName) + (additionalInfo == null ? "":" - ") + additionalInfo;
 			_instance.dispatchEvent(nightScoutServiceEvent);
 		}
+		
 	}
 }

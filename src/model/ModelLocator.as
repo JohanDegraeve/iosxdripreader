@@ -218,7 +218,7 @@ package model
 							
 							CalibrationService.init();
 							TimerService.init();
-							NetworkInfo.init(DistriqtKey.distriqtKey);
+							//NetworkInfo.init(DistriqtKey.distriqtKey);
 							NightScoutService.init();
 						} else {
 							_loggingList.addItem(de.data as String);

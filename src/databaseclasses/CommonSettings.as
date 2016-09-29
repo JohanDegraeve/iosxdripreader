@@ -62,6 +62,10 @@
 		 public static const COMMON_SETTING_AZURE_WEBSITE_NAME:int = 4;
 		 public static const COMMON_SETTING_API_SECRET:int = 5;
 		 public static const COMMON_SETTING_URL_AND_API_SECRET_TESTED:int = 6; 
+		 /**
+		 * 0 = never synced 
+		  */
+		 public static const COMMON_SETTING_NIGHTSCOUT_SYNC_TIMESTAMP:int = 7;
 		 
 		 private static var commonSettings:Array = [
 			 "0",//COMMON_SETTING_CURRENT_SENSOR
@@ -70,7 +74,8 @@
 			 "false",//COMMON_SETTING_INITIAL_INFO_SCREEN_1_SHOWN
 			 DEFAULT_SITE_NAME,//COMMON_SETTING_AZURE_WEBSITE_NAME
 			 DEFAULT_API_SECRET,//COMMON_SETTING_API_SECRET
-			 "false"//COMMON_SETTING_URL_AND_API_SECRET_TESTED
+			 "false",//COMMON_SETTING_URL_AND_API_SECRET_TESTED
+			 "0"//COMMON_SETTING_NIGHTSCOUT_SYNC_TIMESTAMP
 		 ];
 		 
 		 public function CommonSettings()
