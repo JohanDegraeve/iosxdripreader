@@ -160,7 +160,6 @@ package services
 				}
 				
 			}
-			
 		}
 		
 		private static function removeInitialCalibrationRequestNotification (event:TimerEvent):void {

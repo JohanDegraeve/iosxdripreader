@@ -36,6 +36,7 @@ package services
 	import databaseclasses.BgReading;
 	import databaseclasses.Calibration;
 	import databaseclasses.CalibrationRequest;
+	import databaseclasses.CommonSettings;
 	
 	import distriqtkey.DistriqtKey;
 	
@@ -269,18 +270,20 @@ package services
 			}
 			
 			//next is the calibrationrequest notification
-			if (Calibration.allForSensor().length >= 2 && BgReading.last30Minutes().length >= 2) {
-				if (CalibrationRequest.shouldRequestCalibration(ModelLocator.bgReadings.getItemAt(ModelLocator.bgReadings.length - 1) as BgReading)) {
-					Notifications.service.notify(
-						new NotificationBuilder()
-						.setId(NotificationService.ID_FOR_EXTRA_CALIBRATION_REQUEST)
-						.setAlert(ModelLocator.resourceManagerInstance.getString("calibrationservice","calibration_request_alert"))
-						.setTitle(ModelLocator.resourceManagerInstance.getString("calibrationservice","calibration_request_title"))
-						.setBody(ModelLocator.resourceManagerInstance.getString("calibrationservice","calibration_request_body"))
-						.setRepeatInterval(NotificationRepeatInterval.REPEAT_NONE)
-						.enableLights(true)
-						.enableVibration(true)
-						.build());
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_ADDITIONAL_CALIBRATION_REQUEST_ALERT) == "true") {
+				if (Calibration.allForSensor().length >= 2 && BgReading.last30Minutes().length >= 2) {
+					if (CalibrationRequest.shouldRequestCalibration(ModelLocator.bgReadings.getItemAt(ModelLocator.bgReadings.length - 1) as BgReading)) {
+						Notifications.service.notify(
+							new NotificationBuilder()
+							.setId(NotificationService.ID_FOR_EXTRA_CALIBRATION_REQUEST)
+							.setAlert(ModelLocator.resourceManagerInstance.getString("calibrationservice","calibration_request_alert"))
+							.setTitle(ModelLocator.resourceManagerInstance.getString("calibrationservice","calibration_request_title"))
+							.setBody(ModelLocator.resourceManagerInstance.getString("calibrationservice","calibration_request_body"))
+							.setRepeatInterval(NotificationRepeatInterval.REPEAT_NONE)
+							.enableLights(true)
+							.enableVibration(true)
+							.build());
+					}
 				}
 			}
 		}

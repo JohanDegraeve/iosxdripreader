@@ -318,7 +318,7 @@ package services
 		private static function dispatchInformation(informationResourceName:String, additionalInfo:String = null):void {
 			var nightScoutServiceEvent:NightScoutServiceEvent = new NightScoutServiceEvent(NightScoutServiceEvent.NIGHTSCOUT_SERVICE_INFORMATION_EVENT);
 			nightScoutServiceEvent.data = new Object();
-			nightScoutServiceEvent.data.information = ModelLocator.resourceManagerInstance.getString('nightscoutservice',informationResourceName) + (additionalInfo == null ? "":" - ") + additionalInfo;
+			nightScoutServiceEvent.data.information = ModelLocator.resourceManagerInstance.getString('nightscoutservice',informationResourceName) + (additionalInfo == null ? "":" - " + additionalInfo);
 			_instance.dispatchEvent(nightScoutServiceEvent);
 		}
 		
