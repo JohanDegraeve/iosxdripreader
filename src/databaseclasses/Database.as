@@ -1656,13 +1656,14 @@ package databaseclasses
 		 * synchronous
 		 */
 		public static function updateBgReadingSynchronous(bgreading:BgReading):void {
+			var text:String = "";
 			try {
 				var conn:SQLConnection = new SQLConnection();
 				conn.open(dbFile, SQLMode.UPDATE);
 				conn.begin();
 				var updateRequest:SQLStatement = new SQLStatement();
 				updateRequest.sqlConnection = conn;
-				var text:String = "UPDATE bgreading SET ";
+				text = "UPDATE bgreading SET ";
 				text += "lastmodifiedtimestamp = " + bgreading.lastModifiedTimestamp + ",  "; 
 				text += "timestamp = " + bgreading.timestamp + ",  "; 
 				text += "sensorid = '" +  bgreading.sensor.uniqueId + "', ";
@@ -1693,7 +1694,7 @@ package databaseclasses
 					conn.rollback();
 					conn.close();
 				}
-				dispatchInformation('error_while_updating_bgreading_in_db', error.message + " - " + error.details);
+				dispatchInformation('error_while_updating_bgreading_in_db', error.message + " - " + error.details + " updaterequest text = " + text);
 			}
 		}
 		
