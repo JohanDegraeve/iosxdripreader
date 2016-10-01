@@ -82,6 +82,7 @@ package services
 		private static const reconnectAttemptPeriodInSeconds:int = 25;
 		private static var reconnectTimer:Timer;
 		private static var reconnectAttemptTimeStamp:Number = 0;
+		private static var reScanIfFailed:Boolean = false;
 		
 		private static var connectionAttemptCheckTimer:Timer;
 		
@@ -232,7 +233,7 @@ package services
 		 * &nbsp&nbsp or bluetooth was off before, while the app was running already, and it changed to on) <br>
 		 * 
 		 * If a bluetooth peripheral already stored in database, check status and if not connected or connecting, then try to connect<br>
-		 * If no active bluetooth peripheral known, then do nothing
+		 * If no active bluetooth peripheral known, then do nothing<br>
 		 */
 		private static function bluetoothStatusIsOn():void {
 			if (activeBluetoothPeripheral != null) {
@@ -271,6 +272,12 @@ package services
 				dispatchInformation('stopped_scanning');	
 				_instance.dispatchEvent(new BlueToothServiceEvent(BlueToothServiceEvent.STOPPED_SCANNING));
 			}
+			if (reScanIfFailed) {
+				if ((BluetoothLE.service.centralManager.state == BluetoothLEState.STATE_ON)) {
+					bluetoothStatusIsOn();
+				}
+			}
+				
 		}
 		
 		private static function central_peripheralDiscoveredHandler(event:PeripheralEvent):void {
@@ -301,6 +308,7 @@ package services
 				
 				//we want to connect to this device, so stop scanning
 				BluetoothLE.service.centralManager.stopScan();
+				reScanIfFailed = false;
 				
 				BluetoothLE.service.centralManager.connect(event.peripheral);
 				dispatchInformation('stop_scanning_and_try_to_connect');
@@ -370,7 +378,8 @@ package services
 				blueToothServiceEvent.data.information = ModelLocator.resourceManagerInstance.getString('bluetoothservice','will_re_scan_for_device');
 				_instance.dispatchEvent(blueToothServiceEvent);
 				
-				//this will cause rescan
+				//this will cause rescan, if scanning fails just retry, forever
+				reScanIfFailed = true;
 				bluetoothStatusIsOn();
 			}
 		}
