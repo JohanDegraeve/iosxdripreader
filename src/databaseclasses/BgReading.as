@@ -364,7 +364,7 @@ package databaseclasses
 		 * - calculatedValule != 0<br>
 		 * - rawData != 0<br>
 		 * - latest 'number' that match these requirements<br>
-		 * - descending timestamp, order TODO : check if the order is correct - should be because we start counting at the end, bgreadings list is order by timestamp ascending
+		 * - descending timestamp, order
 		 * <br>
 		 * could also be less than number, ie returnvalue could be arraycollection of size 0 
 		 */

@@ -199,7 +199,7 @@ package services
 			var formatter:DateTimeFormatter = new DateTimeFormatter();
 			formatter.dateTimePattern = "yyyy-MM-dd'T'HH:mm:ss.SSSZ";
 			formatter.setStyle("locale", "en_US");
-			formatter.useUTC = true;
+			formatter.useUTC = false;
 				
 			var cntr:int = ModelLocator.bgReadings.length - 1;
 			var arrayCntr:int = 0;
@@ -226,6 +226,7 @@ package services
 						newReading["xDrip_calculated_current_slope"] = bgReading.currentSlope();
 						newReading["xDrip_hide_slope"] = bgReading.hideSlope;
 						newReading["sysTime"] = formatter.format(bgReading.timestamp);
+						newReading["_id"] = bgReading.uniqueId;
 						listOfReadingsAsArray[arrayCntr] = newReading;
 					}
 				} else {

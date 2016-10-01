@@ -19,7 +19,7 @@ package model
 {
 	import com.distriqt.extension.application.Application;
 	import com.distriqt.extension.message.Message;
-	import com.distriqt.extension.networkinfo.NetworkInfo;
+
 	
 	import flash.events.EventDispatcher;
 	import flash.system.Capabilities;
@@ -267,16 +267,20 @@ package model
 		}
 		
 		/**
-		 * add bgreading also removes bgreadings olther than 24 hours 
+		 * add bgreading also removes bgreadings olther than 24 hours but keeps at least 5
 		 */
 		public static function addBGReading(bgReading:BgReading):void {
 			_bgReadings.addItem(bgReading);
 			_bgReadings.refresh();
+			
+			if (_bgReadings.length <= 5)
+				return;
+			
 			var firstBGReading:BgReading = _bgReadings.getItemAt(0) as BgReading;
 			var now:Number = (new Date()).valueOf();
 			while (now - firstBGReading.timestamp > 24 * 3600 * 1000) {
 				_bgReadings.removeItemAt(0);
-				if (_bgReadings.length == 0)
+				if (_bgReadings.length <= 5)
 					break;
 				firstBGReading = _bgReadings.getItemAt(0) as BgReading;
 			}
