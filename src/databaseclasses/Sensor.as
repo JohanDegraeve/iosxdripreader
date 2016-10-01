@@ -90,7 +90,6 @@ package databaseclasses
 			currentSensor = new Sensor(timestamp, 0, 0, null, Number.NaN);
 			Database.insertSensor(currentSensor);
 			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_CURRENT_SENSOR, currentSensor.uniqueId);
-			CalibrationService.init();
 		}
 		
 		/**

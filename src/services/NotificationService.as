@@ -21,7 +21,6 @@ package services
 	import com.distriqt.extension.application.events.ApplicationStateEvent;
 	import com.distriqt.extension.core.Core;
 	import com.distriqt.extension.notifications.AuthorisationStatus;
-	import com.distriqt.extension.notifications.NotificationRepeatInterval;
 	import com.distriqt.extension.notifications.Notifications;
 	import com.distriqt.extension.notifications.Service;
 	import com.distriqt.extension.notifications.builders.NotificationBuilder;
@@ -88,8 +87,6 @@ package services
 		 * to request initial calibration
 		 */
 		public static const ID_FOR_REQUEST_CALIBRATION:int = 3;
-		
-		public static const ID_FOR_TEST:int = 4;
 		
 		private static const debugMode:Boolean = false;
 		
@@ -279,7 +276,6 @@ package services
 							.setAlert(ModelLocator.resourceManagerInstance.getString("calibrationservice","calibration_request_alert"))
 							.setTitle(ModelLocator.resourceManagerInstance.getString("calibrationservice","calibration_request_title"))
 							.setBody(ModelLocator.resourceManagerInstance.getString("calibrationservice","calibration_request_body"))
-							.setRepeatInterval(NotificationRepeatInterval.REPEAT_NONE)
 							.enableLights(true)
 							.enableVibration(true)
 							.build());

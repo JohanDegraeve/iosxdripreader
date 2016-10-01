@@ -53,17 +53,10 @@ package services
 		}
 		
 		public static function init():void {
-			//NOTE THAT THIS FUNCTION CAN BE CALLED MULTIPLE TIMES
-			//once at start up of a new sensor, see Sensor.startSensor()
-			//then again called when initial calibration is finished, from CalibrationService.as
-			if (Calibration.allForSensor().length < 2) {
-				//initial calibration still to be done
-				bgLevel1 = Number.NaN;
-				timeStampOfFirstBgLevel = new Number(0);
-				TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, transmitterServiceBGReadingEventReceivedInitialCalibration);
-				NotificationService.instance.addEventListener(NotificationServiceEvent.NOTIFICATION_EVENT, notificationReceived);
-			} else {
-			}
+			bgLevel1 = Number.NaN;
+			timeStampOfFirstBgLevel = new Number(0);
+			TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, bgReadingReceived);
+			NotificationService.instance.addEventListener(NotificationServiceEvent.NOTIFICATION_EVENT, notificationReceived);
 		}
 		
 		private static function notificationReceived(event:NotificationServiceEvent):void {
@@ -111,7 +104,7 @@ package services
 		public static function stop():void {
 		}
 		
-		private static function transmitterServiceBGReadingEventReceivedInitialCalibration(be:TransmitterServiceEvent):void {
+		private static function bgReadingReceived(be:TransmitterServiceEvent):void {
 			//if there's already more than two calibrations, then there's no need anymore to request initial calibration
 			//same if sensor not active, then length will be 0
 			if (Calibration.allForSensor().length < 2) {
@@ -158,7 +151,6 @@ package services
 					//because also the notification remains 60 seconds
 					DialogService.addDialog(alert, MAXIMUM_WAIT_FOR_CALIBRATION_IN_SECONDS);
 				}
-				
 			}
 		}
 		
@@ -192,7 +184,7 @@ package services
 				);
 				DialogService.addDialog(alert);
 				//and ask again a value
-				transmitterServiceBGReadingEventReceivedInitialCalibration(null);
+				bgReadingReceived(null);
 			} else {
 				if (isNaN(bgLevel1)) {
 					bgLevel1 = asNumber;
@@ -201,7 +193,10 @@ package services
 					Calibration.initialCalibration(bgLevel1, timeStampOfFirstBgLevel, asNumber, (new Date()).valueOf());
 					var calibrationServiceEvent:CalibrationServiceEvent = new CalibrationServiceEvent(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT);
 					_instance.dispatchEvent(calibrationServiceEvent);
-					init();
+					
+					//reset values for the case that the sensor is stopped and restarted
+					bgLevel1 = Number.NaN;
+					timeStampOfFirstBgLevel = new Number(0);
 				}
 			}
 		}
