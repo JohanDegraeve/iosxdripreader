@@ -29,6 +29,7 @@ package services
 	import databaseclasses.Calibration;
 	import databaseclasses.CommonSettings;
 	
+	import events.CalibrationServiceEvent;
 	import events.NightScoutServiceEvent;
 	import events.SettingsServiceEvent;
 	import events.TimerServiceEvent;
@@ -78,9 +79,14 @@ package services
 			
 			CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, settingChanged);
 			TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, bgreadingEventReceived);
+			CalibrationService.instance.addEventListener(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT, initialCalibrationReceived);
 			TimerService.instance.addEventListener(TimerServiceEvent.BG_READING_NOT_RECEIVED_ON_TIME, bgReadingNotReceived);
 			NetworkInfo.networkInfo.addEventListener(NetworkInfoEvent.CHANGE, networkChanged);
 			sync();
+			
+			function initialCalibrationReceived(event:TransmitterServiceEvent):void {
+				sync();
+			}
 			
 			function bgreadingEventReceived(event:TransmitterServiceEvent):void {
 				sync();
@@ -191,7 +197,9 @@ package services
 		private static function sync(event:Event = null):void {
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME) == CommonSettings.DEFAULT_SITE_NAME
 				||
-				CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_API_SECRET) == CommonSettings.DEFAULT_API_SECRET) {
+				CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_API_SECRET) == CommonSettings.DEFAULT_API_SECRET
+				||
+				CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_URL_AND_API_SECRET_TESTED) ==  "false") {
 				return;
 			}
 			
@@ -241,10 +249,17 @@ package services
 					break;
 				}
 				cntr--;
+				arrayCntr++;
 			}			
 			
-			if (listOfReadingsAsArray.length > 0)
+			if (listOfReadingsAsArray.length > 0) {
 				createAndLoadURLRequest(nightScoutEventsUrl, URLRequestMethod.POST, null, JSON.stringify(listOfReadingsAsArray), nightScoutUploadSuccess, nightScoutUploadFailed);
+				var logString:String = "";
+				for (var cntr2:int = 0; cntr2 < listOfReadingsAsArray.length; cntr2++) {
+					logString += " " + listOfReadingsAsArray[cntr2]["_id"] + ",";
+				}
+				dispatchInformation("uploading_events_with_id", logString);
+			}
 		}
 		
 		private static function nightScoutUploadSuccess(event:Event):void {
@@ -260,7 +275,7 @@ package services
 			} else {
 				errorMessage = ModelLocator.resourceManagerInstance.getString("nightscoutservice","upload_to_nightscout_unsuccessfull");
 			}
-			dispatchInformation("upload_to_nightscout_unsuccessfull : " + errorMessage);
+			dispatchInformation("upload_to_nightscout_unsuccessfull" + errorMessage);
 		}
 		
 		/**

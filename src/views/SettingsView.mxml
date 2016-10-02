@@ -320,7 +320,7 @@
 			</s:VGroup>
 			
 			<!-- Chapter Logging and Tracing  Subsection Tracing --> 
-			<s:VGroup width="100%">
+			<s:VGroup width="100%" visible="false" enabled="false">
 				<!-- button to enable tracing -->
 				<s:HGroup id="groupEnableAndDisableTracing" click="detailedTracing_clickHandler(event)" width="100%" >
 					<s:Rect height="100%" width="5" >

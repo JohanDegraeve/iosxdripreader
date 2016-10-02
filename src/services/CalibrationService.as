@@ -221,7 +221,7 @@ package services
 		
 		/**
 		 * To be used when user clicks the calibrate button<br>
-		 * Or when user calibrates as a reaction on a calibration request<br>
+		 * Or when user calibrates as a reaction on a additional calibration request<br>
 		 * In the case of calibration request, there's not going to be an override, for that the parameter override<br>
 		 * <br>
 		 * if override = true, then a check will be done if there was a calibration in the last 60 minutes and if so the last calibration will be overriden<br>
@@ -320,7 +320,7 @@ package services
 							);
 							DialogService.addDialog(alert);
 							//and ask again a value
-							calibrationOnRequest();
+							calibrationOnRequest(override);
 						} else {
 							var newcalibration:Calibration = Calibration.create(asNumber).saveToDatabaseSynchronous();
 							_instance.dispatchEvent(new CalibrationServiceEvent(CalibrationServiceEvent.NEW_CALIBRATION_EVENT));

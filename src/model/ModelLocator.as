@@ -42,6 +42,7 @@ package model
 	import distriqtkey.DistriqtKey;
 	
 	import events.BlueToothServiceEvent;
+	import events.CalibrationServiceEvent;
 	import events.DatabaseEvent;
 	import events.NightScoutServiceEvent;
 	import events.NotificationServiceEvent;
@@ -134,14 +135,29 @@ package model
 			NotificationService.instance.addEventListener(NotificationServiceEvent.LOG_INFO, notificationServiceLogInfoReceived);
 			Database.instance.addEventListener(DatabaseEvent.DATABASE_INFORMATION_EVENT, databaseInformationEventReceived);
 			NightScoutService.instance.addEventListener(NightScoutServiceEvent.NIGHTSCOUT_SERVICE_INFORMATION_EVENT, nightScoutServiceInformationReceived);
+			CalibrationService.instance.addEventListener(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT, initialCalibrationEventReceived);
+			CalibrationService.instance.addEventListener(CalibrationServiceEvent.NEW_CALIBRATION_EVENT, newCalibrationEventReceived);
+			
+			function initialCalibrationEventReceived(be:CalibrationServiceEvent) {
+				_loggingList.addItem(addTimeStamp(" CS : " + "initial calibration done"));
+				Database.insertLogging(Utilities.UniqueId.createEventId(), _loggingList.getItemAt(_loggingList.length - 1) as String, (new Date()).valueOf(),(new Date()).valueOf(),null);
+			}
+			
+			function newCalibrationEventReceived(be:CalibrationServiceEvent) {
+				_loggingList.addItem(addTimeStamp(" CS : " + "new calibration done"));
+				Database.insertLogging(Utilities.UniqueId.createEventId(), _loggingList.getItemAt(_loggingList.length - 1) as String, (new Date()).valueOf(),(new Date()).valueOf(),null);
+			}
+			
 			function nightScoutServiceInformationReceived(be:NightScoutServiceEvent):void {
 				_loggingList.addItem(addTimeStamp(" NS : " + be.data.information));
 				Database.insertLogging(Utilities.UniqueId.createEventId(), _loggingList.getItemAt(_loggingList.length - 1) as String, (new Date()).valueOf(),(new Date()).valueOf(),null);				
 			}
+			
 			function databaseInformationEventReceived(be:DatabaseEvent):void {
 				_loggingList.addItem(addTimeStamp(" DB : " + be.data.information));
 				Database.insertLogging(Utilities.UniqueId.createEventId(), _loggingList.getItemAt(_loggingList.length - 1) as String, (new Date()).valueOf(),(new Date()).valueOf(),null);				
 			}
+			
 			function blueToothServiceInformationReceived(be:BlueToothServiceEvent):void {
 				_loggingList.addItem(addTimeStamp(" BT : " + be.data.information));
 				Database.insertLogging(Utilities.UniqueId.createEventId(), _loggingList.getItemAt(_loggingList.length - 1) as String, (new Date()).valueOf(),(new Date()).valueOf(),null);
