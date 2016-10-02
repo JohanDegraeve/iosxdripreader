@@ -4,6 +4,8 @@ package services
 	import com.distriqt.extension.dialog.DialogView;
 	import com.distriqt.extension.dialog.builders.AlertBuilder;
 	import com.distriqt.extension.dialog.objects.DialogAction;
+	import com.distriqt.extension.networkinfo.NetworkInfo;
+	import com.distriqt.extension.networkinfo.events.NetworkInfoEvent;
 	import com.hurlant.crypto.hash.SHA1;
 	import com.hurlant.util.Hex;
 	
@@ -77,15 +79,15 @@ package services
 			CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, settingChanged);
 			TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, bgreadingEventReceived);
 			TimerService.instance.addEventListener(TimerServiceEvent.BG_READING_NOT_RECEIVED_ON_TIME, bgReadingNotReceived);
-			//NetworkInfo.networkInfo.addEventListener(NetworkInfoEvent.CHANGE, networkChanged);
+			NetworkInfo.networkInfo.addEventListener(NetworkInfoEvent.CHANGE, networkChanged);
 			sync();
 			
 			function bgreadingEventReceived(event:TransmitterServiceEvent):void {
 				sync();
 			}
 			
-/*			function networkChanged(event:NetworkInfoEvent):void {
-				//if (NetworkInfo.networkInfo.isReachable()) {
+			function networkChanged(event:NetworkInfoEvent):void {
+				if (NetworkInfo.networkInfo.isReachable()) {
 					if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME) != CommonSettings.DEFAULT_SITE_NAME
 						&&
 						CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_API_SECRET) != CommonSettings.DEFAULT_API_SECRET
@@ -96,8 +98,8 @@ package services
 					} else {
 						sync();
 					}
-				//} 
-			}*/
+				} 
+			}
 			
 			function settingChanged(event:SettingsServiceEvent):void {
 				if (event.data == CommonSettings.COMMON_SETTING_API_SECRET) {
@@ -120,7 +122,7 @@ package services
 		
 		private static function bgReadingNotReceived(event:Event):void {
 			//just doing a get from nightscout, to see if that works to keep the app running in the background always
-			if (//NetworkInfo.networkInfo.isReachable() &&
+			if (NetworkInfo.networkInfo.isReachable() &&
 				CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_URL_AND_API_SECRET_TESTED) == "true") {
 				var urlVariables:URLVariables = new URLVariables();
 				urlVariables["find[created_at][$gte]"] = DateTimeUtilities.createNSFormattedDateAndTime(new Date());
@@ -131,7 +133,7 @@ package services
 		
 		private static function testNightScoutUrlAndSecret():void {
 			//test if network is available
-			//if (NetworkInfo.networkInfo.isReachable()) {
+			if (NetworkInfo.networkInfo.isReachable()) {
 				var testEvent:Object = new Object();
 				testUniqueId = UniqueId.createEventId();
 				testEvent["_id"] = testUniqueId;
@@ -141,9 +143,9 @@ package services
 				var nightScoutTreatmentsUrl:String = "https://" + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME) + "/api/v1/treatments";
 				createAndLoadURLRequest(nightScoutTreatmentsUrl, URLRequestMethod.PUT,null,JSON.stringify(testEvent), nightScoutUrlTestSuccess, nightScoutUrlTestError);
 				dispatchInformation("call_to_nightscout_to_verify_url_and_secret");
-			/*} else {
+			} else {
 				dispatchInformation("call_to_nightscout_to_verify_url_and_secret_can_not_be_made");
-			}*/
+			}
 		}
 		
 		private static function nightScoutUrlTestSuccess(event:Event):void {
@@ -162,13 +164,19 @@ package services
 		}
 		
 		private static function nightScoutUrlTestError(event:IOErrorEvent):void {
-			var errorMessage:String;
+			var errorMessage:String = ModelLocator.resourceManagerInstance.getString("nightscoutservice","nightscout_test_result_nok");
 			if (event.currentTarget.data) {
-				if (event.currentTarget.data is String)
-					errorMessage = ModelLocator.resourceManagerInstance.getString("nightscoutservice","nightscout_test_result_nok") + "\n" + event.currentTarget.data;
-			} else {
-				errorMessage = ModelLocator.resourceManagerInstance.getString("nightscoutservice","nightscout_test_result_nok");
+				if ((event.currentTarget.data as String).length > 0) {
+					errorMessage += "\n" + event.currentTarget.data;
+				}
 			}
+			
+			if (event.text) {
+				if ((event.text as String).length > 0) {
+					errorMessage += "\n" + event.text;
+				}
+			}
+			
 			var alert:DialogView = Dialog.service.create(
 				new AlertBuilder()
 				.setTitle(ModelLocator.resourceManagerInstance.getString("nightscoutservice","nightscout_title"))
@@ -186,7 +194,7 @@ package services
 				CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_API_SECRET) == CommonSettings.DEFAULT_API_SECRET) {
 				return;
 			}
-
+			
 			if (Calibration.allForSensor().length < 2) {
 				return;
 			}
@@ -200,7 +208,7 @@ package services
 			formatter.dateTimePattern = "yyyy-MM-dd'T'HH:mm:ss.SSSZ";
 			formatter.setStyle("locale", "en_US");
 			formatter.useUTC = false;
-				
+			
 			var cntr:int = ModelLocator.bgReadings.length - 1;
 			var arrayCntr:int = 0;
 			while (cntr > -1) {

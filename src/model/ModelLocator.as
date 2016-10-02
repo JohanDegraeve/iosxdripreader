@@ -19,7 +19,7 @@ package model
 {
 	import com.distriqt.extension.application.Application;
 	import com.distriqt.extension.message.Message;
-
+	import com.distriqt.extension.networkinfo.NetworkInfo;
 	
 	import flash.events.EventDispatcher;
 	import flash.system.Capabilities;
@@ -218,7 +218,7 @@ package model
 							
 							CalibrationService.init();
 							TimerService.init();
-							//NetworkInfo.init(DistriqtKey.distriqtKey);
+							NetworkInfo.init(DistriqtKey.distriqtKey);
 							NightScoutService.init();
 						} else {
 							_loggingList.addItem(de.data as String);

@@ -611,8 +611,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 							
 						</s:VerticalLayout>
 					</s:layout>
-					<s:Label id = "notificationText" text="test1"/>
-					<s:Label id = "notificationText2" text="test2"/>
+					<s:Label id = "notificationText" text=""/>
+					<s:Label id = "notificationText2" text=""/>
 				</s:Group>
 			</s:Group>
 			<s:Label id = "currentBgLabel" text="{currentBgLabelText}" fontSize="70" lineThrough="{currentBgLabellinethrough}"/>
