@@ -84,7 +84,7 @@ package services
 			NetworkInfo.networkInfo.addEventListener(NetworkInfoEvent.CHANGE, networkChanged);
 			sync();
 			
-			function initialCalibrationReceived(event:TransmitterServiceEvent):void {
+			function initialCalibrationReceived(event:CalibrationServiceEvent):void {
 				sync();
 			}
 			
