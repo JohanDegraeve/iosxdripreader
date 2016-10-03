@@ -18,6 +18,7 @@ package services
 	import databaseclasses.BgReading;
 	import databaseclasses.Calibration;
 	import databaseclasses.CalibrationRequest;
+	import databaseclasses.Sensor;
 	
 	import events.CalibrationServiceEvent;
 	import events.NotificationServiceEvent;
@@ -108,48 +109,52 @@ package services
 			//if there's already more than two calibrations, then there's no need anymore to request initial calibration
 			//same if sensor not active, then length will be 0
 			if (Calibration.allForSensor().length < 2) {
-
-				//because the timer based function timerForWaitCalibration doesn't always work as expected
-				NotificationService.updateAllNotifications(null);
-
-				//launch a notifcation but wait maximum MAXIMUM_WAIT_FOR_CALIBRATION_IN_SECONDS
-				if (timerForWaitCalibration != null) {
-					if (timerForWaitCalibration.running) {
-						timerForWaitCalibration.stop();					
-					}
-				}
-				timerForWaitCalibration = new Timer(MAXIMUM_WAIT_FOR_CALIBRATION_IN_SECONDS * 1000, 1);
-				timerForWaitCalibration.addEventListener(TimerEvent.TIMER, removeInitialCalibrationRequestNotification);
-				timerForWaitCalibration.start();
 				
-				//launch a notification
-				//don't do it via the notificationservice, this could result in the notification being cleared but not recreated (NotificationService.updateAllNotifications)
-				//the notification doesn't need to open any action, the dialog is create when the user opens the notification, or if the app is in the foreground, as soon as the notification is build. 
-				//Only do this if be!= null, because if be == null, then it means this function was called after having entered an invalid number in the dialog, so user is using the app, no need for a notification
-				if (be != null) {
-					Notifications.service.notify(
-						new NotificationBuilder()
-						.setId(NotificationService.ID_FOR_REQUEST_CALIBRATION)
-						.setAlert(ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_calibration_title"))
-						.setTitle(ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_calibration_title"))
-						.enableVibration(true)
-						.enableLights(true)
-						.build());
+				if ((new Date()).valueOf() - Sensor.getActiveSensor().startedAt < 2 * 3600 * 1000) {
+					trace("CalibrationService : bgreading received but sensor age < 2 hours, so ignoring");
 				} else {
-					var alert:DialogView = Dialog.service.create(
-						new AlertBuilder()
-						.setTitle(isNaN(bgLevel1) ? ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_first_calibration_title") : ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_second_calibration_title"))
-						.setMessage(ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_calibration"))
-						.addTextField("","Level")
-						.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
-						.addOption(ModelLocator.resourceManagerInstance.getString("general","cancel"), DialogAction.STYLE_CANCEL, 1)
-						.build()
-					);
-					alert.addEventListener(DialogViewEvent.CLOSED, intialCalibrationValueEntered);
-					alert.addEventListener(DialogViewEvent.CANCELLED, cancellation);
-					//setting maximum wait which means in fact user will have two times this period to calibrate
-					//because also the notification remains 60 seconds
-					DialogService.addDialog(alert, MAXIMUM_WAIT_FOR_CALIBRATION_IN_SECONDS);
+					//because the timer based function timerForWaitCalibration doesn't always work as expected
+					NotificationService.updateAllNotifications(null);
+					
+					//launch a notifcation but wait maximum MAXIMUM_WAIT_FOR_CALIBRATION_IN_SECONDS
+					if (timerForWaitCalibration != null) {
+						if (timerForWaitCalibration.running) {
+							timerForWaitCalibration.stop();					
+						}
+					}
+					timerForWaitCalibration = new Timer(MAXIMUM_WAIT_FOR_CALIBRATION_IN_SECONDS * 1000, 1);
+					timerForWaitCalibration.addEventListener(TimerEvent.TIMER, removeInitialCalibrationRequestNotification);
+					timerForWaitCalibration.start();
+					
+					//launch a notification
+					//don't do it via the notificationservice, this could result in the notification being cleared but not recreated (NotificationService.updateAllNotifications)
+					//the notification doesn't need to open any action, the dialog is create when the user opens the notification, or if the app is in the foreground, as soon as the notification is build. 
+					//Only do this if be!= null, because if be == null, then it means this function was called after having entered an invalid number in the dialog, so user is using the app, no need for a notification
+					if (be != null) {
+						Notifications.service.notify(
+							new NotificationBuilder()
+							.setId(NotificationService.ID_FOR_REQUEST_CALIBRATION)
+							.setAlert(ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_calibration_title"))
+							.setTitle(ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_calibration_title"))
+							.enableVibration(true)
+							.enableLights(true)
+							.build());
+					} else {
+						var alert:DialogView = Dialog.service.create(
+							new AlertBuilder()
+							.setTitle(isNaN(bgLevel1) ? ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_first_calibration_title") : ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_second_calibration_title"))
+							.setMessage(ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_calibration"))
+							.addTextField("","Level")
+							.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
+							.addOption(ModelLocator.resourceManagerInstance.getString("general","cancel"), DialogAction.STYLE_CANCEL, 1)
+							.build()
+						);
+						alert.addEventListener(DialogViewEvent.CLOSED, intialCalibrationValueEntered);
+						alert.addEventListener(DialogViewEvent.CANCELLED, cancellation);
+						//setting maximum wait which means in fact user will have two times this period to calibrate
+						//because also the notification remains 60 seconds
+						DialogService.addDialog(alert, MAXIMUM_WAIT_FOR_CALIBRATION_IN_SECONDS);
+					}
 				}
 			}
 		}
