@@ -93,7 +93,7 @@ package services
 		public function NotificationService()
 		{
 			if (_instance != null) {
-				throw new Error("RestartNotificationService class constructor can not be used");	
+				throw new Error("NotificationService class constructor can not be used");	
 			}
 		}
 		

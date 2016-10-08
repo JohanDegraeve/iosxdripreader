@@ -41,6 +41,7 @@ package model
 	
 	import distriqtkey.DistriqtKey;
 	
+	//import events.BackGroundFetchIntervalEvent;
 	import events.BlueToothServiceEvent;
 	import events.CalibrationServiceEvent;
 	import events.DatabaseEvent;
@@ -235,6 +236,7 @@ package model
 							CalibrationService.init();
 							TimerService.init();
 							NetworkInfo.init(DistriqtKey.distriqtKey);
+							//BackGroundFetchInterval.init();
 							NightScoutService.init();
 						} else {
 							_loggingList.addItem(de.data as String);
