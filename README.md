@@ -9,7 +9,7 @@ To compile :
 - install Flash Builder 4.7 with FLex SDK 4.15.0, AIR 22.0 beta en_US
 - an ios developer membership is required, full explanation : http://help.adobe.com/en_US/flex/mobileapps/WS064a3073e805330f6c6abf312e7545f65e-8000.html
 - clone the repository, lets say folder iosxdripreader
-- purchase license for distriqt bluetooth le ane at http://airnativeextensions.com/
+- purchase license for distriqt Notifications, Dialog, Application, Message, NetworkInfo ane at http://airnativeextensions.com/
 - create a folder named ane under iosxdripreader
 - download the zip package, extract, and copy the file com.distriqt.BluetoothLE.ane to the folder ane
 - on the site of airnativeextensions.com, create an application key, application id = net.johandegraeve.iosxdripreader (you can use another application id if you want, but then change the name also in iosxdripreader-app.xml)
