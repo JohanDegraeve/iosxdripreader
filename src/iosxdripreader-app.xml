@@ -326,5 +326,6 @@
 		
 	<extensionID>com.distriqt.NetworkInfo</extensionID>
     
+    <extensionID>net.johandegraeve.iosfetchinterval</extensionID>
     </extensions>
 </application>

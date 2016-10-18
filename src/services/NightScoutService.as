@@ -194,16 +194,19 @@ package services
 			dispatchInformation("nightscout_test_result_nok");
 		}
 		
-		private static function sync(event:Event = null):void {
+		public static function sync(event:Event = null):void {
+			var starttime:Number  = (new Date()).valueOf();
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME) == CommonSettings.DEFAULT_SITE_NAME
 				||
 				CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_API_SECRET) == CommonSettings.DEFAULT_API_SECRET
 				||
 				CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_URL_AND_API_SECRET_TESTED) ==  "false") {
+				_instance.dispatchEvent(new NightScoutServiceEvent(NightScoutServiceEvent.UPLOAD_NO_DATA));
 				return;
 			}
 			
 			if (Calibration.allForSensor().length < 2) {
+				_instance.dispatchEvent(new NightScoutServiceEvent(NightScoutServiceEvent.UPLOAD_NO_DATA));
 				return;
 			}
 			
@@ -219,6 +222,7 @@ package services
 			
 			var cntr:int = ModelLocator.bgReadings.length - 1;
 			var arrayCntr:int = 0;
+			
 			while (cntr > -1) {
 				var bgReading:BgReading = ModelLocator.bgReadings.getItemAt(cntr) as BgReading;
 				if (bgReading.timestamp > lastSyncTimeStamp) {
@@ -252,6 +256,9 @@ package services
 				arrayCntr++;
 			}			
 			
+			var endtime:Number  = (new Date()).valueOf();
+			
+			trace("NightScoutService.as sync , time taken to go through bgreadings = " + ((endtime - starttime)/1000) + " seconds");
 			if (listOfReadingsAsArray.length > 0) {
 				createAndLoadURLRequest(nightScoutEventsUrl, URLRequestMethod.POST, null, JSON.stringify(listOfReadingsAsArray), nightScoutUploadSuccess, nightScoutUploadFailed);
 				var logString:String = "";
@@ -259,12 +266,15 @@ package services
 					logString += " " + listOfReadingsAsArray[cntr2]["_id"] + ",";
 				}
 				dispatchInformation("uploading_events_with_id", logString);
+			} else {
+				_instance.dispatchEvent(new NightScoutServiceEvent(NightScoutServiceEvent.UPLOAD_NO_DATA));
 			}
 		}
 		
 		private static function nightScoutUploadSuccess(event:Event):void {
 			dispatchInformation("upload_to_nightscout_successfull");
 			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_SYNC_TIMESTAMP, (new Date()).valueOf().toString());
+			_instance.dispatchEvent(new NightScoutServiceEvent(NightScoutServiceEvent.UPLOAD_SUCCEEDED));
 		}
 		
 		private static function nightScoutUploadFailed(event:Event):void {
@@ -276,6 +286,7 @@ package services
 				errorMessage = ModelLocator.resourceManagerInstance.getString("nightscoutservice","upload_to_nightscout_unsuccessfull");
 			}
 			dispatchInformation("upload_to_nightscout_unsuccessfull" + errorMessage);
+			_instance.dispatchEvent(new NightScoutServiceEvent(NightScoutServiceEvent.UPLOAD_FAILED));
 		}
 		
 		/**

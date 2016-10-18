@@ -21,6 +21,7 @@ package model
 	import com.distriqt.extension.message.Message;
 	import com.distriqt.extension.networkinfo.NetworkInfo;
 	
+	import flash.events.Event;
 	import flash.events.EventDispatcher;
 	import flash.system.Capabilities;
 	
@@ -41,13 +42,14 @@ package model
 	
 	import distriqtkey.DistriqtKey;
 	
-	//import events.BackGroundFetchIntervalEvent;
+	import events.BackGroundFetchIntervalEvent;
 	import events.BlueToothServiceEvent;
 	import events.CalibrationServiceEvent;
 	import events.DatabaseEvent;
 	import events.NightScoutServiceEvent;
 	import events.NotificationServiceEvent;
 	
+	import services.BackGroundFetchService;
 	import services.BluetoothService;
 	import services.CalibrationService;
 	import services.NightScoutService;
@@ -236,7 +238,7 @@ package model
 							CalibrationService.init();
 							TimerService.init();
 							NetworkInfo.init(DistriqtKey.distriqtKey);
-							//BackGroundFetchInterval.init();
+							//BackGroundFetchService.init();
 							NightScoutService.init();
 						} else {
 							_loggingList.addItem(de.data as String);
@@ -263,6 +265,11 @@ package model
 			image_bluetooth_green = new Image();
 			image_bluetooth_green.contentLoader = iconCache;
 			image_bluetooth_green.source = "../assets/image_bluetooth_green.png";
+		}
+		
+		private static function coreEvent(event:Event):void {
+			var test:int = 0;
+			test++;
 		}
 		
 		private static function addTimeStamp(source:String):String {

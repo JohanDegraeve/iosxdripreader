@@ -25,6 +25,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 	<fx:Style source="assets/style.css"/>
 	<fx:Script>
 		<![CDATA[
+			import model.ModelLocator;
+			
 			import services.DialogService;
 			
 			public static var deviceScreenWidth:Number;
