@@ -30,8 +30,6 @@ package services
 	import flash.events.Event;
 	import flash.events.EventDispatcher;
 	
-	import Utilities.BgGraphBuilder;
-	
 	import databaseclasses.BgReading;
 	import databaseclasses.Calibration;
 	import databaseclasses.CalibrationRequest;
@@ -239,7 +237,7 @@ package services
 			Notifications.service.cancelAll();
 			
 			//start with bgreading notification
-			if (Calibration.allForSensor().length >= 2) {
+			/*if (Calibration.allForSensor().length >= 2) {
 				var lastBgReading:BgReading = BgReading.lastNoSensor(); 
 				var valueToShow:String = "";
 				if (lastBgReading != null) {
@@ -266,7 +264,7 @@ package services
 					.enableVibration(false)
 					.enableLights(false)
 					.build());
-			}
+			}*/
 			
 			//next is the calibrationrequest notification
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_ADDITIONAL_CALIBRATION_REQUEST_ALERT) == "true") {

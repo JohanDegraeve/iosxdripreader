@@ -82,14 +82,14 @@ package services
 			CalibrationService.instance.addEventListener(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT, initialCalibrationReceived);
 			TimerService.instance.addEventListener(TimerServiceEvent.BG_READING_NOT_RECEIVED_ON_TIME, bgReadingNotReceived);
 			NetworkInfo.networkInfo.addEventListener(NetworkInfoEvent.CHANGE, networkChanged);
-			sync();
+			//sync();
 			
 			function initialCalibrationReceived(event:CalibrationServiceEvent):void {
-				sync();
+				//sync();
 			}
 			
 			function bgreadingEventReceived(event:TransmitterServiceEvent):void {
-				sync();
+				//sync();
 			}
 			
 			function networkChanged(event:NetworkInfoEvent):void {
@@ -102,7 +102,7 @@ package services
 					) {
 						testNightScoutUrlAndSecret();
 					} else {
-						sync();
+						//sync();
 					}
 				} 
 			}
