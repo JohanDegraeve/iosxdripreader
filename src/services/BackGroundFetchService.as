@@ -4,6 +4,8 @@ package services
 	
 	import flash.events.Event;
 	import flash.events.EventDispatcher;
+	import flash.events.TimerEvent;
+	import flash.utils.Timer;
 	
 	import events.NightScoutServiceEvent;
 
@@ -11,7 +13,9 @@ package services
 	{
 		private static var _instance:BackGroundFetchService = new BackGroundFetchService(); 
 		private static var initialStart:Boolean = true;
-
+		private static var callCompletionTimer:Timer;
+		private static const MAX_TIME_TO_WAIT_BEFORE_CALLING_CALL_COMPLETION_HANDLER_IN_SECONDS:int = 20;
+		
 		private static var nightScoutUploadResultAwaiting:Boolean = false;
 		
 		public static function get instance():BackGroundFetchService
@@ -42,11 +46,27 @@ package services
 		private static function performFetch(event:Event):void {
 			trace("BackGroundFetchService.as performFetch");
 			nightScoutUploadResultAwaiting = true;
+			
+			callCompletionTimer = new Timer(MAX_TIME_TO_WAIT_BEFORE_CALLING_CALL_COMPLETION_HANDLER_IN_SECONDS * 1000, 1);
+			callCompletionTimer.addEventListener(TimerEvent.TIMER, timeToCallCallCompletionHandler);
+			callCompletionTimer.start();
+			
 			NightScoutService.sync();
+		}
+		
+		private static function timeToCallCallCompletionHandler (event:Event):void {
+			trace("BackGroundFetchService.as : timeToCallCallCompletionHandler");
+			BackgroundFetch.callCompletionHandler(BackgroundFetch.NO_DATA);
+			nightScoutUploadResultAwaiting = false;
 		}
 		
 		private static function nightScoutServiceNoData(event:NightScoutServiceEvent):void {
 			trace("BackGroundFetchService.as received nightScoutServiceNoData and nightScoutUploadResultAwaiting = " + nightScoutUploadResultAwaiting);
+			if (callCompletionTimer != null) {
+				callCompletionTimer.stop();
+				callCompletionTimer = null;
+			}
+			
 			if (nightScoutUploadResultAwaiting) {
 				nightScoutUploadResultAwaiting = false;
 				BackgroundFetch.callCompletionHandler(BackgroundFetch.NO_DATA);
@@ -55,6 +75,11 @@ package services
 
 		private static function nightScoutServiceUploadFailed(event:NightScoutServiceEvent):void {
 			trace("BackGroundFetchService.as received nightScoutServiceUploadFailed and nightScoutUploadResultAwaiting = " + nightScoutUploadResultAwaiting);
+			if (callCompletionTimer != null) {
+				callCompletionTimer.stop();
+				callCompletionTimer = null;
+			}
+
 			if (nightScoutUploadResultAwaiting) {
 				nightScoutUploadResultAwaiting = false;
 				BackgroundFetch.callCompletionHandler(BackgroundFetch.FETCH_FAILED);
@@ -62,7 +87,12 @@ package services
 		}
 
 		private static function nightScoutServiceUploadSucceeded(event:NightScoutServiceEvent):void {
-			trace("BackGroundFetchService.as received nightScoutServiceUploadSucceded and nightScoutUploadResultAwaiting = " + nightScoutUploadResultAwaiting);
+			if (callCompletionTimer != null) {
+				callCompletionTimer.stop();
+				callCompletionTimer = null;
+			}
+
+			trace("BackGroundFetchService.as received nightScoutServiceUploadSuccedeed and nightScoutUploadResultAwaiting = " + nightScoutUploadResultAwaiting);
 			if (nightScoutUploadResultAwaiting) {
 				nightScoutUploadResultAwaiting = false;
 				BackgroundFetch.callCompletionHandler(BackgroundFetch.NEW_DATA);
