@@ -404,6 +404,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 						BluetoothLE.service.centralManager.addEventListener(PeripheralEvent.CONNECT, userInitiatedScanningSucceeded);
 						scanningWasUserInitiated = true;
 						BluetoothService.startScanning();
+						var alert:DialogView = Dialog.service.create(
+							new AlertBuilder()
+							.setTitle(ModelLocator.resourceManagerInstance.getString("homeview","scan_for_device"))
+							.setMessage(ModelLocator.resourceManagerInstance.getString("homeview","scanning_started_message"))
+							.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
+							.build()
+						);
+						DialogService.addDialog(alert, 30);
 					} else {
 						var alert:DialogView = Dialog.service.create(
 							new AlertBuilder()

@@ -1,11 +1,9 @@
 package events
 {
-	import flash.events.Event;
-
 	[Event(name="InitialCalibrationEvent",type="events.CalibrationServiceEvent")]
 	[Event(name="NewCalibrationEvent",type="events.CalibrationServiceEvent")]
 	
-	public class CalibrationServiceEvent extends Event
+	public class CalibrationServiceEvent extends GenericEvent
 	{
 		/**
 		 * event to inform that initial calibration is done
@@ -17,6 +15,10 @@ package events
 		public static const NEW_CALIBRATION_EVENT:String = "NewCalibrationEvent";
 
 		public var data:*;
+		/**
+		 * timestamp that the event was generated
+		 */
+		public var timestamp:Number;
 		
 		public function CalibrationServiceEvent(type:String, bubbles:Boolean=false, cancelable:Boolean=false)
 		{

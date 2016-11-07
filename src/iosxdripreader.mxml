@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 								  xmlns:s="library://ns.adobe.com/flex/spark" 
 								  applicationDPI="160"
 								  splashScreenImage="@Embed('assets/splash.png')"
+								  activate="activateHandler(event)"
 								  initialize="initApplication()">
 
 	<fx:Style source="assets/style.css"/>
@@ -28,6 +29,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			import model.ModelLocator;
 			
 			import services.DialogService;
+			import services.NightScoutService;
 			
 			public static var deviceScreenWidth:Number;
 			public static var deviceScreenHeight:Number;
@@ -46,6 +48,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 				
 				DialogService.init(this.stage);
 			}
+			
+			
+			protected function activateHandler(event:Event):void
+			{
+				ModelLocator.isInForeground = true;
+				trace("iosxdripreader.mxml, setting ModelLocator.isInForeground = true");
+				
+				trace("iosxdripreader.mxml, calling NightScoutService.sync");
+				NightScoutService.sync();
+			}
+
 			
 		]]>
 	</fx:Script>

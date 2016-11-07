@@ -17,8 +17,6 @@
  */
 package events
 {
-	import flash.events.Event;
-	
 	[Event(name="ResultEvent",type="events.DatabaseEvent")]
 	[Event(name="ErrorEvent",type="events.DatabaseEvent")]
 	[Event(name="DatabaseInformation",type="events.DatabaseEvent")]
@@ -28,7 +26,7 @@ package events
 	[Event(name="BGReadingRetrievedEvent",type="events.DatabaseEvent")]
 	[Event(name="LogRetrievedEvent",type="events.DatabaseEvent")]
 	
-	public class DatabaseEvent extends Event
+	public class DatabaseEvent extends GenericEvent
 	{
 		public static const RESULT_EVENT:String = "ResultEvent";
 		public static const ERROR_EVENT:String = "ErrorEvent";
@@ -42,7 +40,6 @@ package events
 		 * data.information will be a string with this info. 
 		 */
 		public static const DATABASE_INFORMATION_EVENT:String = "DatabaseInformation";
-		
 		
 		public var data:*;
 		

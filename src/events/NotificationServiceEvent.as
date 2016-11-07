@@ -1,8 +1,6 @@
 package events
 {
-	import flash.events.Event;
-	
-	public class NotificationServiceEvent extends Event
+	public class NotificationServiceEvent extends GenericEvent
 	{
 		[Event(name="NotificationEvent",type="events.NotificationServiceEvent")]
 		[Event(name="NotificationServiceInitiatedEvent",type="events.NotificationServiceEvent")]

@@ -1,8 +1,6 @@
 package events
 {
-	import flash.events.Event;
-
-	public class SettingsServiceEvent extends Event
+	public class SettingsServiceEvent extends GenericEvent
 	{
 		[Event(name="SettingChanged",type="events.SettingsServiceEvent")]
 		

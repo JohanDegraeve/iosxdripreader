@@ -1,8 +1,6 @@
 package events
 {
-	import flash.events.Event;
-	
-	public class TimerServiceEvent extends Event
+	public class TimerServiceEvent extends GenericEvent
 	{
 		[Event(name="BGReadingNotReceivedOnTime",type="events.TimerServiceEvent")]
 		

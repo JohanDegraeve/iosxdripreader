@@ -17,8 +17,6 @@
  */
 package events
 {
-	import flash.events.Event;
-	
 	[Event(name="BGReadingEvent",type="events.TransmitterServiceEvent")]
 	[Event(name="TransmitterServiceInformation",type="events.TransmitterServiceEvent")]
 	
@@ -26,7 +24,7 @@ package events
 	 * used by transmitter service to notify on all kinds of events : information messages, etc.. <br>
 	 */
 	
-	public class TransmitterServiceEvent extends Event
+	public class TransmitterServiceEvent extends GenericEvent
 	{
 		/**
 		 * event to inform that there's a new bgreading available<br>
@@ -42,7 +40,7 @@ package events
 
 		
 		public var data:*;
-		
+
 		public function TransmitterServiceEvent(type:String, bubbles:Boolean=false, cancelable:Boolean=false)
 		{
 			super(type, bubbles, cancelable);

@@ -169,19 +169,9 @@ package services
 				switch (event.code) 
 				{
 					case ApplicationStateEvent.CODE_LOCK:
-					//if user locks the device, then immediately (in case the sensor is already calibrated), the always on notification will again be shown
-					if (Calibration.allForSensor().length >= 2) {
-						var lastBgReading:BgReading = BgReading.lastNoSensor();
-						if (lastBgReading != null) {
-							if (lastBgReading.calculatedValue != 0) {
-								if ((new Date().getTime()) - (60000 * 11) - lastBgReading.timestamp > 0) {
-								} else {
-									updateAllNotifications(null);
-								}
-							}
-						} else {
-						}
-					}
+					case ApplicationStateEvent.CODE_HOME:
+						trace("NotificationService.as, setting ModelLocator.isInForeground = false");
+						ModelLocator.isInForeground = false;
 					break;
 				}
 			}

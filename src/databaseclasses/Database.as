@@ -56,7 +56,7 @@ package databaseclasses
 		private static var databaseWasCopiedFromSampleFile:Boolean = true;
 		private static const maxDaysToKeepLogfiles:int = 2;
 		public static const END_OF_RESULT:String = "END_OF_RESULT";
-		private static const debugMode:Boolean = false;
+		private static const debugMode:Boolean = true;
 		
 		/**
 		 * create table to store the bluetooth device name and address<br>
@@ -695,11 +695,18 @@ package databaseclasses
 				var tempObject:Object = localSqlStatement.getResult().data;
 				if (tempObject != null) {
 					if (tempObject is Array) {
+						if (debugMode)
+							trace("Retrieved LogInfo from db During Startup = ");
 						for each ( var o:Object in tempObject) {
 							var event:DatabaseEvent = new DatabaseEvent(DatabaseEvent.LOGRETRIEVED_EVENT);
 							event.data = o.log;
+							if (debugMode)
+								trace(o.log as String);
 							instance.dispatchEvent(event);
 						}
+						if (debugMode)
+							trace("End of retrieved LogInfo from db During Stratup.");
+
 					}
 				} else {
 					//no need to dispatch anything, there are no loggings

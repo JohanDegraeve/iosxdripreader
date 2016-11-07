@@ -42,6 +42,7 @@ package model
 	
 	import distriqtkey.DistriqtKey;
 	
+	import events.BackGroundFetchServiceEvent;
 	import events.BlueToothServiceEvent;
 	import events.CalibrationServiceEvent;
 	import events.DatabaseEvent;
@@ -64,7 +65,6 @@ package model
 	public class ModelLocator extends EventDispatcher
 	{
 		private static var _instance:ModelLocator = new ModelLocator();
-		private static var dateFormatter:DateTimeFormatter;
 		private static var dataSortFieldForBGReadings:SortField;
 		private static var dataSortForBGReadings:Sort;
 
@@ -74,6 +74,19 @@ package model
 		public static var image_bluetooth_orange:Image
 		public static var iconCache:ContentCache;
 
+		private static var _isInForeground:Boolean = false;
+
+		public static function get isInForeground():Boolean
+		{
+			return _isInForeground;
+		}
+
+		public static function set isInForeground(value:Boolean):void
+		{
+			_isInForeground = value;
+		}
+
+		
 		public static function get instance():ModelLocator
 		{
 			return _instance;
@@ -128,7 +141,10 @@ package model
 			if (_instance != null) {
 				throw new Error("ModelLocator class can only be instantiated through ModelLocator.getInstance()");	
 			}
-			trace("instantiating modellocator");
+			trace("Modellocator.as, instantiating modellocator");
+			trace("Modellocator.as, setting ModelLocator.isInForeground = true");
+			_isInForeground = true;
+			
 			_appStartTimestamp = (new Date()).valueOf();
 			
 			_resourceManagerInstance = ResourceManager.getInstance();
@@ -139,38 +155,52 @@ package model
 			NightScoutService.instance.addEventListener(NightScoutServiceEvent.NIGHTSCOUT_SERVICE_INFORMATION_EVENT, nightScoutServiceInformationReceived);
 			CalibrationService.instance.addEventListener(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT, initialCalibrationEventReceived);
 			CalibrationService.instance.addEventListener(CalibrationServiceEvent.NEW_CALIBRATION_EVENT, newCalibrationEventReceived);
-			
-			function initialCalibrationEventReceived(be:CalibrationServiceEvent) {
-				_loggingList.addItem(addTimeStamp(" CS : " + "initial calibration done"));
-				Database.insertLogging(Utilities.UniqueId.createEventId(), _loggingList.getItemAt(_loggingList.length - 1) as String, (new Date()).valueOf(),(new Date()).valueOf(),null);
+			BackGroundFetchService.instance.addEventListener(BackGroundFetchServiceEvent.LOG_INFO, backgroundFetchServiceLogInfoReceived);
+
+			function backgroundFetchServiceLogInfoReceived(be:BackGroundFetchServiceEvent):void {
+				_loggingList.addItem(be.getTimeStampAsString() + " BG : " + be.data.information);
+				_loggingList.refresh();
+				Database.insertLogging(Utilities.UniqueId.createEventId(),_loggingList.getItemAt(_loggingList.length - 1) as String, be.timeStamp,(new Date()).valueOf(),null); 
 			}
 			
-			function newCalibrationEventReceived(be:CalibrationServiceEvent) {
-				_loggingList.addItem(addTimeStamp(" CS : " + "new calibration done"));
-				Database.insertLogging(Utilities.UniqueId.createEventId(), _loggingList.getItemAt(_loggingList.length - 1) as String, (new Date()).valueOf(),(new Date()).valueOf(),null);
+			function initialCalibrationEventReceived(be:CalibrationServiceEvent):void {
+				_loggingList.addItem(be.getTimeStampAsString() + " CS : " + "initial calibration done");
+				_loggingList.refresh();
+				Database.insertLogging(Utilities.UniqueId.createEventId(), _loggingList.getItemAt(_loggingList.length - 1) as String, be.timeStamp,(new Date()).valueOf(),null);
+			}
+			
+			function newCalibrationEventReceived(be:CalibrationServiceEvent):void {
+				_loggingList.addItem(be.getTimeStampAsString() + " CS : " + "new calibration done");
+				_loggingList.refresh();
+				Database.insertLogging(Utilities.UniqueId.createEventId(), _loggingList.getItemAt(_loggingList.length - 1) as String, be.timeStamp,(new Date()).valueOf(),null);
 			}
 			
 			function nightScoutServiceInformationReceived(be:NightScoutServiceEvent):void {
-				_loggingList.addItem(addTimeStamp(" NS : " + be.data.information));
-				Database.insertLogging(Utilities.UniqueId.createEventId(), _loggingList.getItemAt(_loggingList.length - 1) as String, (new Date()).valueOf(),(new Date()).valueOf(),null);				
+				_loggingList.addItem(be.getTimeStampAsString() + " NS : " + be.data.information);
+				_loggingList.refresh();
+				Database.insertLogging(Utilities.UniqueId.createEventId(), _loggingList.getItemAt(_loggingList.length - 1) as String, be.timeStamp,(new Date()).valueOf(),null);				
 			}
 			
 			function databaseInformationEventReceived(be:DatabaseEvent):void {
-				_loggingList.addItem(addTimeStamp(" DB : " + be.data.information));
-				Database.insertLogging(Utilities.UniqueId.createEventId(), _loggingList.getItemAt(_loggingList.length - 1) as String, (new Date()).valueOf(),(new Date()).valueOf(),null);				
+				_loggingList.addItem(be.getTimeStampAsString() + " DB : " + be.data.information);
+				_loggingList.refresh();
+				Database.insertLogging(Utilities.UniqueId.createEventId(), _loggingList.getItemAt(_loggingList.length - 1) as String, be.timeStamp,(new Date()).valueOf(),null);				
 			}
 			
 			function blueToothServiceInformationReceived(be:BlueToothServiceEvent):void {
-				_loggingList.addItem(addTimeStamp(" BT : " + be.data.information));
-				Database.insertLogging(Utilities.UniqueId.createEventId(), _loggingList.getItemAt(_loggingList.length - 1) as String, (new Date()).valueOf(),(new Date()).valueOf(),null);
+				//_loggingList.addItem(be.getTimeStampAsString() + " BT : " + be.data.information);
+				//_loggingList.refresh();
+				//Database.insertLogging(Utilities.UniqueId.createEventId(), _loggingList.getItemAt(_loggingList.length - 1) as String, be.timeStamp,(new Date()).valueOf(),null);
 			}
 			
 			function notificationServiceLogInfoReceived(be:NotificationServiceEvent):void {
-				_loggingList.addItem(addTimeStamp(" NI : " + be.data.information));
-				Database.insertLogging(Utilities.UniqueId.createEventId(), _loggingList.getItemAt(_loggingList.length - 1) as String, (new Date()).valueOf(),(new Date()).valueOf(),null);
+				//_loggingList.addItem(be.getTimeStampAsString() + " NI : " + be.data.information);
+				//_loggingList.refresh();
+				//Database.insertLogging(Utilities.UniqueId.createEventId(), _loggingList.getItemAt(_loggingList.length - 1) as String, be.timeStamp,(new Date()).valueOf(),null);
 			}
 			
 			//create the logging list and bgreading list and assign a sorting - but don't get the logs from the database yet because maybe the database init is not finished yet
+			//sorting is alphabetical, which should result in chronologial order because every stored text will begin with a timestamp.
 			var dataSortField:SortField= new SortField();
 			dataSortField.numeric = false;
 			var dataSort:Sort = new Sort();
@@ -188,11 +218,14 @@ package model
 			dataSortForBGReadings.fields=[dataSortFieldForBGReadings];
 			_bgReadings.sort = dataSortForBGReadings;
 			Database.instance.addEventListener(DatabaseEvent.DATABASE_INIT_FINISHED_EVENT,getBgReadingsAndLogsFromDatabase);
-			
+						
 			function getBgReadingsAndLogsFromDatabase():void {
 				Database.instance.addEventListener(DatabaseEvent.BGREADING_RETRIEVAL_EVENT, bgReadingReceivedFromDatabase);
 				//bgreadings created after app start time are not needed because they are already stored in the _bgReadings by the transmitter service
 				Database.getBgReadings(_appStartTimestamp);
+				
+				//for an unknown reasy _isInForeground is back to value false here, so setting it to true.
+				_isInForeground = true;
 			}
 
 			function bgReadingReceivedFromDatabase(de:DatabaseEvent):void {
@@ -225,7 +258,6 @@ package model
 
 							//will initialise the bluetoothdevice
 							Database.getBlueToothDevice();
-
 							Application.init(DistriqtKey.distriqtKey);
 							Message.init(DistriqtKey.distriqtKey);
 							TransmitterService.init();
@@ -239,6 +271,7 @@ package model
 							NetworkInfo.init(DistriqtKey.distriqtKey);
 							BackGroundFetchService.init();
 							NightScoutService.init();
+							//NightScoutService.sync(null);
 						} else {
 							_loggingList.addItem(de.data as String);
 						}
@@ -269,25 +302,6 @@ package model
 		private static function coreEvent(event:Event):void {
 			var test:int = 0;
 			test++;
-		}
-		
-		private static function addTimeStamp(source:String):String {
-			if (dateFormatter == null) {
-				dateFormatter = new DateTimeFormatter();
-				dateFormatter.dateTimePattern = ModelLocator.resourceManagerInstance.getString('general','datetimepatternforlogginginfo');
-				dateFormatter.useUTC = false;
-				dateFormatter.setStyle("locale",Capabilities.language.substr(0,2));
-			}
-			
-			var date:Date = new Date();
-			var milliSeconds:String = date.milliseconds.toString();
-			if (milliSeconds.length < 3)
-				milliSeconds = "0" + milliSeconds;
-			if (milliSeconds.length < 3)
-				milliSeconds = "0" + milliSeconds;
-			
-			var returnValue:String = dateFormatter.format(date) + " " + milliSeconds + " " + source;
-			return returnValue;
 		}
 		
 		/**
