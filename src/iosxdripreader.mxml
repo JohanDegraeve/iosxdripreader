@@ -56,10 +56,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 				trace("iosxdripreader.mxml, setting ModelLocator.isInForeground = true");
 				
 				trace("iosxdripreader.mxml, calling NightScoutService.sync");
-				NightScoutService.sync();
+				//NightScoutService.sync();
 			}
-
-			
 		]]>
 	</fx:Script>
 	

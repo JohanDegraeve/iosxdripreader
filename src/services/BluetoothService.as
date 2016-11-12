@@ -575,10 +575,20 @@ package services
 				//ignoring this packet because length is 0
 			} else {
 				value.position = 0;
+				value.endian = Endian.LITTLE_ENDIAN;
+				var packetLength:int = value.readUnsignedByte();
+				//position = 1
+				var packetType:int = value.readUnsignedByte();//0 = data packet, 1 =  TXID packet, 0xF1 (241 if read as unsigned int) = Beacon packet
+				var rawData:Number = Number.NaN;
+				if (packetType == 0) {
+					rawData = value.readInt();
+				}
+
 				blueToothServiceEvent.data.information = 
 					ModelLocator.resourceManagerInstance.getString('bluetoothservice','data_packet_received_from_transmitter_with') +
-					" byte 0 = " + value.readUnsignedByte() + " and byte 1 = " + value.readUnsignedByte();
+					" byte 0 = " + packetlength + " and byte 1 = " + packetType + " and rawData = " + rawData;
 				_instance.dispatchEvent(blueToothServiceEvent);
+				
 				value.position = 0;
 				processTransmitterData(value);
 			}

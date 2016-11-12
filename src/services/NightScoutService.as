@@ -113,12 +113,13 @@ package services
 			//sync();
 			
 			function initialCalibrationReceived(event:CalibrationServiceEvent):void {
-				dispatchInformation('generic', 'initialCalibrationReceived'); 
-				sync();
+				//dispatchInformation('generic', 'initialCalibrationReceived'); 
+				//sync();
 			}
 			
 			function bgreadingEventReceived(event:TransmitterServiceEvent):void {
-				dispatchInformation('generic', 'bgreadingEventReceived');
+				//dispatchInformation('generic', 'bgreadingEventReceived');
+				if (!ModelLocator.isInForeground)
 				sync();
 			}
 			
@@ -231,12 +232,10 @@ package services
 				CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_API_SECRET) == CommonSettings.DEFAULT_API_SECRET
 				||
 				CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_URL_AND_API_SECRET_TESTED) ==  "false") {
-				BackGroundFetchService.callBackGroundFetchCompletionHandler(BackGroundFetchService.UP_OR_DOWNLOAD_NO_DATA);
 				return;
 			}
 			
 			if (Calibration.allForSensor().length < 2) {
-				BackGroundFetchService.callBackGroundFetchCompletionHandler(BackGroundFetchService.UP_OR_DOWNLOAD_NO_DATA);
 				return;
 			}
 			
@@ -297,7 +296,6 @@ package services
 				dispatchInformation("uploading_events_with_id", logString);
 				createAndLoadURLRequest(_nightScoutEventsUrl, URLRequestMethod.POST, null, JSON.stringify(listOfReadingsAsArray), nightScoutUploadSuccess, nightScoutUploadFailed);
 			} else {
-				BackGroundFetchService.callBackGroundFetchCompletionHandler(BackGroundFetchService.UP_OR_DOWNLOAD_NO_DATA);
 				trace("NightScoutService.as setting syncRunning = false");
 				syncRunning = false;
 			}
@@ -309,7 +307,6 @@ package services
 
 			dispatchInformation("upload_to_nightscout_successfull");
 			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_SYNC_TIMESTAMP, (new Date()).valueOf().toString());
-			BackGroundFetchService.callBackGroundFetchCompletionHandler(BackGroundFetchService.UP_OR_DOWNLOAD_SUCCEEDED);
 			trace("NightScoutService.as setting syncRunning = false");
 			syncRunning = false;
 		}
@@ -327,7 +324,6 @@ package services
 			}
 			
 			dispatchInformation("upload_to_nightscout_unsuccessfull", errorMessage);
-			BackGroundFetchService.callBackGroundFetchCompletionHandler(BackGroundFetchService.UP_OR_DOWNLOAD_FAILED);
 			trace("NightScoutService.as setting syncRunning = false");
 			syncRunning = false;
 		}
