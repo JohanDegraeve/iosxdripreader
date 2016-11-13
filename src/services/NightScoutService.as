@@ -151,7 +151,9 @@ package services
 				if (event.data == CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME || event.data == CommonSettings.COMMON_SETTING_API_SECRET) {
 					if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME) != CommonSettings.DEFAULT_SITE_NAME
 						&&
-						CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_API_SECRET) != CommonSettings.DEFAULT_API_SECRET) {
+						CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_API_SECRET) != CommonSettings.DEFAULT_API_SECRET
+						&& 
+						!syncRunning) {
 						testNightScoutUrlAndSecret();
 					}
 				}
@@ -169,7 +171,7 @@ package services
 				testEvent["notes"] = "to test nightscout url";
 				var nightScoutTreatmentsUrl:String = "https://" + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME) + "/api/v1/treatments";
 				dispatchInformation("call_to_nightscout_to_verify_url_and_secret");
-				createAndLoadURLRequest(nightScoutTreatmentsUrl, URLRequestMethod.POST,null,JSON.stringify(testEvent), nightScoutUrlTestSuccess, nightScoutUrlTestError);
+				createAndLoadURLRequest(nightScoutTreatmentsUrl, URLRequestMethod.PUT,null,JSON.stringify(testEvent), nightScoutUrlTestSuccess, nightScoutUrlTestError);
 			} else {
 				dispatchInformation("call_to_nightscout_to_verify_url_and_secret_can_not_be_made");
 			}

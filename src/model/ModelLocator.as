@@ -187,9 +187,9 @@ package model
 			}
 			
 			function blueToothServiceInformationReceived(be:BlueToothServiceEvent):void {
-				_loggingList.addItem(be.getTimeStampAsString() + " BT : " + be.data.information);
-				_loggingList.refresh();
-				Database.insertLogging(Utilities.UniqueId.createEventId(), _loggingList.getItemAt(_loggingList.length - 1) as String, be.timeStamp,(new Date()).valueOf(),null);
+				//_loggingList.addItem(be.getTimeStampAsString() + " BT : " + be.data.information);
+				//_loggingList.refresh();
+				//Database.insertLogging(Utilities.UniqueId.createEventId(), _loggingList.getItemAt(_loggingList.length - 1) as String, be.timeStamp,(new Date()).valueOf(),null);
 			}
 			
 			function notificationServiceLogInfoReceived(be:NotificationServiceEvent):void {
