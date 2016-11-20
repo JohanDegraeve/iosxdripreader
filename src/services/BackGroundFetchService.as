@@ -2,15 +2,9 @@ package services
 {
 	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
 	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetchEvent;
-	import com.hurlant.crypto.hash.SHA1;
-	import com.hurlant.util.Hex;
 	
 	import flash.events.EventDispatcher;
 	import flash.net.URLVariables;
-	
-	import Utilities.UniqueId;
-	
-	import databaseclasses.CommonSettings;
 	
 	import events.BackGroundFetchServiceEvent;
 	
@@ -52,35 +46,6 @@ package services
 			BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.LOG_INFO, logInfoReceived);
 			BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.LOAD_REQUEST_RESULT, loadRequestSuccess);
 			BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.LOAD_REQUEST_ERROR, loadRequestError);
-			
-			//test immediate upload
-			/*var testEvent:Object = new Object();
-			var testUniqueId:String = UniqueId.createEventId();
-			testEvent["_id"] = testUniqueId;
-			testEvent["eventType"] = "Exercise";
-			testEvent["duration"] = 20;
-			testEvent["notes"] = "to test nightscout url";
-			testEvent["eventTime"] = (new Date()).valueOf();
-			var helpDiabetesObject:Object = new Object();
-			helpDiabetesObject["lastmodifiedtimestamp"] = (new Date()).valueOf();
-			testEvent["helpdiabetes"] = helpDiabetesObject;
-			
-			var nightScoutTreatmentsUrl:String = "https://" + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME) + "/api/v1/treatments";
-			
-			var hash:SHA1 = new SHA1();
-			var _hashedAPISecret:String = Hex.fromArray(hash.hash(Hex.toArray(Hex.fromString(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_API_SECRET)))));
-			
-			var parameters:Array = new Array(8);
-			parameters[0] = nightScoutTreatmentsUrl;
-			parameters[1] = "POST";
-			parameters[2] = null;
-			parameters[3] = ModelLocator.isInForeground;
-			parameters[4] = JSON.stringify(testEvent);
-			parameters[5] = "application/json";
-			parameters[6] = "api-secret";
-			parameters[7] = _hashedAPISecret;
-			BackgroundFetch.createAndLoadUrlRequest.apply(null, parameters);*/
-			//BackgroundFetch.createAndLoadUrlRequest(nightScoutTreatmentsUrl, "POST", null, JSON.stringify(testEvent),  "application/json", "api-secret", _hashedAPISecret);*/
 		}
 		
 		private static function loadRequestSuccess(event:BackgroundFetchEvent):void {

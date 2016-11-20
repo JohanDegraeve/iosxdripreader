@@ -18,6 +18,7 @@ package services
 	import databaseclasses.BgReading;
 	import databaseclasses.Calibration;
 	import databaseclasses.CalibrationRequest;
+	import databaseclasses.CommonSettings;
 	import databaseclasses.Sensor;
 	
 	import events.CalibrationServiceEvent;
@@ -191,6 +192,9 @@ package services
 				//and ask again a value
 				bgReadingReceived(null);
 			} else {
+				if(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) != "true") {
+					asNumber = asNumber * BgReading.MMOLL_TO_MGDL; 	
+				}
 				if (isNaN(bgLevel1)) {
 					bgLevel1 = asNumber;
 					timeStampOfFirstBgLevel = (new Date()).valueOf();
@@ -284,6 +288,9 @@ package services
 								//and ask again a value
 								calibrationOnRequest(override);
 							} else {
+								if(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) != "true") {
+									asNumber = asNumber * BgReading.MMOLL_TO_MGDL; 	
+								}
 								Calibration.clearLastCalibration();
 								var newcalibration:Calibration = Calibration.create(asNumber).saveToDatabaseSynchronous();
 								var calibrationServiceEvent:CalibrationServiceEvent = new CalibrationServiceEvent(CalibrationServiceEvent.NEW_CALIBRATION_EVENT);
@@ -327,6 +334,9 @@ package services
 							//and ask again a value
 							calibrationOnRequest(override);
 						} else {
+							if(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) != "true") {
+								asNumber = asNumber * BgReading.MMOLL_TO_MGDL; 	
+							}
 							var newcalibration:Calibration = Calibration.create(asNumber).saveToDatabaseSynchronous();
 							_instance.dispatchEvent(new CalibrationServiceEvent(CalibrationServiceEvent.NEW_CALIBRATION_EVENT));
 							myTrace("Calibration created : " + newcalibration.print("   "));
@@ -355,6 +365,9 @@ package services
 				initialCalibrate();
 				Calibration.requestCalibrationIfRangeTooNarrow();
 			} else {
+				if(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) != "true") {
+					asNumber = asNumber * BgReading.MMOLL_TO_MGDL; 	
+				}
 				var calibration:Calibration = Calibration.create(asNumber).saveToDatabaseSynchronous();
 				myTrace("Calibration created : " + calibration.print("   "));
 			}

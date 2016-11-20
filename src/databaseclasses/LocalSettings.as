@@ -41,18 +41,25 @@ package databaseclasses
 		 * filename for local tracing, empty string if currently no tracing 
 		 */
 		public static const LOCAL_SETTING_TRACE_FILE_NAME:int = 1;
+		/**
+		 * When user configures nightscout url and api secret, a test is done.<br>
+		 * If that fails a dialog is shown<br>
+		 * This indicates if that dialog has already been shown before or not, to avoid multiple pop ups.
+		 */
+		public static const LOCAL_SETTING_WARNING_THAT_NIGHTSCOUT_URL_AND_SECRET_IS_NOT_OK_ALREADY_GIVEN:int = 2;
 
 		private static var localSettings:Array = [
 			"false",//LOCAL_SETTING_DETAILED_TRACING_ENABLED
-			""//LOCAL_SETTING_TRACE_FILE_NAME
+			"",//LOCAL_SETTING_TRACE_FILE_NAME
+			"false"//LOCAL_SETTING_WARNING_THAT_NIGHTSCOUT_URL_AND_SECRET_IS_NOT_OK_ALREADY_GIVEN
 		];
 		
-		public function LocalSettings()
-		{
+		public function LocalSettings() {
 			if (_instance != null) {
 				throw new Error("LocalSettings class constructor can not be used");	
 			}
 		}
+		
 		public static function getLocalSetting(localSettingId:int):String {
 			return localSettings[localSettingId];
 		}

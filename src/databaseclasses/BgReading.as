@@ -339,23 +339,12 @@ package databaseclasses
 		 * returnvalue is an array of two objects, the first beging a Number, the second a Boolean 
 		 */
 		public static function calculateSlope(current:BgReading, last:BgReading):Array {
-			
 			if (current.timestamp == last.timestamp || 
 				current.timestamp - last.timestamp > BgGraphBuilder.MAX_SLOPE_MINUTES * 60 * 1000) {
 				return new Array(new Number(0), new Boolean(true));
 			}
 			var slope:Number =  (last.calculatedValue - current.calculatedValue) / (last.timestamp - current.timestamp);
 			return new Array(slope,new Boolean(false));
-		}
-		
-		public static function currentSlope():Number {
-			var last2:ArrayCollection = latest(2);
-			if (last2.length == 2) {
-				var slopePair:Array = calculateSlope(last2.getItemAt(0) as BgReading, last2.getItemAt(1) as BgReading);
-				return slopePair[0] as Number;
-			} else{
-				return new Number(0);
-			}
 		}
 		
 		/**
@@ -907,5 +896,6 @@ package databaseclasses
 				return new Number(0);
 			}
 		}
+		
 	}
 }
