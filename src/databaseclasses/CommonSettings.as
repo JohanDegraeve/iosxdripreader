@@ -70,6 +70,10 @@
 		 * value true or false, default true
 		  */
 		 public static const COMMON_SETTING_ADDITIONAL_CALIBRATION_REQUEST_ALERT:int = 8;
+		 /**
+		 * true or false, if true unit is mg/dl 
+		  */
+		 public static const COMMON_SETTING_DO_MGDL:int = 9;
 		 
 		 private static var commonSettings:Array = [
 			 "0",//COMMON_SETTING_CURRENT_SENSOR
@@ -80,7 +84,8 @@
 			 DEFAULT_API_SECRET,//COMMON_SETTING_API_SECRET
 			 "false",//COMMON_SETTING_URL_AND_API_SECRET_TESTED
 			 "0",//COMMON_SETTING_NIGHTSCOUT_SYNC_TIMESTAMP
-			 "true"//COMMON_SETTING_ADDITIONAL_CALIBRATION_REQUEST_ALERT
+			 "true",//COMMON_SETTING_ADDITIONAL_CALIBRATION_REQUEST_ALERT
+			 "true"
 		 ];
 		 
 		 public function CommonSettings()

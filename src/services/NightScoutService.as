@@ -25,6 +25,7 @@ package services
 	import databaseclasses.BlueToothDevice;
 	import databaseclasses.Calibration;
 	import databaseclasses.CommonSettings;
+	import databaseclasses.LocalSettings;
 	
 	import events.BackGroundFetchServiceEvent;
 	import events.CalibrationServiceEvent;
@@ -54,8 +55,8 @@ package services
 		
 		private static var _syncRunning:Boolean = false;
 		private static var lastSyncrunningChangeDate:Number = (new Date()).valueOf();
-		private static const maxMinutesToKeepSyncRunningTrue:int = 3;
-
+		private static const maxMinutesToKeepSyncRunningTrue:int = 1;
+		
 		private static function get syncRunning():Boolean
 		{
 			if (!_syncRunning)
@@ -68,13 +69,13 @@ package services
 			}
 			return true;
 		}
-
+		
 		private static function set syncRunning(value:Boolean):void
 		{
 			_syncRunning = value;
 			lastSyncrunningChangeDate = (new Date()).valueOf();
 		}
-
+		
 		
 		private static var _hashedAPISecret:String = "";
 		
@@ -109,17 +110,28 @@ package services
 			NetworkInfo.networkInfo.addEventListener(NetworkInfoEvent.CHANGE, networkChanged);
 			BackGroundFetchService.instance.addEventListener(BackGroundFetchServiceEvent.LOAD_REQUEST_ERROR, defaultErrorFunction);
 			BackGroundFetchService.instance.addEventListener(BackGroundFetchServiceEvent.LOAD_REQUEST_RESULT, defaultSuccessFunction);
-			//dispatchInformation('generic', 'init');
-			//sync();
+
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME) != CommonSettings.DEFAULT_SITE_NAME
+				&&
+				CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_API_SECRET) != CommonSettings.DEFAULT_API_SECRET
+				&&
+				CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_URL_AND_API_SECRET_TESTED) == "false"
+			) {
+				testNightScoutUrlAndSecret();
+			} else if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME) != CommonSettings.DEFAULT_SITE_NAME
+				&&
+				CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_API_SECRET) != CommonSettings.DEFAULT_API_SECRET
+				&&
+				CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_URL_AND_API_SECRET_TESTED) == "true"
+			) {
+				sync();
+			}
 			
 			function initialCalibrationReceived(event:CalibrationServiceEvent):void {
-				//dispatchInformation('generic', 'initialCalibrationReceived'); 
-				//sync();
+				sync();
 			}
 			
 			function bgreadingEventReceived(event:TransmitterServiceEvent):void {
-				//dispatchInformation('generic', 'bgreadingEventReceived');
-				if (!ModelLocator.isInForeground)
 				sync();
 			}
 			
@@ -132,18 +144,24 @@ package services
 						CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_URL_AND_API_SECRET_TESTED) == "false"
 					) {
 						testNightScoutUrlAndSecret();
-					} else {
-						//dispatchInformation('generic', 'networkChanged');
-						//sync();
+					} else if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME) != CommonSettings.DEFAULT_SITE_NAME
+						&&
+						CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_API_SECRET) != CommonSettings.DEFAULT_API_SECRET
+						&&
+						CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_URL_AND_API_SECRET_TESTED) == "true"
+					) {
+						sync();
 					}
 				} 
 			}
 			
 			function settingChanged(event:SettingsServiceEvent):void {
 				if (event.data == CommonSettings.COMMON_SETTING_API_SECRET) {
+					LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_WARNING_THAT_NIGHTSCOUT_URL_AND_SECRET_IS_NOT_OK_ALREADY_GIVEN, "false");
 					_hashedAPISecret = Hex.fromArray(hash.hash(Hex.toArray(Hex.fromString(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_API_SECRET)))));
 					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_URL_AND_API_SECRET_TESTED,"false");
-				} else if (event.data == CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME){
+				} else if (event.data == CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME) {
+					LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_WARNING_THAT_NIGHTSCOUT_URL_AND_SECRET_IS_NOT_OK_ALREADY_GIVEN, "false");
 					_nightScoutEventsUrl = "https://" + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME) + "/api/v1/entries";
 					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_URL_AND_API_SECRET_TESTED,"false");
 				}
@@ -181,38 +199,44 @@ package services
 			trace("NightScoutService.as nightScoutUrlTestSuccess with information =  " + event.data.information as String);
 			functionToCallAtUpOrDownloadSuccess = null;
 			functionToCallAtUpOrDownloadFailure = null;
-
+			
 			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_URL_AND_API_SECRET_TESTED,"true");
-			var alert:DialogView = Dialog.service.create(
-				new AlertBuilder()
-				.setTitle(ModelLocator.resourceManagerInstance.getString("nightscoutservice","nightscout_title"))
-				.setMessage(ModelLocator.resourceManagerInstance.getString("nightscoutservice","nightscout_test_result_ok"))
-				.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
-				.build()
-			);
-			DialogService.addDialog(alert, 60);
 			dispatchInformation("nightscout_test_result_ok");
 			var nightScoutTreatmentsUrl:String = "https://" + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME) + "/api/v1/treatments";
 			createAndLoadURLRequest(nightScoutTreatmentsUrl + "/" + testUniqueId, URLRequestMethod.DELETE, null, null,sync, null);
+
+			if (ModelLocator.isInForeground) {
+				var alert:DialogView = Dialog.service.create(
+					new AlertBuilder()
+					.setTitle(ModelLocator.resourceManagerInstance.getString("nightscoutservice","nightscout_title"))
+					.setMessage(ModelLocator.resourceManagerInstance.getString("nightscoutservice","nightscout_test_result_ok"))
+					.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
+					.build()
+				);
+				DialogService.addDialog(alert, 60);
+			}
 		}
 		
 		private static function nightScoutUrlTestError(event:BackGroundFetchServiceEvent):void {
 			trace("NightScoutService.as nightScoutUrlTestError with information =  " + event.data.information as String);
 			functionToCallAtUpOrDownloadSuccess = null;
 			functionToCallAtUpOrDownloadFailure = null;
-
-			var errorMessage:String = ModelLocator.resourceManagerInstance.getString("nightscoutservice","nightscout_test_result_nok");
-			errorMessage += "\n" + event.data.information;
 			
-			var alert:DialogView = Dialog.service.create(
-				new AlertBuilder()
-				.setTitle(ModelLocator.resourceManagerInstance.getString("nightscoutservice","nightscout_title"))
-				.setMessage(errorMessage)
-				.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
-				.build()
-			);
-			DialogService.addDialog(alert, 60);
-			dispatchInformation("nightscout_test_result_nok");
+			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_WARNING_THAT_NIGHTSCOUT_URL_AND_SECRET_IS_NOT_OK_ALREADY_GIVEN) == "false" && ModelLocator.isInForeground) {
+				var errorMessage:String = ModelLocator.resourceManagerInstance.getString("nightscoutservice","nightscout_test_result_nok");
+				errorMessage += "\n" + event.data.information;
+				
+				var alert:DialogView = Dialog.service.create(
+					new AlertBuilder()
+					.setTitle(ModelLocator.resourceManagerInstance.getString("nightscoutservice","nightscout_title"))
+					.setMessage(errorMessage)
+					.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
+					.build()
+				);
+				DialogService.addDialog(alert, 60);
+				dispatchInformation("nightscout_test_result_nok");
+				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_WARNING_THAT_NIGHTSCOUT_URL_AND_SECRET_IS_NOT_OK_ALREADY_GIVEN, "true");
+			}
 		}
 		
 		public static function sync(event:Event = null):void {
@@ -221,13 +245,13 @@ package services
 				nightScoutServiceEvent.data = new Object();
 				nightScoutServiceEvent.data.information = "NightScoutService.as sync : sync running already, return";
 				_instance.dispatchEvent(nightScoutServiceEvent);
-
+				
 				return;
 			}
 			
 			functionToCallAtUpOrDownloadSuccess = null;
 			functionToCallAtUpOrDownloadFailure = null;
-
+			
 			var starttime:Number  = (new Date()).valueOf();
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME) == CommonSettings.DEFAULT_SITE_NAME
 				||
@@ -291,10 +315,10 @@ package services
 			
 			trace("NightScoutService.as sync , time taken to go through bgreadings = " + ((endtime - starttime)/1000) + " seconds");
 			if (listOfReadingsAsArray.length > 0) {
-				var logString:String = "";
-				for (var cntr2:int = 0; cntr2 < listOfReadingsAsArray.length; cntr2++) {
-					logString += " " + listOfReadingsAsArray[cntr2]["_id"] + ",";
-				}
+				var logString:String = ".. not filled in ..";
+				/*for (var cntr2:int = 0; cntr2 < listOfReadingsAsArray.length; cntr2++) {
+				logString += " " + listOfReadingsAsArray[cntr2]["_id"] + ",";
+				}*/
 				dispatchInformation("uploading_events_with_id", logString);
 				createAndLoadURLRequest(_nightScoutEventsUrl, URLRequestMethod.POST, null, JSON.stringify(listOfReadingsAsArray), nightScoutUploadSuccess, nightScoutUploadFailed);
 			} else {
@@ -306,7 +330,7 @@ package services
 		private static function nightScoutUploadSuccess(event:Event):void {
 			functionToCallAtUpOrDownloadSuccess = null;
 			functionToCallAtUpOrDownloadFailure = null;
-
+			
 			dispatchInformation("upload_to_nightscout_successfull");
 			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_SYNC_TIMESTAMP, (new Date()).valueOf().toString());
 			trace("NightScoutService.as setting syncRunning = false");
@@ -316,7 +340,7 @@ package services
 		private static function nightScoutUploadFailed(event:BackGroundFetchServiceEvent):void {
 			functionToCallAtUpOrDownloadSuccess = null;
 			functionToCallAtUpOrDownloadFailure = null;
-
+			
 			var errorMessage:String;
 			if (event.data) {
 				if (event.data.information)
@@ -353,28 +377,6 @@ package services
 				functionToCallAtUpOrDownloadSuccess = null;
 			}
 			BackGroundFetchService.createAndLoadUrlRequest(url, requestMethod ? requestMethod:URLRequestMethod.GET, urlVariables, data, "application/json", "api-secret", _hashedAPISecret);
-			/*var request:URLRequest = new URLRequest(url);
-			loader = new URLLoader();
-			request.requestHeaders.push(new URLRequestHeader("api-secret", _hashedAPISecret));
-			request.requestHeaders.push(new URLRequestHeader("Content-type", "application/json"));
-			request.contentType = "application/json";
-			if (!requestMethod)
-			requestMethod = URLRequestMethod.GET;
-			request.method = requestMethod;
-			if (data != null)
-			request.data = data;
-			else if (urlVariables != null)
-			request.data = urlVariables;
-			if (successFunction != null) {
-			loader.addEventListener(Event.COMPLETE,successFunction);
-			}
-			if (errorFunction != null) {
-			loader.addEventListener(IOErrorEvent.IO_ERROR, errorFunction);
-			} else {
-			loader.addEventListener(IOErrorEvent.IO_ERROR,nightScoutAPICallFailed);
-			}
-			loader.load(request);
-			myTrace("createAndLoadURLRequest url = " + request.url + ", method = " + request.method + ", request.data = " + request.data);*/ 
 		}
 		
 		private static function myTrace(log:String):void {
@@ -415,6 +417,5 @@ package services
 			nightScoutServiceEvent.data.information = ModelLocator.resourceManagerInstance.getString('nightscoutservice',informationResourceName) + (additionalInfo == null ? "":" - " + additionalInfo);
 			_instance.dispatchEvent(nightScoutServiceEvent);
 		}
-		
 	}
 }

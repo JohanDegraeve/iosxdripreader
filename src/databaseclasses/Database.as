@@ -55,6 +55,7 @@ package databaseclasses
 		private static var xmlFileName:String;
 		private static var databaseWasCopiedFromSampleFile:Boolean = true;
 		private static const maxDaysToKeepLogfiles:int = 2;
+		private static const maxDaysToKeepBgReadings:int = 5;
 		public static const END_OF_RESULT:String = "END_OF_RESULT";
 		private static const debugMode:Boolean = true;
 		
@@ -544,7 +545,7 @@ package databaseclasses
 			function oldLogFilesDeleted(se:SQLEvent):void {
 				sqlStatement.removeEventListener(SQLEvent.RESULT,oldLogFilesDeleted);
 				sqlStatement.removeEventListener(SQLErrorEvent.ERROR,oldLogFileDeletionFailed);
-				finishedCreatingTables();
+				deleteOldbgReadings();
 			}
 			
 			function oldLogFileDeletionFailed(see:SQLErrorEvent):void {
@@ -552,6 +553,32 @@ package databaseclasses
 				sqlStatement.removeEventListener(SQLEvent.RESULT,oldLogFilesDeleted);
 				sqlStatement.removeEventListener(SQLErrorEvent.ERROR,oldLogFileDeletionFailed);
 				dispatchInformation("failed_to_delete_old_logfiles", see.error.message + " - " + see.error.details);
+			}
+		}
+		
+		/**
+		 * asynchronous 
+		 */
+		private static function deleteOldbgReadings():void {
+			sqlStatement.clearParameters();
+			sqlStatement.text = "DELETE FROM bgreading where (timestamp < :timestamp)";;
+			sqlStatement.parameters[":timestamp"] = (new Date()).valueOf() - maxDaysToKeepBgReadings * 24 * 60 * 60 * 1000;
+			
+			sqlStatement.addEventListener(SQLEvent.RESULT,oldBgReadingsDeleted);
+			sqlStatement.addEventListener(SQLErrorEvent.ERROR,oldBgReadingDeletionFailed);
+			sqlStatement.execute();
+			
+			function oldBgReadingsDeleted(se:SQLEvent):void {
+				sqlStatement.removeEventListener(SQLEvent.RESULT,oldBgReadingsDeleted);
+				sqlStatement.removeEventListener(SQLErrorEvent.ERROR,oldBgReadingDeletionFailed);
+				finishedCreatingTables();
+			}
+			
+			function oldBgReadingDeletionFailed(see:SQLErrorEvent):void {
+				if (debugMode) trace("Database.as : Failed to delete old bgreadings");
+				sqlStatement.removeEventListener(SQLEvent.RESULT,oldBgReadingsDeleted);
+				sqlStatement.removeEventListener(SQLErrorEvent.ERROR,oldBgReadingDeletionFailed);
+				dispatchInformation("failed to delete old bgreadings", see.error.message + " - " + see.error.details);
 			}
 		}
 		
@@ -1147,6 +1174,7 @@ package databaseclasses
 		 * dispatches info if anything goes wrong 
 		 */
 		public static function insertCalibrationSynchronous(calibration:Calibration):void {
+			var insertText:String = ""
 			try {
 				var conn:SQLConnection = new SQLConnection();
 				conn.open(dbFile, SQLMode.UPDATE);
@@ -1206,6 +1234,7 @@ package databaseclasses
 					calibration.secondIntercept +", " +
 					calibration.firstScale +", " +
 					calibration.secondScale + ")";
+				insertText = insertRequest.text;
 				insertRequest.execute();
 				conn.commit();
 				conn.close();
@@ -1214,7 +1243,7 @@ package databaseclasses
 					conn.rollback();
 					conn.close();
 				}
-				dispatchInformation('error_while_inserting_calibration_in_db', error.message + " - " + error.details);
+				dispatchInformation('error_while_inserting_calibration_in_db', error.message + " - " + error.details + " updaterequest text = " + insertText);
 			}
 		}
 		

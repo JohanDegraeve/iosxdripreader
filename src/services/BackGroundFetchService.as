@@ -2,15 +2,9 @@ package services
 {
 	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
 	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetchEvent;
-	import com.hurlant.crypto.hash.SHA1;
-	import com.hurlant.util.Hex;
 	
 	import flash.events.EventDispatcher;
 	import flash.net.URLVariables;
-	
-	import Utilities.UniqueId;
-	
-	import databaseclasses.CommonSettings;
 	
 	import events.BackGroundFetchServiceEvent;
 	
@@ -31,6 +25,7 @@ package services
 	{
 		private static var _instance:BackGroundFetchService = new BackGroundFetchService(); 
 		private static var initialStart:Boolean = true;
+		private static var parameters:Array 
 		
 		public static function get instance():BackGroundFetchService {
 			return _instance;
@@ -52,40 +47,22 @@ package services
 			BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.LOG_INFO, logInfoReceived);
 			BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.LOAD_REQUEST_RESULT, loadRequestSuccess);
 			BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.LOAD_REQUEST_ERROR, loadRequestError);
-			
-			//test immediate upload
-			/*var testEvent:Object = new Object();
-			var testUniqueId:String = UniqueId.createEventId();
-			testEvent["_id"] = testUniqueId;
-			testEvent["eventType"] = "Exercise";
-			testEvent["duration"] = 20;
-			testEvent["notes"] = "to test nightscout url";
-			testEvent["eventTime"] = (new Date()).valueOf();
-			var helpDiabetesObject:Object = new Object();
-			helpDiabetesObject["lastmodifiedtimestamp"] = (new Date()).valueOf();
-			testEvent["helpdiabetes"] = helpDiabetesObject;
-			
-			var nightScoutTreatmentsUrl:String = "https://" + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME) + "/api/v1/treatments";
-			
-			var hash:SHA1 = new SHA1();
-			var _hashedAPISecret:String = Hex.fromArray(hash.hash(Hex.toArray(Hex.fromString(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_API_SECRET)))));
-			
-			var parameters:Array = new Array(8);
-			parameters[0] = nightScoutTreatmentsUrl;
-			parameters[1] = "POST";
-			parameters[2] = null;
-			parameters[3] = ModelLocator.isInForeground;
-			parameters[4] = JSON.stringify(testEvent);
-			parameters[5] = "application/json";
-			parameters[6] = "api-secret";
-			parameters[7] = _hashedAPISecret;
-			BackgroundFetch.createAndLoadUrlRequest.apply(null, parameters);*/
-			//BackgroundFetch.createAndLoadUrlRequest(nightScoutTreatmentsUrl, "POST", null, JSON.stringify(testEvent),  "application/json", "api-secret", _hashedAPISecret);*/
+			BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.LOAD_REQUEST_PERFORMFETCH, performFetch);
+		}
+		
+		private static function performFetch(event:BackgroundFetchEvent):void {
+			trace("BackGroundFetchService.as performFetch");
+			if (parameters != null) {
+				BackgroundFetch.createAndLoadUrlRequest.apply(null, parameters);
+			} else {
+				BackgroundFetch.callCompletionHandler("NO_DATA");
+			}
 		}
 		
 		private static function loadRequestSuccess(event:BackgroundFetchEvent):void {
 			trace("BackGroundFetchService.as loadRequestSuccess");
 			trace("result = " + (event.data.result as String)); 
+			parameters = null;
 			
 			var backgroundfetchserviceLogInfo:BackGroundFetchServiceEvent = new BackGroundFetchServiceEvent(BackGroundFetchServiceEvent.LOG_INFO);
 			backgroundfetchserviceLogInfo.data = new Object();
@@ -96,11 +73,13 @@ package services
 			backgroundFetchServiceResult.data = new Object();
 			backgroundFetchServiceResult.data.information = event.data.result as String;
 			_instance.dispatchEvent(backgroundFetchServiceResult);
+			
 		}
 		
 		private static function loadRequestError(event:BackgroundFetchEvent):void {
 			trace("BackGroundFetchService.as loadRequestError");
 			trace("error = " + (event.data.error as String));
+			parameters = null;
 			
 			var backgroundfetchserviceLogInfo:BackGroundFetchServiceEvent = new BackGroundFetchServiceEvent(BackGroundFetchServiceEvent.LOG_INFO);
 			backgroundfetchserviceLogInfo.data = new Object();
@@ -129,7 +108,7 @@ package services
 		 */
 		public static function createAndLoadUrlRequest(url: String, requestMethod:String, urlVariables:URLVariables, data:String, contentType:String, ... args): void {
 			//return;
-			var parameters:Array = new Array(6 + args.length);
+			parameters = new Array(6 + args.length);
 			parameters[0] = url;
 			parameters[1] = requestMethod;
 			parameters[2] = urlVariables;
@@ -139,9 +118,11 @@ package services
 			for (var i:int = 0;i < args.length;i++) {
 				parameters[6 + i] = args[i];
 			}
-			BackgroundFetch.createAndLoadUrlRequest.apply(null, parameters);
+			
+			if (ModelLocator.isInForeground)
+				BackgroundFetch.createAndLoadUrlRequest.apply(null, parameters);
 		}
-
+		
 		private static function logInfoReceived(event:BackgroundFetchEvent):void {
 			var backgroundfetchserviceEvent:BackGroundFetchServiceEvent = new BackGroundFetchServiceEvent(BackGroundFetchServiceEvent.LOG_INFO);
 			backgroundfetchserviceEvent.data = new Object();

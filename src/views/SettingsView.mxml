@@ -31,6 +31,8 @@
 			[Bindable]
 			private static var additionalCalibrationRequestOnOrOffText:String = "";
 			[Bindable]
+			private static var chosenUnitText:String = "";
+			[Bindable]
 			private static var nightScoutUrl:String = "";
 			[Bindable]
 			private static var nightScoutAPI_SECRET:String = "";
@@ -47,6 +49,12 @@
 					detailedTracingOnOrOffText = ModelLocator.resourceManagerInstance.getString('settingsview','off');
 					groupEnableAndDisableTracing.alpha = 1;
 					groupsendTracingViaEmail.alpha = 0.25;
+				}
+				
+				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true") {
+					chosenUnitText = ModelLocator.resourceManagerInstance.getString('settingsview','mgdl');
+				} else {
+					chosenUnitText = ModelLocator.resourceManagerInstance.getString('settingsview','mmol');
 				}
 				
 				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_ADDITIONAL_CALIBRATION_REQUEST_ALERT) == "true") {
@@ -151,6 +159,20 @@
 				}
 			}
 			
+			private function changeUnit_clickHandler(event:MouseEvent):void {
+				rect13.color = uint("0xD3D3D3");
+				rect14.color = uint("0xD3D3D3");
+				setResetColorTimer();
+				
+				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true") {
+					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL, "false");
+					chosenUnitText = ModelLocator.resourceManagerInstance.getString('settingsview','mmol');
+				} else {
+					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL, "true");
+					chosenUnitText = ModelLocator.resourceManagerInstance.getString('settingsview','mgdl');
+				}
+			}
+			
 			private function additionalCalibrationRequestAlert_clickHandler(event:MouseEvent):void {
 				rect11.color = uint("0xD3D3D3");
 				rect12.color = uint("0xD3D3D3");
@@ -188,6 +210,8 @@
 					rect10.color = uint("0x212121");
 					rect11.color = uint("0x212121");
 					rect12.color = uint("0x212121");
+					rect13.color = uint("0x212121");
+					rect14.color = uint("0x212121");
 				}
 			}
 			
@@ -204,7 +228,6 @@
 					<s:SolidColorStroke color="#3B6999"  weight="3"/>
 				</s:stroke>
 			</s:Line>
-			
 			<!-- Chapter Alerts Subsection Additional Calibration Request Alert -->
 			<s:VGroup click="additionalCalibrationRequestAlert_clickHandler(event)" width="100%">
 				<s:HGroup width="100%">
@@ -220,6 +243,39 @@
 					<s:Rect height="100%" width="5" >
 						<s:fill>
 							<s:SolidColor color="#212121" id="rect12"/>
+						</s:fill>
+					</s:Rect>
+				</s:HGroup>
+				<s:Line width="100%">
+					<s:stroke>
+						<s:SolidColorStroke color="#3B6999"  weight="3"/>
+					</s:stroke>
+				</s:Line>	
+			</s:VGroup>
+			
+			<!-- Chapter unit -->
+			<s:Label text = "{ModelLocator.resourceManagerInstance.getString('settingsview','unit')}" textAlign="center"  color="#3B6999" 
+					 width="100%" paddingLeft="3" paddingRight="0" fontSize="20" fontWeight="bold" paddingTop="3"/>
+			<s:Line width="100%">
+				<s:stroke>
+					<s:SolidColorStroke color="#3B6999"  weight="3"/>
+				</s:stroke>
+			</s:Line>
+			<!-- Chapter unit Subsection chosen unit -->
+			<s:VGroup click="changeUnit_clickHandler(event)" width="100%">
+				<s:HGroup width="100%">
+					<s:Rect height="100%" width="5" >
+						<s:fill>
+							<s:SolidColor color="#212121" id="rect13"/>
+						</s:fill>
+					</s:Rect>
+					<s:Label text = "{ModelLocator.resourceManagerInstance.getString('settingsview','chosen_unit')}"
+							 width="100%" paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
+					<s:Label text = "{chosenUnitText}"  
+							 paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
+					<s:Rect height="100%" width="5" >
+						<s:fill>
+							<s:SolidColor color="#212121" id="rect14"/>
 						</s:fill>
 					</s:Rect>
 				</s:HGroup>

@@ -74,6 +74,8 @@ package model
 		public static var iconCache:ContentCache;
 
 		private static var _isInForeground:Boolean = false;
+		
+		public const MAX_DAYS_TO_STORE_BGREADINGS_IN_MODELLOCATOR = 5;
 
 		public static function get isInForeground():Boolean
 		{
@@ -230,7 +232,9 @@ package model
 			function bgReadingReceivedFromDatabase(de:DatabaseEvent):void {
 				if (de.data != null)
 					if (de.data is BgReading) {
-						_bgReadings.addItem(de.data);
+						if ((de.data as BgReading).timestamp > ((new Date()).valueOf() - MAX_DAYS_TO_STORE_BGREADINGS_IN_MODELLOCATOR * 60 * 60 * 1000)) {
+							_bgReadings.addItem(de.data);
+						}
 					} else if (de.data is String) {
 						if (de.data as String == Database.END_OF_RESULT) {
 							_bgReadings.refresh();
@@ -270,7 +274,7 @@ package model
 							NetworkInfo.init(DistriqtKey.distriqtKey);
 							BackGroundFetchService.init();
 							NightScoutService.init();
-							//NightScoutService.sync(null);
+							NightScoutService.sync(null);
 						} else {
 							_loggingList.addItem(de.data as String);
 						}

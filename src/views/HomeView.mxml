@@ -43,6 +43,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			import com.distriqt.extension.dialog.events.DialogDateTimeEvent;
 			import com.distriqt.extension.dialog.events.DialogViewEvent;
 			import com.distriqt.extension.dialog.objects.DialogAction;
+			import com.hurlant.util.Hex;
 			
 			import mx.events.FlexEvent;
 			
@@ -63,6 +64,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			import events.DatabaseEvent;
 			import events.DialogServiceEvent;
 			import events.NotificationServiceEvent;
+			import events.SettingsServiceEvent;
 			import events.TimerServiceEvent;
 			import events.TransmitterServiceEvent;
 			
@@ -126,10 +128,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 					TimerService.instance.addEventListener(TimerServiceEvent.BG_READING_NOT_RECEIVED_ON_TIME, bgReadingNotReceivedOnTime);
 					Database.init();
 					initialStart = false;
+					CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, settingChanged);
 				} else {
 					//force now a check if the icon needs tobe changed by calling bluetoothStateChangedHandler, even though it may not have changed
 					bluetoothStateChangedHandler(null);
 					displayCurrentInfoFromReading(BgReading.lastNoSensor());
+				}
+				
+				function settingChanged(event:SettingsServiceEvent):void {
+					if (event.data == CommonSettings.COMMON_SETTING_DO_MGDL) {
+						displayCurrentInfoFromReading(BgReading.lastNoSensor());
+					}
 				}
 				
 				function bgReadingNotReceivedOnTime(event:TimerServiceEvent):void {
@@ -317,7 +326,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 					if ((new Date().getTime()) - (60000 * 11) - lastBgReading.timestamp > 0) {
 						//notificationText = ModelLocator.resourceManagerInstance.getString('homeview','signalmissed');
 						estimate = lastBgReading.calculatedValue;
-						currentBgLabelText = BgGraphBuilder.unitizedString(estimate, true);
+						currentBgLabelText = BgGraphBuilder.unitizedString(estimate, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true");
 						currentBgLabellinethrough = true;//currentBgLabel.setStyle("lineThrough","true");
 						currentBgLabel.invalidateSize();
 					} else {
@@ -325,7 +334,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 						notificationText.setTextColor(Color.WHITE);
 						}*/
 						estimate = lastBgReading.calculatedValue;
-						currentBgLabelText = BgGraphBuilder.unitizedString(estimate, true);
+						currentBgLabelText = BgGraphBuilder.unitizedString(estimate, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true");
 						var slope_arrow:String = lastBgReading.slopeArrow();
 						if (lastBgReading.hideSlope) {
 							slope_arrow = "";
