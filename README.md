@@ -8,7 +8,7 @@ xdrip/xbridge reader for iOS devices
 * Additional calibration request alerts but not the 12-hour calibration request alert
 * Synchronisation to Nightscout
  * When the app is in the foreground, upload will always happen immediately after receiving a new value, also at app start, 
- * When the app is in the background, then it is iOS that decides when the app is allowed to do an upload. My initial tests have shown upload very 10 to 20 minutes. In case you want to have the upload immediately, just keep the app in the foreground - the device will actually stay on when the app is in the foreground.
+ * When the app is in the background, then it is iOS that decides when the app is allowed to do an upload. My initial tests have shown upload every 10 to 20 minutes. In case you want to have the upload immediately, just keep the app in the foreground - the device will actually stay on when the app is in the foreground.
 
 
 To compile :
