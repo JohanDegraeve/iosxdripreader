@@ -43,7 +43,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			import com.distriqt.extension.dialog.events.DialogDateTimeEvent;
 			import com.distriqt.extension.dialog.events.DialogViewEvent;
 			import com.distriqt.extension.dialog.objects.DialogAction;
-			import com.hurlant.util.Hex;
 			
 			import mx.events.FlexEvent;
 			
@@ -81,6 +80,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			[Bindable]
 			private static var currentBgLabelText:String = "---";
 			[Bindable]
+			private static var minutesAgoText:String = "";
+			[Bindable]
+			private static var deltaValueText:String = "---";
+			[Bindable]
 			private static var _calibrateButtonActive:Boolean = false;
 			private static const ACTION_SHEET_INDEX_FOR_SCAN_FOR_DEVICE:int = 0;
 			private static const ACTION_SHEET_INDEX_FOR_FORGET_DEVICE:int = 1;
@@ -97,6 +100,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			private static var sensorStartYear:int = 0;
 			private static var sensorStartMonth:int = 0;//starts at 0 for January
 			
+			private static var currentInfoUpdateTimer:Timer;
+
+			
 			/**
 			 * connected or not. Should be replaced by if (BluetoothService.getActiveBluetoothPeripheral().state == PeripheralState.CONNECTED)<br>
 			 * but this last one is not working see https://github.com/distriqt/ANE-BluetoothLE/issues/8
@@ -112,9 +118,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			[ResourceBundle("homeview")]
 			[ResourceBundle("general")]
 			[ResourceBundle("bluetoothservice")]
+			[ResourceBundle("settingsview")]
 			
 			[Bindable]
 			private static var currentBgLabellinethrough:Boolean = false;
+			[Bindable]
+			private static var currentBgLabelColor:int = 0xFFFFFF;
 			
 			protected function onCreationComplete(event:FlexEvent):void
 			{
@@ -132,22 +141,30 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 				} else {
 					//force now a check if the icon needs tobe changed by calling bluetoothStateChangedHandler, even though it may not have changed
 					bluetoothStateChangedHandler(null);
-					displayCurrentInfoFromReading(BgReading.lastNoSensor());
+					
+					//set info
+					displayCurrentInfoFromReading();
+					
+					//start timer to check for delay since last receipt of bgreading
+					restartCurrentInfoUpdateTimer();
 				}
 				
 				function settingChanged(event:SettingsServiceEvent):void {
-					if (event.data == CommonSettings.COMMON_SETTING_DO_MGDL) {
-						displayCurrentInfoFromReading(BgReading.lastNoSensor());
+					if (event.data == CommonSettings.COMMON_SETTING_DO_MGDL 
+						|| 
+						event.data == CommonSettings.COMMON_SETTING_HIGH_MARK 
+						|| 
+						event.data == CommonSettings.COMMON_SETTING_LOW_MARK) {
+						displayCurrentInfoFromReading();
 					}
 				}
 				
 				function bgReadingNotReceivedOnTime(event:TimerServiceEvent):void {
-					displayCurrentInfoFromReading(BgReading.lastNoSensor());
+					displayCurrentInfoFromReading();
 					NotificationService.updateAllNotifications(null);
 					if (!peripheralConnected) {
 						if ((new Date().valueOf() - peripheralConnectionStatusChangeTimestamp) > TimerService.DELAY_FOR_CHECKING_BGREADING_IN_SECONDS) {
 							currentState = "bluetoothred";
-							
 						}
 					}
 				}
@@ -156,7 +173,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 					if (de.data != null)
 						if (de.data is String) {
 							if (de.data as String == Database.END_OF_RESULT) {
-								displayCurrentInfoFromReading(BgReading.lastNoSensor());
+								displayCurrentInfoFromReading();
+								restartCurrentInfoUpdateTimer();
 							}
 						}
 				} 
@@ -294,16 +312,33 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			}
 			
 			private function transmitterServiceBGReadingEventReceived(be:TransmitterServiceEvent):void {
-				displayCurrentInfoFromReading(BgReading.lastNoSensor());
+				displayCurrentInfoFromReading();
+			}
+			
+			private function restartCurrentInfoUpdateTimer():void {
+				if (currentInfoUpdateTimer != null) {
+					if (currentInfoUpdateTimer.running) {
+						currentInfoUpdateTimer.stop();
+					}
+				}
+				currentInfoUpdateTimer = new Timer(60 * 1000, 1);
+				currentInfoUpdateTimer.addEventListener(TimerEvent.TIMER, currentInfoUpdateTimerExpired);
+				currentInfoUpdateTimer.start();
+			}
+			
+			private function currentInfoUpdateTimerExpired(event:Event):void {
+				trace("currentInfoUpdateTimerExpired expired");
+				displayCurrentInfoFromReading();
+				restartCurrentInfoUpdateTimer();
 			}
 			
 			private function initialCalibrationEventReceived(be:CalibrationServiceEvent):void {
-				displayCurrentInfoFromReading(BgReading.lastNoSensor());
+				displayCurrentInfoFromReading();
 				_calibrateButtonActive = true;
 			}
 			
 			private function newCalibrationEventReceived(be:CalibrationServiceEvent):void {
-				displayCurrentInfoFromReading(BgReading.lastNoSensor());
+				displayCurrentInfoFromReading();
 			}
 			
 			private function databaseInformationEventReceived(be:DatabaseEvent):void {
@@ -316,23 +351,22 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 				ModelLocator.instance;
 			}
 			
-			private function displayCurrentInfoFromReading(lastBgReading:BgReading):void {
+			private function displayCurrentInfoFromReading(event:Event = null):void {
+				var lastBgReading:BgReading = BgReading.lastNoSensor();
 				var estimate:Number = new Number(0);
 				if (lastBgReading == null) {
 					currentBgLabelText = "---";
 					currentBgLabellinethrough = false;//currentBgLabel.setStyle("lineThrough","false");
 					currentBgLabel.invalidateSize();
+					minutesAgoText = "";
+					deltaValueText = "";
 				} else {
 					if ((new Date().getTime()) - (60000 * 11) - lastBgReading.timestamp > 0) {
-						//notificationText = ModelLocator.resourceManagerInstance.getString('homeview','signalmissed');
 						estimate = lastBgReading.calculatedValue;
 						currentBgLabelText = BgGraphBuilder.unitizedString(estimate, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true");
 						currentBgLabellinethrough = true;//currentBgLabel.setStyle("lineThrough","true");
 						currentBgLabel.invalidateSize();
 					} else {
-						/*if (notificationText.getText().length()==0){
-						notificationText.setTextColor(Color.WHITE);
-						}*/
 						estimate = lastBgReading.calculatedValue;
 						currentBgLabelText = BgGraphBuilder.unitizedString(estimate, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true");
 						var slope_arrow:String = lastBgReading.slopeArrow();
@@ -340,32 +374,23 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 							slope_arrow = "";
 						}
 						currentBgLabelText += " " + slope_arrow;
-						currentBgLabellinethrough = false;//currentBgLabel.setStyle("lineThrough","false");
+						currentBgLabellinethrough = false;
 						currentBgLabel.invalidateSize();
 					}
-					var minutes:Number = ((new Date()).valueOf() - lastBgReading.timestamp) / (60 * 1000);
-					var minutesString:String = minutes==1 ?" Minute ago":" Minutes ago";
-					
-					/// TODO complete this as in Android version
-					//notificationText.append("\n" + minutes + minutesString);
-					/*List<BgReading> bgReadingList = BgReading.latest(2);
-					if(bgReadingList != null && bgReadingList.size() == 2) {
-					// same logic as in xDripWidget (refactor that to BGReadings to avoid redundancy / later inconsistencies)?
-					if(BgGraphBuilder.isXLargeTablet(getApplicationContext()) || BgGraphBuilder.isLargeTablet(getApplicationContext())) {
-					notificationText.append("  ");
+					var minutes:int = ((new Date()).valueOf() - lastBgReading.timestamp) / (60 * 1000);
+					minutesAgoText = minutes + 
+						(minutes == 1 ? 
+						" " + ModelLocator.resourceManagerInstance.getString('homeview','minuteago')
+						:
+						" " + ModelLocator.resourceManagerInstance.getString('homeview','minutesago'));
+					deltaValueText = BgGraphBuilder.unitizedDeltaString(true, true);
+					if(estimate <= new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_LOW_MARK))) {
+						currentBgLabelColor = 0xFF0000;
+					} else if (estimate >= new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_HIGH_MARK))) {
+						currentBgLabelColor = 0xFFFF00;
 					} else {
-					notificationText.append("\n");
+						currentBgLabelColor = 0xFFFFFF;
 					}
-					notificationText.append(
-					bgGraphBuilder.unitizedDeltaString(true, true));
-					}
-					if(bgGraphBuilder.unitized(estimate) <= bgGraphBuilder.lowMark) {
-					currentBgLabelText.setTextColor(Color.parseColor("#FF0000"));
-					} else if (bgGraphBuilder.unitized(estimate) >= bgGraphBuilder.highMark) {
-					currentBgLabelText.setTextColor(Color.parseColor("#FFFF00"));
-					} else {
-					currentBgLabelText.setTextColor(Color.WHITE);
-					}*/
 				}
 			}
 			
@@ -628,11 +653,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 							
 						</s:VerticalLayout>
 					</s:layout>
-					<s:Label id = "notificationText" text=""/>
-					<s:Label id = "notificationText2" text=""/>
+					<s:Label id = "minutesAgoLabelId" text="{minutesAgoText}"/>
+					<s:Label id = "deltaValueLabelId" text="{deltaValueText}"/>
 				</s:Group>
 			</s:Group>
-			<s:Label id = "currentBgLabel" text="{currentBgLabelText}" fontSize="70" lineThrough="{currentBgLabellinethrough}"/>
+			<s:Label id = "currentBgLabel" text="{currentBgLabelText}" fontSize="60" lineThrough="{currentBgLabellinethrough}" color="{currentBgLabelColor}"/>
 		</s:Group>
 	</s:Group>
 </s:View>

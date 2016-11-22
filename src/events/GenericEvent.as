@@ -9,6 +9,7 @@ package events
 
 	public class GenericEvent extends Event
 	{
+		
 		private var _timeStamp:Number;
 
 		public function set timeStamp(value:Number):void

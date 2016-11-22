@@ -887,7 +887,7 @@ package databaseclasses
 			}
 		}
 	
-		public function currentSlope():Number {
+		public static function currentSlope():Number {
 			var last_2:ArrayCollection = BgReading.latest(2);
 			if (last_2.length == 2) {
 				var slopePair:Array = calculateSlope(last_2.getItemAt(0) as BgReading, last_2.getItemAt(1) as BgReading);
