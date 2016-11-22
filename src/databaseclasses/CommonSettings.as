@@ -74,6 +74,14 @@
 		 * true or false, if true unit is mg/dl 
 		  */
 		 public static const COMMON_SETTING_DO_MGDL:int = 9;
+		 /**
+		 * low bg value, in mgdl, should be converted each time it is used or displayed
+		  */
+		 public static const COMMON_SETTING_LOW_MARK:int = 10;
+		 /**
+		 * high bg value, in mgdl, should be converted each time it is used or displayed
+		  */
+		 public static const COMMON_SETTING_HIGH_MARK:int = 11;
 		 
 		 private static var commonSettings:Array = [
 			 "0",//COMMON_SETTING_CURRENT_SENSOR
@@ -85,7 +93,9 @@
 			 "false",//COMMON_SETTING_URL_AND_API_SECRET_TESTED
 			 "0",//COMMON_SETTING_NIGHTSCOUT_SYNC_TIMESTAMP
 			 "true",//COMMON_SETTING_ADDITIONAL_CALIBRATION_REQUEST_ALERT
-			 "true"
+			 "true",//COMMON_SETTING_DO_MGDL
+			 "70",//COMMON_SETTING_LOW_MARK
+			 "170",//COMMON_SETTING_HIGH_MARK
 		 ];
 		 
 		 public function CommonSettings()

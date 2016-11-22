@@ -298,7 +298,7 @@ package services
 						newReading["xDrip_filtered"] = bgReading.filteredData;
 						newReading["xDrip_calculated_value"] = bgReading.calculatedValue;
 						newReading["xDrip_age_adjusted_raw_value"] = bgReading.ageAdjustedRawValue;
-						newReading["xDrip_calculated_current_slope"] = bgReading.currentSlope();
+						newReading["xDrip_calculated_current_slope"] = BgReading.currentSlope();
 						newReading["xDrip_hide_slope"] = bgReading.hideSlope;
 						newReading["sysTime"] = formatter.format(bgReading.timestamp);
 						newReading["_id"] = bgReading.uniqueId;
