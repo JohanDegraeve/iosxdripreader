@@ -536,7 +536,7 @@ package databaseclasses
 		private static function deleteOldLogFiles():void {
 			sqlStatement.clearParameters();
 			sqlStatement.text = DELETE_OLD_LOGS;
-			sqlStatement.parameters[":logtimestamp"] = (new Date()).valueOf() - maxDaysToKeepLogfiles * 24 * 60 * 60 * 1000;
+			sqlStatement.parameters[":logtimestamp"] = (new Date()).valueOf() - 10*60*1000;//maxDaysToKeepLogfiles * 24 * 60 * 60 * 1000;
 			
 			sqlStatement.addEventListener(SQLEvent.RESULT,oldLogFilesDeleted);
 			sqlStatement.addEventListener(SQLErrorEvent.ERROR,oldLogFileDeletionFailed);
@@ -561,7 +561,7 @@ package databaseclasses
 		 */
 		private static function deleteOldbgReadings():void {
 			sqlStatement.clearParameters();
-			sqlStatement.text = "DELETE FROM bgreading where (timestamp < :timestamp)";;
+			sqlStatement.text = "DELETE FROM bgreading where (timestamp < :timestamp)";
 			sqlStatement.parameters[":timestamp"] = (new Date()).valueOf() - maxDaysToKeepBgReadings * 24 * 60 * 60 * 1000;
 			
 			sqlStatement.addEventListener(SQLEvent.RESULT,oldBgReadingsDeleted);

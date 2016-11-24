@@ -161,43 +161,43 @@ package model
 			function backgroundFetchServiceLogInfoReceived(be:BackGroundFetchServiceEvent):void {
 				_loggingList.addItem(be.getTimeStampAsString() + " BG : " + be.data.information);
 				_loggingList.refresh();
-				Database.insertLogging(Utilities.UniqueId.createEventId(),_loggingList.getItemAt(_loggingList.length - 1) as String, be.timeStamp,(new Date()).valueOf(),null); 
+				Database.insertLogging(Utilities.UniqueId.createEventId(), be.getTimeStampAsString() + " BG : " + be.data.information, be.timeStamp,(new Date()).valueOf(),null); 
 			}
 			
 			function initialCalibrationEventReceived(be:CalibrationServiceEvent):void {
 				_loggingList.addItem(be.getTimeStampAsString() + " CS : " + "initial calibration done");
 				_loggingList.refresh();
-				Database.insertLogging(Utilities.UniqueId.createEventId(), _loggingList.getItemAt(_loggingList.length - 1) as String, be.timeStamp,(new Date()).valueOf(),null);
+				Database.insertLogging(Utilities.UniqueId.createEventId(), be.getTimeStampAsString() + " CS : " + "initial calibration done", be.timeStamp,(new Date()).valueOf(),null);
 			}
 			
 			function newCalibrationEventReceived(be:CalibrationServiceEvent):void {
 				_loggingList.addItem(be.getTimeStampAsString() + " CS : " + "new calibration done");
 				_loggingList.refresh();
-				Database.insertLogging(Utilities.UniqueId.createEventId(), _loggingList.getItemAt(_loggingList.length - 1) as String, be.timeStamp,(new Date()).valueOf(),null);
+				Database.insertLogging(Utilities.UniqueId.createEventId(), be.getTimeStampAsString() + " CS : " + "new calibration done", be.timeStamp,(new Date()).valueOf(),null);
 			}
 			
 			function nightScoutServiceInformationReceived(be:NightScoutServiceEvent):void {
 				_loggingList.addItem(be.getTimeStampAsString() + " NS : " + be.data.information);
 				_loggingList.refresh();
-				Database.insertLogging(Utilities.UniqueId.createEventId(), _loggingList.getItemAt(_loggingList.length - 1) as String, be.timeStamp,(new Date()).valueOf(),null);				
+				Database.insertLogging(Utilities.UniqueId.createEventId(), be.getTimeStampAsString() + " NS : " + be.data.information, be.timeStamp,(new Date()).valueOf(),null);				
 			}
 			
 			function databaseInformationEventReceived(be:DatabaseEvent):void {
 				_loggingList.addItem(be.getTimeStampAsString() + " DB : " + be.data.information);
 				_loggingList.refresh();
-				Database.insertLogging(Utilities.UniqueId.createEventId(), _loggingList.getItemAt(_loggingList.length - 1) as String, be.timeStamp,(new Date()).valueOf(),null);				
+				Database.insertLogging(Utilities.UniqueId.createEventId(), be.getTimeStampAsString() + " DB : " + be.data.information, be.timeStamp,(new Date()).valueOf(),null);				
 			}
 			
 			function blueToothServiceInformationReceived(be:BlueToothServiceEvent):void {
 				//_loggingList.addItem(be.getTimeStampAsString() + " BT : " + be.data.information);
 				//_loggingList.refresh();
-				//Database.insertLogging(Utilities.UniqueId.createEventId(), _loggingList.getItemAt(_loggingList.length - 1) as String, be.timeStamp,(new Date()).valueOf(),null);
+				//Database.insertLogging(Utilities.UniqueId.createEventId(),be.getTimeStampAsString() + " BT : " + be.data.information, be.timeStamp,(new Date()).valueOf(),null);
 			}
 			
 			function notificationServiceLogInfoReceived(be:NotificationServiceEvent):void {
 				//_loggingList.addItem(be.getTimeStampAsString() + " NI : " + be.data.information);
 				//_loggingList.refresh();
-				//Database.insertLogging(Utilities.UniqueId.createEventId(), _loggingList.getItemAt(_loggingList.length - 1) as String, be.timeStamp,(new Date()).valueOf(),null);
+				//Database.insertLogging(Utilities.UniqueId.createEventId(), be.getTimeStampAsString() + " NI : " + be.data.information, be.timeStamp,(new Date()).valueOf(),null);
 			}
 			
 			//create the logging list and bgreading list and assign a sorting - but don't get the logs from the database yet because maybe the database init is not finished yet
