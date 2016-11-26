@@ -503,7 +503,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 					message += " " + ModelLocator.resourceManagerInstance.getString('homeview','status_info_no_device_known');
 					message += "\n\n";
 					message += ModelLocator.resourceManagerInstance.getString('homeview','status_info_transmitter_battery_level');
-					var batteryLevel:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BRIDGE_BATTERY_PERCENTAGE);
+					var batteryLevel:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_BATTERY_VOLTAGE);
 					if (batteryLevel == "0") {
 						batteryLevel = ModelLocator.resourceManagerInstance.getString('homeview','status_info_transmitter_battery_level_unknown');
 					} 
