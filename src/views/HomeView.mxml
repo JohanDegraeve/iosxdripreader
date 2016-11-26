@@ -119,7 +119,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			
 			private static var scanningWasUserInitiated:Boolean = false;
 			
-			[ResourceBundle("homeview")]
+			[ResourceBundle('homeview')]
 			[ResourceBundle("general")]
 			[ResourceBundle("bluetoothservice")]
 			[ResourceBundle("settingsview")]
@@ -225,8 +225,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_INITIAL_INFO_SCREEN_1_SHOWN) == "false") {
 					var alert:DialogView = Dialog.service.create(
 						new AlertBuilder()
-						.setTitle(ModelLocator.resourceManagerInstance.getString("homeview","info"))
-						.setMessage(ModelLocator.resourceManagerInstance.getString("homeview","info_screen_1"))//info about buttons top right corner
+						.setTitle(ModelLocator.resourceManagerInstance.getString('homeview',"info"))
+						.setMessage(ModelLocator.resourceManagerInstance.getString('homeview',"info_screen_1"))//info about buttons top right corner
 						.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
 						.build()
 					);
@@ -249,8 +249,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 					scanningWasUserInitiated = false;
 					var alert:DialogView = Dialog.service.create(
 						new AlertBuilder()
-						.setTitle(ModelLocator.resourceManagerInstance.getString("homeview","scan_for_device"))
-						.setMessage(ModelLocator.resourceManagerInstance.getString("homeview","connected_to_peripheral_device_id_stored"))
+						.setTitle(ModelLocator.resourceManagerInstance.getString('homeview',"scan_for_device"))
+						.setMessage(ModelLocator.resourceManagerInstance.getString('homeview',"connected_to_peripheral_device_id_stored"))
 						.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
 						
 						.build()
@@ -443,8 +443,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 						BluetoothService.startScanning();
 						var alert:DialogView = Dialog.service.create(
 							new AlertBuilder()
-							.setTitle(ModelLocator.resourceManagerInstance.getString("homeview","scan_for_device"))
-							.setMessage(ModelLocator.resourceManagerInstance.getString("homeview","scanning_started_message"))
+							.setTitle(ModelLocator.resourceManagerInstance.getString('homeview',"scan_for_device"))
+							.setMessage(ModelLocator.resourceManagerInstance.getString('homeview',"scanning_started_message"))
 							.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
 							.build()
 						);
@@ -452,8 +452,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 					} else {
 						var alert:DialogView = Dialog.service.create(
 							new AlertBuilder()
-							.setTitle(ModelLocator.resourceManagerInstance.getString("homeview","scanning_failed_tile"))
-							.setMessage(ModelLocator.resourceManagerInstance.getString("homeview","bluetooth_not_switched_on"))
+							.setTitle(ModelLocator.resourceManagerInstance.getString('homeview',"scanning_failed_tile"))
+							.setMessage(ModelLocator.resourceManagerInstance.getString('homeview',"bluetooth_not_switched_on"))
 							.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
 							.build()
 						);
@@ -466,8 +466,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 				} else if (event.index == ACTION_SHEET_INDEX_FOR_START_SENSOR) {
 					var alert:DialogView = Dialog.service.create(
 						new AlertBuilder()
-						.setTitle(ModelLocator.resourceManagerInstance.getString("homeview","start_sensor"))
-						.setMessage(ModelLocator.resourceManagerInstance.getString("homeview","start_sensor_warning_correct_timing"))
+						.setTitle(ModelLocator.resourceManagerInstance.getString('homeview',"start_sensor"))
+						.setMessage(ModelLocator.resourceManagerInstance.getString('homeview',"start_sensor_warning_correct_timing"))
 						.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
 						.addOption(ModelLocator.resourceManagerInstance.getString("general","cancel"), DialogAction.STYLE_CANCEL, 1)
 						.build()
@@ -478,8 +478,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 				} else if (event.index == ACTION_SHEET_INDEX_FOR_STOP_SENSOR) {
 					var alert:DialogView = Dialog.service.create(
 						new AlertBuilder()
-						.setTitle(ModelLocator.resourceManagerInstance.getString("homeview","stop_sensor"))
-						.setMessage(ModelLocator.resourceManagerInstance.getString("homeview","stop_sensor_ask_confirmation"))
+						.setTitle(ModelLocator.resourceManagerInstance.getString('homeview',"stop_sensor"))
+						.setMessage(ModelLocator.resourceManagerInstance.getString('homeview',"stop_sensor_ask_confirmation"))
 						.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
 						.addOption(ModelLocator.resourceManagerInstance.getString("general","cancel"), DialogAction.STYLE_CANCEL, 1)
 						.build()
@@ -488,7 +488,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 					alert.addEventListener(DialogViewEvent.CANCELLED, stopSensorcancellation);
 					DialogService.addDialog(alert, 60);
 				} else if (event.index == ACTION_SHEET_INDEX_FOR_STATUS) {
-					var message:String = ModelLocator.resourceManagerInstance.getString("homeview", "status_info_sensor_start");
+					var message:String = ModelLocator.resourceManagerInstance.getString('homeview', "status_info_sensor_start");
 					var dateFormatterForSensorStartTimeAndDate:DateTimeFormatter = new DateTimeFormatter();
 					dateFormatterForSensorStartTimeAndDate.dateTimePattern = ModelLocator.resourceManagerInstance.getString('homeview','datetimepatternforstatusinfo');
 					dateFormatterForSensorStartTimeAndDate.useUTC = false;
@@ -496,11 +496,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 					if (Sensor.getActiveSensor() != null) {
 						message += " " + dateFormatterForSensorStartTimeAndDate.format(new Date(Sensor.getActiveSensor().startedAt));
 					} else {
-						message += ModelLocator.resourceManagerInstance.getString("homeview", "status_info_sensor_not_started");
+						message += ModelLocator.resourceManagerInstance.getString('homeview', "status_info_sensor_not_started");
 					}
 					message += "\n\n";
 					message += ModelLocator.resourceManagerInstance.getString('homeview','status_info_device_name');
-					message += " " + ModelLocator.resourceManagerInstance.getString('homeview','status_info_no_device_known');
+					if (BlueToothDevice.known()) {
+						message += " " + BlueToothDevice.name;
+					} else {
+						message += " " + ModelLocator.resourceManagerInstance.getString('homeview','status_info_no_device_known');
+					}
 					message += "\n\n";
 					message += ModelLocator.resourceManagerInstance.getString('homeview','status_info_transmitter_battery_level');
 					var batteryLevel:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_BATTERY_VOLTAGE);
@@ -511,7 +515,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 					
 					var alert:DialogView = Dialog.service.create(
 						new AlertBuilder()
-						.setTitle(ModelLocator.resourceManagerInstance.getString("homeview","status_title"))
+						.setTitle(ModelLocator.resourceManagerInstance.getString('homeview',"status_title"))
 						.setMessage(message)
 						.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
 						.build()
@@ -533,7 +537,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 				var dateTime:DateTimeDialogView = Dialog.service.create(
 					new DateTimeDialogBuilder()
 					.setMode(DialogType.MODE_DATE)
-					.setTitle(ModelLocator.resourceManagerInstance.getString("homeview","start_sensor_title_get_date"))
+					.setTitle(ModelLocator.resourceManagerInstance.getString('homeview',"start_sensor_title_get_date"))
 					.setAcceptLabel("Ok")
 					.setCancelable(true)
 					.setCancelLabel(ModelLocator.resourceManagerInstance.getString('general','cancel'))
@@ -575,7 +579,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 				dateTime = Dialog.service.create(
 					new DateTimeDialogBuilder()
 					.setMode(DialogType.MODE_TIME)
-					.setTitle(ModelLocator.resourceManagerInstance.getString("homeview","start_sensor_title_get_time"))
+					.setTitle(ModelLocator.resourceManagerInstance.getString('homeview',"start_sensor_title_get_time"))
 					.setAcceptLabel("Ok")
 					.setCancelable(true)
 					.setCancelLabel(ModelLocator.resourceManagerInstance.getString('general','cancel'))
@@ -609,8 +613,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 				if (sensorStartTime > (new Date()).valueOf() + 5 * 60 * 1000) {
 					var alert:DialogView = Dialog.service.create(
 						new AlertBuilder()
-						.setTitle(ModelLocator.resourceManagerInstance.getString("homeview","start_sensor"))
-						.setMessage(ModelLocator.resourceManagerInstance.getString("homeview","dont_start_with_time_in_future"))
+						.setTitle(ModelLocator.resourceManagerInstance.getString('homeview',"start_sensor"))
+						.setMessage(ModelLocator.resourceManagerInstance.getString('homeview',"dont_start_with_time_in_future"))
 						.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
 						.build()
 					);
@@ -625,15 +629,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 					dateFormatter.setStyle("locale",Capabilities.language.substr(0,2));
 					var message:String;
 					if (timeOfCalibration > 0) {
-						message = ModelLocator.resourceManagerInstance.getString("homeview","sensor_started_wait_needed_1");
+						message = ModelLocator.resourceManagerInstance.getString('homeview',"sensor_started_wait_needed_1");
 						message += " " + dateFormatter.format(new Date(actualTime + timeOfCalibration)) + " ";
-						message += ModelLocator.resourceManagerInstance.getString("homeview","sensor_started_wait_needed_2");
+						message += ModelLocator.resourceManagerInstance.getString('homeview',"sensor_started_wait_needed_2");
 					} else {
-						message = ModelLocator.resourceManagerInstance.getString("homeview","sensor_started_no_wait_needed");
+						message = ModelLocator.resourceManagerInstance.getString('homeview',"sensor_started_no_wait_needed");
 					}
 					var alert:DialogView = Dialog.service.create(
 						new AlertBuilder()
-						.setTitle(ModelLocator.resourceManagerInstance.getString("homeview","start_sensor"))
+						.setTitle(ModelLocator.resourceManagerInstance.getString('homeview',"start_sensor"))
 						.setMessage(message)
 						.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
 						.build()
@@ -647,11 +651,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 					//create alert to get the user's input
 					var alert:DialogView = Dialog.service.create(
 						new AlertBuilder()
-						.setTitle(ModelLocator.resourceManagerInstance.getString("homeview","scanning_failed_tile"))
-						.setMessage(ModelLocator.resourceManagerInstance.getString("homeview","scanning_failed")
+						.setTitle(ModelLocator.resourceManagerInstance.getString('homeview',"scanning_failed_tile"))
+						.setMessage(ModelLocator.resourceManagerInstance.getString('homeview',"scanning_failed")
 							+
-							(BlueToothDevice.known() ? (" " + ModelLocator.resourceManagerInstance.getString("homeview","with_name") + " " + BlueToothDevice.name) + 
-								"\n\n" + ModelLocator.resourceManagerInstance.getString("homeview","explain_expected_device_name"): "")
+							(BlueToothDevice.known() ? (" " + ModelLocator.resourceManagerInstance.getString('homeview',"with_name") + " " + BlueToothDevice.name) + 
+								"\n\n" + ModelLocator.resourceManagerInstance.getString('homeview',"explain_expected_device_name"): "")
 						)
 						.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
 						.build()
