@@ -51,7 +51,7 @@ package services
 		
 		private static function performFetch(event:BackgroundFetchEvent):void {
 			trace("BackGroundFetchService.as performFetch");
-			var backgroundfetchServiceEvent:BackGroundFetchServiceEvent = new BackGroundFetchServiceEvent(BackGroundFetchServiceEvent.LOG_INFO);
+			var backgroundfetchServiceEvent:BackGroundFetchServiceEvent = new BackGroundFetchServiceEvent(BackGroundFetchServiceEvent.PERFORM_FETCH);
 			backgroundfetchServiceEvent.data = new Object();
 			backgroundfetchServiceEvent.data.information = event.data.result as String;
 			_instance.dispatchEvent(backgroundfetchServiceEvent);
@@ -60,7 +60,6 @@ package services
 		private static function loadRequestSuccess(event:BackgroundFetchEvent):void {
 			trace("BackGroundFetchService.as loadRequestSuccess");
 			trace("result = " + (event.data.result as String)); 
-			parameters = null;
 			
 			var backgroundfetchserviceLogInfo:BackGroundFetchServiceEvent = new BackGroundFetchServiceEvent(BackGroundFetchServiceEvent.LOG_INFO);
 			backgroundfetchserviceLogInfo.data = new Object();
@@ -71,13 +70,11 @@ package services
 			backgroundFetchServiceResult.data = new Object();
 			backgroundFetchServiceResult.data.information = event.data.result as String;
 			_instance.dispatchEvent(backgroundFetchServiceResult);
-			
 		}
 		
 		private static function loadRequestError(event:BackgroundFetchEvent):void {
 			trace("BackGroundFetchService.as loadRequestError");
 			trace("error = " + (event.data.error as String));
-			parameters = null;
 			
 			var backgroundfetchserviceLogInfo:BackGroundFetchServiceEvent = new BackGroundFetchServiceEvent(BackGroundFetchServiceEvent.LOG_INFO);
 			backgroundfetchserviceLogInfo.data = new Object();
@@ -105,8 +102,7 @@ package services
 		 * args parameter is to pass additional header name value pairs, must always be by two.<br>
 		 */
 		public static function createAndLoadUrlRequest(url: String, requestMethod:String, urlVariables:URLVariables, data:String, contentType:String, ... args): void {
-			//return;
-			parameters = new Array(6 + args.length);
+			var parameters:Array = new Array(6 + args.length);
 			parameters[0] = url;
 			parameters[1] = requestMethod;
 			parameters[2] = urlVariables;
@@ -116,9 +112,7 @@ package services
 			for (var i:int = 0;i < args.length;i++) {
 				parameters[6 + i] = args[i];
 			}
-			
-			if (ModelLocator.isInForeground)
-				BackgroundFetch.createAndLoadUrlRequest.apply(null, parameters);
+			BackgroundFetch.createAndLoadUrlRequest.apply(null, parameters);
 		}
 		
 		private static function logInfoReceived(event:BackgroundFetchEvent):void {
