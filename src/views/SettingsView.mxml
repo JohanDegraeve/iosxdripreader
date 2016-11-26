@@ -25,6 +25,7 @@
 			
 			import services.DialogService;
 			[ResourceBundle("settingsview")]
+			[ResourceBundle("calibrationservice")]
 			
 			[Bindable]
 			private static var detailedTracingOnOrOffText:String = "";
@@ -32,6 +33,10 @@
 			private static var additionalCalibrationRequestOnOrOffText:String = "";
 			[Bindable]
 			private static var chosenUnitText:String = "";
+			[Bindable]
+			private static var lowValueText:String = "";
+			[Bindable]
+			private static var highValueText:String = "";
 			[Bindable]
 			private static var nightScoutUrl:String = "";
 			[Bindable]
@@ -56,6 +61,9 @@
 				} else {
 					chosenUnitText = ModelLocator.resourceManagerInstance.getString('settingsview','mmol');
 				}
+				
+				lowValueText = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_LOW_MARK);
+				highValueText = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_HIGH_MARK);
 				
 				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_ADDITIONAL_CALIBRATION_REQUEST_ALERT) == "true") {
 					additionalCalibrationRequestOnOrOffText = ModelLocator.resourceManagerInstance.getString('settingsview','on');
@@ -173,6 +181,84 @@
 				}
 			}
 			
+			private function changeLowValue_clickHandler(event:MouseEvent):void {
+				rect15.color = uint("0xD3D3D3");
+				rect16.color = uint("0xD3D3D3");
+				setResetColorTimer();
+
+				var alert:DialogView = Dialog.service.create(
+					new AlertBuilder()
+					.setTitle(ModelLocator.resourceManagerInstance.getString("settingsview","low_value"))
+					.addTextField("", ModelLocator.resourceManagerInstance.getString("settingsview","low_value"))
+					.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
+					.addOption(ModelLocator.resourceManagerInstance.getString("general","cancel"), DialogAction.STYLE_CANCEL, 1)
+					.build()
+				);
+				alert.addEventListener(DialogViewEvent.CLOSED, lowValueentered);
+				DialogService.addDialog(alert);
+			}
+			
+			private static function lowValueentered(event:DialogViewEvent):void {
+				if (event.index == 1) {
+					return;
+				}
+				
+				var asNumber:Number = new Number(event.values[0] as String);
+				if (isNaN(asNumber)) {
+					//add the warning message
+					var alert:DialogView = Dialog.service.create(
+						new AlertBuilder()
+						.setTitle(ModelLocator.resourceManagerInstance.getString("settingsview","low_value"))
+						.setMessage(ModelLocator.resourceManagerInstance.getString("calibrationservice","value_should_be_numeric"))
+						.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
+						.build()
+					);
+					DialogService.addDialog(alert);
+				} else {
+					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_LOW_MARK, asNumber.toString());
+					lowValueText = asNumber.toString();
+				}
+			}
+
+			private function changeHighValue_clickHandler(event:MouseEvent):void {
+				rect17.color = uint("0xD3D3D3");
+				rect18.color = uint("0xD3D3D3");
+				setResetColorTimer();
+				
+				var alert:DialogView = Dialog.service.create(
+					new AlertBuilder()
+					.setTitle(ModelLocator.resourceManagerInstance.getString("settingsview","high_value"))
+					.addTextField("", ModelLocator.resourceManagerInstance.getString("settingsview","high_value"))
+					.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
+					.addOption(ModelLocator.resourceManagerInstance.getString("general","cancel"), DialogAction.STYLE_CANCEL, 1)
+					.build()
+				);
+				alert.addEventListener(DialogViewEvent.CLOSED, highValueentered);
+				DialogService.addDialog(alert);
+			}
+			
+			private static function highValueentered(event:DialogViewEvent):void {
+				if (event.index == 1) {
+					return;
+				}
+				
+				var asNumber:Number = new Number(event.values[0] as String);
+				if (isNaN(asNumber)) {
+					//add the warning message
+					var alert:DialogView = Dialog.service.create(
+						new AlertBuilder()
+						.setTitle(ModelLocator.resourceManagerInstance.getString("settingsview","high_value"))
+						.setMessage(ModelLocator.resourceManagerInstance.getString("calibrationservice","value_should_be_numeric"))
+						.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
+						.build()
+					);
+					DialogService.addDialog(alert);
+				} else {
+					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_HIGH_MARK, asNumber.toString());
+					highValueText = asNumber.toString();
+				}
+			}
+			
 			private function additionalCalibrationRequestAlert_clickHandler(event:MouseEvent):void {
 				rect11.color = uint("0xD3D3D3");
 				rect12.color = uint("0xD3D3D3");
@@ -212,6 +298,10 @@
 					rect12.color = uint("0x212121");
 					rect13.color = uint("0x212121");
 					rect14.color = uint("0x212121");
+					rect15.color = uint("0x212121");
+					rect16.color = uint("0x212121");
+					rect17.color = uint("0x212121");
+					rect18.color = uint("0x212121");
 				}
 			}
 			
@@ -253,15 +343,15 @@
 				</s:Line>	
 			</s:VGroup>
 			
-			<!-- Chapter unit -->
-			<s:Label text = "{ModelLocator.resourceManagerInstance.getString('settingsview','unit')}" textAlign="center"  color="#3B6999" 
+			<!-- Chapter general settings -->
+			<s:Label text = "{ModelLocator.resourceManagerInstance.getString('settingsview','general_settings')}" textAlign="center"  color="#3B6999" 
 					 width="100%" paddingLeft="3" paddingRight="0" fontSize="20" fontWeight="bold" paddingTop="3"/>
 			<s:Line width="100%">
 				<s:stroke>
 					<s:SolidColorStroke color="#3B6999"  weight="3"/>
 				</s:stroke>
 			</s:Line>
-			<!-- Chapter unit Subsection chosen unit -->
+			<!-- Chapter general settings Subsection chosen unit -->
 			<s:VGroup click="changeUnit_clickHandler(event)" width="100%">
 				<s:HGroup width="100%">
 					<s:Rect height="100%" width="5" >
@@ -269,13 +359,61 @@
 							<s:SolidColor color="#212121" id="rect13"/>
 						</s:fill>
 					</s:Rect>
-					<s:Label text = "{ModelLocator.resourceManagerInstance.getString('settingsview','chosen_unit')}"
+					<s:Label text = "{ModelLocator.resourceManagerInstance.getString('settingsview','unit')}"
 							 width="100%" paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
 					<s:Label text = "{chosenUnitText}"  
 							 paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
 					<s:Rect height="100%" width="5" >
 						<s:fill>
 							<s:SolidColor color="#212121" id="rect14"/>
+						</s:fill>
+					</s:Rect>
+				</s:HGroup>
+				<s:Line width="100%">
+					<s:stroke>
+						<s:SolidColorStroke color="#3B6999"  weight="3"/>
+					</s:stroke>
+				</s:Line>	
+			</s:VGroup>
+			<!-- Chapter general settings Subsection low value -->
+			<s:VGroup click="changeLowValue_clickHandler(event)" width="100%">
+				<s:HGroup width="100%">
+					<s:Rect height="100%" width="5" >
+						<s:fill>
+							<s:SolidColor color="#212121" id="rect15"/>
+						</s:fill>
+					</s:Rect>
+					<s:Label text = "{ModelLocator.resourceManagerInstance.getString('settingsview','low_value')}"
+							 width="100%" paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
+					<s:Label text = "{lowValueText}"  
+							 paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
+					<s:Rect height="100%" width="5" >
+						<s:fill>
+							<s:SolidColor color="#212121" id="rect16"/>
+						</s:fill>
+					</s:Rect>
+				</s:HGroup>
+				<s:Line width="100%">
+					<s:stroke>
+						<s:SolidColorStroke color="#3B6999"  weight="3"/>
+					</s:stroke>
+				</s:Line>	
+			</s:VGroup>
+			<!-- Chapter general settings Subsection chosen unit -->
+			<s:VGroup click="changeHighValue_clickHandler(event)" width="100%">
+				<s:HGroup width="100%">
+					<s:Rect height="100%" width="5" >
+						<s:fill>
+							<s:SolidColor color="#212121" id="rect17"/>
+						</s:fill>
+					</s:Rect>
+					<s:Label text = "{ModelLocator.resourceManagerInstance.getString('settingsview','high_value')}"
+							 width="100%" paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
+					<s:Label text = "{highValueText}"  
+							 paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
+					<s:Rect height="100%" width="5" >
+						<s:fill>
+							<s:SolidColor color="#212121" id="rect18"/>
 						</s:fill>
 					</s:Rect>
 				</s:HGroup>

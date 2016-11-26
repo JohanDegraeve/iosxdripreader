@@ -47,7 +47,6 @@ package services
 			BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.LOG_INFO, logInfoReceived);
 			BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.LOAD_REQUEST_RESULT, loadRequestSuccess);
 			BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.LOAD_REQUEST_ERROR, loadRequestError);
-<<<<<<< HEAD
 			BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.LOAD_REQUEST_PERFORMFETCH, performFetch);
 		}
 		
@@ -58,8 +57,6 @@ package services
 			} else {
 				BackgroundFetch.callCompletionHandler("NO_DATA");
 			}
-=======
->>>>>>> master
 		}
 		
 		private static function loadRequestSuccess(event:BackgroundFetchEvent):void {

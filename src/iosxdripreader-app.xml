@@ -331,6 +331,7 @@
 		<extensionID>com.distriqt.NetworkInfo</extensionID>
 
 		<extensionID>net.johandegraeve.iosfetchinterval</extensionID>
-		<extensionID>com.freshplanet.AirBackgroundFetch</extensionID>
-	</extensions>
+		
+	<extensionID>com.freshplanet.AirBackgroundFetch</extensionID>
+    </extensions>
 </application>
