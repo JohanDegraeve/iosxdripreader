@@ -25,7 +25,6 @@ package services
 	{
 		private static var _instance:BackGroundFetchService = new BackGroundFetchService(); 
 		private static var initialStart:Boolean = true;
-		private static var parameters:Array 
 		
 		public static function get instance():BackGroundFetchService {
 			return _instance;
@@ -52,11 +51,10 @@ package services
 		
 		private static function performFetch(event:BackgroundFetchEvent):void {
 			trace("BackGroundFetchService.as performFetch");
-			if (parameters != null) {
-				BackgroundFetch.createAndLoadUrlRequest.apply(null, parameters);
-			} else {
-				BackgroundFetch.callCompletionHandler("NO_DATA");
-			}
+			var backgroundfetchServiceEvent:BackGroundFetchServiceEvent = new BackGroundFetchServiceEvent(BackGroundFetchServiceEvent.LOG_INFO);
+			backgroundfetchServiceEvent.data = new Object();
+			backgroundfetchServiceEvent.data.information = event.data.result as String;
+			_instance.dispatchEvent(backgroundfetchServiceEvent);
 		}
 		
 		private static function loadRequestSuccess(event:BackgroundFetchEvent):void {
