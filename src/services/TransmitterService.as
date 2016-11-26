@@ -144,10 +144,10 @@ package services
 						lastPacketTime = (new Date()).valueOf();
 						
 						//store as bridge battery level value 0 in the common settings (to be synchronized)
-						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_BATTERY_VOLTAGE,"0");
+						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_BRIDGE_BATTERY_PERCENTAGE, "0");
 						
 						//store the transmitter battery level in the common settings (to be synchronized)
-						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_BATTERY_VOLTAGE,transmitterDataXdripDataPacket.transmitterBatteryVoltage.toString());
+						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_BATTERY_VOLTAGE, transmitterDataXdripDataPacket.transmitterBatteryVoltage.toString());
 						Sensor.getActiveSensor().latestBatteryLevel = transmitterDataXdripDataPacket.transmitterBatteryVoltage;
 						//create and save bgreading
 						BgReading.
