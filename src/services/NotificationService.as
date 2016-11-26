@@ -30,6 +30,8 @@ package services
 	import flash.events.Event;
 	import flash.events.EventDispatcher;
 	
+	import Utilities.BgGraphBuilder;
+	
 	import databaseclasses.BgReading;
 	import databaseclasses.Calibration;
 	import databaseclasses.CalibrationRequest;
@@ -214,20 +216,11 @@ package services
 			Notifications.service.cancelAll();
 		}
 		
-		/**
-		 * will clear all existing notifications and recreate<br>
-		 * - notification with bloodglucose level, on the condition that there's a least two calibrations for the current sensor<br>
-		 * - check calibrationrequest notification<br>
-		 * 
-		 */
-		public static function updateAllNotifications(be:Event, loginfo:String = null):void {
-			if (loginfo != null) {
-				dispatchInformation("log info received from " + loginfo);
-			}
-			Notifications.service.cancelAll();
+		public static function updateAllNotifications(be:Event):void {
+			//Notifications.service.cancelAll();
 			
 			//start with bgreading notification
-			/*if (Calibration.allForSensor().length >= 2) {
+			if (Calibration.allForSensor().length >= 2) {
 				var lastBgReading:BgReading = BgReading.lastNoSensor(); 
 				var valueToShow:String = "";
 				if (lastBgReading != null) {
@@ -254,7 +247,7 @@ package services
 					.enableVibration(false)
 					.enableLights(false)
 					.build());
-			}*/
+			}
 			
 			//next is the calibrationrequest notification
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_ADDITIONAL_CALIBRATION_REQUEST_ALERT) == "true") {

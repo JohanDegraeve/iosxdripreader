@@ -45,6 +45,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			import com.distriqt.extension.dialog.objects.DialogAction;
 			
 			import mx.events.FlexEvent;
+			import mx.formatters.DateFormatter;
 			
 			import spark.formatters.DateTimeFormatter;
 			
@@ -101,7 +102,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			private static var sensorStartMonth:int = 0;//starts at 0 for January
 			
 			private static var currentInfoUpdateTimer:Timer;
-
+			
 			
 			/**
 			 * connected or not. Should be replaced by if (BluetoothService.getActiveBluetoothPeripheral().state == PeripheralState.CONNECTED)<br>
@@ -206,7 +207,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			
 			public static function notificationServiceInitiated(ev:NotificationServiceEvent):void {
 				NotificationService.updateAllNotifications(null);
-
+				
 				if (DialogService.isInitiated) {
 					dialogServiceInitiated(null);
 				} else {
@@ -215,7 +216,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			}
 			
 			private static function dialogServiceInitiated(ev:DialogServiceEvent):void {
-					
+				
 				//initial info screen
 				//this seems to be the right time to start using the database - here it is used actually
 				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_INITIAL_INFO_SCREEN_1_SHOWN) == "false") {
@@ -380,9 +381,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 					var minutes:int = ((new Date()).valueOf() - lastBgReading.timestamp) / (60 * 1000);
 					minutesAgoText = minutes + 
 						(minutes == 1 ? 
-						" " + ModelLocator.resourceManagerInstance.getString('homeview','minuteago')
-						:
-						" " + ModelLocator.resourceManagerInstance.getString('homeview','minutesago'));
+							" " + ModelLocator.resourceManagerInstance.getString('homeview','minuteago')
+							:
+							" " + ModelLocator.resourceManagerInstance.getString('homeview','minutesago'));
 					deltaValueText = BgGraphBuilder.unitizedDeltaString(true, true);
 					if(estimate <= new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_LOW_MARK))) {
 						currentBgLabelColor = 0xFF0000;
@@ -484,7 +485,37 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 					alert.addEventListener(DialogViewEvent.CLOSED, stopSensorConfirmation);
 					alert.addEventListener(DialogViewEvent.CANCELLED, stopSensorcancellation);
 					DialogService.addDialog(alert, 60);
-				} 
+				} else if (event.index == ACTION_SHEET_INDEX_FOR_STATUS) {
+					var message:String = ModelLocator.resourceManagerInstance.getString("home", "status_info_sensor_start");
+					var dateFormatter:DateTimeFormatter = new DateTimeFormatter();
+					dateFormatter.dateTimePattern = ModelLocator.resourceManagerInstance.getString('general','datetimepatternforlogginginfo');
+					dateFormatter.useUTC = false;
+					dateFormatter.setStyle("locale",Capabilities.language.substr(0,2));
+					if (Sensor.getActiveSensor() != null) {
+						message += " " + dateFormatter.format(new Date(Sensor.getActiveSensor().startedAt));
+					} else {
+						message += ModelLocator.resourceManagerInstance.getString("home", "status_info_sensor_not_started");
+					}
+					message += "\n";
+					message += ModelLocator.resourceManagerInstance.getString('home','status_info_device_name');
+					message += " " + ModelLocator.resourceManagerInstance.getString('home','status_info_no_device_known');
+					message += "\n";
+					message += ModelLocator.resourceManagerInstance.getString('home','status_info_transmitter_battery_level');
+					message += " " + ModelLocator.resourceManagerInstance.getString('home','status_info_no_device_known');
+					message += "\n";
+					
+					var alert:DialogView = Dialog.service.create(
+						new AlertBuilder()
+						.setTitle(ModelLocator.resourceManagerInstance.getString("homeview","status_title"))
+						.setMessage(message)
+						.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
+						.addOption(ModelLocator.resourceManagerInstance.getString("general","cancel"), DialogAction.STYLE_CANCEL, 1)
+						.build()
+					);
+					//alert.addEventListener(DialogViewEvent.CLOSED, stopSensorConfirmation);
+					//alert.addEventListener(DialogViewEvent.CANCELLED, stopSensorcancellation);
+					DialogService.addDialog(alert, 60);
+				}
 			}
 			
 			private function startSensorWarningCancelled(event:DialogViewEvent):void {
