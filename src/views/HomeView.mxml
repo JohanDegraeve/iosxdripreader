@@ -35,6 +35,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			import com.distriqt.extension.bluetoothle.events.PeripheralEvent;
 			import com.distriqt.extension.dialog.DateTimeDialogView;
 			import com.distriqt.extension.dialog.Dialog;
+			import com.distriqt.extension.dialog.DialogTheme;
 			import com.distriqt.extension.dialog.DialogType;
 			import com.distriqt.extension.dialog.DialogView;
 			import com.distriqt.extension.dialog.builders.ActionSheetBuilder;
@@ -92,6 +93,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			private static const ACTION_SHEET_INDEX_FOR_STOP_SENSOR:int = 3;
 			private static const ACTION_SHEET_INDEX_FOR_STATUS:int = 4;
 			private static const ACTION_SHEET_INDEX_FOR_CANCEL:int = 6;
+			
+			private static const UPDATE_DISPLAY_INFO_EVERY_X_SECONDS:int = 15;
 			
 			//local time, ie if it's here and now 12:20 the 2nd of April 2017, then Hours = 12, ...
 			private static var sensorStartSeconds:int = 0;
@@ -322,13 +325,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 						currentInfoUpdateTimer.stop();
 					}
 				}
-				currentInfoUpdateTimer = new Timer(60 * 1000, 1);
+				currentInfoUpdateTimer = new Timer(UPDATE_DISPLAY_INFO_EVERY_X_SECONDS * 1000, 1);
 				currentInfoUpdateTimer.addEventListener(TimerEvent.TIMER, currentInfoUpdateTimerExpired);
 				currentInfoUpdateTimer.start();
 			}
 			
 			private function currentInfoUpdateTimerExpired(event:Event):void {
-				trace("currentInfoUpdateTimerExpired expired");
 				displayCurrentInfoFromReading();
 				restartCurrentInfoUpdateTimer();
 			}
@@ -486,22 +488,22 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 					alert.addEventListener(DialogViewEvent.CANCELLED, stopSensorcancellation);
 					DialogService.addDialog(alert, 60);
 				} else if (event.index == ACTION_SHEET_INDEX_FOR_STATUS) {
-					var message:String = ModelLocator.resourceManagerInstance.getString("home", "status_info_sensor_start");
-					var dateFormatter:DateTimeFormatter = new DateTimeFormatter();
-					dateFormatter.dateTimePattern = ModelLocator.resourceManagerInstance.getString('general','datetimepatternforlogginginfo');
-					dateFormatter.useUTC = false;
-					dateFormatter.setStyle("locale",Capabilities.language.substr(0,2));
+					var message:String = ModelLocator.resourceManagerInstance.getString("homeview", "status_info_sensor_start");
+					var dateFormatterForSensorStartTimeAndDate:DateTimeFormatter = new DateTimeFormatter();
+					dateFormatterForSensorStartTimeAndDate.dateTimePattern = ModelLocator.resourceManagerInstance.getString('homeview','datetimepatternforstatusinfo');
+					dateFormatterForSensorStartTimeAndDate.useUTC = false;
+					dateFormatterForSensorStartTimeAndDate.setStyle("locale",Capabilities.language.substr(0,2));
 					if (Sensor.getActiveSensor() != null) {
-						message += " " + dateFormatter.format(new Date(Sensor.getActiveSensor().startedAt));
+						message += " " + dateFormatterForSensorStartTimeAndDate.format(new Date(Sensor.getActiveSensor().startedAt));
 					} else {
-						message += ModelLocator.resourceManagerInstance.getString("home", "status_info_sensor_not_started");
+						message += ModelLocator.resourceManagerInstance.getString("homeview", "status_info_sensor_not_started");
 					}
 					message += "\n";
-					message += ModelLocator.resourceManagerInstance.getString('home','status_info_device_name');
-					message += " " + ModelLocator.resourceManagerInstance.getString('home','status_info_no_device_known');
+					message += ModelLocator.resourceManagerInstance.getString('homeview','status_info_device_name');
+					message += " " + ModelLocator.resourceManagerInstance.getString('homeview','status_info_no_device_known');
 					message += "\n";
-					message += ModelLocator.resourceManagerInstance.getString('home','status_info_transmitter_battery_level');
-					message += " " + ModelLocator.resourceManagerInstance.getString('home','status_info_no_device_known');
+					message += ModelLocator.resourceManagerInstance.getString('homeview','status_info_transmitter_battery_level');
+					message += " " + ModelLocator.resourceManagerInstance.getString('homeview','status_info_no_device_known');
 					message += "\n";
 					
 					var alert:DialogView = Dialog.service.create(
@@ -509,7 +511,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 						.setTitle(ModelLocator.resourceManagerInstance.getString("homeview","status_title"))
 						.setMessage(message)
 						.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
-						.addOption(ModelLocator.resourceManagerInstance.getString("general","cancel"), DialogAction.STYLE_CANCEL, 1)
 						.build()
 					);
 					//alert.addEventListener(DialogViewEvent.CLOSED, stopSensorConfirmation);

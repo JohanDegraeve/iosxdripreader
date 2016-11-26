@@ -20,6 +20,7 @@ package events
 	[Event(name="LogInfo",type="events.BackGroundFetchServiceEvent")]
 	[Event(name="LoadRequestResult",type="events.BackGroundFetchServiceEvent")]
 	[Event(name="LoadRequestERror",type="events.BackGroundFetchServiceEvent")]
+	[Event(name="PerformFetch",type="events.BackGroundFetchServiceEvent")]
 
 	public class BackGroundFetchServiceEvent extends GenericEvent
 	{
@@ -35,6 +36,10 @@ package events
 		 * load request was successful, data.information contains the error
 		 */
 		public static const LOAD_REQUEST_ERROR:String = "LoadRequestERror";
+		/**
+		 * performFetch received
+		 */
+		public static const PERFORM_FETCH:String = "PerformFetch";
 
 
 		public var data:*;
