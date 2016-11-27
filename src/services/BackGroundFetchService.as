@@ -26,6 +26,19 @@ package services
 		private static var _instance:BackGroundFetchService = new BackGroundFetchService(); 
 		private static var initialStart:Boolean = true;
 		
+		/**
+		 * to be used in function  callCompletionHandler
+		 */
+		public static const NEW_DATA: String = "NEW_DATA"; 
+		/**
+		 * to be used in function  callCompletionHandler
+		 */
+		public static const FETCH_FAILED: String = "FETCH_FAILED";
+		/**
+		 * to be used in function  callCompletionHandler
+		 */
+		public static const NO_DATA: String = "NO_DATA";
+
 		public static function get instance():BackGroundFetchService {
 			return _instance;
 		}
@@ -49,6 +62,9 @@ package services
 			BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.LOAD_REQUEST_PERFORMFETCH, performFetch);
 		}
 		
+		public static function callCompletionHandler(result:String):void {
+			BackgroundFetch.callCompletionHandler(result);
+		}
 		private static function performFetch(event:BackgroundFetchEvent):void {
 			trace("BackGroundFetchService.as performFetch");
 			var backgroundfetchServiceEvent:BackGroundFetchServiceEvent = new BackGroundFetchServiceEvent(BackGroundFetchServiceEvent.PERFORM_FETCH);
