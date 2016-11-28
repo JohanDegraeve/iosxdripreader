@@ -63,6 +63,10 @@ package services
 		}
 		
 		public static function callCompletionHandler(result:String):void {
+			var backgroundfetchServiceEvent:BackGroundFetchServiceEvent = new BackGroundFetchServiceEvent(BackGroundFetchServiceEvent.LOG_INFO);
+			backgroundfetchServiceEvent.data = new Object();
+			backgroundfetchServiceEvent.data.information = "BackGroundFetchService.as callCompletionhandler with result " + result;
+			_instance.dispatchEvent(backgroundfetchServiceEvent);
 			BackgroundFetch.callCompletionHandler(result);
 		}
 		private static function performFetch(event:BackgroundFetchEvent):void {

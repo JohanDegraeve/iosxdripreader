@@ -116,6 +116,7 @@ package services
 			
 			Notifications.service.setup(service);
 			
+			//var object:Object = Notifications.service.authorisationStatus();
 			switch (Notifications.service.authorisationStatus())
 			{
 				case AuthorisationStatus.AUTHORISED:
@@ -124,6 +125,7 @@ package services
 					register();
 					break;
 				
+				case AuthorisationStatus.DENIED:
 				case AuthorisationStatus.NOT_DETERMINED:
 					// You are yet to ask for authorisation to display notifications
 					// At this point you should consider your strategy to get your user to authorise
@@ -132,10 +134,6 @@ package services
 					Notifications.service.requestAuthorisation();
 					break;
 				
-				case AuthorisationStatus.DENIED:
-					// The user has disabled notifications
-					// TODO Advise your user of the lack of notifications as you see fit
-					break;
 			}
 			
 			function authorisationChangedHandler(event:AuthorisationEvent):void
@@ -213,11 +211,13 @@ package services
 		 * simply clears all notifications 
 		 */
 		public static function clearAllNotifications():void {
-			Notifications.service.cancelAll();
+			Notifications.service.cancel(ID_FOR_BG_VALUE);
+			Notifications.service.cancel(ID_FOR_EXTRA_CALIBRATION_REQUEST);
+			Notifications.service.cancel(ID_FOR_REQUEST_CALIBRATION);
 		}
 		
 		public static function updateAllNotifications(be:Event):void {
-			//Notifications.service.cancelAll();
+			clearAllNotifications();
 			
 			//start with bgreading notification
 			if (Calibration.allForSensor().length >= 2) {
@@ -241,8 +241,9 @@ package services
 				Notifications.service.notify(
 					new NotificationBuilder()
 					.setId(NotificationService.ID_FOR_BG_VALUE)
-					.setAlert("")
+					.setAlert("Bg value")
 					.setTitle(valueToShow)
+					.setBody(".")
 					.setSound("")
 					.enableVibration(false)
 					.enableLights(false)
