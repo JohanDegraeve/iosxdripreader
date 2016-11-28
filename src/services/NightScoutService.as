@@ -258,12 +258,12 @@ package services
 				CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_API_SECRET) == CommonSettings.DEFAULT_API_SECRET
 				||
 				CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_URL_AND_API_SECRET_TESTED) ==  "false") {
-				BackGroundFetchService.callCompletionHandler(BackGroundFetchService.NO_DATA);
+				//BackGroundFetchService.callCompletionHandler(BackGroundFetchService.NO_DATA);
 				return;
 			}
 			
 			if (Calibration.allForSensor().length < 2) {
-				BackGroundFetchService.callCompletionHandler(BackGroundFetchService.NO_DATA);
+				//BackGroundFetchService.callCompletionHandler(BackGroundFetchService.NO_DATA);
 				return;
 			}
 			
@@ -325,13 +325,13 @@ package services
 				createAndLoadURLRequest(_nightScoutEventsUrl, URLRequestMethod.POST, null, JSON.stringify(listOfReadingsAsArray), nightScoutUploadSuccess, nightScoutUploadFailed);
 			} else {
 				trace("NightScoutService.as setting syncRunning = false");
-				BackGroundFetchService.callCompletionHandler(BackGroundFetchService.NO_DATA);
+				//BackGroundFetchService.callCompletionHandler(BackGroundFetchService.NO_DATA);
 				syncRunning = false;
 			}
 		}
 		
 		private static function nightScoutUploadSuccess(event:Event):void {
-			BackGroundFetchService.callCompletionHandler(BackGroundFetchService.NEW_DATA);
+			//BackGroundFetchService.callCompletionHandler(BackGroundFetchService.NEW_DATA);
 			functionToCallAtUpOrDownloadSuccess = null;
 			functionToCallAtUpOrDownloadFailure = null;
 			
@@ -342,7 +342,7 @@ package services
 		}
 		
 		private static function nightScoutUploadFailed(event:BackGroundFetchServiceEvent):void {
-			BackGroundFetchService.callCompletionHandler(BackGroundFetchService.FETCH_FAILED);
+			//BackGroundFetchService.callCompletionHandler(BackGroundFetchService.FETCH_FAILED);
 			functionToCallAtUpOrDownloadSuccess = null;
 			functionToCallAtUpOrDownloadFailure = null;
 			
@@ -362,12 +362,12 @@ package services
 		private static function defaultErrorFunction(event:BackGroundFetchServiceEvent):void {
 			if(functionToCallAtUpOrDownloadFailure != null)
 				functionToCallAtUpOrDownloadFailure(event);
-			BackGroundFetchService.callCompletionHandler(BackGroundFetchService.FETCH_FAILED);
+			//BackGroundFetchService.callCompletionHandler(BackGroundFetchService.FETCH_FAILED);
 		}
 		private static function defaultSuccessFunction(event:BackGroundFetchServiceEvent):void {
 			if(functionToCallAtUpOrDownloadSuccess != null)
 				functionToCallAtUpOrDownloadSuccess(event);
-			BackGroundFetchService.callCompletionHandler(BackGroundFetchService.NEW_DATA);
+			//BackGroundFetchService.callCompletionHandler(BackGroundFetchService.NEW_DATA);
 		}
 		
 		/**
