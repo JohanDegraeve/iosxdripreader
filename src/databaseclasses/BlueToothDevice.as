@@ -129,5 +129,9 @@ package databaseclasses
 		public static function isXBridge():Boolean {
 			return _name.toUpperCase().indexOf("BRIDGE") > -1;
 		}
+		
+		public static function isLimitter():Boolean {
+			return _name.toUpperCase().indexOf("LIMITTER") > -1;
+		}
 	}
 }

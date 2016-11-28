@@ -452,7 +452,7 @@ package databaseclasses
 			var latest3Calibrations:ArrayCollection = new ArrayCollection();
 			latest3Calibrations.addItem(calibration2);//the second is the latest, this one comes first, so it will be sorted from large to small
 			latest3Calibrations.addItem(calibration1);
-
+			
 			adjustRecentBgReadings(5, latest3Calibrations);
 			CalibrationRequest.createOffset(Math.min(bg1,bg2), 35);
 			myTrace("after adjustbgreadings");
@@ -632,7 +632,7 @@ package databaseclasses
 								latest3Calibrations.removeItemAt(latest3Calibrations.length - 1);
 						}
 					}
-
+					
 					if ((calibrations.length == 2 && calibration.slope < sParams.LOW_SLOPE_1) || (calibration.slope < sParams.LOW_SLOPE_2)) { 
 						calibration.slope = calibration.slopeOOBHandler(0, latest3Calibrations);
 						if(calibrations.length > 2) { calibration.possibleBad = true; }
@@ -784,7 +784,7 @@ package databaseclasses
 					}
 				}
 			}
-
+			
 			myTrace("id of firstcalibration = " + firstCalibration.uniqueId);
 			myTrace("id of last calibration = " + lastCalibration.uniqueId);
 			var firstTimeStarted:Number = firstCalibration.sensorAgeAtTimeOfEstimation;
@@ -908,7 +908,7 @@ package databaseclasses
 			lastCalibration.slopeConfidence = 0;
 			lastCalibration.updateInDatabaseSynchronous();
 		}
-
+		
 		private static function myTrace(log:String):void {
 			Trace.myTrace("xdrip-Calibration.as", log);
 		}
@@ -1081,17 +1081,17 @@ internal class DexParameters extends SlopeParameters {
 }
 
 /* THIS IS FOR LIMITTER */
-/*internal class LiParameters extends SlopeParameters {
-function LiParameters(){
-LOW_SLOPE_1 = 1;
-LOW_SLOPE_2 = 1;
-HIGH_SLOPE_1 = 1;
-HIGH_SLOPE_2 = 1;
-DEFAULT_LOW_SLOPE_LOW = 1;
-DEFAULT_LOW_SLOPE_HIGH = 1;
-DEFAULT_SLOPE = 1;
-DEFAULT_HIGH_SLOPE_HIGH = 1;
-DEFAUL_HIGH_SLOPE_LOW = 1;
+internal class LiParameters extends SlopeParameters {
+	function LiParameters(){
+		LOW_SLOPE_1 = 1;
+		LOW_SLOPE_2 = 1;
+		HIGH_SLOPE_1 = 1;
+		HIGH_SLOPE_2 = 1;
+		DEFAULT_LOW_SLOPE_LOW = 1;
+		DEFAULT_LOW_SLOPE_HIGH = 1;
+		DEFAULT_SLOPE = 1;
+		DEFAULT_HIGH_SLOPE_HIGH = 1;
+		DEFAUL_HIGH_SLOPE_LOW = 1;
+	}
 }
-}*/
 

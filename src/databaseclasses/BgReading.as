@@ -763,7 +763,7 @@ package databaseclasses
 		private function calculateAgeAdjustedRawValue():BgReading {
 			var adjust_for:Number = AGE_ADJUSTMENT_TIME - (timestamp - sensor.startedAt);
 			//myTrace("in beginning of calculateAgeAdjustedRawValue, adjust_for = " + adjust_for);
-			if (adjust_for <= 0) {
+			if (adjust_for <= 0 || BlueToothDevice.isLimitter()) {
 				_ageAdjustedRawValue = rawData;
 			} else {
 				_ageAdjustedRawValue = ((AGE_ADJUSTMENT_FACTOR * (adjust_for / AGE_ADJUSTMENT_TIME)) * rawData) + rawData;
