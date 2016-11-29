@@ -7,6 +7,7 @@ xdrip/xbridge reader for iOS devices
 * Initial and subsequent Calibration
 * Additional calibration request alerts but not the 12-hour calibration request alert
 * View latest calculated value on Home screen with "minutes ago" and diff with previous reading
+* Always on notification (not really always but almost always) that allows to see the current value by just lifting up the phone.
 * Synchronisation to Nightscout
  * When the app is in the foreground, upload will always happen immediately after receiving a new value, also at app start, 
  * When the app is in the background, then it is iOS that decides when the app is allowed to do an upload. My initial tests have shown it starts at every 20 minutes but it goes down to every 10 minutes.
