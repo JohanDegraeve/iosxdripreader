@@ -110,7 +110,7 @@ package services
 			NetworkInfo.networkInfo.addEventListener(NetworkInfoEvent.CHANGE, networkChanged);
 			BackGroundFetchService.instance.addEventListener(BackGroundFetchServiceEvent.LOAD_REQUEST_ERROR, defaultErrorFunction);
 			BackGroundFetchService.instance.addEventListener(BackGroundFetchServiceEvent.LOAD_REQUEST_RESULT, defaultSuccessFunction);
-			BackGroundFetchService.instance.addEventListener(BackGroundFetchServiceEvent.PERFORM_FETCH, sync);
+			BackGroundFetchService.instance.addEventListener(BackGroundFetchServiceEvent.PERFORM_FETCH, performFetch);
 
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME) != CommonSettings.DEFAULT_SITE_NAME
 				&&
@@ -129,6 +129,15 @@ package services
 			}
 			
 			function initialCalibrationReceived(event:CalibrationServiceEvent):void {
+				sync();
+			}
+			
+			function performFetch(event:BackGroundFetchServiceEvent):void {
+				var nightScoutServiceEvent:NightScoutServiceEvent = new NightScoutServiceEvent(NightScoutServiceEvent.NIGHTSCOUT_SERVICE_INFORMATION_EVENT);
+				nightScoutServiceEvent.data = new Object();
+				nightScoutServiceEvent.data.information = "NightScoutService.as sync : performfetch";
+				_instance.dispatchEvent(nightScoutServiceEvent);
+
 				sync();
 			}
 			
