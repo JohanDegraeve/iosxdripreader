@@ -35,7 +35,7 @@
 		An updated version of application must have a versionNumber value higher 
 		than the previous version. Required for namespace >= 2.5 . For iOS Apps, 
 		this represents build number. -->
-	<versionNumber>0.0.10</versionNumber>
+	<versionNumber>0.0.11</versionNumber>
 
 	<!-- A string value (such as "v1", "2.5", or "Alpha 1") that represents 
 		the version of the application, as it should be shown to users. For iOS Apps, 
