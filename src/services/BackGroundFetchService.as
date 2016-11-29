@@ -90,7 +90,7 @@ package services
 			backgroundFetchServiceResult.data = new Object();
 			backgroundFetchServiceResult.data.information = event.data.result as String;
 			_instance.dispatchEvent(backgroundFetchServiceResult);
-			callCompletionHandler(NEW_DATA);
+			
 		}
 		
 		private static function loadRequestError(event:BackgroundFetchEvent):void {
@@ -106,7 +106,6 @@ package services
 			backgroundFetchServiceResult.data = new Object();
 			backgroundFetchServiceResult.data.information = event.data.error as String;
 			_instance.dispatchEvent(backgroundFetchServiceResult);
-			callCompletionHandler(FETCH_FAILED);
 		}
 		
 		/**
