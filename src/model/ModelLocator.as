@@ -23,7 +23,6 @@ package model
 	
 	import flash.events.Event;
 	import flash.events.EventDispatcher;
-	import flash.system.Capabilities;
 	
 	import mx.collections.ArrayCollection;
 	import mx.resources.IResourceManager;
@@ -63,6 +62,8 @@ package model
 	 */
 	public class ModelLocator extends EventDispatcher
 	{
+		[ResourceBundle("general")]
+		
 		private static var _instance:ModelLocator = new ModelLocator();
 		private static var dataSortFieldForBGReadings:SortField;
 		private static var dataSortForBGReadings:Sort;
@@ -75,7 +76,7 @@ package model
 
 		private static var _isInForeground:Boolean = false;
 		
-		public const MAX_DAYS_TO_STORE_BGREADINGS_IN_MODELLOCATOR = 5;
+		public const MAX_DAYS_TO_STORE_BGREADINGS_IN_MODELLOCATOR:int = 5;
 
 		public static function get isInForeground():Boolean
 		{
