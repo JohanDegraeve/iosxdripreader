@@ -71,6 +71,10 @@ package services
 		}
 		private static function performFetch(event:BackgroundFetchEvent):void {
 			trace("BackGroundFetchService.as performFetch");
+			var backgroundfetchServiceEvent:BackGroundFetchServiceEvent = new BackGroundFetchServiceEvent(BackGroundFetchServiceEvent.LOG_INFO);
+			backgroundfetchServiceEvent.data = new Object();
+			backgroundfetchServiceEvent.data.information = "BackGroundFetchService.as performFetch";
+			_instance.dispatchEvent(backgroundfetchServiceEvent);
 			var backgroundfetchServiceEvent:BackGroundFetchServiceEvent = new BackGroundFetchServiceEvent(BackGroundFetchServiceEvent.PERFORM_FETCH);
 			backgroundfetchServiceEvent.data = new Object();
 			backgroundfetchServiceEvent.data.information = event.data.result as String;
