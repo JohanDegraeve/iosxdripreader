@@ -59,7 +59,7 @@ package services
 			BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.LOG_INFO, logInfoReceived);
 			BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.LOAD_REQUEST_RESULT, loadRequestSuccess);
 			BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.LOAD_REQUEST_ERROR, loadRequestError);
-			BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.LOAD_REQUEST_PERFORMFETCH, performFetch);
+			BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.PERFORMFETCH, performFetch);
 		}
 		
 		public static function callCompletionHandler(result:String):void {
