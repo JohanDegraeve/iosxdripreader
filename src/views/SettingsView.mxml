@@ -32,6 +32,8 @@
 			[Bindable]
 			private static var additionalCalibrationRequestOnOrOffText:String = "";
 			[Bindable]
+			private static var alwaysOnNotificationTextOnOrOff:String = "";
+			[Bindable]
 			private static var chosenUnitText:String = "";
 			[Bindable]
 			private static var lowValueText:String = "";
@@ -69,6 +71,12 @@
 					additionalCalibrationRequestOnOrOffText = ModelLocator.resourceManagerInstance.getString('settingsview','on');
 				} else {
 					additionalCalibrationRequestOnOrOffText = ModelLocator.resourceManagerInstance.getString('settingsview','off');
+				}
+				
+				if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_ALWAYS_ON_NOTIFICATION) == "true") {
+					alwaysOnNotificationTextOnOrOff = ModelLocator.resourceManagerInstance.getString('settingsview','on');
+				} else {
+					alwaysOnNotificationTextOnOrOff = ModelLocator.resourceManagerInstance.getString('settingsview','off');
 				}
 				
 				nightScoutUrl = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME);
@@ -273,6 +281,20 @@
 				}
 			}
 			
+			private function alwaysOnNotification_clickHandler(event:MouseEvent):void {
+				rect17.color = uint("0xD3D3D3");
+				rect18.color = uint("0xD3D3D3");
+				setResetColorTimer();
+				
+				if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_ALWAYS_ON_NOTIFICATION) == "true") {
+					LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_ALWAYS_ON_NOTIFICATION, "false");
+					alwaysOnNotificationTextOnOrOff = ModelLocator.resourceManagerInstance.getString('settingsview','off');
+				} else {
+					LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_ALWAYS_ON_NOTIFICATION, "true");
+					alwaysOnNotificationTextOnOrOff = ModelLocator.resourceManagerInstance.getString('settingsview','on');
+				}
+			}
+			
 			private function setResetColorTimer():void {
 				if (resetColorTimer != null)
 					if (resetColorTimer.running) {
@@ -302,6 +324,8 @@
 					rect16.color = uint("0x212121");
 					rect17.color = uint("0x212121");
 					rect18.color = uint("0x212121");
+					rect19.color = uint("0x212121");
+					rect20.color = uint("0x212121");
 				}
 			}
 			
@@ -333,6 +357,30 @@
 					<s:Rect height="100%" width="5" >
 						<s:fill>
 							<s:SolidColor color="#212121" id="rect12"/>
+						</s:fill>
+					</s:Rect>
+				</s:HGroup>
+				<s:Line width="100%">
+					<s:stroke>
+						<s:SolidColorStroke color="#3B6999"  weight="3"/>
+					</s:stroke>
+				</s:Line>	
+			</s:VGroup>
+			<!-- Chapter Alerts Subsection Always HomeScreen Notification -->
+			<s:VGroup click="alwaysOnNotification_clickHandler(event)" width="100%">
+				<s:HGroup width="100%">
+					<s:Rect height="100%" width="5" >
+						<s:fill>
+							<s:SolidColor color="#212121" id="rect19"/>
+						</s:fill>
+					</s:Rect>
+					<s:Label text = "{ModelLocator.resourceManagerInstance.getString('settingsview','always_on_notification')}"
+							 width="100%" paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
+					<s:Label text = "{alwaysOnNotificationTextOnOrOff}"  
+							 paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
+					<s:Rect height="100%" width="5" >
+						<s:fill>
+							<s:SolidColor color="#212121" id="rect20"/>
 						</s:fill>
 					</s:Rect>
 				</s:HGroup>

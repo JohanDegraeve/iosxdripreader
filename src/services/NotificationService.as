@@ -36,6 +36,7 @@ package services
 	import databaseclasses.Calibration;
 	import databaseclasses.CalibrationRequest;
 	import databaseclasses.CommonSettings;
+	import databaseclasses.LocalSettings;
 	
 	import distriqtkey.DistriqtKey;
 	
@@ -220,34 +221,35 @@ package services
 			clearAllNotifications();
 			
 			//start with bgreading notification
-			if (Calibration.allForSensor().length >= 2) {
-				var lastBgReading:BgReading = BgReading.lastNoSensor(); 
-				var valueToShow:String = "";
-				if (lastBgReading != null) {
-					if (lastBgReading.calculatedValue != 0) {
-						if ((new Date().getTime()) - (60000 * 11) - lastBgReading.timestamp > 0) {
-							valueToShow = "---"
-						} else {
-							valueToShow = BgGraphBuilder.unitizedString(lastBgReading.calculatedValue, true);
-							if (!lastBgReading.hideSlope) {
-								valueToShow += " " + lastBgReading.slopeArrow();
+			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_ALWAYS_ON_NOTIFICATION) == "true") {
+				if (Calibration.allForSensor().length >= 2) {
+					var lastBgReading:BgReading = BgReading.lastNoSensor(); 
+					var valueToShow:String = "";
+					if (lastBgReading != null) {
+						if (lastBgReading.calculatedValue != 0) {
+							if ((new Date().getTime()) - (60000 * 11) - lastBgReading.timestamp > 0) {
+								valueToShow = "---"
+							} else {
+								valueToShow = BgGraphBuilder.unitizedString(lastBgReading.calculatedValue, true);
+								if (!lastBgReading.hideSlope) {
+									valueToShow += " " + lastBgReading.slopeArrow();
+								}
 							}
 						}
+					} else {
+						valueToShow = "---"
 					}
-				} else {
-					valueToShow = "---"
+					Notifications.service.notify(
+						new NotificationBuilder()
+						.setId(NotificationService.ID_FOR_BG_VALUE)
+						.setAlert("Bg value")
+						.setTitle(valueToShow)
+						.setBody(".")
+						.setSound("")
+						.enableVibration(false)
+						.enableLights(false)
+						.build());
 				}
-				
-				Notifications.service.notify(
-					new NotificationBuilder()
-					.setId(NotificationService.ID_FOR_BG_VALUE)
-					.setAlert("Bg value")
-					.setTitle(valueToShow)
-					.setBody(".")
-					.setSound("")
-					.enableVibration(false)
-					.enableLights(false)
-					.build());
 			}
 			
 			//next is the calibrationrequest notification

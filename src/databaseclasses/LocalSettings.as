@@ -47,11 +47,16 @@ package databaseclasses
 		 * This indicates if that dialog has already been shown before or not, to avoid multiple pop ups.
 		 */
 		public static const LOCAL_SETTING_WARNING_THAT_NIGHTSCOUT_URL_AND_SECRET_IS_NOT_OK_ALREADY_GIVEN:int = 2;
+		/**
+		 * Permanent notification on home screen on or off 
+		 */
+		public static const LOCAL_SETTING_ALWAYS_ON_NOTIFICATION:int = 3;
 
 		private static var localSettings:Array = [
 			"false",//LOCAL_SETTING_DETAILED_TRACING_ENABLED
 			"",//LOCAL_SETTING_TRACE_FILE_NAME
-			"false"//LOCAL_SETTING_WARNING_THAT_NIGHTSCOUT_URL_AND_SECRET_IS_NOT_OK_ALREADY_GIVEN
+			"false",//LOCAL_SETTING_WARNING_THAT_NIGHTSCOUT_URL_AND_SECRET_IS_NOT_OK_ALREADY_GIVEN
+			"false"//LOCAL_SETTING_ALWAYS_ON_NOTIFICATION
 		];
 		
 		public function LocalSettings() {
