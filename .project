@@ -3,6 +3,8 @@
 	<name>iosxdripreader</name>
 	<comment></comment>
 	<projects>
+		<project>ANE-BackgroundFetch-Default</project>
+		<project>ANE-BackgroundFetch-ios</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

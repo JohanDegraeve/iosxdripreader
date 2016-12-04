@@ -262,6 +262,7 @@ package model
 
 							//will initialise the bluetoothdevice
 							Database.getBlueToothDevice();
+							BackGroundFetchService.init();
 							Application.init(DistriqtKey.distriqtKey);
 							Message.init(DistriqtKey.distriqtKey);
 							TransmitterService.init();
@@ -273,7 +274,6 @@ package model
 							CalibrationService.init();
 							TimerService.init();
 							NetworkInfo.init(DistriqtKey.distriqtKey);
-							BackGroundFetchService.init();
 							NightScoutService.init();
 							NightScoutService.sync(null);
 						} else {
