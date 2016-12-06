@@ -85,7 +85,15 @@ package model
 
 		public static function set isInForeground(value:Boolean):void
 		{
+			if (_isInForeground == value)
+				return;
+			
 			_isInForeground = value;
+			if (_loggingList != null) {
+				_loggingList.addItem((new BlueToothServiceEvent(BlueToothServiceEvent.BLUETOOTH_SERVICE_INFORMATION_EVENT)).getTimeStampAsString() + " ML : " + "app is " + (_isInForeground ? "":"not") + " in foreground");
+				_loggingList.refresh();
+				Database.insertLogging(Utilities.UniqueId.createEventId(), (new BlueToothServiceEvent(BlueToothServiceEvent.BLUETOOTH_SERVICE_INFORMATION_EVENT)).getTimeStampAsString() + " ML : " + "app is " + (_isInForeground ? "":"not") + " in foreground", (new Date()).valueOf(), (new Date()).valueOf(),null);
+			}
 		}
 
 		
@@ -227,7 +235,7 @@ package model
 				Database.getBgReadings(_appStartTimestamp);
 				
 				//for an unknown reasy _isInForeground is back to value false here, so setting it to true.
-				_isInForeground = true;
+				isInForeground = true;
 			}
 
 			function bgReadingReceivedFromDatabase(de:DatabaseEvent):void {

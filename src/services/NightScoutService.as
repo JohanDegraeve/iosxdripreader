@@ -341,19 +341,14 @@ package services
 		
 		private static function nightScoutUploadSuccess(event:Event):void {
 			BackGroundFetchService.callCompletionHandler(BackGroundFetchService.NEW_DATA);
-			functionToCallAtUpOrDownloadSuccess = null;
-			functionToCallAtUpOrDownloadFailure = null;
 			
 			dispatchInformation("upload_to_nightscout_successfull");
 			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_SYNC_TIMESTAMP, (new Date()).valueOf().toString());
-			trace("NightScoutService.as setting syncRunning = false");
-			syncRunning = false;
+			syncFinished(true);
 		}
 		
 		private static function nightScoutUploadFailed(event:BackGroundFetchServiceEvent):void {
 			BackGroundFetchService.callCompletionHandler(BackGroundFetchService.FETCH_FAILED);
-			functionToCallAtUpOrDownloadSuccess = null;
-			functionToCallAtUpOrDownloadFailure = null;
 			
 			var errorMessage:String;
 			if (event.data) {
@@ -364,19 +359,26 @@ package services
 			}
 			
 			dispatchInformation("upload_to_nightscout_unsuccessfull", errorMessage);
-			trace("NightScoutService.as setting syncRunning = false");
-			syncRunning = false;
+			syncFinished(false);
 		}
 		
 		private static function defaultErrorFunction(event:BackGroundFetchServiceEvent):void {
 			if(functionToCallAtUpOrDownloadFailure != null)
 				functionToCallAtUpOrDownloadFailure(event);
-			BackGroundFetchService.callCompletionHandler(BackGroundFetchService.FETCH_FAILED);
+			else 
+				BackGroundFetchService.callCompletionHandler(BackGroundFetchService.FETCH_FAILED);
+			
+			functionToCallAtUpOrDownloadSuccess = null;
+			functionToCallAtUpOrDownloadFailure = null;
 		}
 		private static function defaultSuccessFunction(event:BackGroundFetchServiceEvent):void {
 			if(functionToCallAtUpOrDownloadSuccess != null)
 				functionToCallAtUpOrDownloadSuccess(event);
-			BackGroundFetchService.callCompletionHandler(BackGroundFetchService.NEW_DATA);
+			else
+				BackGroundFetchService.callCompletionHandler(BackGroundFetchService.NEW_DATA);
+			
+			functionToCallAtUpOrDownloadSuccess = null;
+			functionToCallAtUpOrDownloadFailure = null;
 		}
 		
 		/**
@@ -399,7 +401,7 @@ package services
 			Trace.myTrace("xdrip-NightScoutService.as", log);
 		}
 		
-		private static function nightScoutAPICallFailed(event:IOErrorEvent):void {
+		/*private static function nightScoutAPICallFailed(event:IOErrorEvent):void {
 			var errorMessage:String = "NightScoutAPICallFailed event.target.data = ";
 			if (event.target.data)
 				if (event.target.data is String)
@@ -415,7 +417,7 @@ package services
 			syncRunning = false;
 			functionToCallAtUpOrDownloadSuccess = null;
 			functionToCallAtUpOrDownloadFailure = null;
-		}
+		}*/
 		
 		private static function syncFinished(result:Boolean):void {
 			trace("syncfinished still to be implemented");
