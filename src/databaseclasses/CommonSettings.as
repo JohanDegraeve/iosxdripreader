@@ -82,6 +82,10 @@
 		 * high bg value, in mgdl, should be converted each time it is used or displayed
 		  */
 		 public static const COMMON_SETTING_HIGH_MARK:int = 11;
+		 /**
+		 * transmitter id, 00000 is not set 
+		 */
+		 public static const COMMON_SETTING_TRANSMITTER_ID:int = 12;
 		 
 		 private static var commonSettings:Array = [
 			 "0",//COMMON_SETTING_CURRENT_SENSOR
@@ -96,6 +100,7 @@
 			 "true",//COMMON_SETTING_DO_MGDL
 			 "70",//COMMON_SETTING_LOW_MARK
 			 "170",//COMMON_SETTING_HIGH_MARK
+			 "00000"//COMMON_SETTING_TRANSMITTER_ID
 		 ];
 		 
 		 public function CommonSettings()

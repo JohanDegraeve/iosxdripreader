@@ -17,6 +17,12 @@
  */
 package services
 {
+	import com.distriqt.extension.dialog.Dialog;
+	import com.distriqt.extension.dialog.DialogView;
+	import com.distriqt.extension.dialog.builders.AlertBuilder;
+	import com.distriqt.extension.dialog.events.DialogViewEvent;
+	import com.distriqt.extension.dialog.objects.DialogAction;
+	
 	import flash.events.EventDispatcher;
 	
 	import databaseclasses.BgReading;
@@ -76,9 +82,25 @@ package services
 				return;//should never be null actually
 			else {
 				if (be.data is TransmitterDataXBridgeBeaconPacket) {
-					//blablabla
-					//TO DO process the beacon, 
-					
+					var transmitterDataBeaconPacket:TransmitterDataXBridgeBeaconPacket = be.data as TransmitterDataXBridgeBeaconPacket;
+										
+					if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID) == "00000" 
+						&&
+						transmitterDataBeaconPacket.TxID == "00000") {
+						var alert:DialogView = Dialog.service.create(
+							new AlertBuilder()
+							.setTitle(ModelLocator.resourceManagerInstance.getString("transmitterservice","enter_transmitter_id_dialog_title"))
+							.setMessage(ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_transmitter_id"))
+							.addTextField("","00000")
+							.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
+							.addOption(ModelLocator.resourceManagerInstance.getString("general","cancel"), DialogAction.STYLE_CANCEL, 1)
+							.build()
+						);
+						alert.addEventListener(DialogViewEvent.CLOSED, transmitterIdEntered);
+						//setting maximum wait which means in fact user will have two times this period to calibrate
+						//because also the notification remains 60 seconds
+						DialogService.addDialog(alert, 60);
+					}
 					//if the currently stored transmit id equals 00000 AND if the id in the beacon is also 00000
 					//then ask the user to configure the transmit id
 					//don't ack the message
@@ -160,6 +182,22 @@ package services
 					}
 				}
 			}
+		}
+		
+		private static function transmitterIdEntered(event:DialogViewEvent):void {
+			if (event.index == 1) {
+				return;
+			}
+			if (event.values[0] as String
+			var alert:DialogView = Dialog.service.create(
+				new AlertBuilder()
+				.setTitle(ModelLocator.resourceManagerInstance.getString("transmitterservice","enter_transmitter_id_dialog_title"))
+				.setMessage(ModelLocator.resourceManagerInstance.getString("transmitterservice","value_should_be_numeric"))
+				.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
+				.build()
+			);
+			DialogService.addDialog(alert);
+
 		}
 		
 		private static function dispatchInformation(informationResourceName:String):void {
