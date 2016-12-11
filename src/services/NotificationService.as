@@ -221,7 +221,7 @@ package services
 			clearAllNotifications();
 			
 			//start with bgreading notification
-			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_ALWAYS_ON_NOTIFICATION) == "true") {
+			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_ALWAYS_ON_NOTIFICATION) == "true" && !ModelLocator.isInForeground) {
 				if (Calibration.allForSensor().length >= 2) {
 					var lastBgReading:BgReading = BgReading.lastNoSensor(); 
 					var valueToShow:String = "";
