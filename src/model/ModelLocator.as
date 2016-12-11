@@ -46,6 +46,7 @@ package model
 	import events.DatabaseEvent;
 	import events.NightScoutServiceEvent;
 	import events.NotificationServiceEvent;
+	import events.TransmitterServiceEvent;
 	
 	import services.BackGroundFetchService;
 	import services.BluetoothService;
@@ -166,7 +167,14 @@ package model
 			CalibrationService.instance.addEventListener(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT, initialCalibrationEventReceived);
 			CalibrationService.instance.addEventListener(CalibrationServiceEvent.NEW_CALIBRATION_EVENT, newCalibrationEventReceived);
 			BackGroundFetchService.instance.addEventListener(BackGroundFetchServiceEvent.LOG_INFO, backgroundFetchServiceLogInfoReceived);
+			TransmitterService.instance.addEventListener(TransmitterServiceEvent.TRANSMITTER_SERVICE_INFORMATION_EVENT, transmitterServiceInfoReceived);
 
+			function transmitterServiceInfoReceived(be:TransmitterServiceEvent):void {
+				_loggingList.addItem(be.getTimeStampAsString() + " TR : " + be.data.information);
+				_loggingList.refresh();
+				Database.insertLogging(Utilities.UniqueId.createEventId(), be.getTimeStampAsString() + " TR : " + be.data.information, be.timeStamp,(new Date()).valueOf(),null); 
+			}
+			
 			function backgroundFetchServiceLogInfoReceived(be:BackGroundFetchServiceEvent):void {
 				_loggingList.addItem(be.getTimeStampAsString() + " BG : " + be.data.information);
 				_loggingList.refresh();

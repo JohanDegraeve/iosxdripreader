@@ -84,7 +84,6 @@ package services
 			else {
 				if (be.data is TransmitterDataXBridgeBeaconPacket) {
 					var transmitterDataBeaconPacket:TransmitterDataXBridgeBeaconPacket = be.data as TransmitterDataXBridgeBeaconPacket;
-										
 					if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID) == "00000" 
 						&&
 						transmitterDataBeaconPacket.TxID == "00000") {
@@ -98,52 +97,62 @@ package services
 							.build()
 						);
 						alert.addEventListener(DialogViewEvent.CLOSED, transmitterIdEntered);
-						//setting maximum wait which means in fact user will have two times this period to calibrate
-						//because also the notification remains 60 seconds
 						DialogService.addDialog(alert, 60);
-					}
-					//if the currently stored transmit id equals 00000 AND if the id in the beacon is also 00000
-					//then ask the user to configure the transmit id
-					//don't ack the message
-					//as soon as user has entered a transmit id, try to send it, failures can be ignored because bluetoothdevice will retry
-					
-					
-					//if the currently stored transmit id equals 00000 AND if the id in the beacon is different from 00000
-					//then store the id in the beacon locally, don't ask the user to configure one, we assume that the id is correct
-					//send an ack to the device to make it go to sleep, two bytes 0x02 en 0xF0 (two times 8 bit unsigned integer)
-					
-					//if the currently stored transmit id is different from 00000 AND if the id in the beacon is different from the stored one
-					//send the transmit id to the device, byte 0 0x06, byte 1 0x01 byte 2 to 5 the encoded transmitter id as 32 bit unsigned integer
-					//dispatch the event that there's new data
-					
-					
-					//only if tx id is ok
-					var value:ByteArray = new ByteArray();
-					value.writeByte(0x02);
-					value.writeByte(0xF0);
-					BluetoothService.ackCharacteristicUpdate(value);
-					
-				} else if (be.data is TransmitterDataXBridgeDataPacket) {
-					var transmitterDataXBridgeDataPacket:TransmitterDataXBridgeDataPacket = be.data as TransmitterDataXBridgeDataPacket;
-					if (((new Date()).valueOf() - lastPacketTime) < 60000) {
-						//if previous packet was less than 1 minute ago then ignore it
-						dispatchInformation('ignoring_transmitterxbridgedatapacket');
+					} else if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID) == "00000" 
+						&&
+						transmitterDataBeaconPacket.TxID != "00000") {
+						trace("TransmitterService.as storing transmitter id received from bluetooth device = " + transmitterDataBeaconPacket.TxID);
+						var transmitterServiceEvent:TransmitterServiceEvent = new TransmitterServiceEvent(TransmitterServiceEvent.TRANSMITTER_SERVICE_INFORMATION_EVENT);
+						transmitterServiceEvent.data = new Object();
+						transmitterServiceEvent.data.information = "storing transmitter id received from bluetooth device = " + transmitterDataBeaconPacket.TxID;
+						_instance.dispatchEvent(transmitterServiceEvent);
+						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID, transmitterDataBeaconPacket.TxID);
+					} else if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID) != "00000" 
+						&&
+						transmitterDataBeaconPacket.TxID != CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID) != "00000") {
+						var value:ByteArray = new ByteArray();
+						value.writeByte(0x06);
+						value.writeByte(0x01);
+						value.writeUnsignedInt((BluetoothService.encodeTxID(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID))));
+						trace("TransmitterService.as calling BluetoothService.ackCharacteristicUpdate");
+						BluetoothService.ackCharacteristicUpdate(value);
 					} else {
-						lastPacketTime = (new Date()).valueOf();
-						// check the transmitter id as in case of TransmitterDataXBridgeBeaconPacket
-						//TO DO if transmitter id in beackon packet <> 00000 AND different from stored id then 
-						
-						//do exactly the same (except case where beacon transmit id is 00000, this will never be a transmitterdataxbridgedatapacket
-						
-						//send a new tx id if needed
-						
-						//ack the message so that the bluetooth connection on the xbridge goes to sleep
 						var value:ByteArray = new ByteArray();
 						value.writeByte(0x02);
 						value.writeByte(0xF0);
 						BluetoothService.ackCharacteristicUpdate(value);
-						
-						//then process the data :
+					}
+				} else if (be.data is TransmitterDataXBridgeDataPacket) {
+					var transmitterDataXBridgeDataPacket:TransmitterDataXBridgeDataPacket = be.data as TransmitterDataXBridgeDataPacket;
+					if (((new Date()).valueOf() - lastPacketTime) < 60000) {
+						//if previous packet was less than 1 minute ago then ignore it
+						//dispatchInformation('ignoring_transmitterxbridgedatapacket');
+					} else {
+						lastPacketTime = (new Date()).valueOf();
+						if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID) == "00000" 
+							&&
+							transmitterDataXBridgeDataPacket.TxID != "00000") {
+							trace("TransmitterService.as storing transmitter id received from bluetooth device = " + transmitterDataXBridgeDataPacket.TxID);
+							var transmitterServiceEvent:TransmitterServiceEvent = new TransmitterServiceEvent(TransmitterServiceEvent.TRANSMITTER_SERVICE_INFORMATION_EVENT);
+							transmitterServiceEvent.data = new Object();
+							transmitterServiceEvent.data.information = "storing transmitter id received from bluetooth device = " + transmitterDataXBridgeDataPacket.TxID;
+							_instance.dispatchEvent(transmitterServiceEvent);
+							CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID, transmitterDataXBridgeDataPacket.TxID);
+						} else if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID) != "00000" 
+							&&
+							transmitterDataXBridgeDataPacket.TxID != CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID) != "00000") {
+							var value:ByteArray = new ByteArray();
+							value.writeByte(0x06);
+							value.writeByte(0x01);
+							value.writeUnsignedInt((BluetoothService.encodeTxID(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID))));
+								trace("TransmitterService.as calling BluetoothService.ackCharacteristicUpdate");
+								BluetoothService.ackCharacteristicUpdate(value);
+								} else {
+									var value:ByteArray = new ByteArray();
+									value.writeByte(0x02);
+									value.writeByte(0xF0);
+									BluetoothService.ackCharacteristicUpdate(value);
+								}						
 						//store the transmitter battery level in the common settings (to be synchronized)
 						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_BATTERY_VOLTAGE,transmitterDataXBridgeDataPacket.transmitterBatteryVoltage.toString());
 						
@@ -168,7 +177,7 @@ package services
 					var transmitterDataXdripDataPacket:TransmitterDataXdripDataPacket = be.data as TransmitterDataXdripDataPacket;
 					if (((new Date()).valueOf() - lastPacketTime) < 60000) {
 						//if previous packet was less than 1 minute ago then ignore it
-						dispatchInformation('ignoring_transmitterxdripdatapacket');
+						//dispatchInformation('ignoring_transmitterxdripdatapacket');
 					} else {//it's an xdrip, with old software, 
 						lastPacketTime = (new Date()).valueOf();
 						
@@ -205,22 +214,13 @@ package services
 				);
 				DialogService.addDialog(alert);
 			} else {
-				//.. send the transmitter id via de bluetooth service
-				// .. check Android code to see what exaclty is sent
-				/*
-				txidMessage.put(0, (byte) 0x06);
-				txidMessage.put(1, (byte) 0x01);
-				txidMessage.putInt(2, TransmitterID);
-				sendBtMessage(txidMessage);
-				
 				var value:ByteArray = new ByteArray();
-				value.writeByte(0x02);
-				value.writeByte(0xF0);
+				value.writeByte(0x06);
+				value.writeByte(0x01);
+				value.writeUnsignedInt(BluetoothService.encodeTxID(event.values[0] as String));
+				trace("TransmitterService.as calling BluetoothService.ackCharacteristicUpdate");
 				BluetoothService.ackCharacteristicUpdate(value);
-
-				*/
 			}
-
 		}
 		
 		private static function dispatchInformation(informationResourceName:String):void {
@@ -230,6 +230,6 @@ package services
 			_instance.dispatchEvent(transmitterServiceEvent);
 		}
 		
-
+		
 	}
 }
