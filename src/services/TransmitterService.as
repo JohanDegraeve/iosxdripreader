@@ -24,6 +24,7 @@ package services
 	import com.distriqt.extension.dialog.objects.DialogAction;
 	
 	import flash.events.EventDispatcher;
+	import flash.utils.ByteArray;
 	
 	import databaseclasses.BgReading;
 	import databaseclasses.CommonSettings;
@@ -117,7 +118,10 @@ package services
 					
 					
 					//only if tx id is ok
-					BluetoothService.ackCharacteristicUpdate();
+					var value:ByteArray = new ByteArray();
+					value.writeByte(0x02);
+					value.writeByte(0xF0);
+					BluetoothService.ackCharacteristicUpdate(value);
 					
 				} else if (be.data is TransmitterDataXBridgeDataPacket) {
 					var transmitterDataXBridgeDataPacket:TransmitterDataXBridgeDataPacket = be.data as TransmitterDataXBridgeDataPacket;
@@ -134,7 +138,10 @@ package services
 						//send a new tx id if needed
 						
 						//ack the message so that the bluetooth connection on the xbridge goes to sleep
-						BluetoothService.ackCharacteristicUpdate();
+						var value:ByteArray = new ByteArray();
+						value.writeByte(0x02);
+						value.writeByte(0xF0);
+						BluetoothService.ackCharacteristicUpdate(value);
 						
 						//then process the data :
 						//store the transmitter battery level in the common settings (to be synchronized)
@@ -188,15 +195,31 @@ package services
 			if (event.index == 1) {
 				return;
 			}
-			if (event.values[0] as String
-			var alert:DialogView = Dialog.service.create(
-				new AlertBuilder()
-				.setTitle(ModelLocator.resourceManagerInstance.getString("transmitterservice","enter_transmitter_id_dialog_title"))
-				.setMessage(ModelLocator.resourceManagerInstance.getString("transmitterservice","value_should_be_numeric"))
-				.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
-				.build()
-			);
-			DialogService.addDialog(alert);
+			if ((event.values[0] as String).length != 5) {
+				var alert:DialogView = Dialog.service.create(
+					new AlertBuilder()
+					.setTitle(ModelLocator.resourceManagerInstance.getString("transmitterservice","enter_transmitter_id_dialog_title"))
+					.setMessage(ModelLocator.resourceManagerInstance.getString("transmitterservice","transmitter_id_should_be_five_chars"))
+					.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
+					.build()
+				);
+				DialogService.addDialog(alert);
+			} else {
+				//.. send the transmitter id via de bluetooth service
+				// .. check Android code to see what exaclty is sent
+				/*
+				txidMessage.put(0, (byte) 0x06);
+				txidMessage.put(1, (byte) 0x01);
+				txidMessage.putInt(2, TransmitterID);
+				sendBtMessage(txidMessage);
+				
+				var value:ByteArray = new ByteArray();
+				value.writeByte(0x02);
+				value.writeByte(0xF0);
+				BluetoothService.ackCharacteristicUpdate(value);
+
+				*/
+			}
 
 		}
 		

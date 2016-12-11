@@ -546,12 +546,10 @@ package services
 		}
 		
 		/**
-		 * simply acknowledges receipt of a message, needed for xbridge so that it goes to sleep 
+		 * simply acknowledges receipt of a message, needed for xbridge so that it goes to sleep<br>
+		 * Can also be the transmitter id. 
 		 */
-		public static function ackCharacteristicUpdate():void {
-			var value:ByteArray = new ByteArray();
-			value.writeByte(0x02);
-			value.writeByte(0xF0);
+		public static function ackCharacteristicUpdate(value:ByteArray):void {
 			if (!activeBluetoothPeripheral.writeValueForCharacteristic(characteristic, value)) {
 				dispatchInformation("write_value_for_characteristic_failed_due_to_invalid_state");
 			}
