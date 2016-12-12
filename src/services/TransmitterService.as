@@ -107,9 +107,13 @@ package services
 						transmitterServiceEvent.data.information = "storing transmitter id received from bluetooth device = " + transmitterDataBeaconPacket.TxID;
 						_instance.dispatchEvent(transmitterServiceEvent);
 						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID, transmitterDataBeaconPacket.TxID);
+						var value:ByteArray = new ByteArray();
+						value.writeByte(0x02);
+						value.writeByte(0xF0);
+						BluetoothService.ackCharacteristicUpdate(value);
 					} else if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID) != "00000" 
 						&&
-						transmitterDataBeaconPacket.TxID != CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID) != "00000") {
+						transmitterDataBeaconPacket.TxID != CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID)) {
 						var value:ByteArray = new ByteArray();
 						value.writeByte(0x06);
 						value.writeByte(0x01);
@@ -127,6 +131,10 @@ package services
 					if (((new Date()).valueOf() - lastPacketTime) < 60000) {
 						//if previous packet was less than 1 minute ago then ignore it
 						//dispatchInformation('ignoring_transmitterxbridgedatapacket');
+						var value:ByteArray = new ByteArray();
+						value.writeByte(0x02);
+						value.writeByte(0xF0);
+						BluetoothService.ackCharacteristicUpdate(value);
 					} else {
 						lastPacketTime = (new Date()).valueOf();
 						if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID) == "00000" 
@@ -138,21 +146,25 @@ package services
 							transmitterServiceEvent.data.information = "storing transmitter id received from bluetooth device = " + transmitterDataXBridgeDataPacket.TxID;
 							_instance.dispatchEvent(transmitterServiceEvent);
 							CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID, transmitterDataXBridgeDataPacket.TxID);
+							var value:ByteArray = new ByteArray();
+							value.writeByte(0x02);
+							value.writeByte(0xF0);
+							BluetoothService.ackCharacteristicUpdate(value);
 						} else if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID) != "00000" 
 							&&
-							transmitterDataXBridgeDataPacket.TxID != CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID) != "00000") {
+							transmitterDataXBridgeDataPacket.TxID != CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID)) {
 							var value:ByteArray = new ByteArray();
 							value.writeByte(0x06);
 							value.writeByte(0x01);
 							value.writeUnsignedInt((BluetoothService.encodeTxID(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID))));
-								trace("TransmitterService.as calling BluetoothService.ackCharacteristicUpdate");
-								BluetoothService.ackCharacteristicUpdate(value);
-								} else {
-									var value:ByteArray = new ByteArray();
-									value.writeByte(0x02);
-									value.writeByte(0xF0);
-									BluetoothService.ackCharacteristicUpdate(value);
-								}						
+							trace("TransmitterService.as calling BluetoothService.ackCharacteristicUpdate");
+							BluetoothService.ackCharacteristicUpdate(value);
+						} else {
+							var value:ByteArray = new ByteArray();
+							value.writeByte(0x02);
+							value.writeByte(0xF0);
+							BluetoothService.ackCharacteristicUpdate(value);
+						}						
 						//store the transmitter battery level in the common settings (to be synchronized)
 						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_BATTERY_VOLTAGE,transmitterDataXBridgeDataPacket.transmitterBatteryVoltage.toString());
 						
