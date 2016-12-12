@@ -220,6 +220,7 @@ package services
 				value.writeUnsignedInt(BluetoothService.encodeTxID(event.values[0] as String));
 				trace("TransmitterService.as calling BluetoothService.ackCharacteristicUpdate");
 				BluetoothService.ackCharacteristicUpdate(value);
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID, event.values[0] as String);
 			}
 		}
 		
