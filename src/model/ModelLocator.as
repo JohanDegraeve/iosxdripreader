@@ -37,6 +37,7 @@ package model
 	
 	import databaseclasses.BgReading;
 	import databaseclasses.Database;
+	import databaseclasses.Sensor;
 	
 	import distriqtkey.DistriqtKey;
 	
@@ -249,13 +250,19 @@ package model
 			function bgReadingReceivedFromDatabase(de:DatabaseEvent):void {
 				if (de.data != null)
 					if (de.data is BgReading) {
-						if ((de.data as BgReading).timestamp > ((new Date()).valueOf() - MAX_DAYS_TO_STORE_BGREADINGS_IN_MODELLOCATOR * 60 * 60 * 1000)) {
+						if ((de.data as BgReading).timestamp > ((new Date()).valueOf() - MAX_DAYS_TO_STORE_BGREADINGS_IN_MODELLOCATOR * 24 * 60 * 60 * 1000)) {
 							_bgReadings.addItem(de.data);
 						}
 					} else if (de.data is String) {
 						if (de.data as String == Database.END_OF_RESULT) {
 							_bgReadings.refresh();
 							getLogsFromDatabase();
+							if (_bgReadings.length < 2) {
+								if (Sensor.getActiveSensor() != null) {
+									//sensor is active but there's less than two bgreadings, this may happen exceptionally if was started previously but not used for exactly or more than  MAX_DAYS_TO_STORE_BGREADINGS_IN_MODELLOCATOR days
+									Sensor.stopSensor();
+								}
+							}
 						}
 					}
 			}
@@ -277,8 +284,7 @@ package model
 							//new bgreadings may come in, being created synchronously in the database, there should be no more async transactions in the database
 
 							//will initialise the bluetoothdevice
-							Database.getBlueToothDevice();
-							BackGroundFetchService.init();
+							Database.getBlueToothDevice();24 *24
 							Application.init(DistriqtKey.distriqtKey);
 							Message.init(DistriqtKey.distriqtKey);
 							TransmitterService.init();
@@ -290,6 +296,7 @@ package model
 							CalibrationService.init();
 							TimerService.init();
 							NetworkInfo.init(DistriqtKey.distriqtKey);
+							BackGroundFetchService.init();
 							NightScoutService.init();
 							NightScoutService.sync(null);
 						} else {
