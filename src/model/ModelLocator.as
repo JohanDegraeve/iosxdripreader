@@ -241,7 +241,7 @@ package model
 			function bgReadingReceivedFromDatabase(de:DatabaseEvent):void {
 				if (de.data != null)
 					if (de.data is BgReading) {
-						if ((de.data as BgReading).timestamp > ((new Date()).valueOf() - MAX_DAYS_TO_STORE_BGREADINGS_IN_MODELLOCATOR * 60 * 60 * 1000)) {
+						if ((de.data as BgReading).timestamp > ((new Date()).valueOf() - MAX_DAYS_TO_STORE_BGREADINGS_IN_MODELLOCATOR * 24* 60 * 60 * 1000)) {
 							_bgReadings.addItem(de.data);
 						}
 					} else if (de.data is String) {
@@ -270,7 +270,6 @@ package model
 
 							//will initialise the bluetoothdevice
 							Database.getBlueToothDevice();
-							BackGroundFetchService.init();
 							Application.init(DistriqtKey.distriqtKey);
 							Message.init(DistriqtKey.distriqtKey);
 							TransmitterService.init();
@@ -282,6 +281,7 @@ package model
 							CalibrationService.init();
 							TimerService.init();
 							NetworkInfo.init(DistriqtKey.distriqtKey);
+							BackGroundFetchService.init();
 							NightScoutService.init();
 							NightScoutService.sync(null);
 						} else {
