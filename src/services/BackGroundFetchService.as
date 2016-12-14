@@ -38,7 +38,7 @@ package services
 		 * to be used in function  callCompletionHandler
 		 */
 		public static const NO_DATA: String = "NO_DATA";
-
+		
 		public static function get instance():BackGroundFetchService {
 			return _instance;
 		}
@@ -60,13 +60,11 @@ package services
 			BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.LOAD_REQUEST_RESULT, loadRequestSuccess);
 			BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.LOAD_REQUEST_ERROR, loadRequestError);
 			BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.PERFORMFETCH, performFetch);
+			
 		}
 		
 		public static function callCompletionHandler(result:String):void {
-			var backgroundfetchServiceEvent:BackGroundFetchServiceEvent = new BackGroundFetchServiceEvent(BackGroundFetchServiceEvent.LOG_INFO);
-			backgroundfetchServiceEvent.data = new Object();
-			backgroundfetchServiceEvent.data.information = "BackGroundFetchService.as callCompletionhandler with result " + result;
-			_instance.dispatchEvent(backgroundfetchServiceEvent);
+			trace("BackGroundFetchService.as callCompletionhandler with result " + result);
 			BackgroundFetch.callCompletionHandler(result);
 		}
 		private static function performFetch(event:BackgroundFetchEvent):void {
@@ -138,6 +136,7 @@ package services
 				parameters[6 + i] = args[i];
 			}
 			BackgroundFetch.createAndLoadUrlRequest.apply(null, parameters);
+			
 		}
 		
 		private static function logInfoReceived(event:BackgroundFetchEvent):void {
