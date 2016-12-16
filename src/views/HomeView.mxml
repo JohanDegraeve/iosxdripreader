@@ -100,6 +100,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			private static var sensorStartSeconds:int = 0;
 			private static var sensorStartMinutes:int = 0;
 			private static var sensorStartHours:int = 0;
+			private static var userSelectedTime:Boolean = false;
 			private static var sensorStartDate:int = 0;
 			private static var sensorStartYear:int = 0;
 			private static var sensorStartMonth:int = 0;//starts at 0 for January
@@ -534,6 +535,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 					return;
 				}
 				sensorStartYear = 0; sensorStartMonth = 0; sensorStartDate = 0; sensorStartHours = 0; sensorStartMinutes = 0; sensorStartSeconds = 0;
+				userSelectedTime = false;
 				var dateTime:DateTimeDialogView = Dialog.service.create(
 					new DateTimeDialogBuilder()
 					.setMode(DialogType.MODE_DATE)
@@ -596,10 +598,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 				sensorStartHours = event.date.hours;
 				sensorStartMinutes = event.date.minutes;
 				sensorStartSeconds = event.date.seconds;
+				userSelectedTime = true;
 			}
 			
 			private function time_closedRequestHandler( event:DialogViewEvent ):void {
-				if (sensorStartHours == 0) {
+				if (!userSelectedTime) {
 					//use pressed cancel
 					return;
 				}

@@ -133,11 +133,7 @@ package services
 			}
 			
 			function performFetch(event:BackGroundFetchServiceEvent):void {
-				var nightScoutServiceEvent:NightScoutServiceEvent = new NightScoutServiceEvent(NightScoutServiceEvent.NIGHTSCOUT_SERVICE_INFORMATION_EVENT);
-				nightScoutServiceEvent.data = new Object();
-				nightScoutServiceEvent.data.information = "NightScoutService.as sync : performfetch";
-				_instance.dispatchEvent(nightScoutServiceEvent);
-
+				trace("NightScoutService.as sync : performfetch");
 				sync();
 			}
 			
@@ -340,6 +336,7 @@ package services
 		}
 		
 		private static function nightScoutUploadSuccess(event:Event):void {
+			trace("NightScoutService.as in nightScoutUploadSuccess");
 			BackGroundFetchService.callCompletionHandler(BackGroundFetchService.NEW_DATA);
 			
 			dispatchInformation("upload_to_nightscout_successfull");
@@ -348,6 +345,7 @@ package services
 		}
 		
 		private static function nightScoutUploadFailed(event:BackGroundFetchServiceEvent):void {
+			trace("NightScoutService.as in nightScoutUploadFailed");
 			BackGroundFetchService.callCompletionHandler(BackGroundFetchService.FETCH_FAILED);
 			
 			var errorMessage:String;
@@ -363,19 +361,29 @@ package services
 		}
 		
 		private static function defaultErrorFunction(event:BackGroundFetchServiceEvent):void {
-			if(functionToCallAtUpOrDownloadFailure != null)
+			trace("NightScoutService.as in defaultErrorFunction");
+			if(functionToCallAtUpOrDownloadFailure != null) {
+				trace("NightScoutService.as in defaultErrorFunction functionToCallAtUpOrDownloadFailure != null");
 				functionToCallAtUpOrDownloadFailure(event);
-			else 
+			}
+			else {
+				trace("NightScoutService.as in defaultErrorFunction functionToCallAtUpOrDownloadFailure = null");
 				BackGroundFetchService.callCompletionHandler(BackGroundFetchService.FETCH_FAILED);
+			}
 			
 			functionToCallAtUpOrDownloadSuccess = null;
 			functionToCallAtUpOrDownloadFailure = null;
 		}
 		private static function defaultSuccessFunction(event:BackGroundFetchServiceEvent):void {
-			if(functionToCallAtUpOrDownloadSuccess != null)
+			trace("NightScoutService.as in defaultSuccessFunction");
+			if(functionToCallAtUpOrDownloadSuccess != null) {
+				trace("NightScoutService.as in defaultSuccessFunction functionToCallAtUpOrDownloadSuccess != null");
 				functionToCallAtUpOrDownloadSuccess(event);
-			else
+			}
+			else {
+				trace("NightScoutService.as in defaultSuccessFunction functionToCallAtUpOrDownloadSuccess = null");
 				BackGroundFetchService.callCompletionHandler(BackGroundFetchService.NEW_DATA);
+			}
 			
 			functionToCallAtUpOrDownloadSuccess = null;
 			functionToCallAtUpOrDownloadFailure = null;
@@ -400,24 +408,6 @@ package services
 		private static function myTrace(log:String):void {
 			Trace.myTrace("xdrip-NightScoutService.as", log);
 		}
-		
-		/*private static function nightScoutAPICallFailed(event:IOErrorEvent):void {
-			var errorMessage:String = "NightScoutAPICallFailed event.target.data = ";
-			if (event.target.data)
-				if (event.target.data is String)
-					errorMessage +=  event.target.data as String;
-			myTrace(errorMessage);
-			
-			var nightScoutServiceEvent:NightScoutServiceEvent = new NightScoutServiceEvent(NightScoutServiceEvent.NIGHTSCOUT_SERVICE_INFORMATION_EVENT);
-			nightScoutServiceEvent.data = new Object();
-			nightScoutServiceEvent.data.information = errorMessage;
-			_instance.dispatchEvent(nightScoutServiceEvent);
-			syncFinished(false);
-			trace("NightScoutService.as setting syncRunning = false");
-			syncRunning = false;
-			functionToCallAtUpOrDownloadSuccess = null;
-			functionToCallAtUpOrDownloadFailure = null;
-		}*/
 		
 		private static function syncFinished(result:Boolean):void {
 			trace("syncfinished still to be implemented");
