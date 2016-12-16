@@ -409,24 +409,6 @@ package services
 			Trace.myTrace("xdrip-NightScoutService.as", log);
 		}
 		
-		/*private static function nightScoutAPICallFailed(event:IOErrorEvent):void {
-			var errorMessage:String = "NightScoutAPICallFailed event.target.data = ";
-			if (event.target.data)
-				if (event.target.data is String)
-					errorMessage +=  event.target.data as String;
-			myTrace(errorMessage);
-			
-			var nightScoutServiceEvent:NightScoutServiceEvent = new NightScoutServiceEvent(NightScoutServiceEvent.NIGHTSCOUT_SERVICE_INFORMATION_EVENT);
-			nightScoutServiceEvent.data = new Object();
-			nightScoutServiceEvent.data.information = errorMessage;
-			_instance.dispatchEvent(nightScoutServiceEvent);
-			syncFinished(false);
-			trace("NightScoutService.as setting syncRunning = false");
-			syncRunning = false;
-			functionToCallAtUpOrDownloadSuccess = null;
-			functionToCallAtUpOrDownloadFailure = null;
-		}*/
-		
 		private static function syncFinished(result:Boolean):void {
 			trace("syncfinished still to be implemented");
 			trace("NightScoutService.as setting syncRunning = false (might appear double");
