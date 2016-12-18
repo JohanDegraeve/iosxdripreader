@@ -21,6 +21,8 @@
 			import databaseclasses.CommonSettings;
 			import databaseclasses.LocalSettings;
 			
+			import events.SettingsServiceEvent;
+			
 			import model.ModelLocator;
 			
 			import services.BluetoothService;
@@ -46,6 +48,8 @@
 			private static var nightScoutAPI_SECRET:String = "";
 			[Bindable]
 			private static var transmitterIdText:String="";
+			[Bindable]
+			private static var versionText:String="";
 			
 			private static var resetColorTimer:Timer;
 			
@@ -86,6 +90,16 @@
 				nightScoutAPI_SECRET = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_API_SECRET);
 				
 				transmitterIdText = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID);
+				
+				LocalSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, settingChanged);
+				
+				versionText = ModelLocator.resourceManagerInstance.getString('general','version');
+			}
+			
+			private static function settingChanged(event:SettingsServiceEvent):void {
+				if (event.data == CommonSettings.COMMON_SETTING_TRANSMITTER_ID) {
+					transmitterIdText = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID);
+				}
 			}
 			
 			protected function showLogging_clickHandler(event:MouseEvent):void
@@ -370,6 +384,8 @@
 					rect20.color = uint("0x212121");
 					rect21.color = uint("0x212121");
 					rect22.color = uint("0x212121");
+					rect23.color = uint("0x212121");
+					rect24.color = uint("0x212121");
 				}
 			}
 			
@@ -598,6 +614,41 @@
 				</s:Line>	
 			</s:VGroup>
 			
+			<!-- Chapter Version info --> 
+			<s:Label text = "{ModelLocator.resourceManagerInstance.getString('settingsview','versioninfo')}" textAlign="center"  color="#3B6999" 
+					 width="100%" paddingLeft="3" paddingRight="0" fontSize="20" fontWeight="bold" paddingTop="3"/>
+			<s:Line width="100%">
+				<s:stroke>
+					<s:SolidColorStroke color="#3B6999"  weight="3"/>
+				</s:stroke>
+			</s:Line>
+
+			<!-- Chapter Version info subsection version --> 
+			<s:VGroup width="100%" >
+				<!-- button to enable tracing -->
+				<s:HGroup id="groupInfo" width="100%" >
+					<s:Rect height="100%" width="5" >
+						<s:fill>
+							<s:SolidColor color="#212121" id="rect23"/>
+						</s:fill>
+					</s:Rect>
+					<s:Label text = "{ModelLocator.resourceManagerInstance.getString('settingsview','version')}" 
+							 width="100%" paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
+					<s:Label text = "{versionText}"  
+							 paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
+					<s:Rect height="100%" width="5" >
+						<s:fill>
+							<s:SolidColor color="#212121" id="rect24"/>
+						</s:fill>
+					</s:Rect>
+				</s:HGroup>
+				<s:Line width="100%">
+					<s:stroke>
+						<s:SolidColorStroke color="0xFFFFFF" weight="1" alpha="0.25"/>
+					</s:stroke>
+				</s:Line>
+			</s:VGroup>
+			
 			<!-- Chapter Logging and Tracing-->
 			<s:Label text = "{ModelLocator.resourceManagerInstance.getString('settingsview','logging_and_tracing')}" textAlign="center"  color="#3B6999" 
 					 width="100%" paddingLeft="3" paddingRight="0" fontSize="20" fontWeight="bold" paddingTop="3"/>
@@ -675,7 +726,7 @@
 					</s:stroke>
 				</s:Line>	
 			</s:VGroup>
-			
+
 			<!-- Chapter XYZ-->
 		</s:VGroup>
 	</s:Scroller>

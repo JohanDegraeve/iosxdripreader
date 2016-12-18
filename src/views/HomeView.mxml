@@ -497,7 +497,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 					if (Sensor.getActiveSensor() != null) {
 						message += " " + dateFormatterForSensorStartTimeAndDate.format(new Date(Sensor.getActiveSensor().startedAt));
 					} else {
-						message += ModelLocator.resourceManagerInstance.getString('homeview', "status_info_sensor_not_started");
+						message += " " + ModelLocator.resourceManagerInstance.getString('homeview', "status_info_sensor_not_started");
 					}
 					message += "\n\n";
 					message += ModelLocator.resourceManagerInstance.getString('homeview','status_info_device_name');

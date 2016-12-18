@@ -98,12 +98,13 @@ package services
 							&&
 							transmitterDataBeaconPacket.TxID == "00000") {
 							
+							Notifications.service.cancel(NotificationService.ID_FOR_ENTER_TRANSMITTER_ID);
 							Notifications.service.notify(
 								new NotificationBuilder()
 								.setId(NotificationService.ID_FOR_ENTER_TRANSMITTER_ID)
 								.setAlert(ModelLocator.resourceManagerInstance.getString("transmitterservice","enter_transmitter_id_dialog_title"))
-								.setTitle(ModelLocator.resourceManagerInstance.getString("transmitterservice","enter_transmitter_id_dialog_title"))
-								.setBody(ModelLocator.resourceManagerInstance.getString("transmitterservice","enter_transmitter_id"))
+								.setTitle(ModelLocator.resourceManagerInstance.getString("transmitterservice","enter_transmitter_id"))
+								.setBody(".")
 								.enableVibration(true)
 								.enableLights(true)
 								.build());
