@@ -22,15 +22,20 @@ package services
 	import com.distriqt.extension.dialog.builders.AlertBuilder;
 	import com.distriqt.extension.dialog.events.DialogViewEvent;
 	import com.distriqt.extension.dialog.objects.DialogAction;
+	import com.distriqt.extension.notifications.Notifications;
+	import com.distriqt.extension.notifications.builders.NotificationBuilder;
+	import com.distriqt.extension.notifications.events.NotificationEvent;
 	
 	import flash.events.EventDispatcher;
 	import flash.utils.ByteArray;
+	import flash.utils.Endian;
 	
 	import databaseclasses.BgReading;
 	import databaseclasses.CommonSettings;
 	import databaseclasses.Sensor;
 	
 	import events.BlueToothServiceEvent;
+	import events.NotificationServiceEvent;
 	import events.TransmitterServiceEvent;
 	
 	import model.ModelLocator;
@@ -75,7 +80,7 @@ package services
 				initialStart = false;
 			
 			BluetoothService.instance.addEventListener(BlueToothServiceEvent.TRANSMITTER_DATA, transmitterDataReceived);
-			
+			NotificationService.instance.addEventListener(NotificationServiceEvent.NOTIFICATION_EVENT, notificationReceived);
 		}
 		
 		private static function transmitterDataReceived(be:BlueToothServiceEvent):void {
@@ -83,58 +88,60 @@ package services
 				return;//should never be null actually
 			else {
 				if (be.data is TransmitterDataXBridgeBeaconPacket) {
-					var transmitterDataBeaconPacket:TransmitterDataXBridgeBeaconPacket = be.data as TransmitterDataXBridgeBeaconPacket;
-					if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID) == "00000" 
-						&&
-						transmitterDataBeaconPacket.TxID == "00000") {
-						var alert:DialogView = Dialog.service.create(
-							new AlertBuilder()
-							.setTitle(ModelLocator.resourceManagerInstance.getString("transmitterservice","enter_transmitter_id_dialog_title"))
-							.setMessage(ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_transmitter_id"))
-							.addTextField("","00000")
-							.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
-							.addOption(ModelLocator.resourceManagerInstance.getString("general","cancel"), DialogAction.STYLE_CANCEL, 1)
-							.build()
-						);
-						alert.addEventListener(DialogViewEvent.CLOSED, transmitterIdEntered);
-						DialogService.addDialog(alert, 60);
-					} else if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID) == "00000" 
-						&&
-						transmitterDataBeaconPacket.TxID != "00000") {
-						trace("TransmitterService.as storing transmitter id received from bluetooth device = " + transmitterDataBeaconPacket.TxID);
-						var transmitterServiceEvent:TransmitterServiceEvent = new TransmitterServiceEvent(TransmitterServiceEvent.TRANSMITTER_SERVICE_INFORMATION_EVENT);
-						transmitterServiceEvent.data = new Object();
-						transmitterServiceEvent.data.information = "storing transmitter id received from bluetooth device = " + transmitterDataBeaconPacket.TxID;
-						_instance.dispatchEvent(transmitterServiceEvent);
-						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID, transmitterDataBeaconPacket.TxID);
-						var value:ByteArray = new ByteArray();
-						value.writeByte(0x02);
-						value.writeByte(0xF0);
-						BluetoothService.ackCharacteristicUpdate(value);
-					} else if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID) != "00000" 
-						&&
-						transmitterDataBeaconPacket.TxID != CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID)) {
-						var value:ByteArray = new ByteArray();
-						value.writeByte(0x06);
-						value.writeByte(0x01);
-						value.writeUnsignedInt((BluetoothService.encodeTxID(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID))));
-						trace("TransmitterService.as calling BluetoothService.ackCharacteristicUpdate");
-						BluetoothService.ackCharacteristicUpdate(value);
+					if (((new Date()).valueOf() - lastPacketTime) < 60000) {
+						//if previous packet was less than 1 minute ago then ignore it
+						//dispatchInformation('ignoring_transmitterxbridgedatapacket');
 					} else {
-						var value:ByteArray = new ByteArray();
-						value.writeByte(0x02);
-						value.writeByte(0xF0);
-						BluetoothService.ackCharacteristicUpdate(value);
+						lastPacketTime = (new Date()).valueOf();
+						var transmitterDataBeaconPacket:TransmitterDataXBridgeBeaconPacket = be.data as TransmitterDataXBridgeBeaconPacket;
+						if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID) == "00000" 
+							&&
+							transmitterDataBeaconPacket.TxID == "00000") {
+							
+							Notifications.service.notify(
+								new NotificationBuilder()
+								.setId(NotificationService.ID_FOR_ENTER_TRANSMITTER_ID)
+								.setAlert(ModelLocator.resourceManagerInstance.getString("transmitterservice","enter_transmitter_id_dialog_title"))
+								.setTitle(ModelLocator.resourceManagerInstance.getString("transmitterservice","enter_transmitter_id_dialog_title"))
+								.setBody(ModelLocator.resourceManagerInstance.getString("transmitterservice","enter_transmitter_id"))
+								.enableVibration(true)
+								.enableLights(true)
+								.build());
+						} else if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID) == "00000" 
+							&&
+							transmitterDataBeaconPacket.TxID != "00000") {
+							trace("TransmitterService.as storing transmitter id received from bluetooth device = " + transmitterDataBeaconPacket.TxID);
+							var transmitterServiceEvent:TransmitterServiceEvent = new TransmitterServiceEvent(TransmitterServiceEvent.TRANSMITTER_SERVICE_INFORMATION_EVENT);
+							transmitterServiceEvent.data = new Object();
+							transmitterServiceEvent.data.information = "storing transmitter id received from bluetooth device = " + transmitterDataBeaconPacket.TxID;
+							_instance.dispatchEvent(transmitterServiceEvent);
+							CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID, transmitterDataBeaconPacket.TxID);
+							var value:ByteArray = new ByteArray();
+							value.writeByte(0x02);
+							value.writeByte(0xF0);
+							BluetoothService.ackCharacteristicUpdate(value);
+						} else if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID) != "00000" 
+							&&
+							transmitterDataBeaconPacket.TxID != CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID)) {
+							var value:ByteArray = new ByteArray();
+							value.endian = Endian.LITTLE_ENDIAN;
+							value.writeByte(0x06);
+							value.writeByte(0x01);
+							value.writeInt((BluetoothService.encodeTxID(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID))));
+							trace("TransmitterService.as calling BluetoothService.ackCharacteristicUpdate");
+							BluetoothService.ackCharacteristicUpdate(value);
+						} else {
+							var value:ByteArray = new ByteArray();
+							value.writeByte(0x02);
+							value.writeByte(0xF0);
+							BluetoothService.ackCharacteristicUpdate(value);
+						}
 					}
 				} else if (be.data is TransmitterDataXBridgeDataPacket) {
 					var transmitterDataXBridgeDataPacket:TransmitterDataXBridgeDataPacket = be.data as TransmitterDataXBridgeDataPacket;
 					if (((new Date()).valueOf() - lastPacketTime) < 60000) {
 						//if previous packet was less than 1 minute ago then ignore it
 						//dispatchInformation('ignoring_transmitterxbridgedatapacket');
-						var value:ByteArray = new ByteArray();
-						value.writeByte(0x02);
-						value.writeByte(0xF0);
-						BluetoothService.ackCharacteristicUpdate(value);
 					} else {
 						lastPacketTime = (new Date()).valueOf();
 						if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID) == "00000" 
@@ -154,9 +161,10 @@ package services
 							&&
 							transmitterDataXBridgeDataPacket.TxID != CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID)) {
 							var value:ByteArray = new ByteArray();
+							value.endian = Endian.LITTLE_ENDIAN;
 							value.writeByte(0x06);
 							value.writeByte(0x01);
-							value.writeUnsignedInt((BluetoothService.encodeTxID(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID))));
+							value.writeInt((BluetoothService.encodeTxID(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID))));
 							trace("TransmitterService.as calling BluetoothService.ackCharacteristicUpdate");
 							BluetoothService.ackCharacteristicUpdate(value);
 						} else {
@@ -212,6 +220,25 @@ package services
 			}
 		}
 		
+		private static function notificationReceived(event:NotificationServiceEvent):void {
+			if (event != null) {//not sure why checking, this would mean NotificationService received a null object, shouldn't happen
+				var notificationEvent:NotificationEvent = event.data as NotificationEvent;
+				if (notificationEvent.id == NotificationService.ID_FOR_ENTER_TRANSMITTER_ID) {
+					var alert:DialogView = Dialog.service.create(
+						new AlertBuilder()
+						.setTitle(ModelLocator.resourceManagerInstance.getString("transmitterservice","enter_transmitter_id_dialog_title"))
+						.setMessage(ModelLocator.resourceManagerInstance.getString("transmitterservice","enter_transmitter_id"))
+						.addTextField(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID), "00000")
+						.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
+						.addOption(ModelLocator.resourceManagerInstance.getString("general","cancel"), DialogAction.STYLE_CANCEL, 1)
+						.build()
+					);
+					alert.addEventListener(DialogViewEvent.CLOSED, transmitterIdEntered);
+					DialogService.addDialog(alert, 58);
+				}
+			}		
+		}
+		
 		private static function transmitterIdEntered(event:DialogViewEvent):void {
 			if (event.index == 1) {
 				return;
@@ -227,9 +254,10 @@ package services
 				DialogService.addDialog(alert);
 			} else {
 				var value:ByteArray = new ByteArray();
+				value.endian = Endian.LITTLE_ENDIAN;
 				value.writeByte(0x06);
 				value.writeByte(0x01);
-				value.writeUnsignedInt(BluetoothService.encodeTxID(event.values[0] as String));
+				value.writeInt(BluetoothService.encodeTxID(event.values[0] as String));
 				trace("TransmitterService.as calling BluetoothService.ackCharacteristicUpdate");
 				BluetoothService.ackCharacteristicUpdate(value);
 				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID, event.values[0] as String);

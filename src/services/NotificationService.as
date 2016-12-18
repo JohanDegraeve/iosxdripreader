@@ -88,6 +88,10 @@ package services
 		 * to request initial calibration
 		 */
 		public static const ID_FOR_REQUEST_CALIBRATION:int = 3;
+		/**
+		 * to request transmitter id 
+		 */
+		public static const ID_FOR_ENTER_TRANSMITTER_ID:int = 4;
 		
 		private static const debugMode:Boolean = false;
 		

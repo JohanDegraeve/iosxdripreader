@@ -332,7 +332,7 @@
 						DialogService.addDialog(alert);
 					} else {
 						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID, event.values[0] as String);
-						transmitterIdText = event.values[0] as String;
+						transmitterIdText = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID);
 					}
 				}
 			}

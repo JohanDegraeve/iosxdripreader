@@ -116,6 +116,9 @@
 		 
 		 public static function setCommonSetting(commonSettingId:int, newValue:String, updateDatabase:Boolean = true):void {
 			 if (commonSettings[commonSettingId] != newValue) {
+				 if (commonSettingId == COMMON_SETTING_TRANSMITTER_ID) {
+					 newValue = newValue.toUpperCase();
+				 }
 				 commonSettings[commonSettingId] = newValue;
 				 if (updateDatabase)
 					 Database.updateCommonSetting(commonSettingId, newValue);
