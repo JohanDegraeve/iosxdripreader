@@ -10,7 +10,8 @@ xdrip/xbridge reader for iOS devices
 * Always on notification (not really always but almost always) that allows to see the current value by just lifting up the phone.
 * Synchronisation to Nightscout
  * When the app is in the foreground, upload will always happen immediately after receiving a new value, also at app start, 
- * When the app is in the background, then it is iOS that decides when the app is allowed to do an upload. The frequency depends on how often the app is in the foreground. The first day the upload will almost not be done while in the background. But if you open the app, just a second, for instance each time you use your phone, then after one day or so, the upload will happen every 10 to 20 minutes.
+ * When the app is in the background, then it is iOS that decides when the app is allowed to do an upload. The frequency is very unpredictable, in fact it is not really usable.
+* set transmitter id
 
 To compile :
 - install Flash Builder 4.7 with FLex SDK 4.15.0, AIR 22.0 en_US
