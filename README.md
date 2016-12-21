@@ -12,7 +12,7 @@ xdrip/xbridge reader for iOS devices
  * When the app is in the foreground, upload will always happen immediately after receiving a new value, also at app start, 
  * ___When the app is in the background, then it is iOS that decides when the app is allowed to do an upload. The frequency depends on the usage of the app. One test I did is to keep the app open all day/night long. The next day/night it was triggerering a background fetch every 10 minutes___
 * set transmitter id
-* ___if xdrip or xbridge is out of range, bluetooth connection will fail and will not automatically reconnect. The app needs to be opened in order to re-establish the connetion___
+* ___if xdrip or xbridge is out of range, bluetooth connection will fail and will not automatically reconnect. The app needs to be opened in order to re-establish the connection___
 
 To compile :
 - install Flash Builder 4.7 with FLex SDK 4.15.0, AIR 22.0 en_US
