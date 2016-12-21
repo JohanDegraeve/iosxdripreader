@@ -10,7 +10,7 @@ xdrip/xbridge reader for iOS devices
 * Always on notification (not really always but almost always) that allows to see the current value by just lifting up the phone.
 * Synchronisation to Nightscout
  * When the app is in the foreground, upload will always happen immediately after receiving a new value, also at app start, 
- * When the app is in the background, then it is iOS that decides when the app is allowed to do an upload. The frequency is very unpredictable, in fact it is not really usable.
+ * ___When the app is in the background, then it is iOS that decides when the app is allowed to do an upload. The frequency depends on the usage of the app. One test I did is to keep the app open all day/night long. The next day/night it was triggerering a background fetch every 10 minutes___
 * set transmitter id
 
 To compile :
