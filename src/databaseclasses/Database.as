@@ -58,6 +58,7 @@ package databaseclasses
 		private static const maxDaysToKeepBgReadings:int = 5;
 		public static const END_OF_RESULT:String = "END_OF_RESULT";
 		private static const debugMode:Boolean = true;
+		private static var loggingTableExists:Boolean = false;
 		
 		/**
 		 * create table to store the bluetooth device name and address<br>
@@ -519,6 +520,7 @@ package databaseclasses
 			function tableCreated(se:SQLEvent):void {
 				sqlStatement.removeEventListener(SQLEvent.RESULT,tableCreated);
 				sqlStatement.removeEventListener(SQLErrorEvent.ERROR,tableCreationError);
+				loggingTableExists = true;
 				deleteOldLogFiles();
 			}
 			
@@ -666,6 +668,8 @@ package databaseclasses
 		}
 		
 		public static function insertLogging(logging_id:String, log:String, logTimeStamp:Number, lastModifiedTimeStamp:Number, dispatcher:EventDispatcher):void {
+			if (!loggingTableExists)
+				return;
 			var insertRequest:SQLStatement;
 			try {
 				var conn:SQLConnection = new SQLConnection();
