@@ -17,10 +17,15 @@
  */
 package Utilities
 {
+	import com.hurlant.crypto.hash.SHA1;
+	import com.hurlant.util.Hex;
+	
+	import flash.utils.ByteArray;
+
 	public class UniqueId
 	{
 		public static var ALPHA_CHAR_CODES:Array = ["0","1","2","3","4","5","6","7","8","9","a","b","c","d","e","f"];
-
+		
 		public function UniqueId()
 		{
 		}
@@ -42,5 +47,20 @@ package Utilities
 				returnValue += eventId[i];
 			return returnValue;
 		}
+		
+		/**
+		 * creates random string of digits only, length 
+		 */
+		public static function createNonce(length:int):String {
+			var nonce:Array = new Array(length);
+			for (var i:int = 0; i < length; i++) {
+				nonce[i] = ALPHA_CHAR_CODES[Math.floor(Math.random() *  10)];
+			}
+			var returnValue:String = "";
+			for (i = 0; i < nonce.length; i++)
+			returnValue += nonce[i];
+			return returnValue;
+		}
+		
 	}
 }

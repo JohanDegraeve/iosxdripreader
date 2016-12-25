@@ -2,13 +2,29 @@ package services
 {
 	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
 	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetchEvent;
+	import com.hurlant.crypto.Crypto;
+	import com.hurlant.util.Base64;
+	import com.hurlant.util.Hex;
 	
+	import flash.events.Event;
 	import flash.events.EventDispatcher;
+	import flash.events.IOErrorEvent;
+	import flash.net.URLLoader;
+	import flash.net.URLRequest;
+	import flash.net.URLRequestHeader;
+	import flash.net.URLRequestMethod;
 	import flash.net.URLVariables;
+	import flash.utils.ByteArray;
+	
+	import Utilities.UniqueId;
+	
+	import databaseclasses.CommonSettings;
 	
 	import events.BackGroundFetchServiceEvent;
 	
 	import model.ModelLocator;
+	
+	import quickbloxsecrets.QuickBloxSecrets;
 	
 	/**
 	 * controls all services that need up or download<br>
@@ -26,6 +42,8 @@ package services
 		private static var _instance:BackGroundFetchService = new BackGroundFetchService(); 
 		private static var initialStart:Boolean = true;
 		
+		private static const QUICKBLOX_URL:String = "https://api.quickblox.com/session.json";
+		private static const QUICKBLOX_REST_API_VERSION:String = "0.1.0";
 		/**
 		 * to be used in function  callCompletionHandler
 		 */
@@ -62,7 +80,7 @@ package services
 			BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.PERFORMFETCH, performFetch);
 			BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.DEVICE_TOKEN_RECEIVED, deviceTokenReceived);
 			BackgroundFetch.minimumBackgroundFetchInterval = BackgroundFetch.BACKGROUND_FETCH_INTERVAL_MINIMUM;
-			//BackgroundFetch.createQuickBloxUser();
+			createQuickBloxSession();
 		}
 		
 		public static function callCompletionHandler(result:String):void {
@@ -84,6 +102,9 @@ package services
 		
 		private static function deviceTokenReceived(event:BackgroundFetchEvent):void {
 			trace("BackGroundFetchService.as deviceTokenReceived ");// + event.data.token);
+			var token:String = (event.data.token as String).replace("<","").replace(">","").replace(" ","");
+			trace("BackGroundFetchService.as deviceTokenReceived  = " + token);
+			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_DEVICE_TOKEN_ID, token);
 		}
 		
 		private static function loadRequestSuccess(event:BackgroundFetchEvent):void {
@@ -151,5 +172,44 @@ package services
 			backgroundfetchserviceEvent.timeStamp = event.timeStamp;
 			_instance.dispatchEvent(backgroundfetchserviceEvent);
 		}
-	}
+		
+		private static function createQuickBloxSession():void {
+			var nonce:String = UniqueId.createNonce(10);
+			var timeStamp:String = (new Date()).valueOf().toString().substr(0, 10);
+			//application_id=51098&auth_key=DKPYLHHLVQMMLPV&nonce=134056951&timestamp=1482683701&user[login]=testuser&user[password]=dkke123JJ
+			var toSign:String = "application_id=" + QuickBloxSecrets.ApplicationId 
+				+ "&auth_key=" + QuickBloxSecrets.AuthorizationKey
+				+ "&nonce=" + nonce
+				+ "&timestamp=" + timeStamp;
+			
+			var key:ByteArray = Hex.toArray(Hex.fromString(QuickBloxSecrets.AuthorizationSecret));
+			var data:ByteArray = Hex.toArray(Hex.fromString(toSign));
+			var signature:Object = BackgroundFetch.generateHMAC_SHA1(QuickBloxSecrets.AuthorizationSecret, toSign);
+//			var signaturebase64:String = Base64.encode(signature);
+				
+			var postBody:String = 
+				'{"application_id": "' + QuickBloxSecrets.ApplicationId + 
+				'", "auth_key": "' + QuickBloxSecrets.AuthorizationKey + 
+				'", "timestamp": "' + timeStamp + 
+				'", "nonce": "' + nonce + 
+				'", "signature": "' + signature +'"}';
+			var loader:URLLoader = new URLLoader();
+			var request:URLRequest = new URLRequest(QUICKBLOX_URL);
+			request.contentType = "application/json";
+			request.method = URLRequestMethod.POST;					
+			request.data = postBody;
+			request.requestHeaders.push(new URLRequestHeader("QuickBlox-REST-API-Version", QUICKBLOX_REST_API_VERSION));
+			loader.addEventListener(Event.COMPLETE, createBloxSessionSuccess);
+			loader.addEventListener(IOErrorEvent.IO_ERROR, createBloxSessionFailure);
+			loader.load(request);
+		}
+		
+		private static function createBloxSessionSuccess(event:Event):void {
+			trace("BackGroundFetchService.as createBloxSessionSuccess");
+		}
+
+		private static function createBloxSessionFailure(event:IOErrorEvent):void {
+			trace("BackGroundFetchService.as createBloxSessionFailure" + (event.currentTarget.data ? event.currentTarget.data:""));
+		}
+}
 }
