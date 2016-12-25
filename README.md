@@ -7,11 +7,12 @@ xdrip/xbridge reader for iOS devices
 * Initial and subsequent Calibration
 * Additional calibration request alerts but not the 12-hour calibration request alert
 * View latest calculated value on Home screen with "minutes ago" and diff with previous reading
-* Always on notification (not really always but almost always) that allows to see the current value by just lifting up the phone.
+* Always on notification (not really always but almost always) that allows to see the current value by just lifting up the phone (iOS 10).
 * Synchronisation to Nightscout
  * When the app is in the foreground, upload will always happen immediately after receiving a new value, also at app start, 
- * When the app is in the background, then it is iOS that decides when the app is allowed to do an upload. The frequency is very unpredictable, in fact it is not really usable.
+ * ___When the app is in the background, then it is iOS that decides when the app is allowed to do an upload. The frequency depends on the usage of the app. One test I did is to keep the app open all day/night long. The next day/night it was triggerering a background fetch every 10 minutes___
 * set transmitter id
+* ___if xdrip or xbridge is out of range, bluetooth connection will fail and will not automatically reconnect. The app needs to be opened in order to re-establish the connection___
 
 To compile :
 - install Flash Builder 4.7 with FLex SDK 4.15.0, AIR 22.0 en_US
