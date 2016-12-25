@@ -60,13 +60,16 @@ package services
 			BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.LOAD_REQUEST_RESULT, loadRequestSuccess);
 			BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.LOAD_REQUEST_ERROR, loadRequestError);
 			BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.PERFORMFETCH, performFetch);
+			BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.DEVICE_TOKEN_RECEIVED, deviceTokenReceived);
 			BackgroundFetch.minimumBackgroundFetchInterval = BackgroundFetch.BACKGROUND_FETCH_INTERVAL_MINIMUM;
+			//BackgroundFetch.createQuickBloxUser();
 		}
 		
 		public static function callCompletionHandler(result:String):void {
 			trace("BackGroundFetchService.as callCompletionhandler with result " + result);
 			BackgroundFetch.callCompletionHandler(result);
 		}
+		
 		private static function performFetch(event:BackgroundFetchEvent):void {
 			trace("BackGroundFetchService.as performFetch");
 			var backgroundfetchServiceEvent:BackGroundFetchServiceEvent = new BackGroundFetchServiceEvent(BackGroundFetchServiceEvent.LOG_INFO);
@@ -77,6 +80,10 @@ package services
 			backgroundfetchServiceEvent.data = new Object();
 			backgroundfetchServiceEvent.data.information = event.data.result as String;
 			_instance.dispatchEvent(backgroundfetchServiceEvent);
+		}
+		
+		private static function deviceTokenReceived(event:BackgroundFetchEvent):void {
+			trace("BackGroundFetchService.as deviceTokenReceived ");// + event.data.token);
 		}
 		
 		private static function loadRequestSuccess(event:BackgroundFetchEvent):void {
@@ -92,7 +99,6 @@ package services
 			backgroundFetchServiceResult.data = new Object();
 			backgroundFetchServiceResult.data.information = event.data.result as String;
 			_instance.dispatchEvent(backgroundFetchServiceResult);
-			
 		}
 		
 		private static function loadRequestError(event:BackgroundFetchEvent):void {
@@ -136,7 +142,6 @@ package services
 				parameters[6 + i] = args[i];
 			}
 			BackgroundFetch.createAndLoadUrlRequest.apply(null, parameters);
-			
 		}
 		
 		private static function logInfoReceived(event:BackgroundFetchEvent):void {

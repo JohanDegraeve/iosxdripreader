@@ -241,6 +241,7 @@
 				<array>
 					<string>bluetooth-central</string>
 					<string>fetch</string>
+					<string>remote-notification</string>
 				</array>
 				<key>NSAppTransportSecurity</key>
       				<dict>
@@ -249,8 +250,21 @@
             ]]>
 		</InfoAdditions>
 		<!-- A list of plist key/value pairs to be added to the application Entitlements.plist -->
-		<!-- <Entitlements> <![CDATA[ <key>keychain-access-groups</key> <array> 
-			<string></string> <string></string> </array> ]]> </Entitlements> -->
+		<Entitlements> <![CDATA[
+		<!-- DEVELOPMENT -->
+		<key>get-task-allow</key>
+		<true/>
+		<key>aps-environment</key>
+		<string>development</string>
+		
+		<key>application-identifier</key>
+		<string>8DKSZ5HNLB.net.johandegraeve.iosxdripreader</string>
+		<key>keychain-access-groups</key>
+		<array>
+		<string>8DKSZ5HNLB.*</string>
+		</array>
+		
+			 ]]></Entitlements>
 		<!-- Display Resolution for the app (either "standard" or "high"). Optional. 
 			Default "standard" -->
 		<!-- <requestedDisplayResolution></requestedDisplayResolution> -->
