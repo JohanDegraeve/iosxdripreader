@@ -185,8 +185,8 @@ package services
 			var key:ByteArray = Hex.toArray(Hex.fromString(QuickBloxSecrets.AuthorizationSecret));
 			var data:ByteArray = Hex.toArray(Hex.fromString(toSign));
 			var signature:Object = BackgroundFetch.generateHMAC_SHA1(QuickBloxSecrets.AuthorizationSecret, toSign);
-//			var signaturebase64:String = Base64.encode(signature);
-				
+			//			var signaturebase64:String = Base64.encode(signature);
+			
 			var postBody:String = 
 				'{"application_id": "' + QuickBloxSecrets.ApplicationId + 
 				'", "auth_key": "' + QuickBloxSecrets.AuthorizationKey + 
@@ -207,9 +207,13 @@ package services
 		private static function createBloxSessionSuccess(event:Event):void {
 			trace("BackGroundFetchService.as createBloxSessionSuccess");
 		}
-
+		
 		private static function createBloxSessionFailure(event:IOErrorEvent):void {
-			trace("BackGroundFetchService.as createBloxSessionFailure" + (event.currentTarget.data ? event.currentTarget.data:""));
+			trace("BackGroundFetchService.as createBloxSessionFailure " + (event.currentTarget.data ? event.currentTarget.data:""));
+			var backgroundfetchserviceEvent:BackGroundFetchServiceEvent = new BackGroundFetchServiceEvent(BackGroundFetchServiceEvent.LOG_INFO);
+			backgroundfetchserviceEvent.data = new Object();
+			backgroundfetchserviceEvent.data.information = "BackGroundFetchService.as createBloxSessionFailure " + (event.currentTarget.data ? event.currentTarget.data:"No info received from quickblox");
+			_instance.dispatchEvent(backgroundfetchserviceEvent);
 		}
-}
+	}
 }
