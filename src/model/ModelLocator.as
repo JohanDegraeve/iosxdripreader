@@ -37,6 +37,7 @@ package model
 	
 	import databaseclasses.BgReading;
 	import databaseclasses.Database;
+	import databaseclasses.LocalSettings;
 	import databaseclasses.Sensor;
 	
 	import distriqtkey.DistriqtKey;
@@ -79,6 +80,7 @@ package model
 		private static var _isInForeground:Boolean = false;
 		
 		public const MAX_DAYS_TO_STORE_BGREADINGS_IN_MODELLOCATOR:int = 5;
+		public static const DEBUG_MODE:Boolean = true;
 
 		public static function get isInForeground():Boolean
 		{
@@ -286,6 +288,9 @@ package model
 							//will initialise the bluetoothdevice
 							Database.getBlueToothDevice();24 *24
 							Application.init(DistriqtKey.distriqtKey);
+							if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_UDID) == "")
+								LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_UDID, Application.service.device.uniqueId("vendor", true));
+							trace("unique device id = " + LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_UDID));
 							Message.init(DistriqtKey.distriqtKey);
 							TransmitterService.init();
 							BluetoothService.init();

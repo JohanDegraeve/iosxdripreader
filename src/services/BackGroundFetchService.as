@@ -2,8 +2,6 @@ package services
 {
 	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
 	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetchEvent;
-	import com.hurlant.crypto.Crypto;
-	import com.hurlant.util.Base64;
 	import com.hurlant.util.Hex;
 	
 	import flash.events.Event;
@@ -18,7 +16,7 @@ package services
 	
 	import Utilities.UniqueId;
 	
-	import databaseclasses.CommonSettings;
+	import databaseclasses.LocalSettings;
 	
 	import events.BackGroundFetchServiceEvent;
 	
@@ -42,8 +40,9 @@ package services
 		private static var _instance:BackGroundFetchService = new BackGroundFetchService(); 
 		private static var initialStart:Boolean = true;
 		
-		private static const QUICKBLOX_URL:String = "https://api.quickblox.com/session.json";
+		private static const QUICKBLOX_DOMAIN:String = "https://api.quickblox.com";
 		private static const QUICKBLOX_REST_API_VERSION:String = "0.1.0";
+		private static var QB_Token:String = "";
 		/**
 		 * to be used in function  callCompletionHandler
 		 */
@@ -56,6 +55,8 @@ package services
 		 * to be used in function  callCompletionHandler
 		 */
 		public static const NO_DATA: String = "NO_DATA";
+		
+		private static var register:Boolean = false;
 		
 		public static function get instance():BackGroundFetchService {
 			return _instance;
@@ -80,7 +81,6 @@ package services
 			BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.PERFORMFETCH, performFetch);
 			BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.DEVICE_TOKEN_RECEIVED, deviceTokenReceived);
 			BackgroundFetch.minimumBackgroundFetchInterval = BackgroundFetch.BACKGROUND_FETCH_INTERVAL_MINIMUM;
-			createQuickBloxSession();
 		}
 		
 		public static function callCompletionHandler(result:String):void {
@@ -102,9 +102,21 @@ package services
 		
 		private static function deviceTokenReceived(event:BackgroundFetchEvent):void {
 			trace("BackGroundFetchService.as deviceTokenReceived ");// + event.data.token);
-			var token:String = (event.data.token as String).replace("<","").replace(">","").replace(" ","");
+			var token:String = (event.data.token as String).replace("<","").replace(">","").replace(" ","").replace(" ","").replace(" ","").replace(" ","").replace(" ","").replace(" ","").replace(" ","").replace(" ","").replace(" ","").replace(" ","").replace(" ","");
 			trace("BackGroundFetchService.as deviceTokenReceived  = " + token);
-			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_DEVICE_TOKEN_ID, token);
+			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_DEVICE_TOKEN_ID, token);
+			
+			//if already registered for push notifications, then update the token
+			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_SUBSCRIBED_TO_PUSH_NOTIFICATIONS) ==  "true") {
+				var backgroundfetchserviceLogInfo:BackGroundFetchServiceEvent = new BackGroundFetchServiceEvent(BackGroundFetchServiceEvent.LOG_INFO);
+				backgroundfetchserviceLogInfo.data = new Object();
+				backgroundfetchserviceLogInfo.data.information = "BackGroundFetchService.as new device_token received, start update at quickBlox";
+				_instance.dispatchEvent(backgroundfetchserviceLogInfo);
+				register = true;
+				createSessionQuickBlox();
+			} else {
+				
+			}
 		}
 		
 		private static function loadRequestSuccess(event:BackgroundFetchEvent):void {
@@ -173,28 +185,41 @@ package services
 			_instance.dispatchEvent(backgroundfetchserviceEvent);
 		}
 		
-		private static function createQuickBloxSession():void {
+		public static function registerPushNotification():void {
+			register = true;
+			createSessionQuickBlox();
+		}
+		
+		public static function deRegisterPushNotification():void {
+			register = false;
+			createSessionQuickBlox();
+		}
+		
+		private static function createSessionQuickBlox():void {
 			var nonce:String = UniqueId.createNonce(10);
 			var timeStamp:String = (new Date()).valueOf().toString().substr(0, 10);
-			//application_id=51098&auth_key=DKPYLHHLVQMMLPV&nonce=134056951&timestamp=1482683701&user[login]=testuser&user[password]=dkke123JJ
+			var udid:String = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_UDID);
 			var toSign:String = "application_id=" + QuickBloxSecrets.ApplicationId 
 				+ "&auth_key=" + QuickBloxSecrets.AuthorizationKey
 				+ "&nonce=" + nonce
 				+ "&timestamp=" + timeStamp;
+			//+ "&user[login]=" + udid
+			//+ "&user[password]=" + QuickBloxSecrets.GenericUserPassword;
 			
 			var key:ByteArray = Hex.toArray(Hex.fromString(QuickBloxSecrets.AuthorizationSecret));
 			var data:ByteArray = Hex.toArray(Hex.fromString(toSign));
 			var signature:Object = BackgroundFetch.generateHMAC_SHA1(QuickBloxSecrets.AuthorizationSecret, toSign);
-			//			var signaturebase64:String = Base64.encode(signature);
 			
 			var postBody:String = 
 				'{"application_id": "' + QuickBloxSecrets.ApplicationId + 
 				'", "auth_key": "' + QuickBloxSecrets.AuthorizationKey + 
 				'", "timestamp": "' + timeStamp + 
 				'", "nonce": "' + nonce + 
-				'", "signature": "' + signature +'"}';
+				'", "signature": "' + signature +
+				//'", "user": {"login": "' + udid + '", "password": "' + QuickBloxSecrets.GenericUserPassword + 
+				'"}';
 			var loader:URLLoader = new URLLoader();
-			var request:URLRequest = new URLRequest(QUICKBLOX_URL);
+			var request:URLRequest = new URLRequest(QUICKBLOX_DOMAIN + "/session.json");
 			request.contentType = "application/json";
 			request.method = URLRequestMethod.POST;					
 			request.data = postBody;
@@ -206,6 +231,122 @@ package services
 		
 		private static function createBloxSessionSuccess(event:Event):void {
 			trace("BackGroundFetchService.as createBloxSessionSuccess");
+			var eventAsJSONObject:Object = JSON.parse(event.target.data as String);
+			QB_Token = eventAsJSONObject.session.token;
+			signUpQuickBlox();
+		}
+		
+		private static function signUpQuickBlox():void {
+			var udid:String = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_UDID);
+			var postBody:String = '{"user": {"login": "' + udid + '", "password": "' + QuickBloxSecrets.GenericUserPassword + '"}}';
+			var loader:URLLoader = new URLLoader();
+			var request:URLRequest = new URLRequest(QUICKBLOX_DOMAIN + "/users.json");
+			request.method = URLRequestMethod.POST;					
+			request.data = postBody;
+			request.contentType = "application/json";
+			request.requestHeaders.push(new URLRequestHeader("QuickBlox-REST-API-Version", QUICKBLOX_REST_API_VERSION));
+			request.requestHeaders.push(new URLRequestHeader("QB-Token", QB_Token));
+			loader.addEventListener(Event.COMPLETE, signUpSuccess);
+			loader.addEventListener(IOErrorEvent.IO_ERROR, signUpFailure);
+			loader.load(request);
+		}
+		
+		private static function signUpSuccess(event:Event):void {
+			trace("BackGroundFetchService signUpSuccess");
+			userSignInQuickBlox();
+		}
+		
+		private static function signUpFailure(event:IOErrorEvent):void {
+			trace("BackGroundFetchService signUpFailure" + (event.currentTarget.data ? event.currentTarget.data:""));
+			if (event.currentTarget.data) {
+				var eventAsJSONObject:Object = JSON.parse(event.target.data as String);
+				if (eventAsJSONObject.errors) {
+					if (eventAsJSONObject.errors.login) {
+						if ((eventAsJSONObject.errors.login[0] as String) == "has already been taken"){
+							userSignInQuickBlox();
+						}
+					}
+				}
+			}
+		}
+		
+		private static function userSignInQuickBlox():void {
+			var udid:String = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_UDID);
+			var postBody:String = '{"login": "' + udid + '", "password": "' + QuickBloxSecrets.GenericUserPassword + '"}';
+			var loader:URLLoader = new URLLoader();
+			var request:URLRequest = new URLRequest(QUICKBLOX_DOMAIN + "/login.json");
+			request.method = URLRequestMethod.POST;					
+			request.data = postBody;
+			request.contentType = "application/json";
+			request.requestHeaders.push(new URLRequestHeader("QuickBlox-REST-API-Version", QUICKBLOX_REST_API_VERSION));
+			request.requestHeaders.push(new URLRequestHeader("QB-Token", QB_Token));
+			loader.addEventListener(Event.COMPLETE, signInSuccess);
+			loader.addEventListener(IOErrorEvent.IO_ERROR, signInFailure);
+			loader.load(request);
+		}
+		
+		private static function signInSuccess(event:Event):void {
+			trace("BackGroundFetchService.as signInSuccess");
+			var eventAsJSONObject:Object = JSON.parse(event.target.data as String);
+			
+			if (register)
+				createSubscription();
+			else
+				deleteUser(new Number(eventAsJSONObject.user.id));
+		}
+		
+		private static function signInFailure(event:IOErrorEvent):void {
+			trace("BackGroundFetchService.as signInFailure " + (event.currentTarget.data ? event.currentTarget.data:""));
+			var backgroundfetchserviceEvent:BackGroundFetchServiceEvent = new BackGroundFetchServiceEvent(BackGroundFetchServiceEvent.LOG_INFO);
+			backgroundfetchserviceEvent.data = new Object();
+			backgroundfetchserviceEvent.data.information = "BackGroundFetchService.as signInFailure " + (event.currentTarget.data ? event.currentTarget.data:"No info received from quickblox");
+			_instance.dispatchEvent(backgroundfetchserviceEvent);
+		}
+		
+		private static function createSubscription():void {
+			var client_identification_sequence:String = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_DEVICE_TOKEN_ID);
+			var udid:String = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_UDID);
+			var environment:String = ModelLocator.DEBUG_MODE ? "development":"production";
+			var postBody:String = '{"notification_channels": "apns",' +
+				' "push_token": {"environment": "development", "client_identification_sequence": "' + client_identification_sequence + '"}, ' +
+				'"device": {"platform": "ios", "udid": "' + udid + '"}}';
+			var loader:URLLoader = new URLLoader();
+			var request:URLRequest = new URLRequest(QUICKBLOX_DOMAIN + "/subscriptions.json");
+			request.method = URLRequestMethod.POST;					
+			request.data = postBody;
+			request.contentType = "application/json";
+			request.requestHeaders.push(new URLRequestHeader("QuickBlox-REST-API-Version", QUICKBLOX_REST_API_VERSION));
+			request.requestHeaders.push(new URLRequestHeader("QB-Token", QB_Token));
+			loader.addEventListener(Event.COMPLETE, subscriptionSuccess);
+			loader.addEventListener(IOErrorEvent.IO_ERROR, subscriptionFailure);
+			loader.load(request);
+		}
+		
+		private static function deleteUser(id:Number):void {
+			var loader:URLLoader = new URLLoader();
+			var request:URLRequest = new URLRequest(QUICKBLOX_DOMAIN + "/users/" + id + ".json");
+			request.method = URLRequestMethod.DELETE;					
+			request.requestHeaders.push(new URLRequestHeader("QuickBlox-REST-API-Version", QUICKBLOX_REST_API_VERSION));
+			request.requestHeaders.push(new URLRequestHeader("QB-Token", QB_Token));
+			request.contentType = "application/json";
+			loader.addEventListener(Event.COMPLETE, userDeleteSuccess);
+			loader.addEventListener(IOErrorEvent.IO_ERROR, userDeleteFailure);
+			loader.load(request);
+		}
+		
+		private static function userDeleteSuccess(event:Event):void {
+			trace("BackGroundFetchService.as subscriptionDeleteSuccess");
+			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_SUBSCRIBED_TO_PUSH_NOTIFICATIONS, "false");
+			destroySession();
+		}
+		
+		private static function userDeleteFailure(event:IOErrorEvent):void {
+			trace("BackGroundFetchService.as subscriptionDeleteFailure" + (event.currentTarget.data ? event.currentTarget.data:""));
+			var backgroundfetchserviceEvent:BackGroundFetchServiceEvent = new BackGroundFetchServiceEvent(BackGroundFetchServiceEvent.LOG_INFO);
+			backgroundfetchserviceEvent.data = new Object();
+			backgroundfetchserviceEvent.data.information = "BackGroundFetchService.as subscriptionDeleteFailure " + (event.currentTarget.data ? event.currentTarget.data:"No info received from quickblox");
+			_instance.dispatchEvent(backgroundfetchserviceEvent);
+			destroySession();
 		}
 		
 		private static function createBloxSessionFailure(event:IOErrorEvent):void {
@@ -213,6 +354,46 @@ package services
 			var backgroundfetchserviceEvent:BackGroundFetchServiceEvent = new BackGroundFetchServiceEvent(BackGroundFetchServiceEvent.LOG_INFO);
 			backgroundfetchserviceEvent.data = new Object();
 			backgroundfetchserviceEvent.data.information = "BackGroundFetchService.as createBloxSessionFailure " + (event.currentTarget.data ? event.currentTarget.data:"No info received from quickblox");
+			_instance.dispatchEvent(backgroundfetchserviceEvent);
+		}
+		
+		private static function subscriptionSuccess(event:Event):void {
+			trace("BackGroundFetchService.as subscriptionSuccess");
+			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_SUBSCRIBED_TO_PUSH_NOTIFICATIONS, "true");
+			destroySession();
+		}
+		
+		private static function subscriptionFailure(event:IOErrorEvent):void {
+			trace("BackGroundFetchService.as subscriptionFailure" + (event.currentTarget.data ? event.currentTarget.data:""));
+			var backgroundfetchserviceEvent:BackGroundFetchServiceEvent = new BackGroundFetchServiceEvent(BackGroundFetchServiceEvent.LOG_INFO);
+			backgroundfetchserviceEvent.data = new Object();
+			backgroundfetchserviceEvent.data.information = "BackGroundFetchService.as subscriptionFailure " + (event.currentTarget.data ? event.currentTarget.data:"No info received from quickblox");
+			_instance.dispatchEvent(backgroundfetchserviceEvent);
+			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_SUBSCRIBED_TO_PUSH_NOTIFICATIONS, "false");
+			destroySession();
+		}
+		
+		private static function destroySession():void {
+			var loader:URLLoader = new URLLoader();
+			var request:URLRequest = new URLRequest(QUICKBLOX_DOMAIN + "/session.json");
+			request.method = URLRequestMethod.DELETE;					
+			request.requestHeaders.push(new URLRequestHeader("QuickBlox-REST-API-Version", QUICKBLOX_REST_API_VERSION));
+			request.requestHeaders.push(new URLRequestHeader("QB-Token", QB_Token));
+			request.contentType = "application/json";
+			loader.addEventListener(Event.COMPLETE, sessionDestroyed);
+			loader.addEventListener(IOErrorEvent.IO_ERROR, sessionDestroyFailure);
+			loader.load(request);
+		}
+		
+		private static function sessionDestroyed(event:Event):void  {
+			trace("BackGroundFetchService.as sessionDestroyed");
+		}
+		
+		private static function sessionDestroyFailure(event:Event):void  {
+			trace("BackGroundFetchService.as sessionDestroyFailure");
+			var backgroundfetchserviceEvent:BackGroundFetchServiceEvent = new BackGroundFetchServiceEvent(BackGroundFetchServiceEvent.LOG_INFO);
+			backgroundfetchserviceEvent.data = new Object();
+			backgroundfetchserviceEvent.data.information = "BackGroundFetchService.as sessionDestroyFailure " + (event.currentTarget.data ? event.currentTarget.data:"No info received from quickblox");
 			_instance.dispatchEvent(backgroundfetchserviceEvent);
 		}
 	}

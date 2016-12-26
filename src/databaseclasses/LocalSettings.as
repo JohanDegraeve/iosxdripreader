@@ -51,12 +51,27 @@ package databaseclasses
 		 * Permanent notification on home screen on or off 
 		 */
 		public static const LOCAL_SETTING_ALWAYS_ON_NOTIFICATION:int = 3;
+		/**
+		 * device token for remote push notifications 
+		 */
+		public static const LOCAL_SETTING_DEVICE_TOKEN_ID:int = 4;
+		/**
+		 * udid
+		 */
+		public static const LOCAL_SETTING_UDID:int = 5;
+		/**
+		 * subscribed to push notifications, true or false
+		 */
+		public static const LOCAL_SETTING_SUBSCRIBED_TO_PUSH_NOTIFICATIONS:int = 6;
 
 		private static var localSettings:Array = [
 			"false",//LOCAL_SETTING_DETAILED_TRACING_ENABLED
 			"",//LOCAL_SETTING_TRACE_FILE_NAME
 			"false",//LOCAL_SETTING_WARNING_THAT_NIGHTSCOUT_URL_AND_SECRET_IS_NOT_OK_ALREADY_GIVEN
-			"true"//LOCAL_SETTING_ALWAYS_ON_NOTIFICATION
+			"true",//LOCAL_SETTING_ALWAYS_ON_NOTIFICATION
+			"",//LOCAL_SETTING_DEVICE_TOKEN_ID
+			"",//LOCAL_SETTING_UDID
+			"false"//LOCAL_SETTING_SUBSCRIBED_TO_PUSH_NOTIFICATIONS
 		];
 		
 		public function LocalSettings() {

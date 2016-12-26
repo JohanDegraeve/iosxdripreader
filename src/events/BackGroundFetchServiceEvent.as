@@ -21,6 +21,8 @@ package events
 	[Event(name="LoadRequestResult",type="events.BackGroundFetchServiceEvent")]
 	[Event(name="LoadRequestERror",type="events.BackGroundFetchServiceEvent")]
 	[Event(name="PerformFetch",type="events.BackGroundFetchServiceEvent")]
+	[Event(name="DeviceTokenReceived",type="events.BackGroundFetchServiceEvent")]
+
 
 	public class BackGroundFetchServiceEvent extends GenericEvent
 	{
@@ -40,7 +42,10 @@ package events
 		 * performFetch received
 		 */
 		public static const PERFORM_FETCH:String = "PerformFetch";
-
+		/**
+		 * ios has sent device token, the token itself is not in the event
+		 */
+		public static const DEVICE_TOKEN_RECEIVED:String = "DeviceTokenReceived";
 
 		public var data:*;
 

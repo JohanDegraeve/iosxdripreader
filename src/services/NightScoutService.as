@@ -111,6 +111,7 @@ package services
 			BackGroundFetchService.instance.addEventListener(BackGroundFetchServiceEvent.LOAD_REQUEST_ERROR, defaultErrorFunction);
 			BackGroundFetchService.instance.addEventListener(BackGroundFetchServiceEvent.LOAD_REQUEST_RESULT, defaultSuccessFunction);
 			BackGroundFetchService.instance.addEventListener(BackGroundFetchServiceEvent.PERFORM_FETCH, performFetch);
+			BackGroundFetchService.instance.addEventListener(BackGroundFetchServiceEvent.DEVICE_TOKEN_RECEIVED, deviceTokenReceived);
 
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME) != CommonSettings.DEFAULT_SITE_NAME
 				&&
@@ -135,6 +136,12 @@ package services
 			function performFetch(event:BackGroundFetchServiceEvent):void {
 				trace("NightScoutService.as sync : performfetch");
 				sync();
+			}
+			
+			function deviceTokenReceived(event:BackGroundFetchServiceEvent):void {
+				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_URL_AND_API_SECRET_TESTED) == "true") {
+					BackGroundFetchService.registerPushNotification();					
+				}
 			}
 			
 			function bgreadingEventReceived(event:TransmitterServiceEvent):void {
@@ -211,6 +218,10 @@ package services
 			var nightScoutTreatmentsUrl:String = "https://" + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME) + "/api/v1/treatments";
 			createAndLoadURLRequest(nightScoutTreatmentsUrl + "/" + testUniqueId, URLRequestMethod.DELETE, null, null,sync, null);
 
+			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_DEVICE_TOKEN_ID) != "") {
+				BackGroundFetchService.registerPushNotification();
+			}
+			
 			if (ModelLocator.isInForeground) {
 				var alert:DialogView = Dialog.service.create(
 					new AlertBuilder()
@@ -227,7 +238,11 @@ package services
 			trace("NightScoutService.as nightScoutUrlTestError with information =  " + event.data.information as String);
 			functionToCallAtUpOrDownloadSuccess = null;
 			functionToCallAtUpOrDownloadFailure = null;
-			
+
+			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_DEVICE_TOKEN_ID) != "") {
+				BackGroundFetchService.deRegisterPushNotification();
+			}
+
 			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_WARNING_THAT_NIGHTSCOUT_URL_AND_SECRET_IS_NOT_OK_ALREADY_GIVEN) == "false" && ModelLocator.isInForeground) {
 				var errorMessage:String = ModelLocator.resourceManagerInstance.getString("nightscoutservice","nightscout_test_result_nok");
 				errorMessage += "\n" + event.data.information;
@@ -246,6 +261,18 @@ package services
 		}
 		
 		public static function sync(event:Event = null):void {
+			
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_URL_AND_API_SECRET_TESTED) ==  "true"
+				&& 
+				LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_DEVICE_TOKEN_ID) != ""
+				&&
+				LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_SUBSCRIBED_TO_PUSH_NOTIFICATIONS) == "false"
+			) {
+				trace("NightScoutService.as sync, url and secret tested, device token not empty and not subscribed, so registering now for push notifications");
+				BackGroundFetchService.registerPushNotification();
+			}
+				
+			
 			if (syncRunning) {
 				var nightScoutServiceEvent:NightScoutServiceEvent = new NightScoutServiceEvent(NightScoutServiceEvent.NIGHTSCOUT_SERVICE_INFORMATION_EVENT);
 				nightScoutServiceEvent.data = new Object();

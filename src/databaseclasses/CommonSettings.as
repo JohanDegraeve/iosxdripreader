@@ -86,11 +86,6 @@
 		 * transmitter id, 00000 is not set 
 		 */
 		 public static const COMMON_SETTING_TRANSMITTER_ID:int = 12;
-		 /**
-		 * device token for remote push notifications 
-		  */
-		 public static const COMMON_SETTING_DEVICE_TOKEN_ID:int = 13;
-		 
 		 private static var commonSettings:Array = [
 			 "0",//COMMON_SETTING_CURRENT_SENSOR
 			 "0",//COMMON_SETTING_TRANSMITTER_BATTERY_VOLTAGE
@@ -104,8 +99,7 @@
 			 "true",//COMMON_SETTING_DO_MGDL
 			 "70",//COMMON_SETTING_LOW_MARK
 			 "170",//COMMON_SETTING_HIGH_MARK
-			 "00000",//COMMON_SETTING_TRANSMITTER_ID
-			 ""//COMMON_SETTING_DEVICE_TOKEN_ID
+			 "00000"//COMMON_SETTING_TRANSMITTER_ID
 		 ];
 		 
 		 public function CommonSettings()
