@@ -61,6 +61,5 @@ package Utilities
 			returnValue += nonce[i];
 			return returnValue;
 		}
-		
 	}
 }

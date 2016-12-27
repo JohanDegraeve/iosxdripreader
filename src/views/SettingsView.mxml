@@ -25,7 +25,6 @@
 			
 			import model.ModelLocator;
 			
-			import services.BluetoothService;
 			import services.DialogService;
 			[ResourceBundle("settingsview")]
 			[ResourceBundle("calibrationservice")]
