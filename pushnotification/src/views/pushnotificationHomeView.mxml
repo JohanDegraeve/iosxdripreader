@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <s:View xmlns:fx="http://ns.adobe.com/mxml/2009" 
-		creationComplete="view1_creationCompleteHandler(event)"
+		initialize="view1_initializeHandler(event)"
 		xmlns:s="library://ns.adobe.com/flex/spark" title="PushNotification">
 
 	<fx:Script>
@@ -16,13 +16,15 @@
 			private static const QUICKBLOX_REST_API_VERSION:String = "0.1.0";
 			private static var QB_Token:String = "";
 			public static var ALPHA_CHAR_CODES:Array = ["0","1","2","3","4","5","6","7","8","9","a","b","c","d","e","f"];
-			private static var pushTimer:Timer
-			protected function view1_creationCompleteHandler(event:FlexEvent):void
+			private static var pushTimer:Timer;
+			
+			protected function view1_initializeHandler(event:FlexEvent):void
 			{
 				//Application.init(DistriqtKey.distriqtKey);
+				createSessionQuickBlox();
 			}
 	
-			private static function createSessionQuickBlox():void {
+			private function createSessionQuickBlox():void {
 				//var udid:String = Application.service.device.uniqueId("vendor", true);
 				var nonce:String = createNonce(10);
 				var timeStamp:String = (new Date()).valueOf().toString().substr(0, 10);
@@ -138,6 +140,8 @@
 					returnValue += nonce[i];
 				return returnValue;
 			}
+			
+			
 		]]>
 	</fx:Script>
 

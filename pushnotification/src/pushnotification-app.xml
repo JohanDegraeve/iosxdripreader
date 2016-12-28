@@ -304,10 +304,16 @@
     <iPhone>
         <InfoAdditions><![CDATA[
 			<key>UIDeviceFamily</key>
-			<array>
-				<string>1</string>
-				<string>2</string>
-			</array>
+				<array>
+					<string>1</string>
+					<string>2</string>
+				</array>
+			<key>UIBackgroundModes</key>
+				<array>
+					<string>bluetooth-central</string>
+					<string>fetch</string>
+					<string>remote-notification</string>
+				</array>
 		]]></InfoAdditions>
         <requestedDisplayResolution>high</requestedDisplayResolution>
     </iPhone>
