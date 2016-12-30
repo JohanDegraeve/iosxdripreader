@@ -237,8 +237,9 @@ package services
 		}
 		
 		private static function signUpQuickBlox():void {
+			var taglist = "ALL";
 			var udid:String = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_UDID);
-			var postBody:String = '{"user": {"login": "' + udid + '", "password": "' + QuickBloxSecrets.GenericUserPassword + '"}}';
+			var postBody:String = '{"user": {"login": "' + udid + '", "password": "' + QuickBloxSecrets.GenericUserPassword + '", "tag_list": "' + taglist +'"}}';
 			var loader:URLLoader = new URLLoader();
 			var request:URLRequest = new URLRequest(QUICKBLOX_DOMAIN + "/users.json");
 			request.method = URLRequestMethod.POST;					
