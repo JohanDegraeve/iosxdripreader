@@ -58,6 +58,8 @@ package services
 		
 		private static var register:Boolean = false;
 		
+		private static var tagList:String = "ALL";
+		
 		public static function get instance():BackGroundFetchService {
 			return _instance;
 		}
@@ -113,7 +115,7 @@ package services
 				backgroundfetchserviceLogInfo.data.information = "BackGroundFetchService.as new device_token received, start update at quickBlox";
 				_instance.dispatchEvent(backgroundfetchserviceLogInfo);
 				register = true;
-				createSessionQuickBlox();
+				registerPushNotification(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_SUBSCRIPTION_TAG));
 			} else {
 				
 			}
@@ -185,8 +187,13 @@ package services
 			_instance.dispatchEvent(backgroundfetchserviceEvent);
 		}
 		
-		public static function registerPushNotification():void {
+		/**
+		 * tags to subscribe too, if empty then it will subscribe tag "ALL"<br>
+		 * Can be comma separated list of tags
+		 */
+		public static function registerPushNotification(newTagList):void {
 			register = true;
+			tagList = newTagList;
 			createSessionQuickBlox();
 		}
 		
@@ -237,9 +244,8 @@ package services
 		}
 		
 		private static function signUpQuickBlox():void {
-			var taglist = "ALL";
 			var udid:String = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_UDID);
-			var postBody:String = '{"user": {"login": "' + udid + '", "password": "' + QuickBloxSecrets.GenericUserPassword + '", "tag_list": "' + taglist +'"}}';
+			var postBody:String = '{"user": {"login": "' + udid + '", "password": "' + QuickBloxSecrets.GenericUserPassword + '", "tag_list": "' + tagList +'"}}';
 			var loader:URLLoader = new URLLoader();
 			var request:URLRequest = new URLRequest(QUICKBLOX_DOMAIN + "/users.json");
 			request.method = URLRequestMethod.POST;					
@@ -290,10 +296,49 @@ package services
 			trace("BackGroundFetchService.as signInSuccess");
 			var eventAsJSONObject:Object = JSON.parse(event.target.data as String);
 			
-			if (register)
-				createSubscription();
+			if (register) {
+				if (eventAsJSONObject.user.user_tags != tagList) {
+					updateUser(eventAsJSONObject.user);
+				} else  {
+					createSubscription();
+				}
+			}
 			else
 				deleteUser(new Number(eventAsJSONObject.user.id));
+		}
+		
+		private static function updateUser(user:Object):void {
+			//create new user without all the null properties
+			var newUser:Object = new Object;
+			newUser.tag_list = tagList;
+			var data:Object = new Object;
+			data.user = newUser;
+			
+			var postBody:String = JSON.stringify(data);
+			var loader:URLLoader = new URLLoader();
+			var request:URLRequest = new URLRequest(QUICKBLOX_DOMAIN + "/users/" + user.id + ".json");
+			request.method = URLRequestMethod.PUT;					
+			request.data = postBody;
+			request.contentType = "application/json";
+			request.requestHeaders.push(new URLRequestHeader("QuickBlox-REST-API-Version", QUICKBLOX_REST_API_VERSION));
+			request.requestHeaders.push(new URLRequestHeader("QB-Token", QB_Token));
+			loader.addEventListener(Event.COMPLETE, updateUserSuccess);
+			loader.addEventListener(IOErrorEvent.IO_ERROR, updateUserFailure);
+			loader.load(request);
+		}
+		
+		private static function updateUserSuccess(event:Event):void {
+			trace("BackGroundFetchService.as updateUserSuccess");
+			createSubscription();
+		}
+		
+		private static function updateUserFailure(event:IOErrorEvent):void {
+			trace("BackGroundFetchService.as updateUserFailure" + (event.currentTarget.data ? event.currentTarget.data:""));
+			var backgroundfetchserviceEvent:BackGroundFetchServiceEvent = new BackGroundFetchServiceEvent(BackGroundFetchServiceEvent.LOG_INFO);
+			backgroundfetchserviceEvent.data = new Object();
+			backgroundfetchserviceEvent.data.information = "BackGroundFetchService.as updateUserFailure " + (event.currentTarget.data ? event.currentTarget.data:"No info received from quickblox");
+			_instance.dispatchEvent(backgroundfetchserviceEvent);
+			createSubscription();
 		}
 		
 		private static function signInFailure(event:IOErrorEvent):void {

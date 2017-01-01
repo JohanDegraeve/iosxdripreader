@@ -11,10 +11,11 @@ package services
 	
 	import flash.events.Event;
 	import flash.events.EventDispatcher;
-	import flash.events.IOErrorEvent;
 	import flash.net.URLLoader;
 	import flash.net.URLRequestMethod;
 	import flash.net.URLVariables;
+	
+	import mx.collections.ArrayCollection;
 	
 	import spark.formatters.DateTimeFormatter;
 	
@@ -140,11 +141,12 @@ package services
 			
 			function deviceTokenReceived(event:BackGroundFetchServiceEvent):void {
 				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_URL_AND_API_SECRET_TESTED) == "true") {
-					BackGroundFetchService.registerPushNotification();					
+					BackGroundFetchService.registerPushNotification(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_SUBSCRIPTION_TAG));					
 				}
 			}
 			
 			function bgreadingEventReceived(event:TransmitterServiceEvent):void {
+				calculateTag();
 				sync();
 			}
 			
@@ -191,6 +193,58 @@ package services
 			}
 		}
 		
+		private static function calculateTag():void {
+			var latestReadings:ArrayCollection = BgReading.latestBySize(1);
+			
+			if (latestReadings.length > 0) { 
+				var minute:Number = (new Date((latestReadings[0]  as BgReading).timestamp)).minutesUTC;
+				var tagNumber:int = minute % 5;
+				var settingChanged:Boolean = false;
+				//example if bgreading is generated in minute 24, tagnumber = 4
+				switch (tagNumber) { 
+					case 0:
+						if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_SUBSCRIPTION_TAG) != "ALL,TWO") {
+							LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_SUBSCRIPTION_TAG, "ALL,TWO");
+							settingChanged = true;
+						}
+						break;
+					case 1:
+						if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_SUBSCRIPTION_TAG) != "ALL,THREE") {
+							LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_SUBSCRIPTION_TAG, "ALL,THREE");
+							settingChanged = true;
+						}
+						break;
+					case 2:
+						if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_SUBSCRIPTION_TAG) != "ALL,FOUR") {
+							LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_SUBSCRIPTION_TAG, "ALL,FOUR");
+							settingChanged = true;
+						}
+						break;
+					case 3:
+						if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_SUBSCRIPTION_TAG) != "ALL,FIVE") {
+							LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_SUBSCRIPTION_TAG, "ALL,FIVE");
+							settingChanged = true;
+						}
+						break;
+					case 4:
+						if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_SUBSCRIPTION_TAG) != "ALL,ONE") {
+							LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_SUBSCRIPTION_TAG, "ALL,ONE");
+							settingChanged = true;
+						}
+						break;
+				}
+				
+				if (settingChanged) {
+					if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_URL_AND_API_SECRET_TESTED) ==  "true"
+						&& 
+						LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_DEVICE_TOKEN_ID) != ""
+					) {
+						BackGroundFetchService.registerPushNotification(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_SUBSCRIPTION_TAG));
+					}
+				}
+			}
+		}
+
 		private static function testNightScoutUrlAndSecret():void {
 			//test if network is available
 			if (NetworkInfo.networkInfo.isReachable()) {
@@ -219,7 +273,7 @@ package services
 			createAndLoadURLRequest(nightScoutTreatmentsUrl + "/" + testUniqueId, URLRequestMethod.DELETE, null, null,sync, null);
 
 			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_DEVICE_TOKEN_ID) != "") {
-				BackGroundFetchService.registerPushNotification();
+				BackGroundFetchService.registerPushNotification(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_SUBSCRIPTION_TAG));
 			}
 			
 			if (ModelLocator.isInForeground) {
@@ -269,7 +323,7 @@ package services
 				LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_SUBSCRIBED_TO_PUSH_NOTIFICATIONS) == "false"
 			) {
 				trace("NightScoutService.as sync, url and secret tested, device token not empty and not subscribed, so registering now for push notifications");
-				BackGroundFetchService.registerPushNotification();
+				BackGroundFetchService.registerPushNotification(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_SUBSCRIPTION_TAG));
 			}
 				
 			

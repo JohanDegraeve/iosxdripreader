@@ -63,6 +63,17 @@ package databaseclasses
 		 * subscribed to push notifications, true or false
 		 */
 		public static const LOCAL_SETTING_SUBSCRIBED_TO_PUSH_NOTIFICATIONS:int = 6;
+		/**
+		 * related to subscribing for push notifications at quickblox.<br>
+		 * The app will receive remote notifications that will trigger background fetch<br>
+		 * This needs to be synchronized with the timing that the transmitter generates readings<br>
+		 * Quickblox will send a remote notifications every minute, with a tag ONE, TWO, THREE, FOUR or FIVE<BR>
+		 * ONE will be sent at 00:00 (or a few seconds later). If the timing of the bg readings is between  55:00 and 59:59 then the app needs to subscribe to ONE,
+		 * if later then TWO, THREE, ...<br>
+		 * Default value ALL means device will receive all notifications<br>
+		 * Multiple values are possible example "ALL,ONE"
+		 */
+		public static const LOCAL_SETTING_SUBSCRIPTION_TAG:int = 7;
 
 		private static var localSettings:Array = [
 			"false",//LOCAL_SETTING_DETAILED_TRACING_ENABLED
@@ -71,7 +82,8 @@ package databaseclasses
 			"true",//LOCAL_SETTING_ALWAYS_ON_NOTIFICATION
 			"",//LOCAL_SETTING_DEVICE_TOKEN_ID
 			"",//LOCAL_SETTING_UDID
-			"false"//LOCAL_SETTING_SUBSCRIBED_TO_PUSH_NOTIFICATIONS
+			"false",//LOCAL_SETTING_SUBSCRIBED_TO_PUSH_NOTIFICATIONS
+			"ALL"//LOCAL_SETTING_LAST_SUBSCRIBED_TAG
 		];
 		
 		public function LocalSettings() {
