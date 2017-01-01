@@ -37,6 +37,8 @@ package services
 	import Utilities.Trace;
 	
 	import databaseclasses.BlueToothDevice;
+	import databaseclasses.CommonSettings;
+	import databaseclasses.LocalSettings;
 	
 	import distriqtkey.DistriqtKey;
 	
@@ -96,6 +98,7 @@ package services
 		private static const uuids_HM_10_Service:Vector.<String> = new <String>[HM10Attributes.HM_10_SERVICE];
 		private static const uuids_HM_RX_TX:Vector.<String> = new <String>[HM10Attributes.HM_RX_TX];
 		private static const debugMode:Boolean = false;
+		private static var amountOfReconnectAttempts:int = 0;
 		
 		private static function set activeBluetoothPeripheral(value:Peripheral):void
 		{
@@ -316,6 +319,16 @@ package services
 		}
 		
 		private static function central_peripheralConnectHandler(event:PeripheralEvent):void {
+			amountOfReconnectAttempts = 0;
+			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_DEVICE_TOKEN_ID) != ""
+				&&
+				CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_URL_AND_API_SECRET_TESTED) !=  "true"
+			) {
+				trace("BluetoothService.as, connected to device, but nightscout url and secret not tested, deregistering qblox");
+				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_SUBSCRIPTION_TAG, "ALL");
+				BackGroundFetchService.deRegisterPushNotification();
+			}
+			
 			if (reconnectTimer != null) {
 				if (reconnectTimer.running) {
 					reconnectTimer.stop();
@@ -386,6 +399,34 @@ package services
 		
 		private static function central_peripheralDisconnectHandler(event:Event = null):void {
 			dispatchInformation('disconnected_from_device');
+			
+			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_DEVICE_TOKEN_ID) != ""
+				&&
+				BlueToothDevice.known()
+				&&
+				BluetoothLE.service.centralManager.state == BluetoothLEState.STATE_ON
+			) {
+				amountOfReconnectAttempts++;
+				if (amountOfReconnectAttempts < 10) {//10  every minute
+					if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_SUBSCRIPTION_TAG) != "ALL,ONE,TWO,THREE,FOUR,FIVE") {
+						LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_SUBSCRIPTION_TAG, "ALL,ONE,TWO,THREE,FOUR,FIVE");
+						BackGroundFetchService.registerPushNotification("ALL,ONE,TWO,THREE,FOUR,FIVE");
+						trace("BluetoothService.as, disconnected from device, registering to qblox for all notifications");
+					}
+				} else if (amountOfReconnectAttempts < 20) {//another 10  every 2,5 minute
+					if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_SUBSCRIPTION_TAG) != "ALL,ONE,FOUR") {
+						LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_SUBSCRIPTION_TAG, "ALL,ONE,FOUR");
+						BackGroundFetchService.registerPushNotification("ALL,ONE,FOUR");
+						trace("BluetoothService.as, disconnected from device, registering to qblox for ALL and ONE and FOUR notifications");
+					}
+				} else {//as of 21st every 5 minutes
+					if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_SUBSCRIPTION_TAG) != "ALL,ONE") {
+						LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_SUBSCRIPTION_TAG, "ALL,ONE");
+						BackGroundFetchService.registerPushNotification("ALL,ONE");
+						trace("BluetoothService.as, disconnected from device, registering to qblox for ALL and ONE notifications");
+					}
+				}
+			}
 
 			if (reconnectTimer != null) {
 				if (reconnectTimer.running) {
@@ -441,7 +482,7 @@ package services
 		}
 		
 		public static function tryReconnect(event:Event = null):void {
-
+			trace("BluetoothService.as tryReconnect");
 			if (reconnectTimer != null) {
 				if (reconnectTimer.running) {
 					reconnectTimer.stop();
@@ -455,7 +496,6 @@ package services
 				}
 				connectionAttemptCheckTimer = null;
 			}
-
 			
 			if ((BluetoothLE.service.centralManager.state == BluetoothLEState.STATE_ON)) {
 				bluetoothStatusIsOn();
@@ -626,6 +666,7 @@ package services
 			blueToothServiceEvent.data = new Object();
 			blueToothServiceEvent.data.information = ModelLocator.resourceManagerInstance.getString("bluetoothservice",informationResourceName);
 			_instance.dispatchEvent(blueToothServiceEvent);
+			//trace("BluetoothService.as " + ModelLocator.resourceManagerInstance.getString("bluetoothservice",informationResourceName));
 		}
 		
 		

@@ -108,11 +108,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			private static var currentInfoUpdateTimer:Timer;
 			
 			
-			/**
-			 * connected or not. Should be replaced by if (BluetoothService.getActiveBluetoothPeripheral().state == PeripheralState.CONNECTED)<br>
-			 * but this last one is not working see https://github.com/distriqt/ANE-BluetoothLE/issues/8
-			 */
-			private static var peripheralConnected:Boolean = false;
+			private static var _peripheralConnected:Boolean = false;
 			/**
 			 * timestamp that has changed connection status<br> 
 			 */
@@ -130,6 +126,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			[Bindable]
 			private static var currentBgLabelColor:int = 0xFFFFFF;
 			
+			/**
+			 * connected or not. Should be replaced by if (BluetoothService.getActiveBluetoothPeripheral().state == PeripheralState.CONNECTED)<br>
+			 * but this last one is not working see https://github.com/distriqt/ANE-BluetoothLE/issues/8
+			 */
+			public static function get peripheralConnected():Boolean
+			{
+				return _peripheralConnected;
+			}
+
 			protected function onCreationComplete(event:FlexEvent):void
 			{
 				if (initialStart) {
@@ -167,7 +172,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 				function bgReadingNotReceivedOnTime(event:TimerServiceEvent):void {
 					displayCurrentInfoFromReading();
 					NotificationService.updateAllNotifications(null);
-					if (!peripheralConnected) {
+					if (!_peripheralConnected) {
 						if ((new Date().valueOf() - peripheralConnectionStatusChangeTimestamp) > TimerService.DELAY_FOR_CHECKING_BGREADING_IN_SECONDS) {
 							currentState = "bluetoothred";
 						}
@@ -239,8 +244,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			
 			private function bluetoothDeviceConnectionCompleted(event:BlueToothServiceEvent):void {
 				currentState = "bluetoothgreen";
-				if (!peripheralConnected) {
-					peripheralConnected = true;
+				if (!_peripheralConnected) {
+					_peripheralConnected = true;
 					peripheralConnectionStatusChangeTimestamp = (new Date()).valueOf();
 				}
 			}
@@ -261,8 +266,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			}
 			
 			private function central_peripheralDisconnectHandler(event:PeripheralEvent):void {
-				if (peripheralConnected) {
-					peripheralConnected = false;
+				if (_peripheralConnected) {
+					_peripheralConnected = false;
 					peripheralConnectionStatusChangeTimestamp = (new Date()).valueOf();
 				}
 				if ((BluetoothLE.service.centralManager.state == BluetoothLEState.STATE_ON) && BlueToothDevice.known() && ((new Date().valueOf() - peripheralConnectionStatusChangeTimestamp) < TimerService.DELAY_FOR_CHECKING_BGREADING_IN_SECONDS)) {
@@ -275,7 +280,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			private function bluetoothStateChangedHandler(event:BluetoothLEEvent):void {
 				if (BluetoothLE.service.centralManager.state == BluetoothLEState.STATE_ON) {
 					if (BluetoothService.bluetoothPeripheralActive()) {
-						if (peripheralConnected) {
+						if (_peripheralConnected) {
 							//peripheral is known in bluetoothservice and it is connected
 							currentState = "bluetoothgreen";
 						} else {

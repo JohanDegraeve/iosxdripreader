@@ -24,6 +24,8 @@ package services
 	
 	import quickbloxsecrets.QuickBloxSecrets;
 	
+	import views.HomeView;
+	
 	/**
 	 * controls all services that need up or download<br>
 	 * 
@@ -92,6 +94,14 @@ package services
 		
 		private static function performFetch(event:BackgroundFetchEvent):void {
 			trace("BackGroundFetchService.as performFetch");
+
+			//if bluetooth is not connected then ios suspended the app, the performfetch actually activate the app
+			//time to try to reconnect
+			if (!HomeView.peripheralConnected) {
+				trace("BackGroundFetchService.as peripheral not connected, calling bluetoothservice.tryreconnect");
+				BluetoothService.tryReconnect(null);
+			}
+			
 			var backgroundfetchServiceEvent:BackGroundFetchServiceEvent = new BackGroundFetchServiceEvent(BackGroundFetchServiceEvent.LOG_INFO);
 			backgroundfetchServiceEvent.data = new Object();
 			backgroundfetchServiceEvent.data.information = "BackGroundFetchService.as performFetch";

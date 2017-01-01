@@ -147,7 +147,12 @@ package services
 			
 			function bgreadingEventReceived(event:TransmitterServiceEvent):void {
 				calculateTag();
-				sync();
+				
+				if (!ModelLocator.isInForeground) {
+					trace("NightScoutService.as bgreadingEventReceived started but not in foreground, not starting sync");
+				} else {
+					sync();
+				}
 			}
 			
 			function networkChanged(event:NetworkInfoEvent):void {
