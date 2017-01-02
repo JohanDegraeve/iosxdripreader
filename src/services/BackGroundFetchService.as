@@ -60,7 +60,8 @@ package services
 		
 		private static var register:Boolean = false;
 		
-		private static var tagList:String = "ALL";
+		private static var wishedTagList:String = "ALL";
+		private static var currentTagList:String = "ALL";
 		
 		public static function get instance():BackGroundFetchService {
 			return _instance;
@@ -102,20 +103,21 @@ package services
 				BluetoothService.tryReconnect(null);
 			}
 			
-			var backgroundfetchServiceEvent:BackGroundFetchServiceEvent = new BackGroundFetchServiceEvent(BackGroundFetchServiceEvent.LOG_INFO);
-			backgroundfetchServiceEvent.data = new Object();
-			backgroundfetchServiceEvent.data.information = "BackGroundFetchService.as performFetch";
-			_instance.dispatchEvent(backgroundfetchServiceEvent);
-			var backgroundfetchServiceEvent:BackGroundFetchServiceEvent = new BackGroundFetchServiceEvent(BackGroundFetchServiceEvent.PERFORM_FETCH);
-			backgroundfetchServiceEvent.data = new Object();
-			backgroundfetchServiceEvent.data.information = event.data.result as String;
-			_instance.dispatchEvent(backgroundfetchServiceEvent);
+			if (!ModelLocator.isInForeground) {
+				var backgroundfetchServiceEvent:BackGroundFetchServiceEvent = new BackGroundFetchServiceEvent(BackGroundFetchServiceEvent.LOG_INFO);
+				backgroundfetchServiceEvent.data = new Object();
+				backgroundfetchServiceEvent.data.information = "BackGroundFetchService.as performFetch";
+				_instance.dispatchEvent(backgroundfetchServiceEvent);
+				var backgroundfetchServiceEvent:BackGroundFetchServiceEvent = new BackGroundFetchServiceEvent(BackGroundFetchServiceEvent.PERFORM_FETCH);
+				backgroundfetchServiceEvent.data = new Object();
+				backgroundfetchServiceEvent.data.information = event.data.result as String;
+				_instance.dispatchEvent(backgroundfetchServiceEvent);
+			}
 		}
 		
 		private static function deviceTokenReceived(event:BackgroundFetchEvent):void {
 			trace("BackGroundFetchService.as deviceTokenReceived ");// + event.data.token);
 			var token:String = (event.data.token as String).replace("<","").replace(">","").replace(" ","").replace(" ","").replace(" ","").replace(" ","").replace(" ","").replace(" ","").replace(" ","").replace(" ","").replace(" ","").replace(" ","").replace(" ","");
-			trace("BackGroundFetchService.as deviceTokenReceived  = " + token);
 			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_DEVICE_TOKEN_ID, token);
 			
 			//if already registered for push notifications, then update the token
@@ -203,7 +205,7 @@ package services
 		 */
 		public static function registerPushNotification(newTagList):void {
 			register = true;
-			tagList = newTagList;
+			wishedTagList = newTagList;
 			createSessionQuickBlox();
 		}
 		
@@ -254,8 +256,13 @@ package services
 		}
 		
 		private static function signUpQuickBlox():void {
+			var backgroundfetchserviceEvent:BackGroundFetchServiceEvent = new BackGroundFetchServiceEvent(BackGroundFetchServiceEvent.LOG_INFO);
+			backgroundfetchserviceEvent.data = new Object();
+			backgroundfetchserviceEvent.data.information = "BackGroundFetchService.as signUpQuickBlox with tag_list = " + wishedTagList;
+			_instance.dispatchEvent(backgroundfetchserviceEvent);
+
 			var udid:String = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_UDID);
-			var postBody:String = '{"user": {"login": "' + udid + '", "password": "' + QuickBloxSecrets.GenericUserPassword + '", "tag_list": "' + tagList +'"}}';
+			var postBody:String = '{"user": {"login": "' + udid + '", "password": "' + QuickBloxSecrets.GenericUserPassword + '", "tag_list": "' + wishedTagList +'"}}';
 			var loader:URLLoader = new URLLoader();
 			var request:URLRequest = new URLRequest(QUICKBLOX_DOMAIN + "/users.json");
 			request.method = URLRequestMethod.POST;					
@@ -281,6 +288,11 @@ package services
 					if (eventAsJSONObject.errors.login) {
 						if ((eventAsJSONObject.errors.login[0] as String) == "has already been taken"){
 							userSignInQuickBlox();
+						} else {
+							var backgroundfetchserviceEvent:BackGroundFetchServiceEvent = new BackGroundFetchServiceEvent(BackGroundFetchServiceEvent.LOG_INFO);
+							backgroundfetchserviceEvent.data = new Object();
+							backgroundfetchserviceEvent.data.information = "BackGroundFetchService.as signUpFailure" + (event.currentTarget.data ? event.currentTarget.data:"");
+							_instance.dispatchEvent(backgroundfetchserviceEvent);
 						}
 					}
 				}
@@ -307,9 +319,10 @@ package services
 			var eventAsJSONObject:Object = JSON.parse(event.target.data as String);
 			
 			if (register) {
-				if (eventAsJSONObject.user.user_tags != tagList) {
-					updateUser(eventAsJSONObject.user);
-				} else  {
+				if (eventAsJSONObject.user.user_tags != wishedTagList) {
+					currentTagList = eventAsJSONObject.user.user_tags;
+					updateUserTagList(eventAsJSONObject.user);
+				} else {
 					createSubscription();
 				}
 			}
@@ -317,10 +330,10 @@ package services
 				deleteUser(new Number(eventAsJSONObject.user.id));
 		}
 		
-		private static function updateUser(user:Object):void {
+		private static function updateUserTagList(user:Object):void {
 			//create new user without all the null properties
 			var newUser:Object = new Object;
-			newUser.tag_list = tagList;
+			newUser.tag_list = wishedTagList;
 			var data:Object = new Object;
 			data.user = newUser;
 			
@@ -338,16 +351,23 @@ package services
 		}
 		
 		private static function updateUserSuccess(event:Event):void {
-			trace("BackGroundFetchService.as updateUserSuccess");
+			trace("BackGroundFetchService.as updateUserSuccess with taglist " + wishedTagList);
+			
+			var backgroundfetchserviceEvent:BackGroundFetchServiceEvent = new BackGroundFetchServiceEvent(BackGroundFetchServiceEvent.LOG_INFO);
+			backgroundfetchserviceEvent.data = new Object();
+			backgroundfetchserviceEvent.data.information = "BackGroundFetchService.as updateUserSuccess with new tag list = " + wishedTagList;
+			_instance.dispatchEvent(backgroundfetchserviceEvent);
+
 			createSubscription();
 		}
 		
 		private static function updateUserFailure(event:IOErrorEvent):void {
-			trace("BackGroundFetchService.as updateUserFailure" + (event.currentTarget.data ? event.currentTarget.data:""));
+			trace("BackGroundFetchService.as updateUserFailure, resetting taglist in settings to value received from quickblox = " + currentTagList + ", event.currentTarget.data = " + (event.currentTarget.data ? event.currentTarget.data:"No info received from quickblox"));
 			var backgroundfetchserviceEvent:BackGroundFetchServiceEvent = new BackGroundFetchServiceEvent(BackGroundFetchServiceEvent.LOG_INFO);
 			backgroundfetchserviceEvent.data = new Object();
-			backgroundfetchserviceEvent.data.information = "BackGroundFetchService.as updateUserFailure " + (event.currentTarget.data ? event.currentTarget.data:"No info received from quickblox");
+			backgroundfetchserviceEvent.data.information = "BackGroundFetchService.as updateUserFailure, resetting taglist in settings to value received from quickblox = " + currentTagList + ", event.currentTarget.data = " + (event.currentTarget.data ? event.currentTarget.data:"No info received from quickblox");
 			_instance.dispatchEvent(backgroundfetchserviceEvent);
+			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_SUBSCRIPTION_TAG, currentTagList);
 			createSubscription();
 		}
 		
@@ -391,7 +411,7 @@ package services
 		}
 		
 		private static function userDeleteSuccess(event:Event):void {
-			trace("BackGroundFetchService.as subscriptionDeleteSuccess");
+			trace("BackGroundFetchService.as userDeleteSuccess");
 			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_SUBSCRIBED_TO_PUSH_NOTIFICATIONS, "false");
 			destroySession();
 		}
@@ -400,7 +420,7 @@ package services
 			trace("BackGroundFetchService.as subscriptionDeleteFailure" + (event.currentTarget.data ? event.currentTarget.data:""));
 			var backgroundfetchserviceEvent:BackGroundFetchServiceEvent = new BackGroundFetchServiceEvent(BackGroundFetchServiceEvent.LOG_INFO);
 			backgroundfetchserviceEvent.data = new Object();
-			backgroundfetchserviceEvent.data.information = "BackGroundFetchService.as subscriptionDeleteFailure " + (event.currentTarget.data ? event.currentTarget.data:"No info received from quickblox");
+			backgroundfetchserviceEvent.data.information = "BackGroundFetchService.as userDeleteFailure " + (event.currentTarget.data ? event.currentTarget.data:"No info received from quickblox");
 			_instance.dispatchEvent(backgroundfetchserviceEvent);
 			destroySession();
 		}

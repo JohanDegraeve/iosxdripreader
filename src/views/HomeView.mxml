@@ -35,7 +35,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			import com.distriqt.extension.bluetoothle.events.PeripheralEvent;
 			import com.distriqt.extension.dialog.DateTimeDialogView;
 			import com.distriqt.extension.dialog.Dialog;
-			import com.distriqt.extension.dialog.DialogTheme;
 			import com.distriqt.extension.dialog.DialogType;
 			import com.distriqt.extension.dialog.DialogView;
 			import com.distriqt.extension.dialog.builders.ActionSheetBuilder;
@@ -46,7 +45,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			import com.distriqt.extension.dialog.objects.DialogAction;
 			
 			import mx.events.FlexEvent;
-			import mx.formatters.DateFormatter;
 			
 			import spark.formatters.DateTimeFormatter;
 			
@@ -240,7 +238,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_INITIAL_INFO_SCREEN_1_SHOWN,"true");
 				}
 			}
-			
 			
 			private function bluetoothDeviceConnectionCompleted(event:BlueToothServiceEvent):void {
 				currentState = "bluetoothgreen";

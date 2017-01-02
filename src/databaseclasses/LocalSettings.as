@@ -83,7 +83,7 @@ package databaseclasses
 			"",//LOCAL_SETTING_DEVICE_TOKEN_ID
 			"",//LOCAL_SETTING_UDID
 			"false",//LOCAL_SETTING_SUBSCRIBED_TO_PUSH_NOTIFICATIONS
-			"ALL"//LOCAL_SETTING_LAST_SUBSCRIBED_TAG
+			"ALL"//LOCAL_SETTING_SUBSCRIPTION_TAG
 		];
 		
 		public function LocalSettings() {

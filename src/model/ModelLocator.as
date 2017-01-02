@@ -290,7 +290,7 @@ package model
 							Application.init(DistriqtKey.distriqtKey);
 							if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_UDID) == "")
 								LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_UDID, Application.service.device.uniqueId("vendor", true));
-							trace("unique device id = " + LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_UDID));
+							//trace("unique device id = " + LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_UDID));
 							Message.init(DistriqtKey.distriqtKey);
 							TransmitterService.init();
 							BluetoothService.init();

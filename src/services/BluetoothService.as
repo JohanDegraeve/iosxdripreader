@@ -323,8 +323,12 @@ package services
 			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_DEVICE_TOKEN_ID) != ""
 				&&
 				CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_URL_AND_API_SECRET_TESTED) !=  "true"
+				&&
+				LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_SUBSCRIBED_TO_PUSH_NOTIFICATIONS) ==  "true"
 			) {
 				trace("BluetoothService.as, connected to device, but nightscout url and secret not tested, deregistering qblox");
+				//may be a bit unlogic at start up, because at start up, user does not even exist yet, calling deregister will cause creating the
+				//user and redeleting it 
 				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_SUBSCRIPTION_TAG, "ALL");
 				BackGroundFetchService.deRegisterPushNotification();
 			}
