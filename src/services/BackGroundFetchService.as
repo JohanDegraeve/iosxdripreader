@@ -7,19 +7,21 @@ package services
 	import flash.events.Event;
 	import flash.events.EventDispatcher;
 	import flash.events.IOErrorEvent;
+	import flash.events.TimerEvent;
 	import flash.net.URLLoader;
 	import flash.net.URLRequest;
 	import flash.net.URLRequestHeader;
 	import flash.net.URLRequestMethod;
 	import flash.net.URLVariables;
 	import flash.utils.ByteArray;
+	import flash.utils.Timer;
 	
 	import Utilities.UniqueId;
 	
-	import databaseclasses.CommonSettings;
 	import databaseclasses.LocalSettings;
 	
 	import events.BackGroundFetchServiceEvent;
+	import events.BlueToothServiceEvent;
 	
 	import model.ModelLocator;
 	
@@ -64,6 +66,11 @@ package services
 		private static var wishedTagList:String = "ALL";
 		private static var currentTagList:String = "ALL";
 		
+		private static var attemptingBluetoothReconnect:Boolean = false;
+		private static var waitingSyncResponse:Boolean = false;
+		private static var syncResponse:String = NO_DATA;
+		private static var reconnectAttemptTimer:Timer;
+		
 		public static function get instance():BackGroundFetchService {
 			return _instance;
 		}
@@ -87,11 +94,40 @@ package services
 			BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.PERFORMFETCH, performFetch);
 			BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.DEVICE_TOKEN_RECEIVED, deviceTokenReceived);
 			BackgroundFetch.minimumBackgroundFetchInterval = BackgroundFetch.BACKGROUND_FETCH_INTERVAL_MINIMUM;
+			BluetoothService.instance.addEventListener(BlueToothServiceEvent.BLUETOOTH_DEVICE_CONNECTION_COMPLETED, bluetoothDeviceConnectionCompleted);
 		}
 		
+		private static function bluetoothDeviceConnectionCompleted(event:BlueToothServiceEvent):void {
+			if (attemptingBluetoothReconnect) {
+				trace("BackGroundFetchService.as bluetoothDeviceConnectionCompleted waiting bluetoothreconnect = true");
+				attemptingBluetoothReconnect = false;
+				if (!waitingSyncResponse) {
+					trace("BackGroundFetchService.as bluetoothDeviceConnectionCompleted watingsyncresponse = false, calling callcompletion");
+					callCompletionHandler(syncResponse);
+				}
+			}
+		}
+
 		public static function callCompletionHandler(result:String):void {
 			trace("BackGroundFetchService.as callCompletionhandler with result " + result);
-			BackgroundFetch.callCompletionHandler(result);
+			waitingSyncResponse = false;
+			if (attemptingBluetoothReconnect) {
+				trace("attemptingBluetoothReconnect = true, setting syncresponse to result");
+				syncResponse = result;
+			} else {
+				trace("attemptingBluetoothReconnect = false, calling callcompletionhandler");
+				BackgroundFetch.callCompletionHandler(result);
+				syncResponse = NO_DATA;
+				if (reconnectAttemptTimer != null)
+					if (reconnectAttemptTimer.running)
+						reconnectAttemptTimer.stop();
+			}
+		}
+		
+		private static function reconnectTimerExpiry(event:TimerEvent):void {
+			waitingSyncResponse = false;
+			attemptingBluetoothReconnect = false;
+			callCompletionHandler(syncResponse);
 		}
 		
 		private static function performFetch(event:BackgroundFetchEvent):void {
@@ -99,12 +135,16 @@ package services
 
 			//if bluetooth is not connected then ios suspended the app, the performfetch actually activates the app
 			//time to try to reconnect
-			if (!HomeView.peripheralConnected) {
-				trace("BackGroundFetchService.as peripheral not connected, calling bluetoothservice.tryreconnect");
-				BluetoothService.tryReconnect(null);
-			}
 			
 			if (!ModelLocator.isInForeground) {
+				if (!HomeView.peripheralConnected) {
+					trace("BackGroundFetchService.as peripheral not connected, calling bluetoothservice.tryreconnect");
+					attemptingBluetoothReconnect = true;
+					reconnectAttemptTimer = new Timer(20000, 1);
+					reconnectAttemptTimer.addEventListener(TimerEvent.TIMER_COMPLETE, reconnectTimerExpiry);
+					BluetoothService.tryReconnect(null);
+				}
+
 				var backgroundfetchServiceEvent:BackGroundFetchServiceEvent = new BackGroundFetchServiceEvent(BackGroundFetchServiceEvent.LOG_INFO);
 				backgroundfetchServiceEvent.data = new Object();
 				backgroundfetchServiceEvent.data.information = "BackGroundFetchService.as performFetch";
@@ -114,7 +154,7 @@ package services
 				backgroundfetchServiceEvent.data.information = event.data.result as String;
 				_instance.dispatchEvent(backgroundfetchServiceEvent);
 			} else {
-				
+				callCompletionHandler(NO_DATA);
 			}
 		}
 		
