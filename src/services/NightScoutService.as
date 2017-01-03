@@ -112,7 +112,6 @@ package services
 			BackGroundFetchService.instance.addEventListener(BackGroundFetchServiceEvent.LOAD_REQUEST_ERROR, defaultErrorFunction);
 			BackGroundFetchService.instance.addEventListener(BackGroundFetchServiceEvent.LOAD_REQUEST_RESULT, defaultSuccessFunction);
 			BackGroundFetchService.instance.addEventListener(BackGroundFetchServiceEvent.PERFORM_FETCH, performFetch);
-			BackGroundFetchService.instance.addEventListener(BackGroundFetchServiceEvent.DEVICE_TOKEN_RECEIVED, deviceTokenReceived);
 
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME) != CommonSettings.DEFAULT_SITE_NAME
 				&&
@@ -137,12 +136,6 @@ package services
 			function performFetch(event:BackGroundFetchServiceEvent):void {
 				trace("NightScoutService.as sync : performfetch");
 				sync();
-			}
-			
-			function deviceTokenReceived(event:BackGroundFetchServiceEvent):void {
-				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_URL_AND_API_SECRET_TESTED) == "true") {
-					BackGroundFetchService.registerPushNotification(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_SUBSCRIPTION_TAG));					
-				}
 			}
 			
 			function bgreadingEventReceived(event:TransmitterServiceEvent):void {
@@ -204,49 +197,35 @@ package services
 			if (latestReadings.length > 0) { 
 				var minute:Number = (new Date((latestReadings[0]  as BgReading).timestamp)).minutesUTC;
 				var tagNumber:int = minute % 5;
-				var settingChanged:Boolean = false;
 				//example if bgreading is generated in minute 24, tagnumber = 4
 				switch (tagNumber) { 
 					case 0:
-						if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_SUBSCRIPTION_TAG) != "ALL,TWO") {
-							LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_SUBSCRIPTION_TAG, "ALL,TWO");
-							settingChanged = true;
+						if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_WISHED_QBLOX_SUBSCRIPTION_TAG) != "ALL,TWO") {
+							LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_WISHED_QBLOX_SUBSCRIPTION_TAG, "ALL,TWO");
 						}
 						break;
 					case 1:
-						if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_SUBSCRIPTION_TAG) != "ALL,THREE") {
-							LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_SUBSCRIPTION_TAG, "ALL,THREE");
-							settingChanged = true;
+						if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_WISHED_QBLOX_SUBSCRIPTION_TAG) != "ALL,THREE") {
+							LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_WISHED_QBLOX_SUBSCRIPTION_TAG, "ALL,THREE");
 						}
 						break;
 					case 2:
-						if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_SUBSCRIPTION_TAG) != "ALL,FOUR") {
-							LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_SUBSCRIPTION_TAG, "ALL,FOUR");
-							settingChanged = true;
+						if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_WISHED_QBLOX_SUBSCRIPTION_TAG) != "ALL,FOUR") {
+							LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_WISHED_QBLOX_SUBSCRIPTION_TAG, "ALL,FOUR");
 						}
 						break;
 					case 3:
-						if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_SUBSCRIPTION_TAG) != "ALL,FIVE") {
-							LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_SUBSCRIPTION_TAG, "ALL,FIVE");
-							settingChanged = true;
+						if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_WISHED_QBLOX_SUBSCRIPTION_TAG) != "ALL,FIVE") {
+							LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_WISHED_QBLOX_SUBSCRIPTION_TAG, "ALL,FIVE");
 						}
 						break;
 					case 4:
-						if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_SUBSCRIPTION_TAG) != "ALL,ONE") {
-							LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_SUBSCRIPTION_TAG, "ALL,ONE");
-							settingChanged = true;
+						if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_WISHED_QBLOX_SUBSCRIPTION_TAG) != "ALL,ONE") {
+							LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_WISHED_QBLOX_SUBSCRIPTION_TAG, "ALL,ONE");
 						}
 						break;
 				}
 				
-				if (settingChanged) {
-					if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_URL_AND_API_SECRET_TESTED) ==  "true"
-						&& 
-						LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_DEVICE_TOKEN_ID) != ""
-					) {
-						BackGroundFetchService.registerPushNotification(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_SUBSCRIPTION_TAG));
-					}
-				}
 			}
 		}
 
@@ -277,8 +256,8 @@ package services
 			var nightScoutTreatmentsUrl:String = "https://" + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME) + "/api/v1/treatments";
 			createAndLoadURLRequest(nightScoutTreatmentsUrl + "/" + testUniqueId, URLRequestMethod.DELETE, null, null,sync, null);
 
-			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_DEVICE_TOKEN_ID) != "") {
-				BackGroundFetchService.registerPushNotification(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_SUBSCRIPTION_TAG));
+			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_DEVICE_TOKEN_ID) != "" && ModelLocator.isInForeground) {
+				BackGroundFetchService.registerPushNotification(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_WISHED_QBLOX_SUBSCRIPTION_TAG));
 			}
 			
 			if (ModelLocator.isInForeground) {
@@ -325,10 +304,16 @@ package services
 				&& 
 				LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_DEVICE_TOKEN_ID) != ""
 				&&
-				LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_SUBSCRIBED_TO_PUSH_NOTIFICATIONS) == "false"
+				ModelLocator.isInForeground//registerpushnotification is using loadeer, which only works when app is in foreground
+				&&
+				(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_SUBSCRIBED_TO_PUSH_NOTIFICATIONS) == "false"
+				||
+				(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_WISHED_QBLOX_SUBSCRIPTION_TAG)
+					!=
+				LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_ACTUAL_QBLOX_SUBSCRIPTION_TAG)))
 			) {
 				trace("NightScoutService.as sync, url and secret tested, device token not empty and not subscribed, so registering now for push notifications");
-				BackGroundFetchService.registerPushNotification(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_SUBSCRIPTION_TAG));
+				BackGroundFetchService.registerPushNotification(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_WISHED_QBLOX_SUBSCRIPTION_TAG));
 			}
 				
 			

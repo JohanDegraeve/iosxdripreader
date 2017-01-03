@@ -16,6 +16,7 @@ package services
 	
 	import Utilities.UniqueId;
 	
+	import databaseclasses.CommonSettings;
 	import databaseclasses.LocalSettings;
 	
 	import events.BackGroundFetchServiceEvent;
@@ -96,7 +97,7 @@ package services
 		private static function performFetch(event:BackgroundFetchEvent):void {
 			trace("BackGroundFetchService.as performFetch");
 
-			//if bluetooth is not connected then ios suspended the app, the performfetch actually activate the app
+			//if bluetooth is not connected then ios suspended the app, the performfetch actually activates the app
 			//time to try to reconnect
 			if (!HomeView.peripheralConnected) {
 				trace("BackGroundFetchService.as peripheral not connected, calling bluetoothservice.tryreconnect");
@@ -112,6 +113,8 @@ package services
 				backgroundfetchServiceEvent.data = new Object();
 				backgroundfetchServiceEvent.data.information = event.data.result as String;
 				_instance.dispatchEvent(backgroundfetchServiceEvent);
+			} else {
+				
 			}
 		}
 		
@@ -121,15 +124,19 @@ package services
 			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_DEVICE_TOKEN_ID, token);
 			
 			//if already registered for push notifications, then update the token
-			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_SUBSCRIBED_TO_PUSH_NOTIFICATIONS) ==  "true") {
+			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_SUBSCRIBED_TO_PUSH_NOTIFICATIONS) ==  "true"
+				&&
+				ModelLocator.isInForeground) {
 				var backgroundfetchserviceLogInfo:BackGroundFetchServiceEvent = new BackGroundFetchServiceEvent(BackGroundFetchServiceEvent.LOG_INFO);
 				backgroundfetchserviceLogInfo.data = new Object();
 				backgroundfetchserviceLogInfo.data.information = "BackGroundFetchService.as new device_token received, start update at quickBlox";
 				_instance.dispatchEvent(backgroundfetchserviceLogInfo);
 				register = true;
-				registerPushNotification(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_SUBSCRIPTION_TAG));
-			} else {
-				
+				registerPushNotification(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_WISHED_QBLOX_SUBSCRIPTION_TAG));
+			} else if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_SUBSCRIBED_TO_PUSH_NOTIFICATIONS) ==  "true") {
+				//new device token but app not in foreground, let's locally set it as not subscribed
+				//subscription should occur later on, hopefully
+				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_SUBSCRIBED_TO_PUSH_NOTIFICATIONS, "false");
 			}
 		}
 		
@@ -203,7 +210,7 @@ package services
 		 * tags to subscribe too, if empty then it will subscribe tag "ALL"<br>
 		 * Can be comma separated list of tags
 		 */
-		public static function registerPushNotification(newTagList):void {
+		public static function registerPushNotification(newTagList:String):void {
 			register = true;
 			wishedTagList = newTagList;
 			createSessionQuickBlox();
@@ -277,6 +284,7 @@ package services
 		
 		private static function signUpSuccess(event:Event):void {
 			trace("BackGroundFetchService signUpSuccess");
+			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_ACTUAL_QBLOX_SUBSCRIPTION_TAG, wishedTagList);
 			userSignInQuickBlox();
 		}
 		
@@ -357,7 +365,7 @@ package services
 			backgroundfetchserviceEvent.data = new Object();
 			backgroundfetchserviceEvent.data.information = "BackGroundFetchService.as updateUserSuccess with new tag list = " + wishedTagList;
 			_instance.dispatchEvent(backgroundfetchserviceEvent);
-
+			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_ACTUAL_QBLOX_SUBSCRIPTION_TAG, wishedTagList);
 			createSubscription();
 		}
 		
@@ -367,7 +375,7 @@ package services
 			backgroundfetchserviceEvent.data = new Object();
 			backgroundfetchserviceEvent.data.information = "BackGroundFetchService.as updateUserFailure, resetting taglist in settings to value received from quickblox = " + currentTagList + ", event.currentTarget.data = " + (event.currentTarget.data ? event.currentTarget.data:"No info received from quickblox");
 			_instance.dispatchEvent(backgroundfetchserviceEvent);
-			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_SUBSCRIPTION_TAG, currentTagList);
+			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_ACTUAL_QBLOX_SUBSCRIPTION_TAG, currentTagList);
 			createSubscription();
 		}
 		
@@ -413,6 +421,7 @@ package services
 		private static function userDeleteSuccess(event:Event):void {
 			trace("BackGroundFetchService.as userDeleteSuccess");
 			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_SUBSCRIBED_TO_PUSH_NOTIFICATIONS, "false");
+			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_WISHED_QBLOX_SUBSCRIPTION_TAG, "ALL");
 			destroySession();
 		}
 		

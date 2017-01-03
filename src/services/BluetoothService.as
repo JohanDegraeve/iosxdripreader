@@ -98,7 +98,7 @@ package services
 		private static const uuids_HM_10_Service:Vector.<String> = new <String>[HM10Attributes.HM_10_SERVICE];
 		private static const uuids_HM_RX_TX:Vector.<String> = new <String>[HM10Attributes.HM_RX_TX];
 		private static const debugMode:Boolean = false;
-		private static var amountOfReconnectAttempts:int = 0;
+		//private static var amountOfReconnectAttempts:int = 0;
 		
 		private static function set activeBluetoothPeripheral(value:Peripheral):void
 		{
@@ -319,8 +319,8 @@ package services
 		}
 		
 		private static function central_peripheralConnectHandler(event:PeripheralEvent):void {
-			amountOfReconnectAttempts = 0;
-			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_DEVICE_TOKEN_ID) != ""
+			//amountOfReconnectAttempts = 0;
+			/*if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_DEVICE_TOKEN_ID) != ""
 				&&
 				CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_URL_AND_API_SECRET_TESTED) !=  "true"
 				&&
@@ -329,9 +329,9 @@ package services
 				trace("BluetoothService.as, connected to device, but nightscout url and secret not tested, deregistering qblox");
 				//may be a bit unlogic at start up, because at start up, user does not even exist yet, calling deregister will cause creating the
 				//user and redeleting it 
-				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_SUBSCRIPTION_TAG, "ALL");
+				//might not work because not in foreground
 				BackGroundFetchService.deRegisterPushNotification();
-			}
+			}*/
 			
 			if (reconnectTimer != null) {
 				if (reconnectTimer.running) {
@@ -404,7 +404,7 @@ package services
 		private static function central_peripheralDisconnectHandler(event:Event = null):void {
 			dispatchInformation('disconnected_from_device');
 			
-			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_DEVICE_TOKEN_ID) != ""
+			/*if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_DEVICE_TOKEN_ID) != ""
 				&&
 				BlueToothDevice.known()
 				&&
@@ -412,25 +412,25 @@ package services
 			) {
 				amountOfReconnectAttempts++;
 				if (amountOfReconnectAttempts < 10) {//10  every minute
-					if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_SUBSCRIPTION_TAG) != "ALL,ONE,TWO,THREE,FOUR,FIVE") {
-						LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_SUBSCRIPTION_TAG, "ALL,ONE,TWO,THREE,FOUR,FIVE");
+					if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_WISHED_QBLOX_SUBSCRIPTION_TAG) != "ALL,ONE,TWO,THREE,FOUR,FIVE") {
+						LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_WISHED_QBLOX_SUBSCRIPTION_TAG, "ALL,ONE,TWO,THREE,FOUR,FIVE");
 						BackGroundFetchService.registerPushNotification("ALL,ONE,TWO,THREE,FOUR,FIVE");
 						trace("BluetoothService.as, disconnected from device, registering to qblox for all notifications");
 					}
 				} else if (amountOfReconnectAttempts < 20) {//another 10  every 2,5 minute
-					if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_SUBSCRIPTION_TAG) != "ALL,ONE,FOUR") {
-						LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_SUBSCRIPTION_TAG, "ALL,ONE,FOUR");
+					if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_WISHED_QBLOX_SUBSCRIPTION_TAG) != "ALL,ONE,FOUR") {
+						LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_WISHED_QBLOX_SUBSCRIPTION_TAG, "ALL,ONE,FOUR");
 						BackGroundFetchService.registerPushNotification("ALL,ONE,FOUR");
 						trace("BluetoothService.as, disconnected from device, registering to qblox for ALL and ONE and FOUR notifications");
 					}
 				} else {//as of 21st every 5 minutes
-					if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_SUBSCRIPTION_TAG) != "ALL,ONE") {
-						LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_SUBSCRIPTION_TAG, "ALL,ONE");
+					if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_WISHED_QBLOX_SUBSCRIPTION_TAG) != "ALL,ONE") {
+						LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_WISHED_QBLOX_SUBSCRIPTION_TAG, "ALL,ONE");
 						BackGroundFetchService.registerPushNotification("ALL,ONE");
 						trace("BluetoothService.as, disconnected from device, registering to qblox for ALL and ONE notifications");
 					}
 				}
-			}
+			}*/
 
 			if (reconnectTimer != null) {
 				if (reconnectTimer.running) {
@@ -513,6 +513,7 @@ package services
 				discoverServiceOrCharacteristicTimer.stop();
 				discoverServiceOrCharacteristicTimer = null;
 			}
+			
 			dispatchInformation("services_discovered");
 			amountOfDiscoverServicesOrCharacteristicsAttempt = 0;
 			
@@ -546,10 +547,12 @@ package services
 					}
 					index++;
 				}
-				activeBluetoothPeripheral.discoverCharacteristics(activeBluetoothPeripheral.services[index], uuids_HM_RX_TX);
-				discoverServiceOrCharacteristicTimer = new Timer(DISCOVER_SERVICES_OR_CHARACTERISTICS_RETRY_TIME_IN_SECONDS * 1000, 1);
-				discoverServiceOrCharacteristicTimer.addEventListener(TimerEvent.TIMER, discoverCharacteristics);
-				discoverServiceOrCharacteristicTimer.start();
+				if (activeBluetoothPeripheral.services.length > 0) {
+					activeBluetoothPeripheral.discoverCharacteristics(activeBluetoothPeripheral.services[index], uuids_HM_RX_TX);
+					discoverServiceOrCharacteristicTimer = new Timer(DISCOVER_SERVICES_OR_CHARACTERISTICS_RETRY_TIME_IN_SECONDS * 1000, 1);
+					discoverServiceOrCharacteristicTimer.addEventListener(TimerEvent.TIMER, discoverCharacteristics);
+					discoverServiceOrCharacteristicTimer.start();
+				}
 			} else {
 				dispatchInformation("max_amount_of_discover_characteristics_attempt_reached");
 				tryReconnect();
