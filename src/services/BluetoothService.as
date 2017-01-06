@@ -351,15 +351,28 @@ package services
 			
 			dispatchInformation('connected_to_peripheral');
 
-			if (activeBluetoothPeripheral == null)
+			if (activeBluetoothPeripheral == null) {
+				trace("Bluetoothservice.as activeBluetoothPeripheral == null, assigning activeBluetoothPeripheral");
 				activeBluetoothPeripheral = event.peripheral;
+			} else {
+				forgetBlueToothDevice();
+				startScanning()
+				return;
+			}
+			/*trace("Bluetoothservice.as activeBluetoothPeripheral.name = " + activeBluetoothPeripheral.name);
+			for each (var o:Object in activeBluetoothPeripheral.services) {
+				trace("Bluetoothservice.as activeBluetoothPeripheral.name = " + o);
+			}*/
 
 			discoverServices();
 		}
 		
 		private static function discoverServices(event:Event = null):void {
+			trace("bluetoothservice.as in discoverServices");
 			if (activeBluetoothPeripheral == null)//rare case, user might have done forget xdrip while waiting for rettempt
 				return;
+			trace("bluetoothservice.as still in discoverServices");
+			
 			
 			if (discoverServiceOrCharacteristicTimer != null) {
 				discoverServiceOrCharacteristicTimer.stop();

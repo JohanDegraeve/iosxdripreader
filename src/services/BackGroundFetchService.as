@@ -112,7 +112,7 @@ package services
 			trace("BackGroundFetchService.as callCompletionhandler with result " + result);
 			waitingSyncResponse = false;
 			if (attemptingBluetoothReconnect) {
-				trace("attemptingBluetoothReconnect = true, setting syncresponse to result");
+				trace("attemptingBluetoothReconnect = true, setting syncresponse to " + result);
 				syncResponse = result;
 			} else {
 				trace("attemptingBluetoothReconnect = false, calling callcompletionhandler");
@@ -124,10 +124,12 @@ package services
 			}
 		}
 		
-		private static function reconnectTimerExpiry(event:TimerEvent):void {
+		private static function reconnectTimerExpiry(event:Event):void {
+			trace("reconnectTimerExpiry calling callCompletionHandler with result " + syncResponse); 
 			waitingSyncResponse = false;
 			attemptingBluetoothReconnect = false;
-			callCompletionHandler(syncResponse);
+			BackgroundFetch.callCompletionHandler(syncResponse);
+			syncResponse = NO_DATA;
 		}
 		
 		private static function performFetch(event:BackgroundFetchEvent):void {
@@ -141,7 +143,8 @@ package services
 					trace("BackGroundFetchService.as peripheral not connected, calling bluetoothservice.tryreconnect");
 					attemptingBluetoothReconnect = true;
 					reconnectAttemptTimer = new Timer(20000, 1);
-					reconnectAttemptTimer.addEventListener(TimerEvent.TIMER_COMPLETE, reconnectTimerExpiry);
+					reconnectAttemptTimer.addEventListener(TimerEvent.TIMER, reconnectTimerExpiry);
+					reconnectAttemptTimer.start();
 					BluetoothService.tryReconnect(null);
 				}
 
