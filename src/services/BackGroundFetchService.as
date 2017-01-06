@@ -27,8 +27,6 @@ package services
 	
 	import quickbloxsecrets.QuickBloxSecrets;
 	
-	import views.HomeView;
-	
 	/**
 	 * controls all services that need up or download<br>
 	 * 
@@ -135,19 +133,16 @@ package services
 		private static function performFetch(event:BackgroundFetchEvent):void {
 			trace("BackGroundFetchService.as performFetch");
 
-			//if bluetooth is not connected then ios suspended the app, the performfetch actually activates the app
-			//time to try to reconnect
+			if (BluetoothService.automaticReconnectRequired) {
+				trace("BackGroundFetchService.as peripheral not connected & BluetoothService.automaticReconnectRequired = true, calling bluetoothservice.tryreconnect");
+				attemptingBluetoothReconnect = true;
+				reconnectAttemptTimer = new Timer(20000, 1);
+				reconnectAttemptTimer.addEventListener(TimerEvent.TIMER, reconnectTimerExpiry);
+				reconnectAttemptTimer.start();
+				BluetoothService.tryReconnect(null);
+			}
 			
 			if (!ModelLocator.isInForeground) {
-				if (!HomeView.peripheralConnected) {
-					trace("BackGroundFetchService.as peripheral not connected, calling bluetoothservice.tryreconnect");
-					attemptingBluetoothReconnect = true;
-					reconnectAttemptTimer = new Timer(20000, 1);
-					reconnectAttemptTimer.addEventListener(TimerEvent.TIMER, reconnectTimerExpiry);
-					reconnectAttemptTimer.start();
-					BluetoothService.tryReconnect(null);
-				}
-
 				var backgroundfetchServiceEvent:BackGroundFetchServiceEvent = new BackGroundFetchServiceEvent(BackGroundFetchServiceEvent.LOG_INFO);
 				backgroundfetchServiceEvent.data = new Object();
 				backgroundfetchServiceEvent.data.information = "BackGroundFetchService.as performFetch";
@@ -162,7 +157,7 @@ package services
 		}
 		
 		private static function deviceTokenReceived(event:BackgroundFetchEvent):void {
-			trace("BackGroundFetchService.as deviceTokenReceived ");// + event.data.token);
+			trace("BackGroundFetchService.as deviceTokenReceived ");
 			var token:String = (event.data.token as String).replace("<","").replace(">","").replace(" ","").replace(" ","").replace(" ","").replace(" ","").replace(" ","").replace(" ","").replace(" ","").replace(" ","").replace(" ","").replace(" ","").replace(" ","");
 			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_DEVICE_TOKEN_ID, token);
 			
