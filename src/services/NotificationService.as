@@ -33,6 +33,7 @@ package services
 	import Utilities.BgGraphBuilder;
 	
 	import databaseclasses.BgReading;
+	import databaseclasses.BlueToothDevice;
 	import databaseclasses.Calibration;
 	import databaseclasses.CalibrationRequest;
 	import databaseclasses.CommonSettings;
@@ -46,6 +47,8 @@ package services
 	import events.TransmitterServiceEvent;
 	
 	import model.ModelLocator;
+	
+	import views.HomeView;
 	
 	/**
 	 * This service<br>
@@ -243,12 +246,17 @@ package services
 					} else {
 						valueToShow = "---"
 					}
+					var bodyText:String = HomeView.peripheralConnected ? 
+						ModelLocator.resourceManagerInstance.getString("notificationservice","connected_to") + " " + BlueToothDevice.name
+						:
+						ModelLocator.resourceManagerInstance.getString("notificationservice","not_connected_to") + " " + BlueToothDevice.name;
+
 					Notifications.service.notify(
 						new NotificationBuilder()
 						.setId(NotificationService.ID_FOR_BG_VALUE)
 						.setAlert("Bg value")
 						.setTitle(valueToShow)
-						.setBody(".")
+						.setBody(bodyText)
 						.setSound("")
 						.enableVibration(false)
 						.enableLights(false)
