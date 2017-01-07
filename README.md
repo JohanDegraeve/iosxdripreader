@@ -16,9 +16,22 @@ xdrip/xbridge reader for iOS devices
 * set transmitter id
 * ___if xdrip or xbridge is out of range, bluetooth connection will fail and will not always automatically reconnect. The app needs to be opened in order to re-establish the connection___ The status of the connection is visible in the always on notification.
 
-If you need a package for your device, sent my a mail please.
+# To Install the app.
 
-To compile :
+If you need a package for your device, sent my the UDID of your device in a mail please. (johan.degraeve@gmail.com).
+I'll update the latest release version with a release signed for your device.
+
+Then
+
+Installation is done via itunes on a pc or mac, 
+
+* Open iTunes, select File > Add to Library and add the application IPA file to iTunes (or drag and drop it onto the iTunes dock icon).
+* Locate your new application in Apps. (see http://wwwimages.adobe.com/content/dam/Adobe/en/devnet/air/articles/packaging-air-apps-ios/fig_18.jpg)
+* Connect your iOS device to your computer's USB port.
+* In iTunes, select the attached device and make sure your application is selected to be synced on the device and then sync the device (see http://wwwimages.adobe.com/content/dam/Adobe/en/devnet/air/articles/packaging-air-apps-ios/fig_19.jpg)
+* Locate the application on the device and run it. (See http://wwwimages.adobe.com/content/dam/Adobe/en/devnet/air/articles/packaging-air-apps-ios/fig_20.jpg and http://wwwimages.adobe.com/content/dam/Adobe/en/devnet/air/articles/packaging-air-apps-ios/fig_20.jpg)
+
+# To compile :
 - install Flash Builder 4.7 with FLex SDK 4.15.0, AIR 22.0 en_US
 - an ios developer membership is required, full explanation : http://help.adobe.com/en_US/flex/mobileapps/WS064a3073e805330f6c6abf312e7545f65e-8000.html
 - clone the repository, lets say folder iosxdripreader
