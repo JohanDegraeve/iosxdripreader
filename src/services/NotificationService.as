@@ -225,6 +225,7 @@ package services
 		}
 		
 		public static function updateAllNotifications(be:Event):void {
+			trace("NotificationService.as in updateAllNotifications");
 			clearAllNotifications();
 			
 			//start with bgreading notification
@@ -247,9 +248,9 @@ package services
 						valueToShow = "---"
 					}
 					var bodyText:String = HomeView.peripheralConnected ? 
-						ModelLocator.resourceManagerInstance.getString("notificationservice","connected_to") + " " + BlueToothDevice.name
+						ModelLocator.resourceManagerInstance.getString("notificationservice","connected")
 						:
-						ModelLocator.resourceManagerInstance.getString("notificationservice","not_connected_to") + " " + BlueToothDevice.name;
+						ModelLocator.resourceManagerInstance.getString("notificationservice","not_connected");
 
 					Notifications.service.notify(
 						new NotificationBuilder()

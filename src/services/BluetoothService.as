@@ -82,7 +82,7 @@ package services
 		private static const reconnectAttemptPeriodInSeconds:int = 25;
 		//private static var reconnectTimer:Timer;
 		//private static var reconnectAttemptTimeStamp:Number = 0;
-		private static var reScanIfFailed:Boolean = false;
+		//private static var reScanIfFailed:Boolean = false;
 		
 		//private static var connectionAttemptCheckTimer:Timer;
 		
@@ -96,12 +96,6 @@ package services
 		private static const uuids_HM_10_Service:Vector.<String> = new <String>[HM10Attributes.HM_10_SERVICE];
 		private static const uuids_HM_RX_TX:Vector.<String> = new <String>[HM10Attributes.HM_RX_TX];
 		private static const debugMode:Boolean = true;
-		//private static var amountOfReconnectAttempts:int = 0;
-		private static var _automaticReconnectRequired:Boolean = true;
-		public static function get automaticReconnectRequired():Boolean
-		{
-			return _automaticReconnectRequired;
-		}
 
 		private static function set activeBluetoothPeripheral(value:Peripheral):void
 		{
@@ -274,11 +268,11 @@ package services
 				dispatchInformation('stopped_scanning');	
 				_instance.dispatchEvent(new BlueToothServiceEvent(BlueToothServiceEvent.STOPPED_SCANNING));
 			}
-			if (reScanIfFailed) {
+			/*if (reScanIfFailed) {
 				if ((BluetoothLE.service.centralManager.state == BluetoothLEState.STATE_ON)) {
 					bluetoothStatusIsOn();
 				}
-			}
+			}*/
 				
 		}
 		
@@ -310,7 +304,7 @@ package services
 				
 				//we want to connect to this device, so stop scanning
 				BluetoothLE.service.centralManager.stopScan();
-				reScanIfFailed = false;
+				//reScanIfFailed = false;
 				
 				BluetoothLE.service.centralManager.connect(event.peripheral);
 				dispatchInformation('stop_scanning_and_try_to_connect');
@@ -319,8 +313,6 @@ package services
 		
 		private static function central_peripheralConnectHandler(event:PeripheralEvent):void {
 			dispatchInformation('connected_to_peripheral');
-
-			_automaticReconnectRequired = false;
 			
 			if (activeBluetoothPeripheral == null) {
 				trace("Bluetoothservice.as activeBluetoothPeripheral == null, assigning activeBluetoothPeripheral");
@@ -366,7 +358,6 @@ package services
 				//central_peripheralDisconnectHandler will see that activeBluetoothPeripheral == null and so 
 				var temp:Peripheral = activeBluetoothPeripheral;
 				activeBluetoothPeripheral = null;
-				_automaticReconnectRequired = true;
 				BluetoothLE.service.centralManager.disconnect(temp);
 				
 				var blueToothServiceEvent:BlueToothServiceEvent = new BlueToothServiceEvent(BlueToothServiceEvent.BLUETOOTH_SERVICE_INFORMATION_EVENT);
@@ -375,8 +366,6 @@ package services
 				_instance.dispatchEvent(blueToothServiceEvent);
 				trace("BluetoothService.as will_re_scan_for_device");
 				
-				//this will cause rescan, if scanning fails just retry, forever
-				reScanIfFailed = true;
 				bluetoothStatusIsOn();
 			}
 		}
@@ -387,7 +376,6 @@ package services
 				// this is a case where disconnect happened for a device that was already connected
 				// automatic reconnect is required.
 				trace("BluetoothService.as disconnected_from_device and activeBluetoothPeripheral != null");
-				_automaticReconnectRequired = true;
 				BluetoothLE.service.centralManager.disconnect(activeBluetoothPeripheral);
 			} 
 			activeBluetoothPeripheral = null;

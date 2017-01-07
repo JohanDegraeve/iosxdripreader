@@ -240,6 +240,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			}
 			
 			private function bluetoothDeviceConnectionCompleted(event:BlueToothServiceEvent):void {
+				NotificationService.updateAllNotifications(null);
 				currentState = "bluetoothgreen";
 				if (!_peripheralConnected) {
 					_peripheralConnected = true;
@@ -267,6 +268,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 					_peripheralConnected = false;
 					peripheralConnectionStatusChangeTimestamp = (new Date()).valueOf();
 				}
+				NotificationService.updateAllNotifications(null);
 				if ((BluetoothLE.service.centralManager.state == BluetoothLEState.STATE_ON) && BlueToothDevice.known() && ((new Date().valueOf() - peripheralConnectionStatusChangeTimestamp) < TimerService.DELAY_FOR_CHECKING_BGREADING_IN_SECONDS)) {
 					currentState = "bluetoothorange";
 				} else {

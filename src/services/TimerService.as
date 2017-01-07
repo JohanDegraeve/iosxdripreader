@@ -55,6 +55,7 @@ package services
 		 * it's just dispatch an event that bgreading delivery is delayed. 
 		 */
 		private static function bgReadingNotReceivedOnTime(event:Event):void {
+			trace("Timerservice.as bgReadingNotReceivedOnTime");
 			if (bgReadingCheckTimer != null) {
 				if (bgReadingCheckTimer.running) {
 					bgReadingCheckTimer.stop();
