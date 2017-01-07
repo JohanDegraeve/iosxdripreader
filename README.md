@@ -25,6 +25,7 @@ Then
 
 Installation is done via itunes on a pc or mac, 
 
+* download the IPA file in the Releases
 * Open iTunes, select File > Add to Library and add the application IPA file to iTunes (or drag and drop it onto the iTunes dock icon).
 * Locate your new application in Apps. (see http://wwwimages.adobe.com/content/dam/Adobe/en/devnet/air/articles/packaging-air-apps-ios/fig_18.jpg)
 * Connect your iOS device to your computer's USB port.
