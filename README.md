@@ -8,13 +8,31 @@ xdrip/xbridge reader for iOS devices
 * Additional calibration request alerts but not the 12-hour calibration request alert
 * View latest calculated value on Home screen with "minutes ago" and diff with previous reading
 * Always on notification (not really always but almost always) that allows to see the current value by just lifting up the phone (iOS 10).
-* Synchronisation to Nightscout
+* Upload to Nightscout
  * When the app is in the foreground, upload will always happen immediately after receiving a new value, also at app start, 
- * ___When the app is in the background, then it is iOS that decides when the app is allowed to do an upload. The frequency depends on the usage of the app. One test I did is to keep the app open all day/night long. The next day/night it was triggerering a background fetch every 10 minutes___
+ * When the app is in the background, then there are two mechanisms being used to trigger an upload to NightScout
+   * iOS that decides when the app is allowed to do an upload. The frequency depends on the usage of the app. One test I did is to keep the app open all day/night long. The next day/night it was triggerering a background fetch every 10 minutes. If you would keep the app open for example during one night, but not during the day, then the app will do an upload every 10 minutes as of the next night.
+   * when a remote notification arrives. The app will subscribe to a service as soon as you launch it. As soon as the first bgreading is received, the app will receive a remote notification the minute after it's supposed to receive a new bgreading. This remote notification opens the app in the background, and allows it to do an upload to NightScout. The upload may have a delay of maximum 1,5 minute. The trigger is actually being sent by another app on a spare iphone on my desk which is always on. There's no guarantee that this app is always alive.
 * set transmitter id
-* ___if xdrip or xbridge is out of range, bluetooth connection will fail and will not automatically reconnect. The app needs to be opened in order to re-establish the connection___
+* ___if xdrip or xbridge is out of range, bluetooth connection will fail and will not always automatically reconnect. The app needs to be opened in order to re-establish the connection___ The status of the connection is visible in the always on notification.
 
-To compile :
+# To Install the app.
+
+If you need a package for your device, sent my the UDID of your device in a mail please. (johan.degraeve@gmail.com).
+I'll update the latest release version with a release signed for your device.
+
+Then
+
+Installation is done via itunes on a pc or mac, 
+
+* download the IPA file in the Releases
+* Open iTunes, select File > Add to Library and add the application IPA file to iTunes (or drag and drop it onto the iTunes dock icon).
+* Locate your new application in Apps. (see http://wwwimages.adobe.com/content/dam/Adobe/en/devnet/air/articles/packaging-air-apps-ios/fig_18.jpg)
+* Connect your iOS device to your computer's USB port.
+* In iTunes, select the attached device and make sure your application is selected to be synced on the device and then sync the device (see http://wwwimages.adobe.com/content/dam/Adobe/en/devnet/air/articles/packaging-air-apps-ios/fig_19.jpg)
+* Locate the application on the device and run it. (See http://wwwimages.adobe.com/content/dam/Adobe/en/devnet/air/articles/packaging-air-apps-ios/fig_20.jpg and http://wwwimages.adobe.com/content/dam/Adobe/en/devnet/air/articles/packaging-air-apps-ios/fig_20.jpg)
+
+# To compile (only if you want to develop):
 - install Flash Builder 4.7 with FLex SDK 4.15.0, AIR 22.0 en_US
 - an ios developer membership is required, full explanation : http://help.adobe.com/en_US/flex/mobileapps/WS064a3073e805330f6c6abf312e7545f65e-8000.html
 - clone the repository, lets say folder iosxdripreader
