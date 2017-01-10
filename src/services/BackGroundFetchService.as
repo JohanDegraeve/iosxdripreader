@@ -257,6 +257,7 @@ package services
 			for (var i:int = 0;i < args.length;i++) {
 				parameters[6 + i] = args[i];
 			}
+			myTrace("calling BackgroundFetch.createAndLoadUrlRequest.apply(null, parameters);");
 			BackgroundFetch.createAndLoadUrlRequest.apply(null, parameters);
 		}
 		

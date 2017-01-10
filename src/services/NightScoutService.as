@@ -383,6 +383,7 @@ package services
 			
 			myTrace("sync , time taken to go through bgreadings = " + ((endtime - starttime)/1000) + " seconds");
 			if (listOfReadingsAsArray.length > 0) {
+				myTrace("listOfReadingsAsArray.length > 0");
 				var logString:String = ".. not filled in ..";
 				/*for (var cntr2:int = 0; cntr2 < listOfReadingsAsArray.length; cntr2++) {
 				logString += " " + listOfReadingsAsArray[cntr2]["_id"] + ",";
