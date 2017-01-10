@@ -48,7 +48,7 @@ package Utilities
 				dateFormatter.useUTC = false;
 				dateFormatter.setStyle("locale",Capabilities.language.substr(0,2));
 			}
-			var traceText:String = dateFormatter.format(new Date()) + " " + tag +  ": " + log;
+			var traceText:String = "xdripreadertrace" + " " + tag + " " + dateFormatter.format(new Date()) + " : " + log;
 			if (debugMode)
 				trace(traceText);
 			

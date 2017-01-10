@@ -31,9 +31,9 @@ package services
 	import flash.events.EventDispatcher;
 	
 	import Utilities.BgGraphBuilder;
+	import Utilities.Trace;
 	
 	import databaseclasses.BgReading;
-	import databaseclasses.BlueToothDevice;
 	import databaseclasses.Calibration;
 	import databaseclasses.CalibrationRequest;
 	import databaseclasses.CommonSettings;
@@ -95,8 +95,6 @@ package services
 		 * to request transmitter id 
 		 */
 		public static const ID_FOR_ENTER_TRANSMITTER_ID:int = 4;
-		
-		private static const debugMode:Boolean = false;
 		
 		public function NotificationService()
 		{
@@ -173,12 +171,12 @@ package services
 			}
 			
 			function application_deactivateHandler(event:ApplicationStateEvent):void {
-				trace("in application_deactivateHandler, event.code = " + event.code);
+				myTrace("in application_deactivateHandler, event.code = " + event.code);
 				switch (event.code) 
 				{
 					case ApplicationStateEvent.CODE_LOCK:
 					case ApplicationStateEvent.CODE_HOME:
-						trace("NotificationService.as, setting ModelLocator.isInForeground = false");
+						myTrace("NotificationService.as, setting ModelLocator.isInForeground = false");
 						ModelLocator.isInForeground = false;
 					break;
 				}
@@ -201,7 +199,7 @@ package services
 			}
 			
 			function notificationHandler(event:NotificationEvent):void {
-				if (debugMode) trace("in Notificationservice notificationHandler at " + (new Date()).toLocaleTimeString());
+				myTrace("in Notificationservice notificationHandler at " + (new Date()).toLocaleTimeString());
 				var notificationServiceEvent:NotificationServiceEvent = new NotificationServiceEvent(NotificationServiceEvent.NOTIFICATION_EVENT);
 				notificationServiceEvent.data = event;
 				_instance.dispatchEvent(notificationServiceEvent);
@@ -225,7 +223,7 @@ package services
 		}
 		
 		public static function updateAllNotifications(be:Event):void {
-			trace("NotificationService.as in updateAllNotifications");
+			myTrace("NotificationService.as in updateAllNotifications");
 			clearAllNotifications();
 			
 			//start with bgreading notification
@@ -282,5 +280,10 @@ package services
 				}
 			}
 		}
+		
+		private static function myTrace(log:String):void {
+			Trace.myTrace("NotificationService.as", log);
+		}
+
 	}
 }
