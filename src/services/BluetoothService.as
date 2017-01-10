@@ -152,8 +152,8 @@ package services
 			
 			BluetoothLE.init(DistriqtKey.distriqtKey);
 			if (BluetoothLE.isSupported) {
-				if (debugMode) trace("passing bluetoothservice.issupported");
-				trace("BluetoothService.as authorisation status = " + BluetoothLE.service.authorisationStatus());
+				myTrace("passing bluetoothservice.issupported");
+				myTrace("authorisation status = " + BluetoothLE.service.authorisationStatus());
 				switch (BluetoothLE.service.authorisationStatus()) {
 					case AuthorisationStatus.SHOULD_EXPLAIN:
 						BluetoothLE.service.requestAuthorisation();
@@ -277,7 +277,7 @@ package services
 		}
 		
 		private static function central_peripheralDiscoveredHandler(event:PeripheralEvent):void {
-			trace("BluetoothService.as passing in central_peripheralDiscoveredHandler");
+			myTrace("BluetoothService.as passing in central_peripheralDiscoveredHandler");
 			
 			// event.peripheral will contain a Peripheral object with information about the Peripheral
 			if ((event.peripheral.name as String).toUpperCase().indexOf("DRIP") > -1 || (event.peripheral.name as String).toUpperCase().indexOf("BRIDGE") > -1 || (event.peripheral.name as String).toUpperCase().indexOf("LIMITTER") > -1) {
@@ -315,7 +315,7 @@ package services
 			dispatchInformation('connected_to_peripheral');
 			
 			if (activeBluetoothPeripheral == null) {
-				trace("Bluetoothservice.as activeBluetoothPeripheral == null, assigning activeBluetoothPeripheral");
+				myTrace("Bluetoothservice.as activeBluetoothPeripheral == null, assigning activeBluetoothPeripheral");
 				activeBluetoothPeripheral = event.peripheral;
 			} else {
 			}
@@ -323,10 +323,10 @@ package services
 		}
 		
 		private static function discoverServices(event:Event = null):void {
-			trace("bluetoothservice.as in discoverServices");
+			myTrace("bluetoothservice.as in discoverServices");
 			if (activeBluetoothPeripheral == null)//rare case, user might have done forget xdrip while waiting for rettempt
 				return;
-			trace("bluetoothservice.as still in discoverServices");
+			myTrace("bluetoothservice.as still in discoverServices");
 			
 			
 			if (discoverServiceOrCharacteristicTimer != null) {
@@ -340,7 +340,7 @@ package services
 				blueToothServiceEvent.data = new Object();
 				blueToothServiceEvent.data.information = ModelLocator.resourceManagerInstance.getString('bluetoothservice','launching_discoverservices_attempt_amount') + " " + amountOfDiscoverServicesOrCharacteristicsAttempt;
 				_instance.dispatchEvent(blueToothServiceEvent);
-				trace("BluetoothService.as launching_discoverservices_attempt_amount " + amountOfDiscoverServicesOrCharacteristicsAttempt);
+				myTrace("BluetoothService.as launching_discoverservices_attempt_amount " + amountOfDiscoverServicesOrCharacteristicsAttempt);
 				
 				activeBluetoothPeripheral.discoverServices(uuids_HM_10_Service);
 				discoverServiceOrCharacteristicTimer = new Timer(DISCOVER_SERVICES_OR_CHARACTERISTICS_RETRY_TIME_IN_SECONDS * 1000, 1);
@@ -349,7 +349,7 @@ package services
 			} else {
 				dispatchInformation("max_amount_of_discover_services_attempt_reached");
 				amountOfDiscoverServicesOrCharacteristicsAttempt = 0;
-				trace("BluetoothService.as max_amount_of_discover_services_attempt_reached");
+				myTrace("BluetoothService.as max_amount_of_discover_services_attempt_reached");
 				
 				//i just happens that retrying doesn't help anymore
 				//so disconnecting and rescanning seems the only solution ?
@@ -364,7 +364,7 @@ package services
 				blueToothServiceEvent.data = new Object();
 				blueToothServiceEvent.data.information = ModelLocator.resourceManagerInstance.getString('bluetoothservice','will_re_scan_for_device');
 				_instance.dispatchEvent(blueToothServiceEvent);
-				trace("BluetoothService.as will_re_scan_for_device");
+				myTrace("BluetoothService.as will_re_scan_for_device");
 				
 				bluetoothStatusIsOn();
 			}
@@ -375,14 +375,14 @@ package services
 			if (activeBluetoothPeripheral != null) {
 				// this is a case where disconnect happened for a device that was already connected
 				// automatic reconnect is required.
-				trace("BluetoothService.as disconnected_from_device and activeBluetoothPeripheral != null");
+				myTrace("BluetoothService.as disconnected_from_device and activeBluetoothPeripheral != null");
 				BluetoothLE.service.centralManager.disconnect(activeBluetoothPeripheral);
 			} 
 			activeBluetoothPeripheral = null;
 		}
 		
 		public static function tryReconnect(event:Event = null):void {
-			trace("BluetoothService.as tryReconnect");
+			myTrace("BluetoothService.as tryReconnect");
 			if ((BluetoothLE.service.centralManager.state == BluetoothLEState.STATE_ON)) {
 				bluetoothStatusIsOn();
 			} else {
@@ -484,9 +484,9 @@ package services
 		}
 		
 		private static function peripheral_characteristic_updatedHandler(event:CharacteristicEvent):void {
-			for (var i:int = 0;i < event.characteristic.value.length;i++) {
-				if (debugMode) trace("BluetoothService.as bytearray element " + i + " = " + (new Number(event.characteristic.value[i])).toString(16));
-			}
+			/*for (var i:int = 0;i < event.characteristic.value.length;i++) {
+				myTrace("BluetoothService.as bytearray element " + i + " = " + (new Number(event.characteristic.value[i])).toString(16));
+			}*/
 			
 			
 			//now start reading the values
@@ -521,33 +521,33 @@ package services
 		}
 		
 		private static function peripheral_characteristic_writeHandler(event:CharacteristicEvent):void {
-			if (debugMode) trace("BluetoothService.as : peripheral_characteristic_writeHandler");
+			myTrace("peripheral_characteristic_writeHandler");
 		}
 		
 		private static function peripheral_characteristic_writeErrorHandler(event:CharacteristicEvent):void {
-			if (debugMode) trace("BluetoothService.as : peripheral_characteristic_writeErrorHandler");
+			myTrace("peripheral_characteristic_writeErrorHandler");
 			dispatchInformation("failed_to_write_value_for_characteristic_to_device");
 		}
 		
 		private static function peripheral_characteristic_errorHandler(event:CharacteristicEvent):void {
-			if (debugMode) trace("BluetoothService.as : peripheral_characteristic_errorHandler" );
+			myTrace("peripheral_characteristic_errorHandler" );
 			dispatchInformation("characteristic_update_error_received");
 		}
 		
 		private static function peripheral_characteristic_subscribeHandler(event:CharacteristicEvent):void {
-			if (debugMode) trace("BluetoothService.as : peripheral_characteristic_subscribeHandler: " + event.characteristic.uuid);
+			myTrace("peripheral_characteristic_subscribeHandler: " + event.characteristic.uuid);
 			dispatchInformation("successfully_subscribed_to_characteristics");
 			_instance.dispatchEvent(new BlueToothServiceEvent(BlueToothServiceEvent.BLUETOOTH_DEVICE_CONNECTION_COMPLETED));
 			NotificationService.updateAllNotifications(null);
 		}
 		
 		private static function peripheral_characteristic_subscribeErrorHandler(event:CharacteristicEvent):void {
-			if (debugMode) trace("BluetoothService.as : peripheral_characteristic_subscribeErrorHandler: " + event.characteristic.uuid);
+			myTrace("peripheral_characteristic_subscribeErrorHandler: " + event.characteristic.uuid);
 			dispatchInformation("subscribe_to_characteristics_failed");
 		}
 		
 		private static function peripheral_characteristic_unsubscribeHandler(event:CharacteristicEvent):void {
-			if (debugMode) trace("BluetoothService.as : peripheral_characteristic_unsubscribeHandler: " + event.characteristic.uuid);	
+			myTrace("peripheral_characteristic_unsubscribeHandler: " + event.characteristic.uuid);	
 		}
 		
 		private static function dispatchInformation(informationResourceName:String):void {
@@ -555,7 +555,7 @@ package services
 			blueToothServiceEvent.data = new Object();
 			blueToothServiceEvent.data.information = ModelLocator.resourceManagerInstance.getString("bluetoothservice",informationResourceName);
 			_instance.dispatchEvent(blueToothServiceEvent);
-			trace("BluetoothService.as " + ModelLocator.resourceManagerInstance.getString("bluetoothservice",informationResourceName));
+			myTrace(ModelLocator.resourceManagerInstance.getString("bluetoothservice",informationResourceName));
 		}
 		
 		
@@ -668,7 +668,7 @@ package services
 		}
 		
 		private static function myTrace(log:String):void {
-			Trace.myTrace("xdrip-BluetoothService.as", log);
+			Trace.myTrace("BluetoothService.as", log);
 		}
 		
 		/**

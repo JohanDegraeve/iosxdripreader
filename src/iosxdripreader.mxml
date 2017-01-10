@@ -26,10 +26,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 	<fx:Style source="assets/style.css"/>
 	<fx:Script>
 		<![CDATA[
+			import Utilities.Trace;
+			
 			import model.ModelLocator;
 			
+			import services.BluetoothService;
 			import services.DialogService;
 			import services.NightScoutService;
+			
+			import views.HomeView;
 			
 			public static var deviceScreenWidth:Number;
 			public static var deviceScreenHeight:Number;
@@ -52,12 +57,22 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			
 			protected function activateHandler(event:Event):void
 			{
-				trace("iosxdripreader.mxml, setting ModelLocator.isInForeground = true");
+				myTrace("setting ModelLocator.isInForeground = true");
 				ModelLocator.isInForeground = true;
 				
-				trace("iosxdripreader.mxml, calling NightScoutService.sync");
+				myTrace("calling NightScoutService.sync");
 				NightScoutService.sync();
+				
+				if (!HomeView.peripheralConnected) {
+					myTrace("peripheral not connected, calling bluetoothservice.tryreconnect");
+					BluetoothService.tryReconnect(null);
+				}
 			}
+			
+			private static function myTrace(log:String):void {
+				Trace.myTrace("iosxdripreader.mxml", log);
+			}
+
 		]]>
 	</fx:Script>
 	

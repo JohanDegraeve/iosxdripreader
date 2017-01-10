@@ -55,16 +55,20 @@ package services
 		}
 		
 		public static function init():void {
+			myTrace("init");
 			bgLevel1 = Number.NaN;
 			timeStampOfFirstBgLevel = new Number(0);
 			TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, bgReadingReceived);
 			NotificationService.instance.addEventListener(NotificationServiceEvent.NOTIFICATION_EVENT, notificationReceived);
+			myTrace("finished init");
 		}
 		
 		private static function notificationReceived(event:NotificationServiceEvent):void {
+			myTrace("notificationReceived");
 			if (event != null) {//not sure why checking, this would mean NotificationService received a null object, shouldn't happen
 				var notificationEvent:NotificationEvent = event.data as NotificationEvent;
 				if (notificationEvent.id == NotificationService.ID_FOR_EXTRA_CALIBRATION_REQUEST) {
+					myTrace("ID_FOR_EXTRA_CALIBRATION_REQUEST");
 					//double check if it's still needed - in the Android version this double check is not done
 					if (!CalibrationRequest.shouldRequestCalibration(ModelLocator.bgReadings.getItemAt(ModelLocator.bgReadings.length - 1) as BgReading)) {
 						var alert:DialogView = Dialog.service.create(
@@ -79,8 +83,10 @@ package services
 						calibrationOnRequest(false);
 					}
 				} else if (notificationEvent.id == NotificationService.ID_FOR_REQUEST_CALIBRATION) {
+					myTrace("ID_FOR_EXTRA_CALIBRATION_REQUEST");
 					//we don't need to do anything with the bgreading, but we need to ask the user for a calibration
 					if (((new Date()).valueOf() - timeStampOfFirstBgLevel) > (7 * 60 * 1000 + 100)) { //previous measurement was more than 7 minutes ago , restart
+						myTrace("previous measurement was more than 7 minutes ago , restart");
 						timeStampOfFirstBgLevel = new Number(0);
 						bgLevel1 = Number.NaN;
 					}
@@ -107,12 +113,13 @@ package services
 		}
 		
 		private static function bgReadingReceived(be:TransmitterServiceEvent):void {
+			myTrace("bgReadingReceived");
 			//if there's already more than two calibrations, then there's no need anymore to request initial calibration
 			//same if sensor not active, then length will be 0
 			if (Calibration.allForSensor().length < 2) {
-				
+				myTrace("Calibration.allForSensor().length < 2");
 				if ((new Date()).valueOf() - Sensor.getActiveSensor().startedAt < 2 * 3600 * 1000) {
-					trace("CalibrationService : bgreading received but sensor age < 2 hours, so ignoring");
+					myTrace("CalibrationService : bgreading received but sensor age < 2 hours, so ignoring");
 				} else {
 					//because the timer based function timerForWaitCalibration doesn't always work as expected
 					NotificationService.updateAllNotifications(null);
@@ -132,6 +139,7 @@ package services
 					//the notification doesn't need to open any action, the dialog is create when the user opens the notification, or if the app is in the foreground, as soon as the notification is build. 
 					//Only do this if be!= null, because if be == null, then it means this function was called after having entered an invalid number in the dialog, so user is using the app, no need for a notification
 					if (be != null) {
+						myTrace("Launching notification ID_FOR_REQUEST_CALIBRATION");
 						Notifications.service.notify(
 							new NotificationBuilder()
 							.setId(NotificationService.ID_FOR_REQUEST_CALIBRATION)
@@ -142,6 +150,7 @@ package services
 							.enableLights(true)
 							.build());
 					} else {
+						myTrace("opening dialog to request calibration");
 						var alert:DialogView = Dialog.service.create(
 							new AlertBuilder()
 							.setTitle(isNaN(bgLevel1) ? ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_first_calibration_title") : ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_second_calibration_title"))
@@ -164,7 +173,7 @@ package services
 		private static function removeInitialCalibrationRequestNotification (event:TimerEvent):void {
 			//user didn't give input on time, dialog is closed by DialogService
 			//but also notification needs to be removed, call to update will remove this notification
-			trace("in removeInitialCalibrationRequestNotification");
+			myTrace("in removeInitialCalibrationRequestNotification");
 			NotificationService.updateAllNotifications(null);
 		}
 		
@@ -172,6 +181,7 @@ package services
 		}
 		
 		private static function intialCalibrationValueEntered(event:DialogViewEvent):void {
+			myTrace("intialCalibrationValueEntered");
 			if (event.index == 1) {
 				return;
 			}
@@ -215,6 +225,7 @@ package services
 		 * will create an alertdialog to ask for a calibration 
 		 */
 		private static function initialCalibrate():void {
+			myTrace("initialCalibrate");
 			var alert:DialogView = Dialog.service.create(
 				new AlertBuilder()
 				.setTitle(ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_calibration_title"))
@@ -375,7 +386,7 @@ package services
 		}
 		
 		private static function myTrace(log:String):void {
-			Trace.myTrace("xdrip-CalibrationService.as", log);
+			Trace.myTrace("CalibrationService.as", log);
 		}
 	}
 }

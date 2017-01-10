@@ -16,6 +16,7 @@ package services
 	import flash.utils.ByteArray;
 	import flash.utils.Timer;
 	
+	import Utilities.Trace;
 	import Utilities.UniqueId;
 	
 	import databaseclasses.LocalSettings;
@@ -118,23 +119,23 @@ package services
 		
 		private static function bluetoothDeviceConnectionCompleted(event:BlueToothServiceEvent):void {
 			if (attemptingBluetoothReconnect) {
-				trace("BackGroundFetchService.as bluetoothDeviceConnectionCompleted waiting bluetoothreconnect = true");
+				myTrace("bluetoothDeviceConnectionCompleted waiting bluetoothreconnect = true");
 				attemptingBluetoothReconnect = false;
 				if (!waitingSyncResponse) {
-					trace("BackGroundFetchService.as bluetoothDeviceConnectionCompleted watingsyncresponse = false, calling callcompletion");
+					myTrace("bluetoothDeviceConnectionCompleted watingsyncresponse = false, calling callcompletion");
 					callCompletionHandler(syncResponse);
 				}
 			}
 		}
 		
 		public static function callCompletionHandler(result:String):void {
-			trace("BackGroundFetchService.as callCompletionhandler with result " + result);
+			myTrace("callCompletionhandler with result " + result);
 			waitingSyncResponse = false;
 			if (attemptingBluetoothReconnect) {
-				trace("attemptingBluetoothReconnect = true, setting syncresponse to " + result);
+				myTrace("attemptingBluetoothReconnect = true, setting syncresponse to " + result);
 				syncResponse = result;
 			} else {
-				trace("attemptingBluetoothReconnect = false, calling callcompletionhandler");
+				myTrace("attemptingBluetoothReconnect = false, calling callcompletionhandler");
 				BackgroundFetch.callCompletionHandler(result);
 				syncResponse = NO_DATA;
 				if (reconnectAttemptTimer != null)
@@ -144,7 +145,7 @@ package services
 		}
 		
 		private static function reconnectTimerExpiry(event:Event):void {
-			trace("reconnectTimerExpiry calling callCompletionHandler with result " + syncResponse); 
+			myTrace("reconnectTimerExpiry calling callCompletionHandler with result " + syncResponse); 
 			waitingSyncResponse = false;
 			attemptingBluetoothReconnect = false;
 			BackgroundFetch.callCompletionHandler(syncResponse);
@@ -152,10 +153,10 @@ package services
 		}
 		
 		private static function performFetch(event:BackgroundFetchEvent):void {
-			trace("BackGroundFetchService.as performFetch");
+			myTrace("performFetch");
 			
 			if (!HomeView.peripheralConnected) {
-				trace("BackGroundFetchService.as peripheral not connected, calling bluetoothservice.tryreconnect");
+				myTrace("peripheral not connected, calling bluetoothservice.tryreconnect");
 				attemptingBluetoothReconnect = true;
 				reconnectAttemptTimer = new Timer(20000, 1);
 				reconnectAttemptTimer.addEventListener(TimerEvent.TIMER, reconnectTimerExpiry);
@@ -178,7 +179,7 @@ package services
 		}
 		
 		private static function deviceTokenReceived(event:BackgroundFetchEvent):void {
-			trace("BackGroundFetchService.as deviceTokenReceived ");
+			myTrace("deviceTokenReceived ");
 			var token:String = (event.data.token as String).replace("<","").replace(">","").replace(" ","").replace(" ","").replace(" ","").replace(" ","").replace(" ","").replace(" ","").replace(" ","").replace(" ","").replace(" ","").replace(" ","").replace(" ","");
 			
 			//if already registered for push notifications, then update the token
@@ -202,8 +203,8 @@ package services
 		}
 		
 		private static function loadRequestSuccess(event:BackgroundFetchEvent):void {
-			trace("BackGroundFetchService.as loadRequestSuccess");
-			trace("result = " + (event.data.result as String)); 
+			myTrace("loadRequestSuccess");
+			myTrace("result = " + (event.data.result as String)); 
 			
 			var backgroundfetchserviceLogInfo:BackGroundFetchServiceEvent = new BackGroundFetchServiceEvent(BackGroundFetchServiceEvent.LOG_INFO);
 			backgroundfetchserviceLogInfo.data = new Object();
@@ -217,8 +218,8 @@ package services
 		}
 		
 		private static function loadRequestError(event:BackgroundFetchEvent):void {
-			trace("BackGroundFetchService.as loadRequestError");
-			trace("error = " + (event.data.error as String));
+			myTrace("loadRequestError");
+			myTrace("error = " + (event.data.error as String));
 			
 			var backgroundfetchserviceLogInfo:BackGroundFetchServiceEvent = new BackGroundFetchServiceEvent(BackGroundFetchServiceEvent.LOG_INFO);
 			backgroundfetchserviceLogInfo.data = new Object();
@@ -275,13 +276,13 @@ package services
 			if (QBSessionBusy)
 				return;
 			QBSessionBusy = true;
-			trace("BackGroundFetchService.as registerPushNotification with taglist " + newTagList);
+			myTrace("registerPushNotification with taglist " + newTagList);
 			wishedTagList = newTagList;
 			createSessionQuickBlox();
 		}
 		
 		private static function createSessionQuickBlox():void {
-			trace("BackGroundFetchService.as createSessionQuickBlox");
+			myTrace("createSessionQuickBlox");
 			var nonce:String = UniqueId.createNonce(10);
 			var timeStamp:String = (new Date()).valueOf().toString().substr(0, 10);
 			var udid:String = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_UDID);
@@ -316,7 +317,7 @@ package services
 		}
 		
 		private static function createBloxSessionSuccess(event:Event):void {
-			trace("BackGroundFetchService.as createBloxSessionSuccess");
+			myTrace("createBloxSessionSuccess");
 			var eventAsJSONObject:Object = JSON.parse(event.target.data as String);
 			QB_Token = eventAsJSONObject.session.token;
 			signUpQuickBlox();
@@ -343,13 +344,13 @@ package services
 		}
 		
 		private static function signUpSuccess(event:Event):void {
-			trace("BackGroundFetchService signUpSuccess");
+			myTrace("BackGroundFetchService signUpSuccess");
 			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_ACTUAL_QBLOX_SUBSCRIPTION_TAG, wishedTagList);
 			userSignInQuickBlox();
 		}
 		
 		private static function signUpFailure(event:IOErrorEvent):void {
-			trace("BackGroundFetchService signUpFailure" + (event.currentTarget.data ? event.currentTarget.data:""));
+			myTrace("BackGroundFetchService signUpFailure" + (event.currentTarget.data ? event.currentTarget.data:""));
 			if (event.currentTarget.data) {
 				var eventAsJSONObject:Object = JSON.parse(event.target.data as String);
 				if (eventAsJSONObject.errors) {
@@ -383,7 +384,7 @@ package services
 		}
 		
 		private static function signInSuccess(event:Event):void {
-			trace("BackGroundFetchService.as signInSuccess");
+			myTrace("signInSuccess");
 			var eventAsJSONObject:Object = JSON.parse(event.target.data as String);
 			
 			if (eventAsJSONObject.user.user_tags != wishedTagList) {
@@ -415,7 +416,7 @@ package services
 		}
 		
 		private static function updateUserSuccess(event:Event):void {
-			trace("BackGroundFetchService.as updateUserSuccess with taglist " + wishedTagList);
+			myTrace("updateUserSuccess with taglist " + wishedTagList);
 			
 			var backgroundfetchserviceEvent:BackGroundFetchServiceEvent = new BackGroundFetchServiceEvent(BackGroundFetchServiceEvent.LOG_INFO);
 			backgroundfetchserviceEvent.data = new Object();
@@ -426,7 +427,7 @@ package services
 		}
 		
 		private static function updateUserFailure(event:IOErrorEvent):void {
-			trace("BackGroundFetchService.as updateUserFailure, resetting taglist in settings to value received from quickblox = " + currentTagList + ", event.currentTarget.data = " + (event.currentTarget.data ? event.currentTarget.data:"No info received from quickblox"));
+			myTrace("updateUserFailure, resetting taglist in settings to value received from quickblox = " + currentTagList + ", event.currentTarget.data = " + (event.currentTarget.data ? event.currentTarget.data:"No info received from quickblox"));
 			var backgroundfetchserviceEvent:BackGroundFetchServiceEvent = new BackGroundFetchServiceEvent(BackGroundFetchServiceEvent.LOG_INFO);
 			backgroundfetchserviceEvent.data = new Object();
 			backgroundfetchserviceEvent.data.information = "BackGroundFetchService.as updateUserFailure, resetting taglist in settings to value received from quickblox = " + currentTagList + ", event.currentTarget.data = " + (event.currentTarget.data ? event.currentTarget.data:"No info received from quickblox");
@@ -436,7 +437,7 @@ package services
 		}
 		
 		private static function signInFailure(event:IOErrorEvent):void {
-			trace("BackGroundFetchService.as signInFailure " + (event.currentTarget.data ? event.currentTarget.data:""));
+			myTrace("signInFailure " + (event.currentTarget.data ? event.currentTarget.data:""));
 			var backgroundfetchserviceEvent:BackGroundFetchServiceEvent = new BackGroundFetchServiceEvent(BackGroundFetchServiceEvent.LOG_INFO);
 			backgroundfetchserviceEvent.data = new Object();
 			backgroundfetchserviceEvent.data.information = "BackGroundFetchService.as signInFailure " + (event.currentTarget.data ? event.currentTarget.data:"No info received from quickblox");
@@ -463,7 +464,7 @@ package services
 		}
 		
 		private static function createBloxSessionFailure(event:IOErrorEvent):void {
-			trace("BackGroundFetchService.as createBloxSessionFailure " + (event.currentTarget.data ? event.currentTarget.data:""));
+			myTrace("createBloxSessionFailure " + (event.currentTarget.data ? event.currentTarget.data:""));
 			var backgroundfetchserviceEvent:BackGroundFetchServiceEvent = new BackGroundFetchServiceEvent(BackGroundFetchServiceEvent.LOG_INFO);
 			backgroundfetchserviceEvent.data = new Object();
 			backgroundfetchserviceEvent.data.information = "BackGroundFetchService.as createBloxSessionFailure " + (event.currentTarget.data ? event.currentTarget.data:"No info received from quickblox");
@@ -471,13 +472,13 @@ package services
 		}
 		
 		private static function subscriptionSuccess(event:Event):void {
-			trace("BackGroundFetchService.as subscriptionSuccess");
+			myTrace("subscriptionSuccess");
 			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_SUBSCRIBED_TO_PUSH_NOTIFICATIONS, "true");
 			destroySession();
 		}
 		
 		private static function subscriptionFailure(event:IOErrorEvent):void {
-			trace("BackGroundFetchService.as subscriptionFailure" + (event.currentTarget.data ? event.currentTarget.data:""));
+			myTrace("subscriptionFailure" + (event.currentTarget.data ? event.currentTarget.data:""));
 			var backgroundfetchserviceEvent:BackGroundFetchServiceEvent = new BackGroundFetchServiceEvent(BackGroundFetchServiceEvent.LOG_INFO);
 			backgroundfetchserviceEvent.data = new Object();
 			backgroundfetchserviceEvent.data.information = "BackGroundFetchService.as subscriptionFailure " + (event.currentTarget.data ? event.currentTarget.data:"No info received from quickblox");
@@ -499,15 +500,20 @@ package services
 		}
 		
 		private static function sessionDestroyed(event:Event):void  {
-			trace("BackGroundFetchService.as sessionDestroyed");
+			myTrace("sessionDestroyed");
 		}
 		
 		private static function sessionDestroyFailure(event:Event):void  {
-			trace("BackGroundFetchService.as sessionDestroyFailure");
+			myTrace("sessionDestroyFailure");
 			var backgroundfetchserviceEvent:BackGroundFetchServiceEvent = new BackGroundFetchServiceEvent(BackGroundFetchServiceEvent.LOG_INFO);
 			backgroundfetchserviceEvent.data = new Object();
 			backgroundfetchserviceEvent.data.information = "BackGroundFetchService.as sessionDestroyFailure " + (event.currentTarget.data ? event.currentTarget.data:"No info received from quickblox");
 			_instance.dispatchEvent(backgroundfetchserviceEvent);
 		}
+		
+		private static function myTrace(log:String):void {
+			Trace.myTrace("BackGroundFetchService.as", log);
+		}
+
 	}
 }

@@ -305,6 +305,7 @@ package databaseclasses
 		 * with database update of the cleared calibrations
 		 */
 		public static function clearAllExistingCalibrations():void {
+			myTrace("clearAllExistingCalibrations");
 			Database.deleteAllCalibrationRequestsSynchronous();
 			var pastCalibrations:ArrayCollection = allForSensor();
 			for (var i:int = 0; i < pastCalibrations.length; i++) {
@@ -321,6 +322,7 @@ package databaseclasses
 		 * the calibrations will be order in descending order by timestamp
 		 */
 		public static function allForSensor():ArrayCollection {
+			myTrace("allForSensor");
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CURRENT_SENSOR) == "0")
 				return new ArrayCollection();//an empty arraycollection
 			
@@ -445,28 +447,28 @@ package databaseclasses
 			bgReading1.updateInDatabaseSynchronous();
 			bgReading2.updateInDatabaseSynchronous();
 			
-			myTrace("Calibration.intialCalibration before calculate_w_l_s");
-			myTrace("Calibration.intialCalibration after calculate_w_l_s");
-			myTrace("before adjustbgreadings bgReading1 = " + bgReading1.print("   "));
-			myTrace("before adjustbgreadings bgReading2 = " + bgReading2.print("   "));
+			//myTrace("Calibration.intialCalibration before calculate_w_l_s");
+			//myTrace("Calibration.intialCalibration after calculate_w_l_s");
+			//myTrace("before adjustbgreadings bgReading1 = " + bgReading1.print("   "));
+			//myTrace("before adjustbgreadings bgReading2 = " + bgReading2.print("   "));
 			var latest3Calibrations:ArrayCollection = new ArrayCollection();
 			latest3Calibrations.addItem(calibration2);//the second is the latest, this one comes first, so it will be sorted from large to small
 			latest3Calibrations.addItem(calibration1);
 			
 			adjustRecentBgReadings(5, latest3Calibrations);
 			CalibrationRequest.createOffset(Math.min(bg1,bg2), 35);
-			myTrace("after adjustbgreadings");
-			myTrace("End of initialCalibration bgReading1 = " + bgReading1.print("   "));
-			myTrace("End of initialCalibration bgReading2 = " + bgReading2.print("   "));
-			myTrace("End of initialCalibration calibration1 = " + calibration1.print("   "));
-			myTrace("End of initialCalibration calibration2 = " + calibration2.print("   "));
+			//myTrace("after adjustbgreadings");
+			//myTrace("End of initialCalibration bgReading1 = " + bgReading1.print("   "));
+			//myTrace("End of initialCalibration bgReading2 = " + bgReading2.print("   "));
+			//myTrace("End of initialCalibration calibration1 = " + calibration1.print("   "));
+			//myTrace("End of initialCalibration calibration2 = " + calibration2.print("   "));
 		}
 		
 		/**
 		 * no database insert of the new calibration !
 		 */
 		public static function create(bg:Number):Calibration {
-			//TODO take unit from settings
+			myTrace("create bgreading");
 			var calibration:Calibration;
 			var unit:String = "mgdl";
 			if (unit != "mgdl") {
@@ -568,20 +570,19 @@ package databaseclasses
 				}
 				
 				if (calibration == null) {
-					trace("calling calibration.last");
 					calibration = Calibration.last();
 				}
 				
-				myTrace("calibrations length = " + calibrations.length);
+				//myTrace("calibrations length = " + calibrations.length);
 				if (calibrations.length <= 1) {
-					myTrace("calculatewls : length <= 1");
+					//myTrace("calculatewls : length <= 1");
 					calibration.slope = 1;
-					myTrace("intercept checkpoint 1 = " + calibration.intercept);
+					//myTrace("intercept checkpoint 1 = " + calibration.intercept);
 					calibration.intercept = calibration.bg - (calibration.rawValue * calibration.slope);
-					myTrace("intercept checkpoint 2 = " + calibration.intercept);
+					//myTrace("intercept checkpoint 2 = " + calibration.intercept);
 					CalibrationRequest.createOffset(calibration.bg, 25);
 				} else {
-					myTrace("calculatewls : length > 1");
+					//myTrace("calculatewls : length > 1");
 					for (calibcntr = 0; calibcntr< calibrations.length; calibcntr++) {
 						calibrationItem = calibrations.getItemAt(calibcntr) as Calibration;
 						w = calibrationItem.calculateWeight(calibrations);
@@ -591,22 +592,22 @@ package databaseclasses
 						p += (w * calibrationItem.bg);
 						q += (w * calibrationItem.estimateRawAtTimeOfCalibration * calibrationItem.bg);
 					}
-					myTrace("calculatewls 1 : w = " + w + ", l = " + l + ", m = " + m + ", n = " + n + ", p = " + p + ", q = " + q);
-					myTrace("calculatewls : lastcalibration has id = " + calibration.uniqueId);
+					//myTrace("calculatewls 1 : w = " + w + ", l = " + l + ", m = " + m + ", n = " + n + ", p = " + p + ", q = " + q);
+					//myTrace("calculatewls : lastcalibration has id = " + calibration.uniqueId);
 					w = (calibration.calculateWeight(calibrations) * (calibrations.length * 0.14));
 					l += (w);
 					m += (w * calibration.estimateRawAtTimeOfCalibration);
 					n += (w * calibration.estimateRawAtTimeOfCalibration * calibration.estimateRawAtTimeOfCalibration);
 					p += (w * calibration.bg);
 					q += (w * calibration.estimateRawAtTimeOfCalibration * calibration.bg);
-					myTrace("calculatewls 2 : w = " + w + ", l = " + l + ", m = " + m + ", n = " + n + ", p = " + p + ", q = " + q);
+					//myTrace("calculatewls 2 : w = " + w + ", l = " + l + ", m = " + m + ", n = " + n + ", p = " + p + ", q = " + q);
 					var d:Number = (l * n) - (m * m);
-					myTrace("d = " + d);
-					myTrace("intercept checkpoint 3 = " + calibration.intercept);
+					//myTrace("d = " + d);
+					//myTrace("intercept checkpoint 3 = " + calibration.intercept);
 					calibration.intercept = ((n * p) - (m * q)) / d;
-					myTrace("intercept checkpoint 4 = " + calibration.intercept);
+					//myTrace("intercept checkpoint 4 = " + calibration.intercept);
 					calibration.slope = ((l * q) - (m * p)) / d;
-					myTrace("1 intercept = "+  calibration.intercept + ", slope = " + calibration.slope);
+					//myTrace("1 intercept = "+  calibration.intercept + ", slope = " + calibration.slope);
 					
 					//getting the latest 3 calibrations from database
 					//then check if calibration is not null and of not if it's already in that list, if not add it, resort and get the latest 3
@@ -636,20 +637,20 @@ package databaseclasses
 					if ((calibrations.length == 2 && calibration.slope < sParams.LOW_SLOPE_1) || (calibration.slope < sParams.LOW_SLOPE_2)) { 
 						calibration.slope = calibration.slopeOOBHandler(0, latest3Calibrations);
 						if(calibrations.length > 2) { calibration.possibleBad = true; }
-						myTrace("intercept checkpoint 5 = " + calibration.intercept);
+						//myTrace("intercept checkpoint 5 = " + calibration.intercept);
 						calibration.intercept = calibration.bg - (calibration.estimateRawAtTimeOfCalibration * calibration.slope);
-						myTrace("intercept checkpoint 6 = " + calibration.intercept);
+						//myTrace("intercept checkpoint 6 = " + calibration.intercept);
 						CalibrationRequest.createOffset(calibration.bg, 25);
-						myTrace("2 intercept = "+  calibration.intercept + ", slope = " + calibration.slope);
+						//myTrace("2 intercept = "+  calibration.intercept + ", slope = " + calibration.slope);
 					}
 					if ((calibrations.length == 2 && calibration.slope > sParams.HIGH_SLOPE_1) || (calibration.slope > sParams.HIGH_SLOPE_2)) {
 						calibration.slope = calibration.slopeOOBHandler(1, latest3Calibrations);
 						if(calibrations.length > 2) { calibration.possibleBad = true; }
-						myTrace("intercept checkpoint 7 = " + calibration.intercept);
+						//myTrace("intercept checkpoint 7 = " + calibration.intercept);
 						calibration.intercept = calibration.bg - (calibration.estimateRawAtTimeOfCalibration * calibration.slope);
-						myTrace("intercept checkpoint 8 = " + calibration.intercept);
+						//myTrace("intercept checkpoint 8 = " + calibration.intercept);
 						CalibrationRequest.createOffset(calibration.bg, 25);
-						myTrace("3 intercept = "+  calibration.intercept + ", slope = " + calibration.slope);
+						//myTrace("3 intercept = "+  calibration.intercept + ", slope = " + calibration.slope);
 					}
 				}
 			}
@@ -676,21 +677,21 @@ package databaseclasses
 			
 			var thisCalibration:Calibration = calibrations.getItemAt(0) as Calibration;
 			if(status == 0) {
-				myTrace("in slopeOOBHandler, with status = 0");
-				myTrace("calibrations.size = " + calibrations.length);
+				//myTrace("in slopeOOBHandler, with status = 0");
+				//myTrace("calibrations.size = " + calibrations.length);
 				if (calibrations.length == 3) {
 					if ((Math.abs(thisCalibration.bg - thisCalibration.estimateBgAtTimeOfCalibration) < 30) && ((calibrations.getItemAt(1) as Calibration).possibleBad == true)) {
-						myTrace("returnvalue for size 3, first branch = " + (calibrations.getItemAt(1) as Calibration).slope);
+						//myTrace("returnvalue for size 3, first branch = " + (calibrations.getItemAt(1) as Calibration).slope);
 						return (calibrations.getItemAt(1) as Calibration).slope;
 					} else {
-						myTrace("returnvalue for size 3, second branch = " + Math.max(((-0.048) * (thisCalibration.sensorAgeAtTimeOfEstimation / (60000 * 60 * 24))) + 1.1, sParams.DEFAULT_LOW_SLOPE_LOW));
+						//myTrace("returnvalue for size 3, second branch = " + Math.max(((-0.048) * (thisCalibration.sensorAgeAtTimeOfEstimation / (60000 * 60 * 24))) + 1.1, sParams.DEFAULT_LOW_SLOPE_LOW));
 						return Math.max(((-0.048) * (thisCalibration.sensorAgeAtTimeOfEstimation / (60000 * 60 * 24))) + 1.1, sParams.DEFAULT_LOW_SLOPE_LOW);
 					}
 				} else if (calibrations.length == 2) {
-					myTrace("thisCalibration.sensor_age_at_time_of_estimation = " + thisCalibration.sensorAgeAtTimeOfEstimation);
-					myTrace("(thisCalibration.sensor_age_at_time_of_estimation / (60000 * 60 * 24) = " + (thisCalibration.sensorAgeAtTimeOfEstimation / (60000 * 60 * 24)));
-					myTrace("sParams.getDefaultLowSlopeHigh() = " + sParams.DEFAULT_LOW_SLOPE_HIGH);
-					myTrace("return value for size 2 = " + Math.max(((-0.048) * (thisCalibration.sensorAgeAtTimeOfEstimation / (60000 * 60 * 24))) + 1.1, sParams.DEFAULT_LOW_SLOPE_HIGH));
+					//myTrace("thisCalibration.sensor_age_at_time_of_estimation = " + thisCalibration.sensorAgeAtTimeOfEstimation);
+					//myTrace("(thisCalibration.sensor_age_at_time_of_estimation / (60000 * 60 * 24) = " + (thisCalibration.sensorAgeAtTimeOfEstimation / (60000 * 60 * 24)));
+					//myTrace("sParams.getDefaultLowSlopeHigh() = " + sParams.DEFAULT_LOW_SLOPE_HIGH);
+					//myTrace("return value for size 2 = " + Math.max(((-0.048) * (thisCalibration.sensorAgeAtTimeOfEstimation / (60000 * 60 * 24))) + 1.1, sParams.DEFAULT_LOW_SLOPE_HIGH));
 					return Math.max(((-0.048) * (thisCalibration.sensorAgeAtTimeOfEstimation / (60000 * 60 * 24))) + 1.1, sParams.DEFAULT_LOW_SLOPE_HIGH);
 				}
 				return sParams.DEFAULT_SLOPE;
@@ -785,20 +786,20 @@ package databaseclasses
 				}
 			}
 			
-			myTrace("id of firstcalibration = " + firstCalibration.uniqueId);
-			myTrace("id of last calibration = " + lastCalibration.uniqueId);
+			//myTrace("id of firstcalibration = " + firstCalibration.uniqueId);
+			//myTrace("id of last calibration = " + lastCalibration.uniqueId);
 			var firstTimeStarted:Number = firstCalibration.sensorAgeAtTimeOfEstimation;
 			var lastTimeStarted:Number = lastCalibration.sensorAgeAtTimeOfEstimation;
-			myTrace("calculateWeight: firstTimeStarted = " + firstTimeStarted);
-			myTrace("calculateWeight: lastTimeStarted = " + lastTimeStarted);
-			myTrace("sensor_age_at_time_of_estimation = " + sensorAgeAtTimeOfEstimation);//calibration creation date - sensor started at, gewoonlijk 2 uur + 10 minuten = 7800000
-			myTrace("sensor_age_at_time_of_estimation - firstTimeStarted = " + (sensorAgeAtTimeOfEstimation - firstTimeStarted));//
-			myTrace("lastTimeStarted - firstTimeStarted" + (lastTimeStarted - firstTimeStarted));
-			myTrace("division = " + ((sensorAgeAtTimeOfEstimation - firstTimeStarted) / (lastTimeStarted - firstTimeStarted)));
+			//myTrace("calculateWeight: firstTimeStarted = " + firstTimeStarted);
+			//myTrace("calculateWeight: lastTimeStarted = " + lastTimeStarted);
+			//myTrace("sensor_age_at_time_of_estimation = " + sensorAgeAtTimeOfEstimation);//calibration creation date - sensor started at, gewoonlijk 2 uur + 10 minuten = 7800000
+			//myTrace("sensor_age_at_time_of_estimation - firstTimeStarted = " + (sensorAgeAtTimeOfEstimation - firstTimeStarted));//
+			//myTrace("lastTimeStarted - firstTimeStarted" + (lastTimeStarted - firstTimeStarted));
+			//myTrace("division = " + ((sensorAgeAtTimeOfEstimation - firstTimeStarted) / (lastTimeStarted - firstTimeStarted)));
 			var timePercentage:Number = Math.min(((sensorAgeAtTimeOfEstimation - firstTimeStarted) / (lastTimeStarted - firstTimeStarted)) / (0.85), 1);
 			timePercentage = (timePercentage + 0.01);
-			myTrace("calculateWeight: timePercentage = " + timePercentage);
-			myTrace("returnvalue = " + Math.max((((((slopeConfidence + sensorConfidence) * (timePercentage))) / 2) * 100), 1));
+			//myTrace("calculateWeight: timePercentage = " + timePercentage);
+			//myTrace("returnvalue = " + Math.max((((((slopeConfidence + sensorConfidence) * (timePercentage))) / 2) * 100), 1));
 			return Math.max((((((slopeConfidence + sensorConfidence) * (timePercentage))) / 2) * 100), 1);
 		}
 		
@@ -910,7 +911,7 @@ package databaseclasses
 		}
 		
 		private static function myTrace(log:String):void {
-			Trace.myTrace("xdrip-Calibration.as", log);
+			Trace.myTrace("Calibration.as", log);
 		}
 		
 		public function print(indentation:String):String {

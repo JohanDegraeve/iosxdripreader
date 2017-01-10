@@ -134,7 +134,7 @@ package services
 			}
 			
 			function performFetch(event:BackGroundFetchServiceEvent):void {
-				trace("NightScoutService.as sync : performfetch");
+				myTrace("sync : performfetch");
 				sync();
 			}
 			
@@ -142,7 +142,7 @@ package services
 				calculateTag();
 				
 				if (!ModelLocator.isInForeground) {
-					trace("NightScoutService.as bgreadingEventReceived started but not in foreground, not starting sync");
+					myTrace("bgreadingEventReceived started but not in foreground, not starting sync");
 				} else {
 					sync();
 				}
@@ -247,7 +247,7 @@ package services
 		}
 		
 		private static function nightScoutUrlTestSuccess(event:BackGroundFetchServiceEvent):void {
-			trace("NightScoutService.as nightScoutUrlTestSuccess with information =  " + event.data.information as String);
+			myTrace("nightScoutUrlTestSuccess with information =  " + event.data.information as String);
 			functionToCallAtUpOrDownloadSuccess = null;
 			functionToCallAtUpOrDownloadFailure = null;
 			
@@ -269,7 +269,7 @@ package services
 		}
 		
 		private static function nightScoutUrlTestError(event:BackGroundFetchServiceEvent):void {
-			trace("NightScoutService.as nightScoutUrlTestError with information =  " + event.data.information as String);
+			myTrace("nightScoutUrlTestError with information =  " + event.data.information as String);
 			functionToCallAtUpOrDownloadSuccess = null;
 			functionToCallAtUpOrDownloadFailure = null;
 
@@ -302,7 +302,7 @@ package services
 					!=
 				LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_ACTUAL_QBLOX_SUBSCRIPTION_TAG)))
 			) {
-				trace("NightScoutService.as sync, url and secret tested, device token not empty and not subscribed, so registering now for push notifications");
+				myTrace("sync, url and secret tested, device token not empty and not subscribed, so registering now for push notifications");
 				BackGroundFetchService.registerPushNotification(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_WISHED_QBLOX_SUBSCRIPTION_TAG));
 			}
 				
@@ -333,7 +333,7 @@ package services
 				return;
 			}
 			
-			trace("NightScoutService.as setting syncRunning = true");
+			myTrace("setting syncRunning = true");
 			syncRunning = true;
 			
 			var listOfReadingsAsArray:Array = [];
@@ -381,7 +381,7 @@ package services
 			
 			var endtime:Number  = (new Date()).valueOf();
 			
-			trace("NightScoutService.as sync , time taken to go through bgreadings = " + ((endtime - starttime)/1000) + " seconds");
+			myTrace("sync , time taken to go through bgreadings = " + ((endtime - starttime)/1000) + " seconds");
 			if (listOfReadingsAsArray.length > 0) {
 				var logString:String = ".. not filled in ..";
 				/*for (var cntr2:int = 0; cntr2 < listOfReadingsAsArray.length; cntr2++) {
@@ -390,14 +390,14 @@ package services
 				dispatchInformation("uploading_events_with_id", logString);
 				createAndLoadURLRequest(_nightScoutEventsUrl, URLRequestMethod.POST, null, JSON.stringify(listOfReadingsAsArray), nightScoutUploadSuccess, nightScoutUploadFailed);
 			} else {
-				trace("NightScoutService.as setting syncRunning = false");
+				myTrace("setting syncRunning = false");
 				BackGroundFetchService.callCompletionHandler(BackGroundFetchService.NO_DATA);
 				syncRunning = false;
 			}
 		}
 		
 		private static function nightScoutUploadSuccess(event:Event):void {
-			trace("NightScoutService.as in nightScoutUploadSuccess");
+			myTrace("in nightScoutUploadSuccess");
 			BackGroundFetchService.callCompletionHandler(BackGroundFetchService.NEW_DATA);
 			
 			dispatchInformation("upload_to_nightscout_successfull");
@@ -406,7 +406,7 @@ package services
 		}
 		
 		private static function nightScoutUploadFailed(event:BackGroundFetchServiceEvent):void {
-			trace("NightScoutService.as in nightScoutUploadFailed");
+			myTrace("in nightScoutUploadFailed");
 			BackGroundFetchService.callCompletionHandler(BackGroundFetchService.FETCH_FAILED);
 			
 			var errorMessage:String;
@@ -422,13 +422,13 @@ package services
 		}
 		
 		private static function defaultErrorFunction(event:BackGroundFetchServiceEvent):void {
-			trace("NightScoutService.as in defaultErrorFunction");
+			myTrace("in defaultErrorFunction");
 			if(functionToCallAtUpOrDownloadFailure != null) {
-				trace("NightScoutService.as in defaultErrorFunction functionToCallAtUpOrDownloadFailure != null");
+				myTrace("in defaultErrorFunction functionToCallAtUpOrDownloadFailure != null");
 				functionToCallAtUpOrDownloadFailure(event);
 			}
 			else {
-				trace("NightScoutService.as in defaultErrorFunction functionToCallAtUpOrDownloadFailure = null");
+				myTrace("in defaultErrorFunction functionToCallAtUpOrDownloadFailure = null");
 				BackGroundFetchService.callCompletionHandler(BackGroundFetchService.FETCH_FAILED);
 			}
 			
@@ -436,13 +436,13 @@ package services
 			functionToCallAtUpOrDownloadFailure = null;
 		}
 		private static function defaultSuccessFunction(event:BackGroundFetchServiceEvent):void {
-			trace("NightScoutService.as in defaultSuccessFunction");
+			myTrace("in defaultSuccessFunction");
 			if(functionToCallAtUpOrDownloadSuccess != null) {
-				trace("NightScoutService.as in defaultSuccessFunction functionToCallAtUpOrDownloadSuccess != null");
+				myTrace("in defaultSuccessFunction functionToCallAtUpOrDownloadSuccess != null");
 				functionToCallAtUpOrDownloadSuccess(event);
 			}
 			else {
-				trace("NightScoutService.as in defaultSuccessFunction functionToCallAtUpOrDownloadSuccess = null");
+				myTrace("in defaultSuccessFunction functionToCallAtUpOrDownloadSuccess = null");
 				BackGroundFetchService.callCompletionHandler(BackGroundFetchService.NEW_DATA);
 			}
 			
@@ -467,12 +467,12 @@ package services
 		}
 		
 		private static function myTrace(log:String):void {
-			Trace.myTrace("xdrip-NightScoutService.as", log);
+			Trace.myTrace("NightScoutService.as", log);
 		}
 		
 		private static function syncFinished(result:Boolean):void {
-			trace("syncfinished still to be implemented");
-			trace("NightScoutService.as setting syncRunning = false (might appear double");
+			myTrace("syncfinished");
+			myTrace("setting syncRunning = false");
 			syncRunning = false;
 		}
 		

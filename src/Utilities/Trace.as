@@ -10,20 +10,16 @@ package Utilities
 	
 	import spark.formatters.DateTimeFormatter;
 	
-	import databaseclasses.Database;
 	import databaseclasses.LocalSettings;
 	
-	import events.BlueToothServiceEvent;
-	import events.DatabaseEvent;
 	import events.SettingsServiceEvent;
 	
-	import services.BluetoothService;
 	
 	public class Trace
 	{
 		private static var dateFormatter:DateTimeFormatter;
 		private static var writeFileStream:FileStream;
-		private static const debugMode:Boolean = false;
+		private static const debugMode:Boolean = true;
 		private static var initialStart:Boolean = true;
 		
 		public function Trace()
@@ -33,8 +29,6 @@ package Utilities
 		public static function init():void {
 			if (initialStart) {
 				initialStart = false;
-				Database.instance.addEventListener(DatabaseEvent.DATABASE_INFORMATION_EVENT, databaseInformationReceived);
-				BluetoothService.instance.addEventListener(BlueToothServiceEvent.BLUETOOTH_SERVICE_INFORMATION_EVENT, bluetoothServiceInformationReceived);
 				LocalSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, localSettingChanged);
 			}
 		}
@@ -50,7 +44,7 @@ package Utilities
 		public static function myTrace(tag:String, log:String):void {
 			if (dateFormatter == null) {
 				dateFormatter = new DateTimeFormatter();
-				dateFormatter.dateTimePattern = "HH-mm-ss-SSS";
+				dateFormatter.dateTimePattern = "HH:mm:ss.SSS";
 				dateFormatter.useUTC = false;
 				dateFormatter.setStyle("locale",Capabilities.language.substr(0,2));
 			}
@@ -70,14 +64,6 @@ package Utilities
 					trace("Trace.as : file creation failed");
 				}
 			}
-		}
-		
-		private static function bluetoothServiceInformationReceived(event:BlueToothServiceEvent):void {
-			myTrace("BT-INFO", event.data.information);
-		}
-		
-		private static function databaseInformationReceived(event:DatabaseEvent):void {
-			myTrace("DB-INFO", event.data.information);
 		}
 		
 		public static function sendTraceFile():void {

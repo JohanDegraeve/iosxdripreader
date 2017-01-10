@@ -30,6 +30,8 @@ package services
 	import flash.utils.ByteArray;
 	import flash.utils.Endian;
 	
+	import Utilities.Trace;
+	
 	import databaseclasses.BgReading;
 	import databaseclasses.CommonSettings;
 	import databaseclasses.Sensor;
@@ -111,7 +113,7 @@ package services
 						} else if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID) == "00000" 
 							&&
 							transmitterDataBeaconPacket.TxID != "00000") {
-							trace("TransmitterService.as storing transmitter id received from bluetooth device = " + transmitterDataBeaconPacket.TxID);
+							myTrace("storing transmitter id received from bluetooth device = " + transmitterDataBeaconPacket.TxID);
 							var transmitterServiceEvent:TransmitterServiceEvent = new TransmitterServiceEvent(TransmitterServiceEvent.TRANSMITTER_SERVICE_INFORMATION_EVENT);
 							transmitterServiceEvent.data = new Object();
 							transmitterServiceEvent.data.information = "storing transmitter id received from bluetooth device = " + transmitterDataBeaconPacket.TxID;
@@ -129,7 +131,7 @@ package services
 							value.writeByte(0x06);
 							value.writeByte(0x01);
 							value.writeInt((BluetoothService.encodeTxID(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID))));
-							trace("TransmitterService.as calling BluetoothService.ackCharacteristicUpdate");
+							myTrace("calling BluetoothService.ackCharacteristicUpdate");
 							BluetoothService.ackCharacteristicUpdate(value);
 						} else {
 							var value:ByteArray = new ByteArray();
@@ -148,7 +150,7 @@ package services
 						if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID) == "00000" 
 							&&
 							transmitterDataXBridgeDataPacket.TxID != "00000") {
-							trace("TransmitterService.as storing transmitter id received from bluetooth device = " + transmitterDataXBridgeDataPacket.TxID);
+							myTrace("storing transmitter id received from bluetooth device = " + transmitterDataXBridgeDataPacket.TxID);
 							var transmitterServiceEvent:TransmitterServiceEvent = new TransmitterServiceEvent(TransmitterServiceEvent.TRANSMITTER_SERVICE_INFORMATION_EVENT);
 							transmitterServiceEvent.data = new Object();
 							transmitterServiceEvent.data.information = "storing transmitter id received from bluetooth device = " + transmitterDataXBridgeDataPacket.TxID;
@@ -166,7 +168,7 @@ package services
 							value.writeByte(0x06);
 							value.writeByte(0x01);
 							value.writeInt((BluetoothService.encodeTxID(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID))));
-							trace("TransmitterService.as calling BluetoothService.ackCharacteristicUpdate");
+							myTrace("calling BluetoothService.ackCharacteristicUpdate");
 							BluetoothService.ackCharacteristicUpdate(value);
 						} else {
 							var value:ByteArray = new ByteArray();
@@ -259,7 +261,7 @@ package services
 				value.writeByte(0x06);
 				value.writeByte(0x01);
 				value.writeInt(BluetoothService.encodeTxID(event.values[0] as String));
-				trace("TransmitterService.as calling BluetoothService.ackCharacteristicUpdate");
+				myTrace("calling BluetoothService.ackCharacteristicUpdate");
 				BluetoothService.ackCharacteristicUpdate(value);
 				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID, event.values[0] as String);
 			}
@@ -272,6 +274,9 @@ package services
 			_instance.dispatchEvent(transmitterServiceEvent);
 		}
 		
-		
+		private static function myTrace(log:String):void {
+			Trace.myTrace("TransmitterService.as", log);
+			trace(log);
+		}
 	}
 }

@@ -470,13 +470,9 @@ package databaseclasses
 			var second_latest:BgReading;
 			var third_latest:BgReading;
 			if (last3.length == 3) {
-				myTrace("findNewCurve 3");
 				latest = last3.getItemAt(0) as BgReading;
 				second_latest = last3.getItemAt(1) as BgReading;
 				third_latest = last3.getItemAt(2) as BgReading;
-				/*myTrace("second_latest = " + second_latest.print("   "));
-				myTrace("third_latest = " + third_latest.print("   "));
-				myTrace("this = " + print("   "));*/
 				y3 = latest.calculatedValue;
 				x3 = latest.timestamp;
 				y2 = second_latest.calculatedValue;
@@ -485,22 +481,13 @@ package databaseclasses
 				x1 = third_latest.timestamp;
 				
 				_a = y1/((x1-x2)*(x1-x3))+y2/((x2-x1)*(x2-x3))+y3/((x3-x1)*(x3-x2));
-				log = "BgReading.find_new_curve, size = 3, before calculation of b";
-				
-				myTrace(log);
 				_b = (-y1*(x2+x3)/((x1-x2)*(x1-x3))-y2*(x1+x3)/((x2-x1)*(x2-x3))-y3*(x1+x2)/((x3-x1)*(x3-x2)));
-				log = "BgReading.find_new_curve, size = 3, after calculation of b, b = " + b;
-				myTrace(log);
 				_c = (y1*x2*x3/((x1-x2)*(x1-x3))+y2*x1*x3/((x2-x1)*(x2-x3))+y3*x1*x2/((x3-x1)*(x3-x2)));
 				
 				resetLastModifiedTimeStamp();
 			} else if (last3.length == 2) {
 				latest = last3.getItemAt(0) as BgReading;
 				second_latest = last3.getItemAt(1) as BgReading;
-				/*myTrace("findnewCurve only 2");
-				myTrace("second_latest = " + second_latest.print("   "));
-				myTrace("latest = " + latest.print("   "));
-				myTrace("this = " + print("   "));*/
 				
 				y2 = latest.calculatedValue;
 				x2 = latest.timestamp;
@@ -508,32 +495,21 @@ package databaseclasses
 				x1 = second_latest.timestamp;
 				
 				if (y1 == y2) {
-					log = "BgReading.find_new_curve, size = 2, y1 = y2";
-					myTrace(log);
 					_b = 0;
 				} else {
-					log = "BgReading.find_new_curve, size = 2, y1 != y2, before calculation of b";
-					myTrace(log);
 					_b = (y2 - y1)/(x2 - x1);
-					log = "BgReading.find_new_curve, size = 2, y1 != y2, after calculation of b";
-					myTrace(log);
 				}
 				_a = 0;
 				_c = -1 * ((latest.b * x1) - y1);
 				
 				resetLastModifiedTimeStamp();
 			} else {
-				log = "BgReading.find_new_curve, size is less than 2";
-				myTrace(log);
-
 				_a = 0;
 				_b = 0;
 				_c = calculatedValue;
 				
 				resetLastModifiedTimeStamp();
 			}
-			log = "BgReading.find_new_curve for bgreading with rawData = " + rawData + ", final a = " + a + ", b = " + b + ", c = " + c;
-			myTrace(log);
 		}
 		
 		/**
@@ -680,12 +656,7 @@ package databaseclasses
 				} else {
 					var lastBgReading:BgReading = (BgReading.latest(1))[0] as BgReading;
 					if (lastBgReading != null && lastBgReading.calibration != null) {
-						myTrace("lastBgReading.calibrationFlag = " + lastBgReading.calibrationFlag);
-						myTrace("timestamp =                                            " + timestamp);
-						myTrace("(lastBgReading.timestamp + (60000 * 20)) =             " + (lastBgReading.timestamp + (60000 * 20)));
-						myTrace("(lastBgReading.calibration.timestamp + (60000 * 20)) = " + (lastBgReading.calibration.timestamp + (60000 * 20)));
 						if (lastBgReading.calibrationFlag == true && ((lastBgReading.timestamp + (60000 * 20)) > timestamp) && ((lastBgReading.calibration.timestamp + (60000 * 20)) > timestamp)) {
-							myTrace("overriding lastbgreading.calibration");
 							lastBgReading.calibration
 								.rawValueOverride(BgReading.weightedAverageRaw(lastBgReading.timestamp, timestamp, lastBgReading.calibration.timestamp, lastBgReading.ageAdjustedRawValue, bgReading.ageAdjustedRawValue))
 								.updateInDatabaseSynchronous();
@@ -697,7 +668,6 @@ package databaseclasses
 				updateCalculatedValue(bgReading);
 			}
 			bgReading.performCalculations();
-			myTrace("created bgreading with values : " + bgReading.print("   ")); 
 			return bgReading;
 		}
 		
@@ -762,14 +732,12 @@ package databaseclasses
 		 */
 		private function calculateAgeAdjustedRawValue():BgReading {
 			var adjust_for:Number = AGE_ADJUSTMENT_TIME - (timestamp - sensor.startedAt);
-			//myTrace("in beginning of calculateAgeAdjustedRawValue, adjust_for = " + adjust_for);
 			if (adjust_for <= 0 || BlueToothDevice.isLimitter()) {
 				_ageAdjustedRawValue = rawData;
 			} else {
 				_ageAdjustedRawValue = ((AGE_ADJUSTMENT_FACTOR * (adjust_for / AGE_ADJUSTMENT_TIME)) * rawData) + rawData;
 			}
 			resetLastModifiedTimeStamp();
-			//myTrace("in end of calculateAgeAdjustedRawValue, adjust_for = " + adjust_for);
 			return this;
 		}
 		
@@ -804,7 +772,7 @@ package databaseclasses
 		}
 		
 		private static function myTrace(log:String):void {
-			Trace.myTrace("xdrip-BgReading.as", log);
+			Trace.myTrace("BgReading.as", log);
 		}
 		
 		public function print(indentation:String):String {

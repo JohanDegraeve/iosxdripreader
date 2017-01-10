@@ -1977,7 +1977,7 @@ package databaseclasses
 		}
 		
 		private static function myTrace(log:String):void {
-			Trace.myTrace("xdrip-Calibration.as", log);
+			Trace.myTrace("Database.as", log);
 		}
 
 	}
