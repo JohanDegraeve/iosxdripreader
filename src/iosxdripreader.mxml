@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 								  splashScreenImage="@Embed('assets/splash.png')"
 								  activate="activateHandler(event)"
 								  initialize="initApplication()">
-
+	
 	<fx:Style source="assets/style.css"/>
 	<fx:Script>
 		<![CDATA[
@@ -30,15 +30,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			
 			import model.ModelLocator;
 			
-			import services.BluetoothService;
 			import services.DialogService;
 			import services.NightScoutService;
 			
-			import views.HomeView;
-			
 			public static var deviceScreenWidth:Number;
 			public static var deviceScreenHeight:Number;
-
+			
 			private function initApplication():void {
 				this.addEventListener(Event.ADDED_TO_STAGE, addedToStageHandler);
 				NativeApplication.nativeApplication.executeInBackground = true;
@@ -57,22 +54,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			
 			protected function activateHandler(event:Event):void
 			{
-				myTrace("setting ModelLocator.isInForeground = true");
 				ModelLocator.isInForeground = true;
+				myTrace("setting ModelLocator.isInForeground = true");
 				
 				myTrace("calling NightScoutService.sync");
 				NightScoutService.sync();
-				
-				if (!HomeView.peripheralConnected) {
-					myTrace("peripheral not connected, calling bluetoothservice.tryreconnect");
-					BluetoothService.tryReconnect(null);
-				}
 			}
 			
 			private static function myTrace(log:String):void {
 				Trace.myTrace("iosxdripreader.mxml", log);
 			}
-
 		]]>
 	</fx:Script>
 	

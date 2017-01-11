@@ -291,7 +291,10 @@ package services
 		}
 		
 		public static function sync(event:Event = null):void {
-			
+			myTrace("LOCAL_SETTING_DEVICE_TOKEN_ID = " + LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_DEVICE_TOKEN_ID));
+			myTrace("LOCAL_SETTING_SUBSCRIBED_TO_PUSH_NOTIFICATIONS = " + LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_SUBSCRIBED_TO_PUSH_NOTIFICATIONS));
+			myTrace("LOCAL_SETTING_WISHED_QBLOX_SUBSCRIPTION_TAG = " + LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_WISHED_QBLOX_SUBSCRIPTION_TAG));
+			myTrace("LOCAL_SETTING_ACTUAL_QBLOX_SUBSCRIPTION_TAG = " + LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_ACTUAL_QBLOX_SUBSCRIPTION_TAG));
 			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_DEVICE_TOKEN_ID) != ""
 				&&
 				ModelLocator.isInForeground//registerpushnotification is using loadeer, which only works when app is in foreground

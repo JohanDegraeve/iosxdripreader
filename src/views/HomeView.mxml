@@ -197,7 +197,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 						_calibrateButtonActive = true;
 					}
 					
-					BluetoothService.instance.addEventListener(BlueToothServiceEvent.BLUETOOTH_SERVICE_INFORMATION_EVENT, blueToothServiceInformationReceived);
+					//BluetoothService.instance.addEventListener(BlueToothServiceEvent.BLUETOOTH_SERVICE_INFORMATION_EVENT, blueToothServiceInformationReceived);
 					BluetoothService.instance.addEventListener(BlueToothServiceEvent.BLUETOOTH_SERVICE_INITIATED, blueToothServiceInitiated);
 					
 					TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, transmitterServiceBGReadingEventReceived);
@@ -240,12 +240,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			}
 			
 			private function bluetoothDeviceConnectionCompleted(event:BlueToothServiceEvent):void {
-				NotificationService.updateAllNotifications(null);
 				currentState = "bluetoothgreen";
 				if (!_peripheralConnected) {
 					_peripheralConnected = true;
 					peripheralConnectionStatusChangeTimestamp = (new Date()).valueOf();
 				}
+				NotificationService.updateAllNotifications(null);
 			}
 			
 			private function userInitiatedScanningSucceeded(event:PeripheralEvent):void {
@@ -307,9 +307,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 				
 			}
 			
-			private function blueToothServiceInformationReceived(be:BlueToothServiceEvent):void {
+			/*private function blueToothServiceInformationReceived(be:BlueToothServiceEvent):void {
 				trace((new Date()).toTimeString() + " : HomeView : received bluetooth service information = " + be.data.information);
-			}
+			}*/
 			
 			private function blueToothServiceInitiated(be:BlueToothServiceEvent):void {
 				BluetoothService.instance.addEventListener(BlueToothServiceEvent.BLUETOOTH_DEVICE_CONNECTION_COMPLETED, bluetoothDeviceConnectionCompleted);

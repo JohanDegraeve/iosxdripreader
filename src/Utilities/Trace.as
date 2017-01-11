@@ -44,11 +44,12 @@ package Utilities
 		public static function myTrace(tag:String, log:String):void {
 			if (dateFormatter == null) {
 				dateFormatter = new DateTimeFormatter();
-				dateFormatter.dateTimePattern = "HH:mm:ss.SSS";
+				dateFormatter.dateTimePattern = "HH:mm:ss";
 				dateFormatter.useUTC = false;
-				dateFormatter.setStyle("locale",Capabilities.language.substr(0,2));
+				//dateFormatter.setStyle("locale",Capabilities.language.substr(0,2));
 			}
-			var traceText:String = "xdripreadertrace" + " " + tag + " " + dateFormatter.format(new Date()) + " : " + log;
+			var now:Date = new Date();
+			var traceText:String = dateFormatter.format(new Date()) + "." + now.milliseconds + " xdripreadertrace " + tag + " : " + log;
 			if (debugMode)
 				trace(traceText);
 			

@@ -80,11 +80,11 @@ package services
 		private static var amountOfDiscoverServicesOrCharacteristicsAttempt:int = 0;
 		
 		private static const reconnectAttemptPeriodInSeconds:int = 25;
-		//private static var reconnectTimer:Timer;
-		//private static var reconnectAttemptTimeStamp:Number = 0;
-		//private static var reScanIfFailed:Boolean = false;
+		private static var reconnectTimer:Timer;
+		private static var reconnectAttemptTimeStamp:Number = 0;
+		private static var reScanIfFailed:Boolean = false;
 		
-		//private static var connectionAttemptCheckTimer:Timer;
+		private static var connectionAttemptCheckTimer:Timer;
 		
 		private static const lengthOfDataPacket:int = 17;
 		private static const srcNameTable:Array = [ '0', '1', '2', '3', '4', '5', '6', '7',
@@ -95,8 +95,7 @@ package services
 		private static var timeStampOfLastDataPacketReceived:Number = 0;
 		private static const uuids_HM_10_Service:Vector.<String> = new <String>[HM10Attributes.HM_10_SERVICE];
 		private static const uuids_HM_RX_TX:Vector.<String> = new <String>[HM10Attributes.HM_RX_TX];
-		private static const debugMode:Boolean = true;
-
+		
 		private static function set activeBluetoothPeripheral(value:Peripheral):void
 		{
 			if (value == _activeBluetoothPeripheral)
@@ -239,6 +238,10 @@ package services
 			if (activeBluetoothPeripheral != null) {
 				BluetoothLE.service.centralManager.connect(activeBluetoothPeripheral);
 				dispatchInformation('trying_to_connect_to_known_device');
+				connectionAttemptCheckTimer = new Timer(reconnectAttemptPeriodInSeconds * 1000 - 2000, 1);
+				connectionAttemptCheckTimer.addEventListener(TimerEvent.TIMER, central_peripheralDisconnectHandler);
+				connectionAttemptCheckTimer.start();
+				reconnectAttemptTimeStamp = (new Date()).valueOf();
 			} else {
 				if (BlueToothDevice.known()) {
 					//we know a device from previous connection should we should try to connect
@@ -268,16 +271,16 @@ package services
 				dispatchInformation('stopped_scanning');	
 				_instance.dispatchEvent(new BlueToothServiceEvent(BlueToothServiceEvent.STOPPED_SCANNING));
 			}
-			/*if (reScanIfFailed) {
+			if (reScanIfFailed) {
 				if ((BluetoothLE.service.centralManager.state == BluetoothLEState.STATE_ON)) {
 					bluetoothStatusIsOn();
 				}
-			}*/
+			}
 				
 		}
 		
 		private static function central_peripheralDiscoveredHandler(event:PeripheralEvent):void {
-			myTrace("BluetoothService.as passing in central_peripheralDiscoveredHandler");
+			myTrace("passing in central_peripheralDiscoveredHandler");
 			
 			// event.peripheral will contain a Peripheral object with information about the Peripheral
 			if ((event.peripheral.name as String).toUpperCase().indexOf("DRIP") > -1 || (event.peripheral.name as String).toUpperCase().indexOf("BRIDGE") > -1 || (event.peripheral.name as String).toUpperCase().indexOf("LIMITTER") > -1) {
@@ -287,6 +290,7 @@ package services
 					ModelLocator.resourceManagerInstance.getString('bluetoothservice','found_peripheral_with_name') +
 					" = " + event.peripheral.name;
 				_instance.dispatchEvent(blueToothServiceEvent);
+				myTrace(blueToothServiceEvent.data.information as String);
 				
 				if (BlueToothDevice.address != "") {
 					if (BlueToothDevice.address != event.peripheral.uuid) {
@@ -304,7 +308,7 @@ package services
 				
 				//we want to connect to this device, so stop scanning
 				BluetoothLE.service.centralManager.stopScan();
-				//reScanIfFailed = false;
+				reScanIfFailed = false;
 				
 				BluetoothLE.service.centralManager.connect(event.peripheral);
 				dispatchInformation('stop_scanning_and_try_to_connect');
@@ -312,22 +316,33 @@ package services
 		}
 		
 		private static function central_peripheralConnectHandler(event:PeripheralEvent):void {
-			dispatchInformation('connected_to_peripheral');
-			
-			if (activeBluetoothPeripheral == null) {
-				myTrace("Bluetoothservice.as activeBluetoothPeripheral == null, assigning activeBluetoothPeripheral");
-				activeBluetoothPeripheral = event.peripheral;
-			} else {
+			if (reconnectTimer != null) {
+				if (reconnectTimer.running) {
+					reconnectTimer.stop();
+				}
+				reconnectTimer = null;
 			}
+			
+			if (connectionAttemptCheckTimer  != null) {
+				if (connectionAttemptCheckTimer.running) {
+					connectionAttemptCheckTimer.stop();
+				}
+				connectionAttemptCheckTimer = null;
+			}
+
+			reconnectAttemptTimeStamp = 0;
+			
+			dispatchInformation('connected_to_peripheral');
+
+			if (activeBluetoothPeripheral == null)
+				activeBluetoothPeripheral = event.peripheral;
+
 			discoverServices();
 		}
 		
 		private static function discoverServices(event:Event = null):void {
-			myTrace("bluetoothservice.as in discoverServices");
 			if (activeBluetoothPeripheral == null)//rare case, user might have done forget xdrip while waiting for rettempt
 				return;
-			myTrace("bluetoothservice.as still in discoverServices");
-			
 			
 			if (discoverServiceOrCharacteristicTimer != null) {
 				discoverServiceOrCharacteristicTimer.stop();
@@ -340,7 +355,7 @@ package services
 				blueToothServiceEvent.data = new Object();
 				blueToothServiceEvent.data.information = ModelLocator.resourceManagerInstance.getString('bluetoothservice','launching_discoverservices_attempt_amount') + " " + amountOfDiscoverServicesOrCharacteristicsAttempt;
 				_instance.dispatchEvent(blueToothServiceEvent);
-				myTrace("BluetoothService.as launching_discoverservices_attempt_amount " + amountOfDiscoverServicesOrCharacteristicsAttempt);
+				myTrace(blueToothServiceEvent.data.information as String);
 				
 				activeBluetoothPeripheral.discoverServices(uuids_HM_10_Service);
 				discoverServiceOrCharacteristicTimer = new Timer(DISCOVER_SERVICES_OR_CHARACTERISTICS_RETRY_TIME_IN_SECONDS * 1000, 1);
@@ -349,8 +364,7 @@ package services
 			} else {
 				dispatchInformation("max_amount_of_discover_services_attempt_reached");
 				amountOfDiscoverServicesOrCharacteristicsAttempt = 0;
-				myTrace("BluetoothService.as max_amount_of_discover_services_attempt_reached");
-				
+
 				//i just happens that retrying doesn't help anymore
 				//so disconnecting and rescanning seems the only solution ?
 
@@ -364,28 +378,93 @@ package services
 				blueToothServiceEvent.data = new Object();
 				blueToothServiceEvent.data.information = ModelLocator.resourceManagerInstance.getString('bluetoothservice','will_re_scan_for_device');
 				_instance.dispatchEvent(blueToothServiceEvent);
-				myTrace("BluetoothService.as will_re_scan_for_device");
+				myTrace(blueToothServiceEvent.data.information as String);
 				
+				//this will cause rescan, if scanning fails just retry, forever
+				reScanIfFailed = true;
 				bluetoothStatusIsOn();
 			}
 		}
 		
 		private static function central_peripheralDisconnectHandler(event:Event = null):void {
 			dispatchInformation('disconnected_from_device');
-			if (activeBluetoothPeripheral != null) {
-				// this is a case where disconnect happened for a device that was already connected
-				// automatic reconnect is required.
-				myTrace("BluetoothService.as disconnected_from_device and activeBluetoothPeripheral != null");
-				BluetoothLE.service.centralManager.disconnect(activeBluetoothPeripheral);
-			} 
-			activeBluetoothPeripheral = null;
+
+			if (reconnectTimer != null) {
+				if (reconnectTimer.running) {
+					reconnectTimer.stop();
+				}
+				reconnectTimer = null;
+			}
+			
+			if (connectionAttemptCheckTimer  != null) {
+				if (connectionAttemptCheckTimer.running) {
+					connectionAttemptCheckTimer.stop();
+				}
+				connectionAttemptCheckTimer = null;
+			}
+			
+			
+			//setting to 0 because i had a case where the maximum was reached after a few re and disconnects
+			amountOfDiscoverServicesOrCharacteristicsAttempt = 0;
+			
+			if ((BluetoothLE.service.centralManager.state == BluetoothLEState.STATE_ON) && activeBluetoothPeripheral != null) {
+				if (reconnectAttemptTimeStamp != 0) {
+					var lastReconnectDifInms:Number = (new Date().valueOf() - reconnectAttemptTimeStamp);
+					if (lastReconnectDifInms > reconnectAttemptPeriodInSeconds * 1000) {
+						tryReconnect();
+						dispatchInformation('will_try_to_reconnect_now');
+					} else {
+						var reconnectinms:Number = reconnectAttemptPeriodInSeconds * 1000 - lastReconnectDifInms;
+						reconnectTimer = new Timer(reconnectinms, 1);
+						reconnectTimer.addEventListener(TimerEvent.TIMER, tryReconnect);
+						reconnectTimer.start();
+						var blueToothServiceEvent:BlueToothServiceEvent = new BlueToothServiceEvent(BlueToothServiceEvent.BLUETOOTH_SERVICE_INFORMATION_EVENT);
+						blueToothServiceEvent.data = new Object();
+						var reconnectins:int = reconnectinms/1000;
+						blueToothServiceEvent.data.information = 
+						ModelLocator.resourceManagerInstance.getString('bluetoothservice','will_try_to_reconnect_in') +
+						" " + reconnectins + " " +
+						ModelLocator.resourceManagerInstance.getString('bluetoothservice','seconds');
+						_instance.dispatchEvent(blueToothServiceEvent);
+						myTrace(blueToothServiceEvent.data.information as String);
+					}
+				} else {
+					reconnectTimer = new Timer(reconnectAttemptPeriodInSeconds * 1000, 1);
+					reconnectTimer.addEventListener(TimerEvent.TIMER, tryReconnect);
+					reconnectTimer.start();
+					var blueToothServiceEvent:BlueToothServiceEvent = new BlueToothServiceEvent(BlueToothServiceEvent.BLUETOOTH_SERVICE_INFORMATION_EVENT);
+					blueToothServiceEvent.data = new Object();
+					blueToothServiceEvent.data.information = 
+						ModelLocator.resourceManagerInstance.getString('bluetoothservice','will_try_to_reconnect_in') +
+						" " + reconnectAttemptPeriodInSeconds + " " +
+						ModelLocator.resourceManagerInstance.getString('bluetoothservice','seconds');
+					_instance.dispatchEvent(blueToothServiceEvent);
+					myTrace(blueToothServiceEvent.data.information as String);
+				}
+			}
 		}
 		
 		public static function tryReconnect(event:Event = null):void {
-			myTrace("BluetoothService.as tryReconnect");
+
+			if (reconnectTimer != null) {
+				if (reconnectTimer.running) {
+					reconnectTimer.stop();
+				}
+				reconnectTimer = null;
+			}
+			
+			if (connectionAttemptCheckTimer  != null) {
+				if (connectionAttemptCheckTimer.running) {
+					connectionAttemptCheckTimer.stop();
+				}
+				connectionAttemptCheckTimer = null;
+			}
+
+			
 			if ((BluetoothLE.service.centralManager.state == BluetoothLEState.STATE_ON)) {
 				bluetoothStatusIsOn();
 			} else {
+				//no need to further retry, a reconnect will be done as soon as bluetooth is switched on
 			}
 		}
 		
@@ -394,7 +473,6 @@ package services
 				discoverServiceOrCharacteristicTimer.stop();
 				discoverServiceOrCharacteristicTimer = null;
 			}
-			
 			dispatchInformation("services_discovered");
 			amountOfDiscoverServicesOrCharacteristicsAttempt = 0;
 			
@@ -419,6 +497,7 @@ package services
 				blueToothServiceEvent.data = new Object();
 				blueToothServiceEvent.data.information = ModelLocator.resourceManagerInstance.getString('bluetoothservice','launching_discovercharacteristics_attempt_amount') + " " + amountOfDiscoverServicesOrCharacteristicsAttempt;
 				_instance.dispatchEvent(blueToothServiceEvent);
+				myTrace(blueToothServiceEvent.data.information as String);
 				
 				//find the index of the service that has uuid = the one used by xdrip/xbridge
 				var index:int;
@@ -428,12 +507,10 @@ package services
 					}
 					index++;
 				}
-				if (activeBluetoothPeripheral.services.length > 0) {
-					activeBluetoothPeripheral.discoverCharacteristics(activeBluetoothPeripheral.services[index], uuids_HM_RX_TX);
-					discoverServiceOrCharacteristicTimer = new Timer(DISCOVER_SERVICES_OR_CHARACTERISTICS_RETRY_TIME_IN_SECONDS * 1000, 1);
-					discoverServiceOrCharacteristicTimer.addEventListener(TimerEvent.TIMER, discoverCharacteristics);
-					discoverServiceOrCharacteristicTimer.start();
-				}
+				activeBluetoothPeripheral.discoverCharacteristics(activeBluetoothPeripheral.services[index], uuids_HM_RX_TX);
+				discoverServiceOrCharacteristicTimer = new Timer(DISCOVER_SERVICES_OR_CHARACTERISTICS_RETRY_TIME_IN_SECONDS * 1000, 1);
+				discoverServiceOrCharacteristicTimer.addEventListener(TimerEvent.TIMER, discoverCharacteristics);
+				discoverServiceOrCharacteristicTimer.start();
 			} else {
 				dispatchInformation("max_amount_of_discover_characteristics_attempt_reached");
 				tryReconnect();
@@ -484,9 +561,9 @@ package services
 		}
 		
 		private static function peripheral_characteristic_updatedHandler(event:CharacteristicEvent):void {
-			/*for (var i:int = 0;i < event.characteristic.value.length;i++) {
-				myTrace("BluetoothService.as bytearray element " + i + " = " + (new Number(event.characteristic.value[i])).toString(16));
-			}*/
+			for (var i:int = 0;i < event.characteristic.value.length;i++) {
+				//myTrace("bytearray element " + i + " = " + (new Number(event.characteristic.value[i])).toString(16));
+			}
 			
 			
 			//now start reading the values
@@ -498,6 +575,7 @@ package services
 				blueToothServiceEvent.data.information = 
 					ModelLocator.resourceManagerInstance.getString('bluetoothservice','data_packet_received_from_transmitter_with_length_0');
 				_instance.dispatchEvent(blueToothServiceEvent);
+				myTrace(blueToothServiceEvent.data.information as String);
 				//ignoring this packet because length is 0
 			} else {
 				value.position = 0;
@@ -514,6 +592,7 @@ package services
 					ModelLocator.resourceManagerInstance.getString('bluetoothservice','data_packet_received_from_transmitter_with') +
 					" byte 0 = " + packetlength + " and byte 1 = " + packetType + " and rawData = " + rawData;
 				_instance.dispatchEvent(blueToothServiceEvent);
+				myTrace(blueToothServiceEvent.data.information as String);
 				
 				value.position = 0;
 				processTransmitterData(value);
@@ -538,7 +617,6 @@ package services
 			myTrace("peripheral_characteristic_subscribeHandler: " + event.characteristic.uuid);
 			dispatchInformation("successfully_subscribed_to_characteristics");
 			_instance.dispatchEvent(new BlueToothServiceEvent(BlueToothServiceEvent.BLUETOOTH_DEVICE_CONNECTION_COMPLETED));
-			NotificationService.updateAllNotifications(null);
 		}
 		
 		private static function peripheral_characteristic_subscribeErrorHandler(event:CharacteristicEvent):void {
@@ -555,7 +633,7 @@ package services
 			blueToothServiceEvent.data = new Object();
 			blueToothServiceEvent.data.information = ModelLocator.resourceManagerInstance.getString("bluetoothservice",informationResourceName);
 			_instance.dispatchEvent(blueToothServiceEvent);
-			myTrace(ModelLocator.resourceManagerInstance.getString("bluetoothservice",informationResourceName));
+			myTrace(blueToothServiceEvent.data.information as String);
 		}
 		
 		
@@ -573,6 +651,7 @@ package services
 			blueToothServiceEvent.data = new Object();
 			blueToothServiceEvent.data.information = ModelLocator.resourceManagerInstance.getString('bluetoothservice','bluetoothdeviceforgotten');
 			_instance.dispatchEvent(blueToothServiceEvent);
+			myTrace(blueToothServiceEvent.data.information as String);
 		}
 		
 		/**

@@ -276,7 +276,6 @@ package services
 		
 		private static function myTrace(log:String):void {
 			Trace.myTrace("TransmitterService.as", log);
-			trace(log);
 		}
 	}
 }

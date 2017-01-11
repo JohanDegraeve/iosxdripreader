@@ -284,6 +284,5 @@ package services
 		private static function myTrace(log:String):void {
 			Trace.myTrace("NotificationService.as", log);
 		}
-
 	}
 }
