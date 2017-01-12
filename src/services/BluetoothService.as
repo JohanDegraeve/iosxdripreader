@@ -279,11 +279,14 @@ package services
 				
 		}
 		
-		private static function central_peripheralDiscoveredHandler(event:PeripheralEvent):void {
+		private static function central_peripheralDiscoveredHandler(event:PeripheralEvent):void {//LimiTix
 			myTrace("passing in central_peripheralDiscoveredHandler");
 			
 			// event.peripheral will contain a Peripheral object with information about the Peripheral
-			if ((event.peripheral.name as String).toUpperCase().indexOf("DRIP") > -1 || (event.peripheral.name as String).toUpperCase().indexOf("BRIDGE") > -1 || (event.peripheral.name as String).toUpperCase().indexOf("LIMITTER") > -1) {
+			if ((event.peripheral.name as String).toUpperCase().indexOf("DRIP") > -1 
+				|| (event.peripheral.name as String).toUpperCase().indexOf("BRIDGE") > -1 
+				|| (event.peripheral.name as String).toUpperCase().indexOf("LIMITIX") > -1 
+				|| (event.peripheral.name as String).toUpperCase().indexOf("LIMITTER") > -1) {
 				var blueToothServiceEvent:BlueToothServiceEvent = new BlueToothServiceEvent(BlueToothServiceEvent.BLUETOOTH_SERVICE_INFORMATION_EVENT);
 				blueToothServiceEvent.data = new Object();
 				blueToothServiceEvent.data.information = 
