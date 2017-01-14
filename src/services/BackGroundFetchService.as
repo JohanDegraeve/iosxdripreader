@@ -123,8 +123,8 @@ package services
 		}
 		
 		private static function deviceTokenReceived(event:BackgroundFetchEvent):void {
-			myTrace("deviceTokenReceived");
 			var token:String = (event.data.token as String).replace("<","").replace(">","").replace(" ","").replace(" ","").replace(" ","").replace(" ","").replace(" ","").replace(" ","").replace(" ","").replace(" ","").replace(" ","").replace(" ","").replace(" ","");
+			myTrace("deviceTokenReceived = " + token);
 			
 			//if already registered for push notifications, then update the token
 			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_SUBSCRIBED_TO_PUSH_NOTIFICATIONS) ==  "true"
