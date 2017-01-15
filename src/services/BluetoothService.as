@@ -245,6 +245,7 @@ package services
 			} else {
 				if (BlueToothDevice.known()) {
 					//we know a device from previous connection should we should try to connect
+					myTrace("call startScanning");
 					startScanning();
 				}
 			}
@@ -266,7 +267,9 @@ package services
 		}
 		
 		private static function stopScanning(event:Event):void {
+			myTrace("in stopScanning");
 			if (BluetoothLE.service.centralManager.isScanning) {
+				myTrace("is scanning, call stopScan");
 				BluetoothLE.service.centralManager.stopScan();
 				dispatchInformation('stopped_scanning');	
 				_instance.dispatchEvent(new BlueToothServiceEvent(BlueToothServiceEvent.STOPPED_SCANNING));
@@ -391,7 +394,7 @@ package services
 		
 		private static function central_peripheralDisconnectHandler(event:Event = null):void {
 			dispatchInformation('disconnected_from_device');
-
+			
 			if (reconnectTimer != null) {
 				if (reconnectTimer.running) {
 					reconnectTimer.stop();

@@ -53,10 +53,14 @@ package Utilities
 			if (debugMode)
 				trace(traceText);
 			
+			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_NSLOG) == "true") {
+				BackgroundFetch.traceNSLog(traceText);
+			}
+			
 			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_DETAILED_TRACING_ENABLED) == "false") {
 			} else {
 				var fileName:String = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_TRACE_FILE_NAME);
-				BackgroundFetch.writeStringToFile(filePath, traceText);			
+				BackgroundFetch.writeStringToFile(filePath, traceText.replace(" xdripreadertrace ", " "));			
 			}
 		}
 		

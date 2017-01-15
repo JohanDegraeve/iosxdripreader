@@ -34,6 +34,8 @@
 			[Bindable]
 			private static var additionalCalibrationRequestOnOrOffText:String = "";
 			[Bindable]
+			private static var nsLogOnOffText:String = "";
+			[Bindable]
 			private static var alwaysOnNotificationTextOnOrOff:String = "";
 			[Bindable]
 			private static var chosenUnitText:String = "";
@@ -77,6 +79,13 @@
 					additionalCalibrationRequestOnOrOffText = ModelLocator.resourceManagerInstance.getString('settingsview','on');
 				} else {
 					additionalCalibrationRequestOnOrOffText = ModelLocator.resourceManagerInstance.getString('settingsview','off');
+				}
+				
+				
+				if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_NSLOG) == "true") {
+					nsLogOnOffText = ModelLocator.resourceManagerInstance.getString('settingsview','on');
+				} else {
+					nsLogOnOffText = ModelLocator.resourceManagerInstance.getString('settingsview','off');
 				}
 				
 				if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_ALWAYS_ON_NOTIFICATION) == "true") {
@@ -350,6 +359,20 @@
 				}
 			}
 			
+			private function NSLog_clickHandler(event:MouseEvent):void {
+				rect25.color = uint("0xD3D3D3");
+				rect26.color = uint("0xD3D3D3");
+				setResetColorTimer();
+				
+				if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_NSLOG) == "true") {
+					LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_NSLOG, "false");
+					nsLogOnOffText = ModelLocator.resourceManagerInstance.getString('settingsview','off');
+				} else {
+					LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_NSLOG, "true");
+					nsLogOnOffText = ModelLocator.resourceManagerInstance.getString('settingsview','on');
+				}
+			}
+			
 			private function setResetColorTimer():void {
 				if (resetColorTimer != null)
 					if (resetColorTimer.running) {
@@ -385,6 +408,8 @@
 					rect22.color = uint("0x212121");
 					rect23.color = uint("0x212121");
 					rect24.color = uint("0x212121");
+					rect25.color = uint("0x212121");
+					rect26.color = uint("0x212121");
 				}
 			}
 			
@@ -421,7 +446,7 @@
 				</s:HGroup>
 				<s:Line width="100%">
 					<s:stroke>
-						<s:SolidColorStroke color="#3B6999"  weight="3"/>
+						<s:SolidColorStroke color="0xFFFFFF" weight="1" alpha="0.25"/>
 					</s:stroke>
 				</s:Line>	
 			</s:VGroup>
@@ -478,7 +503,7 @@
 				</s:HGroup>
 				<s:Line width="100%">
 					<s:stroke>
-						<s:SolidColorStroke color="#3B6999"  weight="3"/>
+						<s:SolidColorStroke color="0xFFFFFF" weight="1" alpha="0.25"/>
 					</s:stroke>
 				</s:Line>	
 			</s:VGroup>
@@ -502,7 +527,7 @@
 				</s:HGroup>
 				<s:Line width="100%">
 					<s:stroke>
-						<s:SolidColorStroke color="#3B6999"  weight="3"/>
+						<s:SolidColorStroke color="0xFFFFFF" weight="1" alpha="0.25"/>
 					</s:stroke>
 				</s:Line>	
 			</s:VGroup>
@@ -526,7 +551,7 @@
 				</s:HGroup>
 				<s:Line width="100%">
 					<s:stroke>
-						<s:SolidColorStroke color="#3B6999"  weight="3"/>
+						<s:SolidColorStroke color="0xFFFFFF" weight="1" alpha="0.25"/>
 					</s:stroke>
 				</s:Line>	
 			</s:VGroup>
@@ -643,7 +668,7 @@
 				</s:HGroup>
 				<s:Line width="100%">
 					<s:stroke>
-						<s:SolidColorStroke color="0xFFFFFF" weight="1" alpha="0.25"/>
+						<s:SolidColorStroke color="#3B6999"  weight="3"/>
 					</s:stroke>
 				</s:Line>
 			</s:VGroup>
@@ -657,7 +682,7 @@
 				</s:stroke>
 			</s:Line>
 			
-			<!-- Chapter Logging and Tracing  Subection Show logging -->
+			<!-- Chapter Logging and Tracing  Subsection Show logging -->
 			<s:VGroup click="showLogging_clickHandler(event)" width="100%">
 				<s:HGroup width="100%">
 					<s:Rect height="100%" width="5" >
@@ -675,7 +700,7 @@
 				</s:HGroup>
 				<s:Line width="100%">
 					<s:stroke>
-						<s:SolidColorStroke color="0xFFFFFF" weight="1"/>
+						<s:SolidColorStroke color="0xFFFFFF" weight="1" alpha="1"/>
 					</s:stroke>
 				</s:Line>	
 			</s:VGroup>
@@ -716,6 +741,31 @@
 					<s:Rect height="100%" width="5" >
 						<s:fill>
 							<s:SolidColor color="#212121" id="rect10"/>
+						</s:fill>
+					</s:Rect>
+				</s:HGroup>
+				<s:Line width="100%">
+					<s:stroke>
+						<s:SolidColorStroke color="0xFFFFFF" weight="1"/>
+					</s:stroke>
+				</s:Line>	
+			</s:VGroup>
+
+			<!-- Chapter Logging and Tracing  Subsection NSLog -->
+			<s:VGroup click="NSLog_clickHandler(event)" width="100%">
+				<s:HGroup width="100%">
+					<s:Rect height="100%" width="5" >
+						<s:fill>
+							<s:SolidColor color="#212121" id="rect25"/>
+						</s:fill>
+					</s:Rect>
+					<s:Label text = "{ModelLocator.resourceManagerInstance.getString('settingsview','ns_logging')}"
+							 width="100%" paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
+					<s:Label text = "{nsLogOnOffText}"  
+							 paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
+					<s:Rect height="100%" width="5" >
+						<s:fill>
+							<s:SolidColor color="#212121" id="rect26"/>
 						</s:fill>
 					</s:Rect>
 				</s:HGroup>
