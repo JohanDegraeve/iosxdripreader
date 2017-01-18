@@ -83,8 +83,8 @@ package services
 		 */
 		public static const NO_DATA: String = "NO_DATA";
 		
-		private static var wishedTagList:String = "ALL";
-		private static var currentTagList:String = "ALL";
+		private static var wishedTagList:String = "ONE";
+		private static var currentTagList:String = "ONE";
 		
 		private static var _attemptingBluetoothReconnect:Boolean = false;
 		private static var timeStampOfSettingAttemptingBluetoothReconnect:Number;

@@ -76,8 +76,8 @@ package databaseclasses
 		 * Quickblox will send a remote notifications every minute, with a tag ONE, TWO, THREE, FOUR or FIVE<BR>
 		 * ONE will be sent at 00:00 (or a few seconds later). If the timing of the bg readings is between  55:00 and 59:59 then the app needs to subscribe to ONE,
 		 * if later then TWO, THREE, ...<br>
-		 * Default value ALL means device will receive all notifications<br>
-		 * Multiple values are possible example "ALL,ONE"
+		 * Default value ONE means device will receive first notification, every 5 minutes<br>
+		 * Multiple values are possible example "ONE,TWO"
 		 */
 		public static const LOCAL_SETTING_WISHED_QBLOX_SUBSCRIPTION_TAG:int = 8;
 		/**
@@ -95,8 +95,8 @@ package databaseclasses
 			"",//LOCAL_SETTING_DEVICE_TOKEN_ID
 			"",//LOCAL_SETTING_UDID
 			"false",//LOCAL_SETTING_SUBSCRIBED_TO_PUSH_NOTIFICATIONS
-			"ALL",//LOCAL_SETTING_WISHED_QBLOX_SUBSCRIPTION_TAG
-			"ALL",//LOCAL_SETTING_ACTUAL_QBLOX_SUBSCRIPTION_TAG
+			"ONE",//LOCAL_SETTING_WISHED_QBLOX_SUBSCRIPTION_TAG
+			"ONE",//LOCAL_SETTING_ACTUAL_QBLOX_SUBSCRIPTION_TAG
 			"false"//LOCAL_SETTING_NSLOG
 		];
 		
