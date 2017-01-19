@@ -6,6 +6,7 @@ package services
 	import com.distriqt.extension.dialog.objects.DialogAction;
 	import com.distriqt.extension.networkinfo.NetworkInfo;
 	import com.distriqt.extension.networkinfo.events.NetworkInfoEvent;
+	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
 	import com.hurlant.crypto.hash.SHA1;
 	import com.hurlant.util.Hex;
 	
@@ -140,6 +141,7 @@ package services
 			
 			function bgreadingEventReceived(event:TransmitterServiceEvent):void {
 				calculateTag();
+				//BackgroundFetch.storeBloodGlucoseValue(BgReading.lastNoSensor().calculatedValue);
 				
 				if (!ModelLocator.isInForeground) {
 					myTrace("bgreadingEventReceived started but not in foreground, not starting sync");
