@@ -83,6 +83,7 @@ package services
 		private static var reconnectTimer:Timer;
 		private static var reconnectAttemptTimeStamp:Number = 0;
 		private static var reScanIfFailed:Boolean = false;
+		private static var awaitingConnect:Boolean = false;
 		
 		private static var connectionAttemptCheckTimer:Timer;
 		
@@ -95,6 +96,8 @@ package services
 		private static var timeStampOfLastDataPacketReceived:Number = 0;
 		private static const uuids_HM_10_Service:Vector.<String> = new <String>[HM10Attributes.HM_10_SERVICE];
 		private static const uuids_HM_RX_TX:Vector.<String> = new <String>[HM10Attributes.HM_RX_TX];
+		private static var connectionAttemptTimeStamp:Number;
+		private static const maxTimeBetweenConnectAttemptAndConnectSuccess:Number = 3;
 		
 		private static function set activeBluetoothPeripheral(value:Peripheral):void
 		{
@@ -236,6 +239,8 @@ package services
 		 */
 		private static function bluetoothStatusIsOn():void {
 			if (activeBluetoothPeripheral != null) {
+				awaitingConnect = true;
+				connectionAttemptTimeStamp = (new Date()).valueOf();
 				BluetoothLE.service.centralManager.connect(activeBluetoothPeripheral);
 				dispatchInformation('trying_to_connect_to_known_device');
 				connectionAttemptCheckTimer = new Timer(reconnectAttemptPeriodInSeconds * 1000 - 2000, 1);
@@ -279,11 +284,22 @@ package services
 					bluetoothStatusIsOn();
 				}
 			}
-				
+		}
+		
+		public static function stopScanningIfScanning():void {
+			myTrace("in stopScanningIfScanning");
+			if (BluetoothLE.service.centralManager.isScanning) {
+				myTrace("is scanning, call stopScan");
+				BluetoothLE.service.centralManager.stopScan();
+			}
 		}
 		
 		private static function central_peripheralDiscoveredHandler(event:PeripheralEvent):void {//LimiTix
-			myTrace("passing in central_peripheralDiscoveredHandler");
+			if (awaitingConnect) {
+				myTrace("passing in central_peripheralDiscoveredHandler but already awaiting connect, ignoring this one");
+			} else {
+				myTrace("passing in central_peripheralDiscoveredHandler");
+			}
 			
 			// event.peripheral will contain a Peripheral object with information about the Peripheral
 			if ((event.peripheral.name as String).toUpperCase().indexOf("DRIP") > -1 
@@ -303,6 +319,8 @@ package services
 						//a bluetooth device address is already stored, but it's not the one for which peripheraldiscoveredhandler is called
 						//so we ignore it
 						dispatchInformation('stored_uuid_does_not_match');
+						myTrace("stop scan");
+						BluetoothLE.service.centralManager.stopScan();
 						return;
 					}
 				} else {
@@ -316,6 +334,8 @@ package services
 				BluetoothLE.service.centralManager.stopScan();
 				reScanIfFailed = false;
 				
+				awaitingConnect = true;
+				connectionAttemptTimeStamp = (new Date()).valueOf();
 				BluetoothLE.service.centralManager.connect(event.peripheral);
 				dispatchInformation('stop_scanning_and_try_to_connect');
 			}
@@ -328,15 +348,28 @@ package services
 				}
 				reconnectTimer = null;
 			}
-			
 			if (connectionAttemptCheckTimer  != null) {
 				if (connectionAttemptCheckTimer.running) {
 					connectionAttemptCheckTimer.stop();
 				}
 				connectionAttemptCheckTimer = null;
 			}
-
 			reconnectAttemptTimeStamp = 0;
+			
+			if (!awaitingConnect) {
+				myTrace("in central_peripheralConnectHandler but awaitingConnect = false, will disconnect");
+				//activeBluetoothPeripheral = null;
+				BluetoothLE.service.centralManager.disconnect(event.peripheral);
+				return;
+			} 
+			
+			if ((new Date()).valueOf() - connectionAttemptTimeStamp > maxTimeBetweenConnectAttemptAndConnectSuccess * 1000) { //not waiting more than 3 seconds between device discovery and connection success
+				myTrace("passing in central_peripheralConnectHandler but time between connect attempt and connect success is more than " + maxTimeBetweenConnectAttemptAndConnectSuccess + " seconds. Will disconnect");
+				//activeBluetoothPeripheral = null;
+				BluetoothLE.service.centralManager.disconnect(event.peripheral);
+				return;
+			} 
+			awaitingConnect = false;
 			
 			dispatchInformation('connected_to_peripheral');
 
@@ -393,22 +426,19 @@ package services
 		}
 		
 		private static function central_peripheralDisconnectHandler(event:Event = null):void {
-			dispatchInformation('disconnected_from_device');
-			
+			myTrace('Disconnected from device or attempt to reconnect failed.');
 			if (reconnectTimer != null) {
 				if (reconnectTimer.running) {
 					reconnectTimer.stop();
 				}
 				reconnectTimer = null;
 			}
-			
 			if (connectionAttemptCheckTimer  != null) {
 				if (connectionAttemptCheckTimer.running) {
 					connectionAttemptCheckTimer.stop();
 				}
 				connectionAttemptCheckTimer = null;
 			}
-			
 			
 			//setting to 0 because i had a case where the maximum was reached after a few re and disconnects
 			amountOfDiscoverServicesOrCharacteristicsAttempt = 0;

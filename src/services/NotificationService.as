@@ -236,7 +236,7 @@ package services
 							if ((new Date().getTime()) - (60000 * 11) - lastBgReading.timestamp > 0) {
 								valueToShow = "---"
 							} else {
-								valueToShow = BgGraphBuilder.unitizedString(lastBgReading.calculatedValue, true);
+								valueToShow = BgGraphBuilder.unitizedString(lastBgReading.calculatedValue, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true");
 								if (!lastBgReading.hideSlope) {
 									valueToShow += " " + lastBgReading.slopeArrow();
 								}

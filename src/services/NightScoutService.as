@@ -6,7 +6,6 @@ package services
 	import com.distriqt.extension.dialog.objects.DialogAction;
 	import com.distriqt.extension.networkinfo.NetworkInfo;
 	import com.distriqt.extension.networkinfo.events.NetworkInfoEvent;
-	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
 	import com.hurlant.crypto.hash.SHA1;
 	import com.hurlant.util.Hex;
 	
@@ -258,6 +257,8 @@ package services
 			var nightScoutTreatmentsUrl:String = "https://" + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME) + "/api/v1/treatments";
 			createAndLoadURLRequest(nightScoutTreatmentsUrl + "/" + testUniqueId, URLRequestMethod.DELETE, null, null,sync, null);
 
+			myTrace(ModelLocator.resourceManagerInstance.getString("nightscoutservice","nightscout_test_result_ok"));
+			
 			if (ModelLocator.isInForeground) {
 				var alert:DialogView = Dialog.service.create(
 					new AlertBuilder()
@@ -278,6 +279,12 @@ package services
 			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_WARNING_THAT_NIGHTSCOUT_URL_AND_SECRET_IS_NOT_OK_ALREADY_GIVEN) == "false" && ModelLocator.isInForeground) {
 				var errorMessage:String = ModelLocator.resourceManagerInstance.getString("nightscoutservice","nightscout_test_result_nok");
 				errorMessage += "\n" + event.data.information;
+				
+				if ((event.data.information as String).indexOf("Cannot PUT /api/v1/treatments") > -1) {
+					errorMessage += "\n" + ModelLocator.resourceManagerInstance.getString("nightscoutservice","care_portal_should_be_enabled");
+				}
+				
+				myTrace(errorMessage);
 				
 				var alert:DialogView = Dialog.service.create(
 					new AlertBuilder()

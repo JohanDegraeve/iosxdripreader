@@ -20,6 +20,7 @@ package model
 	import com.distriqt.extension.application.Application;
 	import com.distriqt.extension.message.Message;
 	import com.distriqt.extension.networkinfo.NetworkInfo;
+	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
 	
 	import flash.events.Event;
 	import flash.events.EventDispatcher;

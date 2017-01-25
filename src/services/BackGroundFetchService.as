@@ -7,14 +7,12 @@ package services
 	import flash.events.Event;
 	import flash.events.EventDispatcher;
 	import flash.events.IOErrorEvent;
-	import flash.events.TimerEvent;
 	import flash.net.URLLoader;
 	import flash.net.URLRequest;
 	import flash.net.URLRequestHeader;
 	import flash.net.URLRequestMethod;
 	import flash.net.URLVariables;
 	import flash.utils.ByteArray;
-	import flash.utils.Timer;
 	
 	import Utilities.Trace;
 	import Utilities.UniqueId;
@@ -102,7 +100,6 @@ package services
 
 		private static var waitingSyncResponse:Boolean = false;
 		private static var syncResponse:String = NO_DATA;
-		private static var reconnectAttemptTimer:Timer;
 		
 		public static function get instance():BackGroundFetchService {
 			return _instance;
@@ -127,6 +124,7 @@ package services
 			BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.LOAD_REQUEST_ERROR, loadRequestError);
 			BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.PERFORMFETCH, performFetch);
 			BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.DEVICE_TOKEN_RECEIVED, deviceTokenReceived);
+			BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.RECONNECTTIMEREXPIRED, reconnectTimerExpiry);
 			BackgroundFetch.minimumBackgroundFetchInterval = BackgroundFetch.BACKGROUND_FETCH_INTERVAL_MINIMUM;
 			BluetoothService.instance.addEventListener(BlueToothServiceEvent.BLUETOOTH_DEVICE_CONNECTION_COMPLETED, bluetoothDeviceConnectionCompleted);
 		}
@@ -140,6 +138,7 @@ package services
 				if (attemptingBluetoothReconnect && ((new Date()).valueOf() - timeStampOfSettingAttemptingBluetoothReconnect < 60 * 1000)) {
 					myTrace("bluetoothDeviceConnectionCompleted attemptingBluetoothReconnect = true & retry from within BackGroundFetchService < 60 seconds");
 					attemptingBluetoothReconnect = false;
+					BackgroundFetch.cancelReconnectTimer();
 					if (!waitingSyncResponse) {
 						myTrace("bluetoothDeviceConnectionCompleted watingsyncresponse = false, calling callcompletion");
 						callCompletionHandler(syncResponse);
@@ -147,9 +146,7 @@ package services
 				} else if (attemptingBluetoothReconnect) {
 					myTrace("bluetoothDeviceConnectionCompleted attemptingBluetoothReconnect = true & retry from within BackGroundFetchService > 60 seconds");
 					attemptingBluetoothReconnect = true;
-					reconnectAttemptTimer = new Timer(20000, 1);
-					reconnectAttemptTimer.addEventListener(TimerEvent.TIMER, reconnectTimerExpiry);
-					reconnectAttemptTimer.start();
+					BackgroundFetch.startReconnectTimer(20);
 					BluetoothService.forgetBlueToothDevice();
 					BluetoothService.tryReconnect(null);
 				}
@@ -166,16 +163,17 @@ package services
 				myTrace("attemptingBluetoothReconnect = false, calling callcompletionhandler");
 				BackgroundFetch.callCompletionHandler(result);
 				syncResponse = NO_DATA;
-				if (reconnectAttemptTimer != null)
-					if (reconnectAttemptTimer.running)
-						reconnectAttemptTimer.stop();
+				BackgroundFetch.cancelReconnectTimer();
 			}
 		}
 		
 		private static function reconnectTimerExpiry(event:Event):void {
 			myTrace("reconnectTimerExpiry calling callCompletionHandler with result " + syncResponse); 
 			waitingSyncResponse = false;
-			attemptingBluetoothReconnect = false;
+			if (attemptingBluetoothReconnect) {
+				attemptingBluetoothReconnect = false;
+				BluetoothService.stopScanningIfScanning();
+			}
 			BackgroundFetch.callCompletionHandler(syncResponse);
 			syncResponse = NO_DATA;
 		}
@@ -185,10 +183,8 @@ package services
 			if (!HomeView.peripheralConnected && !ModelLocator.isInForeground) {
 				myTrace("peripheral not connected, calling bluetoothservice.tryreconnect");
 				attemptingBluetoothReconnect = true;
-				reconnectAttemptTimer = new Timer(20000, 1);
-				reconnectAttemptTimer.addEventListener(TimerEvent.TIMER, reconnectTimerExpiry);
-				reconnectAttemptTimer.start();
-				//BluetoothService.forgetBlueToothDevice();
+				BackgroundFetch.startReconnectTimer(20);
+				BluetoothService.forgetBlueToothDevice();
 				BluetoothService.tryReconnect(null);
 			}
 			if (!ModelLocator.isInForeground) {
