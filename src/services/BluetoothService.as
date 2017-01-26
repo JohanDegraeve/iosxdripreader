@@ -98,6 +98,7 @@ package services
 		private static const uuids_HM_RX_TX:Vector.<String> = new <String>[HM10Attributes.HM_RX_TX];
 		private static var connectionAttemptTimeStamp:Number;
 		private static const maxTimeBetweenConnectAttemptAndConnectSuccess:Number = 3;
+		private static var waitingForPeripheralCharacteristicsDiscovered:Boolean = false;
 		
 		private static function set activeBluetoothPeripheral(value:Peripheral):void
 		{
@@ -527,7 +528,9 @@ package services
 				discoverServiceOrCharacteristicTimer = null;
 			}
 			
-			if (amountOfDiscoverServicesOrCharacteristicsAttempt < MAX_RETRY_DISCOVER_SERVICES_OR_CHARACTERISTICS) {
+			if (amountOfDiscoverServicesOrCharacteristicsAttempt < MAX_RETRY_DISCOVER_SERVICES_OR_CHARACTERISTICS
+				&&
+				activeBluetoothPeripheral.services.length > 0) {
 				amountOfDiscoverServicesOrCharacteristicsAttempt++;
 				var blueToothServiceEvent:BlueToothServiceEvent = new BlueToothServiceEvent(BlueToothServiceEvent.BLUETOOTH_SERVICE_INFORMATION_EVENT);
 				blueToothServiceEvent.data = new Object();
@@ -543,17 +546,29 @@ package services
 					}
 					index++;
 				}
+				waitingForPeripheralCharacteristicsDiscovered = true;
 				activeBluetoothPeripheral.discoverCharacteristics(activeBluetoothPeripheral.services[index], uuids_HM_RX_TX);
 				discoverServiceOrCharacteristicTimer = new Timer(DISCOVER_SERVICES_OR_CHARACTERISTICS_RETRY_TIME_IN_SECONDS * 1000, 1);
 				discoverServiceOrCharacteristicTimer.addEventListener(TimerEvent.TIMER, discoverCharacteristics);
 				discoverServiceOrCharacteristicTimer.start();
 			} else {
-				dispatchInformation("max_amount_of_discover_characteristics_attempt_reached");
+				if (amountOfDiscoverServicesOrCharacteristicsAttempt == MAX_RETRY_DISCOVER_SERVICES_OR_CHARACTERISTICS) {
+					myTrace("amountOfDiscoverServicesOrCharacteristicsAttempt == MAX_RETRY_DISCOVER_SERVICES_OR_CHARACTERISTICS"); 
+					dispatchInformation("max_amount_of_discover_characteristics_attempt_reached");
+				}
+				if (activeBluetoothPeripheral.services.length == 0) {
+					myTrace("activeBluetoothPeripheral.services.length == 0"); 
+				}
 				tryReconnect();
 			}
 		}
 		
 		private static function peripheral_discoverCharacteristicsHandler(event:PeripheralEvent):void {
+			if (!waitingForPeripheralCharacteristicsDiscovered) {
+				myTrace("in peripheral_discoverCharacteristicsHandler but not waitingForPeripheralCharacteristicsDiscovered");
+				return;
+			}
+			waitingForPeripheralCharacteristicsDiscovered = false;
 			if (discoverServiceOrCharacteristicTimer != null) {
 				discoverServiceOrCharacteristicTimer.stop();
 				discoverServiceOrCharacteristicTimer = null;
