@@ -99,6 +99,7 @@ package services
 		private static var connectionAttemptTimeStamp:Number;
 		private static const maxTimeBetweenConnectAttemptAndConnectSuccess:Number = 3;
 		private static var waitingForPeripheralCharacteristicsDiscovered:Boolean = false;
+		private static var waitingForServicesDiscovered:Boolean = false;
 		
 		private static function set activeBluetoothPeripheral(value:Peripheral):void
 		{
@@ -381,6 +382,7 @@ package services
 		}
 		
 		private static function discoverServices(event:Event = null):void {
+			waitingForServicesDiscovered = false;
 			if (activeBluetoothPeripheral == null)//rare case, user might have done forget xdrip while waiting for rettempt
 				return;
 			
@@ -397,6 +399,7 @@ package services
 				_instance.dispatchEvent(blueToothServiceEvent);
 				myTrace(blueToothServiceEvent.data.information as String);
 				
+				waitingForServicesDiscovered = true;
 				activeBluetoothPeripheral.discoverServices(uuids_HM_10_Service);
 				discoverServiceOrCharacteristicTimer = new Timer(DISCOVER_SERVICES_OR_CHARACTERISTICS_RETRY_TIME_IN_SECONDS * 1000, 1);
 				discoverServiceOrCharacteristicTimer.addEventListener(TimerEvent.TIMER, discoverServices);
@@ -506,6 +509,14 @@ package services
 		}
 		
 		private static function peripheral_discoverServicesHandler(event:PeripheralEvent):void {
+			if (!waitingForServicesDiscovered) {
+				myTrace("in peripheral_discoverServicesHandler but not waitingForServicesDiscovered, ignoring");
+				return;
+			} else {
+				myTrace("in peripheral_discoverServicesHandler and waitingForServicesDiscovered");
+			}
+			waitingForServicesDiscovered = false;
+			
 			if (discoverServiceOrCharacteristicTimer != null) {
 				discoverServiceOrCharacteristicTimer.stop();
 				discoverServiceOrCharacteristicTimer = null;
