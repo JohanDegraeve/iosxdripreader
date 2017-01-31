@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-Copyright (C) 2016  Johan Degraeve
+Copyright (C) 2017  Johan Degraeve
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -17,10 +17,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 
 -->
 <s:View xmlns:fx="http://ns.adobe.com/mxml/2009" 
-		xmlns:s="library://ns.adobe.com/flex/spark" title=""
+		xmlns:s="library://ns.adobe.com/flex/spark" 
+		xmlns:charts="mx.charts.*"
+		xmlns:series="mx.charts.series.*"
+		xmlns:chartClasses="mx.charts.chartClasses.*" 
+		title=""
 		initialize="initializeHandler(event)"
 		destructionPolicy="never"
-		creationComplete="onCreationComplete(event)">
+		creationComplete="onCreationComplete(event)" xmlns:mx="library://ns.adobe.com/flex/mx">
 	
 	<s:states>
 		<s:State name="bluetoothred"/>
@@ -44,6 +48,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			import com.distriqt.extension.dialog.events.DialogViewEvent;
 			import com.distriqt.extension.dialog.objects.DialogAction;
 			
+			import mx.collections.ArrayCollection;
 			import mx.events.FlexEvent;
 			
 			import spark.formatters.DateTimeFormatter;
@@ -75,6 +80,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			import services.NotificationService;
 			import services.TimerService;
 			import services.TransmitterService;
+			
+			[ResourceBundle('homeview')]
+			[ResourceBundle("general")]
+			[ResourceBundle("bluetoothservice")]
+			[ResourceBundle("settingsview")]
 			
 			private static var initialStart:Boolean = true;
 			[Bindable]
@@ -111,18 +121,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			 * timestamp that has changed connection status<br> 
 			 */
 			private static var peripheralConnectionStatusChangeTimestamp:Number = (new Date()).valueOf();
-			
 			private static var scanningWasUserInitiated:Boolean = false;
-			
-			[ResourceBundle('homeview')]
-			[ResourceBundle("general")]
-			[ResourceBundle("bluetoothservice")]
-			[ResourceBundle("settingsview")]
 			
 			[Bindable]
 			private static var currentBgLabellinethrough:Boolean = false;
 			[Bindable]
 			private static var currentBgLabelColor:int = 0xFFFFFF;
+			
+			[Bindable]
+			private var chartValues:ArrayCollection;
+			
+			protected var webView:StageWebView = new StageWebView();
 			
 			/**
 			 * connected or not. Should be replaced by if (BluetoothService.getActiveBluetoothPeripheral().state == PeripheralState.CONNECTED)<br>
@@ -132,7 +141,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			{
 				return _peripheralConnected;
 			}
-
+			
 			protected function onCreationComplete(event:FlexEvent):void
 			{
 				if (initialStart) {
@@ -204,6 +213,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 					
 					CalibrationService.instance.addEventListener(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT, initialCalibrationEventReceived);
 					CalibrationService.instance.addEventListener(CalibrationServiceEvent.NEW_CALIBRATION_EVENT, newCalibrationEventReceived);
+					Database.instance.addEventListener(DatabaseEvent.LOGRETRIEVED_EVENT, logReceivedFromDatabase);
 				}
 				
 				function onInitError(event:Event):void
@@ -308,7 +318,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			}
 			
 			/*private function blueToothServiceInformationReceived(be:BlueToothServiceEvent):void {
-				trace((new Date()).toTimeString() + " : HomeView : received bluetooth service information = " + be.data.information);
+			trace((new Date()).toTimeString() + " : HomeView : received bluetooth service information = " + be.data.information);
 			}*/
 			
 			private function blueToothServiceInitiated(be:BlueToothServiceEvent):void {
@@ -683,7 +693,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 		<s:layout>
 			<s:VerticalLayout/>
 		</s:layout>
-		<s:Group width="100%">
+		<s:Group width="100%" id="topGroup">
 			<s:layout>
 				<s:HorizontalLayout paddingTop="5" paddingBottom="5" paddingLeft="5" paddingRight="5" gap="5" 
 									horizontalAlign="right" verticalAlign="middle"/>
@@ -705,5 +715,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			</s:Group>
 			<s:Label id = "currentBgLabel" text="{currentBgLabelText}" fontSize="60" lineThrough="{currentBgLabellinethrough}" color="{currentBgLabelColor}"/>
 		</s:Group>
+		<charts:LineChart id="chart" height="100%" width="100%" showDataTips="false"
+						  paddingRight="5" paddingLeft="5" 
+						  dataProvider="{chartValues}" >
+			<charts:horizontalAxis>
+				
+			</charts:horizontalAxis>
+			<charts:series>
+				<series:LineSeries  >
+				</series:LineSeries>
+			</charts:series>
+		</charts:LineChart> 
 	</s:Group>
 </s:View>
