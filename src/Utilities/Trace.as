@@ -75,6 +75,7 @@ package Utilities
 				var body:String = "Hi,\n\nFind attached trace file " + fileName + "\n\nregards.";
 				Message.service.sendMailWithOptions("Trace file", body, "johan.degraeve@gmail.com","","",[attachment],false);
 				f.deleteFileAsync();
+				BackgroundFetch.resetWriteStringToFilePath();
 				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_TRACE_FILE_NAME, "");
 			}
 		}
