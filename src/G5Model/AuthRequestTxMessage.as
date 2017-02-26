@@ -16,6 +16,7 @@ package G5Model
 			singleUseToken = new ByteArray();
 			singleUseToken.endian = Endian.LITTLE_ENDIAN;
 			singleUseToken.writeBytes(uuidBytes, 0, token_size);
+			singleUseToken.position = 0;
 			
 			// Create the byteSequence.
 			byteSequence = new ByteArray();
@@ -23,6 +24,7 @@ package G5Model
 			byteSequence.writeByte(opcode);
 			byteSequence.writeBytes(singleUseToken);
 			byteSequence.writeByte(endByte);
+			byteSequence.position = 0;
 		}
 	}
 }

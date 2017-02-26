@@ -44,12 +44,12 @@ package Utilities
 		public function HM10Attributes()
 		{
 			UUIDMap = new Object();
-			UUIDMap.HM_10_SERVICE_G4 = "HM_10_SERVICE_G4";
-			UUIDMap.HM_10_SERVICE_G5 = "HM_10_SERVICE_G5";
-			UUIDMap.HM_RX_TX_G4 = "HM_RX_TX_G4";
-			UUIDMap.G5_Communication_Characteristic_UUID = "G5_Communication_Characteristic_UUID";
-			UUIDMap.G5_Control_Characteristic_UUID = "G5_Control_Characteristic_UUID";
-			UUIDMap.G5_Authentication_Characteristic_UUID = "G5_Authentication_Characteristic_UUID";
+			UUIDMap[HM_10_SERVICE_G4] = "HM_10_SERVICE_G4";
+			UUIDMap[HM_10_SERVICE_G5] = "HM_10_SERVICE_G5";
+			UUIDMap[HM_RX_TX_G4] = "HM_RX_TX_G4";
+			UUIDMap[G5_Communication_Characteristic_UUID] = "G5_Communication_Characteristic_UUID";
+			UUIDMap[G5_Control_Characteristic_UUID] = "G5_Control_Characteristic_UUID";
+			UUIDMap[G5_Authentication_Characteristic_UUID] = "G5_Authentication_Characteristic_UUID";
 		}
 	}
 }

@@ -25,10 +25,7 @@ package services
 	import com.distriqt.extension.bluetoothle.events.PeripheralEvent;
 	import com.distriqt.extension.bluetoothle.objects.Characteristic;
 	import com.distriqt.extension.bluetoothle.objects.Peripheral;
-	import com.distriqt.extension.bluetoothle.objects.Service;
 	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
-	import com.hurlant.crypto.Crypto;
-	import com.hurlant.crypto.symmetric.AESKey;
 	
 	import flash.events.Event;
 	import flash.events.EventDispatcher;
@@ -41,8 +38,10 @@ package services
 	import G5Model.AuthChallengeTxMessage;
 	import G5Model.AuthRequestTxMessage;
 	import G5Model.AuthStatusRxMessage;
-	import G5Model.KeepAliveTxMessage;
+	import G5Model.BatteryInfoTxMessage;
+	import G5Model.SensorRxMessage;
 	import G5Model.SensorTxMessage;
+	import G5Model.TransmitterStatus;
 	
 	import Utilities.HM10Attributes;
 	import Utilities.Trace;
@@ -57,8 +56,6 @@ package services
 	import distriqtkey.DistriqtKey;
 	
 	import events.BlueToothServiceEvent;
-	
-	import flashx.textLayout.elements.GlobalSettings;
 	
 	import model.ModelLocator;
 	import model.TransmitterDataXBridgeBeaconPacket;
@@ -122,11 +119,13 @@ package services
 		private static var waitingForPeripheralCharacteristicsDiscovered:Boolean = false;
 		private static var waitingForServicesDiscovered:Boolean = false;
 		
-		private static const DexcomG5:Boolean = false;
+		private static const DexcomG5:Boolean = true;
 		private static var authRequest:AuthRequestTxMessage = null;
 		private static var authStatus:AuthStatusRxMessage = null;
 		private static var lastOnReadCode:int = 0xff;
 		private static var isBondedOrBonding:Boolean = false;
+		
+		public static const BATTERY_READ_PERIOD_MS:Number = 1000 * 60 * 60 * 12; // how often to poll battery data (12 hours)
 		
 		private static function set activeBluetoothPeripheral(value:Peripheral):void
 		{
@@ -749,7 +748,7 @@ package services
 		}
 		
 		private static function peripheral_characteristic_updatedHandler(event:CharacteristicEvent):void {
-			myTrace("peripheral_characteristic_updatedHandler characteristic uuid = " + HM10Attributes.instance.UUIDMap[event.characteristic.uuid]);
+			myTrace("peripheral_characteristic_updatedHandler characteristic uuid = " + HM10Attributes.instance.UUIDMap[event.characteristic.uuid.toUpperCase()]);
 			for (var i:int = 0;i < event.characteristic.value.length;i++) {
 				myTrace("bytearray element " + i + " = " + (new Number(event.characteristic.value[i])).toString(16));
 			}
@@ -841,7 +840,8 @@ package services
 		}
 		
 		private static function peripheral_characteristic_subscribeHandler(event:CharacteristicEvent):void {
-			myTrace("peripheral_characteristic_subscribeHandler: " + HM10Attributes.instance.UUIDMap[event.characteristic.uuid]);
+			myTrace("peripheral_characteristic_subscribeHandler: " + HM10Attributes.instance.UUIDMap[event.characteristic.uuid.toUpperCase()]);
+			myTrace("peripheral_characteristic_subscribeHandler: " + event.characteristic.uuid);
 			dispatchInformation("successfully_subscribed_to_characteristics");
 			if (DexcomG5) {
 				if (event.characteristic.uuid.toUpperCase() == HM10Attributes.G5_Control_Characteristic_UUID.toUpperCase()) {
@@ -958,7 +958,47 @@ package services
 					} else {
 						myTrace("challengehash == null");
 					}
+					break;
+				case 27:
+					var sensorRx:SensorRxMessage = new SensorRxMessage(buffer);
+					var sensor_battery_level:int = 0;
+					if (sensorRx.transmitterStatus.toString() == TransmitterStatus.BRICKED) {
+						//TODO Handle this in UI/Notification
+						sensor_battery_level = 206; //will give message "EMPTY"
+					} else if (sensorRx.transmitterStatus.toString() == TransmitterStatus.LOW) {
+						sensor_battery_level = 209; //will give message "LOW"
+					} else {
+						sensor_battery_level = 216; //no message, just system status "OK"
+					}
+					
+					if ((new Date()).valueOf() - new Number(CommonSettings.COMMON_SETTING_LASTUPDATE_TRANSMITTER_BATTERY_VOLTAGE_INMS) > BluetoothService.BATTERY_READ_PERIOD_MS) {
+						doBatteryInfoRequestMessage(characteristic);
+					} else {
+						doDisconnectMessage(gatt, characteristic);
+					}
+					process transmitterdata
+
+					break;
+				case 35:
+					process batteryinforxmessage
+					break;
+				case 75:
+					//to do store version
+					doDisconnectMessage(gatt, characteristic);
+					break;
+				default:
+					myTrace("processG5TransmitterData unknown code received : " + code);
+					break;
 			}
+		}
+		
+		private static function doBatteryInfoRequestMessage(characteristic:Characteristic):void {
+			myTrace("doBatteryInfoMessage() start");
+			var batteryInfoTxMessage:BatteryInfoTxMessage =  new BatteryInfoTxMessage();
+			if (!activeBluetoothPeripheral.writeValueForCharacteristic(characteristic, batteryInfoTxMessage.byteSequence)) {
+				dispatchInformation("write_value_for_characteristic_failed_due_to_invalid_state");
+			}
+			myTrace("doBatteryInfoMessage() finished");
 		}
 		
 		public static function calculateHash(data:ByteArray):ByteArray {
@@ -1076,9 +1116,8 @@ package services
 		}
 		
 		private static function sendAuthRequestTxMessage(characteristic:Characteristic):void {
-			myTrace("Sending new AuthRequestTxMessage to");
 			authRequest = new AuthRequestTxMessage(getTokenSize());
-			myTrace("AuthRequestTX: " + UniqueId.byteArrayToString(authRequest.byteSequence));
+			myTrace("Sending new AuthRequestTxMessage with AuthRequestTX: " + UniqueId.byteArrayToString(authRequest.byteSequence));
 			
 			if (!activeBluetoothPeripheral.writeValueForCharacteristic(characteristic, authRequest.byteSequence)) {
 				dispatchInformation("write_value_for_characteristic_failed_due_to_invalid_state");

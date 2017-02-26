@@ -16,6 +16,7 @@ package G5Model
 			byteSequence.endian = Endian.LITTLE_ENDIAN;
 			byteSequence.writeByte(opcode);
 			byteSequence.writeBytes(crc);
+			byteSequence.position = 0;
 			myTrace("SensorTx dbg: " + UniqueId.bytesToHex(byteSequence));
 		}
 		

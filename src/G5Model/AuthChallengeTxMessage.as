@@ -12,11 +12,14 @@ package G5Model
 		public function AuthChallengeTxMessage(challenge:ByteArray) {
 			challengeHash = new ByteArray();
 			challenge.endian = Endian.LITTLE_ENDIAN;
+			challengeHash.writeBytes(challenge);
 			challenge.readBytes(challengeHash);
-			byteSequence = new ByteArray;//ByteBuffer.allocate(9);
+			challenge.position = 0;
+			byteSequence = new ByteArray();//ByteBuffer.allocate(9);
 			byteSequence.endian = Endian.LITTLE_ENDIAN;
 			byteSequence.writeByte(opcode);//data.put(opcode);
 			byteSequence.writeBytes(challengeHash);//data.put(challengeHash);
+			byteSequence.position = 0;
 		}		
 		
 	}

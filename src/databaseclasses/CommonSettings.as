@@ -19,6 +19,8 @@
  	import flash.events.EventDispatcher;
  	
  	import events.SettingsServiceEvent;
+ 	
+ 	import services.BluetoothService;
 
 	 /**
 	  * common settings are settings that are shared with other devices, ie settings that will be synchronized
@@ -86,6 +88,11 @@
 		 * transmitter id, 00000 is not set 
 		 */
 		 public static const COMMON_SETTING_TRANSMITTER_ID:int = 12;
+		 /**
+		 * last update TRANSMITTER_BATTERY_VOLTAGE in ms since 1 1 1970<br>
+		 * updated automatically when the setting COMMON_SETTING_TRANSMITTER_BATTERY_VOLTAGE
+		  */
+		 public static const COMMON_SETTING_LASTUPDATE_TRANSMITTER_BATTERY_VOLTAGE_INMS:int = 13
 		 private static var commonSettings:Array = [
 			 "0",//COMMON_SETTING_CURRENT_SENSOR
 			 "0",//COMMON_SETTING_TRANSMITTER_BATTERY_VOLTAGE
@@ -99,7 +106,8 @@
 			 "true",//COMMON_SETTING_DO_MGDL
 			 "70",//COMMON_SETTING_LOW_MARK
 			 "170",//COMMON_SETTING_HIGH_MARK
-			 "00000"//COMMON_SETTING_TRANSMITTER_ID
+			 "00000",//COMMON_SETTING_TRANSMITTER_ID
+			 "0"//COMMON_SETTING_LASTUPDATE_TRANSMITTER_BATTERY_VOLTAGE_INMS
 		 ];
 		 
 		 public function CommonSettings()
@@ -117,6 +125,9 @@
 			 if (commonSettings[commonSettingId] != newValue) {
 				 if (commonSettingId == COMMON_SETTING_TRANSMITTER_ID) {
 					 newValue = newValue.toUpperCase();
+				 }
+				 if (commonSettingId == COMMON_SETTING_TRANSMITTER_BATTERY_VOLTAGE) {
+					 commonSettings[COMMON_SETTING_LASTUPDATE_TRANSMITTER_BATTERY_VOLTAGE_INMS] = (new Date()).valueOf();
 				 }
 				 commonSettings[commonSettingId] = newValue;
 				 if (updateDatabase)

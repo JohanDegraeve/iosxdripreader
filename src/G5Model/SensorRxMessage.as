@@ -8,25 +8,28 @@ package G5Model
 	
 	public class SensorRxMessage extends TransmitterMessage
 	{
-		var opcode:int = 0x2f;
+		private var opcode:int = 0x2f;
 		public var timestamp:Number;
 		public var unfiltered:Number;
 		public var filtered:Number;
+		public var transmitterStatus:TransmitterStatus;
 		
 		public function SensorRxMessage(packet:ByteArray) {
 			myTrace("SensorRX dbg: " + UniqueId.bytesToHex(packet));
 			if (packet.length >= 14) {
 				byteSequence = new ByteArray();
 				byteSequence.endian = Endian.LITTLE_ENDIAN;
-				byteSequence = packet.readBytes(packet);
+				byteSequence.writeBytes(packet);
+				byteSequence.position = 0;
 				if (byteSequence.readByte() == opcode) {
 					
-					byteSequence.readByte();//status = TransmitterStatus.getBatteryLevel(data.get(1));
+					transmitterStatus = TransmitterStatus.getBatteryLevel(byteSequence.readByte());
 					timestamp = byteSequence.readInt();
 					unfiltered = byteSequence.readInt();
 					filtered = byteSequence.readInt();
-					myTrace("SensorRX dbg: timestamp = " + timestamp + ", unfiltered = " + unfiltered + ", filtered = " + filtered);
+					myTrace("SensorRX dbg: timestamp = " + timestamp + ", unfiltered = " + unfiltered + ", filtered = " + filtered + ", transmitterStatus = " + transmitterStatus.toString());
 				}
+				byteSequence.position = 0;
 			}
 		}
 		
