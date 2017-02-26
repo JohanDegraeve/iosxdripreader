@@ -22,12 +22,34 @@ package Utilities
 	 */
 	public class HM10Attributes
 	{
-		public static const CLIENT_CHARACTERISTIC_CONFIG:String = "00002902-0000-1000-8000-00805f9b34fb";
-		public static const HM_10_SERVICE:String = "0000ffe0-0000-1000-8000-00805f9b34fb";
-		public static const HM_RX_TX:String = "0000ffe1-0000-1000-8000-00805f9b34fb";
+		public static const HM_10_SERVICE_G4:String = "0000ffe0-0000-1000-8000-00805f9b34fb"; 
+		public static const HM_10_SERVICE_G5:String = "F8083532-849E-531C-C594-30F1F86A4EA5"; 
+		public static const HM_RX_TX_G4:String = "0000ffe1-0000-1000-8000-00805f9b34fb";
+		public static const G5_Communication_Characteristic_UUID:String = "F8083533-849E-531C-C594-30F1F86A4EA5";
+		public static const G5_Control_Characteristic_UUID:String = "F8083534-849E-531C-C594-30F1F86A4EA5";
+		public static const G5_Authentication_Characteristic_UUID:String = "F8083535-849E-531C-C594-30F1F86A4EA5";
+		/**
+		 * only to be used in tracing, to get the name of a UUID 
+		 */
+		public var UUIDMap:Object;
+
+		private static var _instance:HM10Attributes = new HM10Attributes();
+		
+		public static function get instance():HM10Attributes
+		{
+			return _instance;
+		}
+		
 
 		public function HM10Attributes()
 		{
+			UUIDMap = new Object();
+			UUIDMap.HM_10_SERVICE_G4 = "HM_10_SERVICE_G4";
+			UUIDMap.HM_10_SERVICE_G5 = "HM_10_SERVICE_G5";
+			UUIDMap.HM_RX_TX_G4 = "HM_RX_TX_G4";
+			UUIDMap.G5_Communication_Characteristic_UUID = "G5_Communication_Characteristic_UUID";
+			UUIDMap.G5_Control_Characteristic_UUID = "G5_Control_Characteristic_UUID";
+			UUIDMap.G5_Authentication_Characteristic_UUID = "G5_Authentication_Characteristic_UUID";
 		}
 	}
 }

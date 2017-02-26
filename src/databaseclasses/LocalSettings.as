@@ -86,6 +86,14 @@ package databaseclasses
 		 * For explanation see LOCAL_SETTING_SUBSCRIBED_TO_PUSH_NOTIFICATIONS
 		 */
 		public static const LOCAL_SETTING_ACTUAL_QBLOX_SUBSCRIPTION_TAG:int = 9;
+		/**
+		 * taken over from Android version xdripplus 
+		 */
+		public static const LOCAL_SETTING_G5_ALWAYS_AUTHENTICATE:int = 10;
+		/**
+		 * taken over from Android version xdripplus 
+		 */
+		public static const LOCAL_SETTING_G5_ALWAYS_UNBOUND:int = 11;
 
 		private static var localSettings:Array = [
 			"false",//LOCAL_SETTING_DETAILED_TRACING_ENABLED
@@ -97,7 +105,9 @@ package databaseclasses
 			"false",//LOCAL_SETTING_SUBSCRIBED_TO_PUSH_NOTIFICATIONS
 			"ONE",//LOCAL_SETTING_WISHED_QBLOX_SUBSCRIPTION_TAG
 			"ONE",//LOCAL_SETTING_ACTUAL_QBLOX_SUBSCRIPTION_TAG
-			"false"//LOCAL_SETTING_NSLOG
+			"false",//LOCAL_SETTING_NSLOG
+			"false",//LOCAL_SETTING_G5_ALWAYS_AUTHENTICATE
+			"false"//LOCAL_SETTING_G5_ALWAYS_UNBOUND
 		];
 		
 		public function LocalSettings() {
