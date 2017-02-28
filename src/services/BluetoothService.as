@@ -38,7 +38,9 @@ package services
 	import G5Model.AuthChallengeTxMessage;
 	import G5Model.AuthRequestTxMessage;
 	import G5Model.AuthStatusRxMessage;
+	import G5Model.BatteryInfoRxMessage;
 	import G5Model.BatteryInfoTxMessage;
+	import G5Model.DisconnectTxMessage;
 	import G5Model.SensorRxMessage;
 	import G5Model.SensorTxMessage;
 	import G5Model.TransmitterStatus;
@@ -58,6 +60,7 @@ package services
 	import events.BlueToothServiceEvent;
 	
 	import model.ModelLocator;
+	import model.TransmitterDataG5Packet;
 	import model.TransmitterDataXBridgeBeaconPacket;
 	import model.TransmitterDataXBridgeDataPacket;
 	import model.TransmitterDataXdripDataPacket;
@@ -441,12 +444,14 @@ package services
 			} 
 			
 			awaitingConnect = false;
-			if ((new Date()).valueOf() - connectionAttemptTimeStamp > maxTimeBetweenConnectAttemptAndConnectSuccess * 1000) { //not waiting more than 3 seconds between device discovery and connection success
-				myTrace("passing in central_peripheralConnectHandler but time between connect attempt and connect success is more than " + maxTimeBetweenConnectAttemptAndConnectSuccess + " seconds. Will disconnect");
-				//activeBluetoothPeripheral = null;
-				BluetoothLE.service.centralManager.disconnect(event.peripheral);
-				return;
-			} 
+			if (DexcomG5) {
+				if ((new Date()).valueOf() - connectionAttemptTimeStamp > maxTimeBetweenConnectAttemptAndConnectSuccess * 1000) { //not waiting more than 3 seconds between device discovery and connection success
+					myTrace("passing in central_peripheralConnectHandler but time between connect attempt and connect success is more than " + maxTimeBetweenConnectAttemptAndConnectSuccess + " seconds. Will disconnect");
+					//activeBluetoothPeripheral = null;
+					BluetoothLE.service.centralManager.disconnect(event.peripheral);
+					return;
+				} 
+			}
 			
 			dispatchInformation('connected_to_peripheral');
 			
@@ -743,7 +748,7 @@ package services
 		 */
 		public static function ackCharacteristicUpdate(value:ByteArray):void {
 			if (!activeBluetoothPeripheral.writeValueForCharacteristic(G4characteristic, value)) {
-				dispatchInformation("write_value_for_characteristic_failed_due_to_invalid_state");
+				myTrace("ackCharacteristicUpdate writeValueForCharacteristic failed");
 			}
 		}
 		
@@ -953,15 +958,15 @@ package services
 						var authChallengeTx:AuthChallengeTxMessage = new AuthChallengeTxMessage(challengeHash);
 						myTrace("authChallengeTx = " + UniqueId.byteArrayToString(authChallengeTx.byteSequence));
 						if (!activeBluetoothPeripheral.writeValueForCharacteristic(characteristic, authChallengeTx.byteSequence)) {
-							dispatchInformation("write_value_for_characteristic_failed_due_to_invalid_state");
+							myTrace("processG5TransmitterData case 3 writeValueForCharacteristic failed");
 						}
 					} else {
 						myTrace("challengehash == null");
 					}
 					break;
-				case 27:
+				case 47:
 					var sensorRx:SensorRxMessage = new SensorRxMessage(buffer);
-					var sensor_battery_level:int = 0;
+					var sensor_battery_level:Number = 0;
 					if (sensorRx.transmitterStatus.toString() == TransmitterStatus.BRICKED) {
 						//TODO Handle this in UI/Notification
 						sensor_battery_level = 206; //will give message "EMPTY"
@@ -974,17 +979,23 @@ package services
 					if ((new Date()).valueOf() - new Number(CommonSettings.COMMON_SETTING_LASTUPDATE_TRANSMITTER_BATTERY_VOLTAGE_INMS) > BluetoothService.BATTERY_READ_PERIOD_MS) {
 						doBatteryInfoRequestMessage(characteristic);
 					} else {
-						doDisconnectMessage(gatt, characteristic);
+						doDisconnectMessageG5(characteristic);
 					}
-					process transmitterdata
-
+					
+					var blueToothServiceEvent:BlueToothServiceEvent = new BlueToothServiceEvent(BlueToothServiceEvent.TRANSMITTER_DATA);
+					blueToothServiceEvent.data = new TransmitterDataG5Packet(sensorRx.unfiltered, sensorRx.filtered, sensor_battery_level, sensorRx.timestamp, sensorRx.transmitterStatus);
+					_instance.dispatchEvent(blueToothServiceEvent);
 					break;
 				case 35:
-					process batteryinforxmessage
+					buffer.position = 0;
+					if (!setStoredBatteryBytesG5(buffer)) {
+						myTrace("Could not save out battery data!");
+					}
+					doDisconnectMessageG5(characteristic);
 					break;
 				case 75:
 					//to do store version
-					doDisconnectMessage(gatt, characteristic);
+					doDisconnectMessageG5(characteristic);
 					break;
 				default:
 					myTrace("processG5TransmitterData unknown code received : " + code);
@@ -992,11 +1003,35 @@ package services
 			}
 		}
 		
+		public static function setStoredBatteryBytesG5(data:ByteArray):Boolean {
+			myTrace("Store: BatteryRX dbg: " + UniqueId.bytesToHex((data)));
+			if (data.length < 10) return false;
+			myTrace("Saving battery data: " + (new BatteryInfoRxMessage(data)).toString());
+			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_G5_BATTERY_MARKER, UniqueId.bytesToHex(data));
+			//PersistentStore.setBytes(G5_BATTERY_MARKER + transmitterId, data);
+			//PersistentStore.setLong(G5_BATTERY_FROM_MARKER + transmitterId, JoH.tsl());
+			return true;
+		}
+		
+		private static function doDisconnectMessageG5(characteristic:Characteristic):void {
+			myTrace("doDisconnectMessage() start");
+			var disconnectTx:DisconnectTxMessage = new DisconnectTxMessage();
+			if (!activeBluetoothPeripheral.writeValueForCharacteristic(characteristic, disconnectTx.byteSequence)) {
+				myTrace("doDisconnectMessage writeValueForCharacteristic failed");
+			}
+			if (activeBluetoothPeripheral != null) {
+				if (!BluetoothLE.service.centralManager.disconnect(activeBluetoothPeripheral)) {
+					myTrace("doDisconnectMessage disconnect failed");
+				}
+			}
+			myTrace("doDisconnectMessage() finished");
+		}
+		
 		private static function doBatteryInfoRequestMessage(characteristic:Characteristic):void {
 			myTrace("doBatteryInfoMessage() start");
 			var batteryInfoTxMessage:BatteryInfoTxMessage =  new BatteryInfoTxMessage();
 			if (!activeBluetoothPeripheral.writeValueForCharacteristic(characteristic, batteryInfoTxMessage.byteSequence)) {
-				dispatchInformation("write_value_for_characteristic_failed_due_to_invalid_state");
+				myTrace("doBatteryInfoRequestMessage writeValueForCharacteristic failed");
 			}
 			myTrace("doBatteryInfoMessage() finished");
 		}
@@ -1120,7 +1155,7 @@ package services
 			myTrace("Sending new AuthRequestTxMessage with AuthRequestTX: " + UniqueId.byteArrayToString(authRequest.byteSequence));
 			
 			if (!activeBluetoothPeripheral.writeValueForCharacteristic(characteristic, authRequest.byteSequence)) {
-				dispatchInformation("write_value_for_characteristic_failed_due_to_invalid_state");
+				myTrace("sendAuthRequestTxMessage writeValueForCharacteristic failed");
 			}
 		}
 		
@@ -1142,7 +1177,6 @@ package services
 			var sensorTx:SensorTxMessage = new SensorTxMessage();
 			//controlCharacteristic.setValue(sensorTx.byteSequence);
 			if (!activeBluetoothPeripheral.writeValueForCharacteristic(G5ControlCharacteristic, sensorTx.byteSequence)) {
-				dispatchInformation("write_value_for_characteristic_failed_due_to_invalid_state");
 				myTrace("getSensorData writeValueForCharacteristic G5CommunicationCharacteristic failed");
 			} else {
 				myTrace("getSensorData(): writing desccrptor");

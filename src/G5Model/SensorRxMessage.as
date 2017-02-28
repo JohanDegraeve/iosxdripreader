@@ -6,6 +6,8 @@ package G5Model
 	import Utilities.Trace;
 	import Utilities.UniqueId;
 	
+	import model.TransmitterData;
+	
 	public class SensorRxMessage extends TransmitterMessage
 	{
 		private var opcode:int = 0x2f;

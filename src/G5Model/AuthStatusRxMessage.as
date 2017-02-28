@@ -21,6 +21,7 @@ package G5Model
 					authenticated = byteSequence.readUnsignedByte() != 0;
 					bonded = byteSequence.readUnsignedByte() != 0;
 					myTrace("AuthRequestRxMessage:  authenticated:"+authenticated+"  bonded:"+bonded);
+					byteSequence.position = 0;
 				}
 			}
 		}

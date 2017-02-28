@@ -92,7 +92,10 @@
 		 * last update TRANSMITTER_BATTERY_VOLTAGE in ms since 1 1 1970<br>
 		 * updated automatically when the setting COMMON_SETTING_TRANSMITTER_BATTERY_VOLTAGE
 		  */
-		 public static const COMMON_SETTING_LASTUPDATE_TRANSMITTER_BATTERY_VOLTAGE_INMS:int = 13
+		 public static const COMMON_SETTING_LASTUPDATE_TRANSMITTER_BATTERY_VOLTAGE_INMS:int = 13;
+		 public static const COMMON_SETTING_G5_BATTERY_MARKER:int = 14;
+		 public static const COMMON_SETTING_G5_BATTERY_FROM_MARKER:int = 15;
+			
 		 private static var commonSettings:Array = [
 			 "0",//COMMON_SETTING_CURRENT_SENSOR
 			 "0",//COMMON_SETTING_TRANSMITTER_BATTERY_VOLTAGE
@@ -107,7 +110,9 @@
 			 "70",//COMMON_SETTING_LOW_MARK
 			 "170",//COMMON_SETTING_HIGH_MARK
 			 "00000",//COMMON_SETTING_TRANSMITTER_ID
-			 "0"//COMMON_SETTING_LASTUPDATE_TRANSMITTER_BATTERY_VOLTAGE_INMS
+			 "0",//COMMON_SETTING_LASTUPDATE_TRANSMITTER_BATTERY_VOLTAGE_INMS
+			 "",//COMMON_SETTING_G5_BATTERY_MARKER
+			 "0",//COMMON_SETTING_G5_BATTERY_FROM_MARKER
 		 ];
 		 
 		 public function CommonSettings()
@@ -128,6 +133,9 @@
 				 }
 				 if (commonSettingId == COMMON_SETTING_TRANSMITTER_BATTERY_VOLTAGE) {
 					 commonSettings[COMMON_SETTING_LASTUPDATE_TRANSMITTER_BATTERY_VOLTAGE_INMS] = (new Date()).valueOf();
+				 }
+				 if (commonSettingId == COMMON_SETTING_G5_BATTERY_MARKER) {
+					 commonSettings[COMMON_SETTING_G5_BATTERY_FROM_MARKER] = (new Date()).valueOf();
 				 }
 				 commonSettings[commonSettingId] = newValue;
 				 if (updateDatabase)

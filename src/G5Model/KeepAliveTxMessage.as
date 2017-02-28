@@ -17,7 +17,7 @@ package G5Model
 			byteSequence.endian = Endian.LITTLE_ENDIAN;
 			byteSequence.writeByte(opcode);
 			byteSequence.writeByte(time);
-			
+			byteSequence.position = 0;
 			myTrace("New KeepAliveRequestTxMessage: " + UniqueId.bytesToHex(byteSequence));
 		}
 		
