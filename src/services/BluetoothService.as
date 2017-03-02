@@ -846,7 +846,6 @@ package services
 		
 		private static function peripheral_characteristic_subscribeHandler(event:CharacteristicEvent):void {
 			myTrace("peripheral_characteristic_subscribeHandler: " + HM10Attributes.instance.UUIDMap[event.characteristic.uuid.toUpperCase()]);
-			myTrace("peripheral_characteristic_subscribeHandler: " + event.characteristic.uuid);
 			dispatchInformation("successfully_subscribed_to_characteristics");
 			if (DexcomG5) {
 				if (event.characteristic.uuid.toUpperCase() == HM10Attributes.G5_Control_Characteristic_UUID.toUpperCase()) {
@@ -976,7 +975,7 @@ package services
 						sensor_battery_level = 216; //no message, just system status "OK"
 					}
 					
-					if ((new Date()).valueOf() - new Number(CommonSettings.COMMON_SETTING_LASTUPDATE_TRANSMITTER_BATTERY_VOLTAGE_INMS) > BluetoothService.BATTERY_READ_PERIOD_MS) {
+					if ((new Date()).valueOf() - new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_BATTERY_FROM_MARKER)) > BluetoothService.BATTERY_READ_PERIOD_MS) {
 						doBatteryInfoRequestMessage(characteristic);
 					} else {
 						doDisconnectMessageG5(characteristic);
