@@ -39,7 +39,6 @@ package Utilities
 		{
 			return _instance;
 		}
-		
 
 		public function HM10Attributes()
 		{

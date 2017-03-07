@@ -20,8 +20,6 @@
  */
 package databaseclasses
 {
-	import com.hurlant.util.der.Integer;
-	
 	import mx.collections.ArrayCollection;
 	
 	import Utilities.BgGraphBuilder;

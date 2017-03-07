@@ -254,7 +254,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 					_peripheralConnected = true;
 					peripheralConnectionStatusChangeTimestamp = (new Date()).valueOf();
 				}
-				NotificationService.updateAllNotifications(null);
+				if (!BluetoothService.DexcomG5) {
+					NotificationService.updateAllNotifications(null);
+				}
 			}
 			
 			private function userInitiatedScanningSucceeded(event:PeripheralEvent):void {
@@ -277,7 +279,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 					_peripheralConnected = false;
 					peripheralConnectionStatusChangeTimestamp = (new Date()).valueOf();
 				}
-				NotificationService.updateAllNotifications(null);
+				if (!BluetoothService.DexcomG5) {
+					NotificationService.updateAllNotifications(null);
+				}
+				
 				if ((BluetoothLE.service.centralManager.state == BluetoothLEState.STATE_ON) && BlueToothDevice.known() && ((new Date().valueOf() - peripheralConnectionStatusChangeTimestamp) < TimerService.DELAY_FOR_CHECKING_BGREADING_IN_SECONDS)) {
 					currentState = "bluetoothorange";
 				} else {

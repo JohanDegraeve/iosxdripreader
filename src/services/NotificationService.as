@@ -245,10 +245,16 @@ package services
 					} else {
 						valueToShow = "---"
 					}
-					var bodyText:String = HomeView.peripheralConnected ? 
-						ModelLocator.resourceManagerInstance.getString("notificationservice","connected")
-						:
-						ModelLocator.resourceManagerInstance.getString("notificationservice","not_connected");
+					
+					var bodyText:String;
+					if (!BluetoothService.DexcomG5) {
+						bodyText = HomeView.peripheralConnected ? 
+							ModelLocator.resourceManagerInstance.getString("notificationservice","connected")
+							:
+							ModelLocator.resourceManagerInstance.getString("notificationservice","not_connected");
+					} else {
+						bodyText = " ";						
+					}
 
 					Notifications.service.notify(
 						new NotificationBuilder()
