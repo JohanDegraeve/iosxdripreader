@@ -95,6 +95,10 @@
 		 public static const COMMON_SETTING_UNUSED:int = 13;
 		 public static const COMMON_SETTING_G5_BATTERY_MARKER:int = 14;
 		 public static const COMMON_SETTING_G5_BATTERY_FROM_MARKER:int = 15;
+		 /**
+		 * G4 or G5, also for limitter G4 is used
+		  */
+		 public static const COMMON_SETTING_PERIPHERAL_TYPE:int = 16;
 			
 		 private static var commonSettings:Array = [
 			 "0",//COMMON_SETTING_CURRENT_SENSOR
@@ -113,6 +117,7 @@
 			 "0",//COMMON_SETTING_UNUSED
 			 "",//COMMON_SETTING_G5_BATTERY_MARKER
 			 "0",//COMMON_SETTING_G5_BATTERY_FROM_MARKER
+			 "G4"//COMMON_SETTING_PERIPHERAL_TYPE
 		 ];
 		 
 		 public function CommonSettings()
@@ -135,11 +140,12 @@
 					 commonSettings[COMMON_SETTING_G5_BATTERY_FROM_MARKER] = (new Date()).valueOf();
 				 }
 				 commonSettings[commonSettingId] = newValue;
-				 if (updateDatabase)
+				 if (updateDatabase) {
 					 Database.updateCommonSetting(commonSettingId, newValue);
-				 var settingChangedEvent:SettingsServiceEvent = new SettingsServiceEvent(SettingsServiceEvent.SETTING_CHANGED);
-				 settingChangedEvent.data = commonSettingId;
-				 _instance.dispatchEvent(settingChangedEvent);
+					 var settingChangedEvent:SettingsServiceEvent = new SettingsServiceEvent(SettingsServiceEvent.SETTING_CHANGED);
+					 settingChangedEvent.data = commonSettingId;
+					 _instance.dispatchEvent(settingChangedEvent);
+				 }
 			 }
 		 }
 		 

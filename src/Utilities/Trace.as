@@ -58,6 +58,7 @@ package Utilities
 			}
 			
 			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_DETAILED_TRACING_ENABLED) == "false") {
+				
 			} else {
 				var fileName:String = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_TRACE_FILE_NAME);
 				BackgroundFetch.writeStringToFile(filePath, traceText.replace(" xdripreadertrace ", " "));			
@@ -70,13 +71,14 @@ package Utilities
 			var fileName:String = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_TRACE_FILE_NAME);
 			if (fileName != "") {
 				var f:File = File.applicationStorageDirectory.resolvePath(fileName);
-				trace("xdripreadertrace nativepath = " + f.nativePath);
 				var attachment:MessageAttachment = new MessageAttachment(f.nativePath, "", "", "");
 				var body:String = "Hi,\n\nFind attached trace file " + fileName + "\n\nregards.";
 				Message.service.sendMailWithOptions("Trace file", body, "johan.degraeve@gmail.com","","",[attachment],false);
 				f.deleteFileAsync();
 				BackgroundFetch.resetWriteStringToFilePath();
 				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_TRACE_FILE_NAME, "");
+			} else {
+				
 			}
 		}
 		

@@ -231,11 +231,33 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 				}
 			}
 			
+			private static function peripheralTypeSelected(event:DialogViewEvent):void {
+				if (event.index == 1) {
+					return;
+				}
+				if (event.index == 1) {
+					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE, "G5");
+				} else if (event.index == 2) {
+					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE, "G4");
+				}
+			}
+			
 			private static function dialogServiceInitiated(ev:DialogServiceEvent):void {
+				/*var alert:DialogView = Dialog.service.create(
+					new AlertBuilder()
+					.setTitle(ModelLocator.resourceManagerInstance.getString('homeview',"selectG4_or_G5_title"))
+					.setMessage(ModelLocator.resourceManagerInstance.getString('homeview',"selectG4_or_G5"))//info about buttons top right corner
+					.addOption(ModelLocator.resourceManagerInstance.getString('homeview',"yes"), DialogAction.STYLE_POSITIVE, 1)
+					.addOption(ModelLocator.resourceManagerInstance.getString('homeview',"no"), DialogAction.STYLE_POSITIVE, 2)
+					.build()
+				);
+				DialogService.addDialog(alert);
+				alert.addEventListener(DialogViewEvent.CLOSED, peripheralTypeSelected);
+				alert.addEventListener(DialogViewEvent.CANCELLED, peripheralTypeSelected);*/
 				
 				//initial info screen
 				//this seems to be the right time to start using the database - here it is used actually
-				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_INITIAL_INFO_SCREEN_1_SHOWN) == "false") {
+			/*	if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_INITIAL_INFO_SCREEN_1_SHOWN) == "false") {
 					var alert:DialogView = Dialog.service.create(
 						new AlertBuilder()
 						.setTitle(ModelLocator.resourceManagerInstance.getString('homeview',"info"))
@@ -245,7 +267,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 					);
 					DialogService.addDialog(alert);
 					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_INITIAL_INFO_SCREEN_1_SHOWN,"true");
-				}
+				}*/
 			}
 			
 			private function bluetoothDeviceConnectionCompleted(event:BlueToothServiceEvent):void {
