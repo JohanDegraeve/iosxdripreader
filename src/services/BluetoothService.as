@@ -35,13 +35,14 @@ package services
 	import flash.utils.Endian;
 	import flash.utils.Timer;
 	
+	import mx.collections.ArrayCollection;
+	
 	import G5Model.AuthChallengeRxMessage;
 	import G5Model.AuthChallengeTxMessage;
 	import G5Model.AuthRequestTxMessage;
 	import G5Model.AuthStatusRxMessage;
 	import G5Model.BatteryInfoRxMessage;
 	import G5Model.BatteryInfoTxMessage;
-	import G5Model.DisconnectTxMessage;
 	import G5Model.SensorRxMessage;
 	import G5Model.SensorTxMessage;
 	import G5Model.TransmitterStatus;
@@ -60,6 +61,7 @@ package services
 	import distriqtkey.DistriqtKey;
 	
 	import events.BlueToothServiceEvent;
+	import events.SettingsServiceEvent;
 	
 	import model.ModelLocator;
 	import model.TransmitterDataG5Packet;
@@ -121,13 +123,16 @@ package services
 		private static var waitingForPeripheralCharacteristicsDiscovered:Boolean = false;
 		private static var waitingForServicesDiscovered:Boolean = false;
 		
-		public static const DexcomG5:Boolean = true;
 		private static var authRequest:AuthRequestTxMessage = null;
 		private static var authStatus:AuthStatusRxMessage = null;
 		private static var lastOnReadCode:int = 0xff;
 		private static var isBondedOrBonding:Boolean = false;
+		private static var discoveryTimeStamp:Number;
+		private static const waitTimeBeforeRescanAfterG5DisconnectInSeconds:int = 10;
 		
 		public static const BATTERY_READ_PERIOD_MS:Number = 1000 * 60 * 60 * 12; // how often to poll battery data (12 hours)
+		
+		public static var isDexcomG5:Boolean;
 		
 		private static function set activeBluetoothPeripheral(value:Peripheral):void
 		{
@@ -217,11 +222,12 @@ package services
 				return;
 			else
 				initialStart = false;
-			
-			BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.TIMER1_EXPIRED, dexcomG5Rescan);
-			BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.TIMER2_EXPIRED, dexcomG5Rescan);
+			BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.TIMER1_EXPIRED, dexcomG5StartRescan);
 			BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.TIMER3_EXPIRED, stopScanning);
 			BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.TIMER4_EXPIRED, central_peripheralDisconnectHandler);
+			CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, settingChanged);
+			
+			isDexcomG5 = (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE) == "G5");
 			
 			BluetoothLE.init(DistriqtKey.distriqtKey);
 			if (BluetoothLE.isSupported) {
@@ -270,7 +276,16 @@ package services
 				
 			} else {
 				myTrace("Unfortunately your android version does not support Bluetooth Low Energy");
-				dispatchInformation('bluetooth_not_supported');
+			}
+		}
+		
+		private static function settingChanged(event:SettingsServiceEvent):void {
+			if (event.data == CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE) {
+				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE) == "G5") {
+					isDexcomG5 = true;					
+				} else {
+					isDexcomG5 = false;
+				}
 			}
 		}
 		
@@ -301,15 +316,8 @@ package services
 			treatNewBlueToothStatus(BluetoothLE.service.centralManager.state);					
 		}
 		
-		/** as soon as bluetooth status is on<br>
-		 * &nbsp&nbsp (this may happen the first time that this class is instantiated, means it's instantiated while bluetooth is on<br>
-		 * &nbsp&nbsp or bluetooth was off before, while the app was running already, and it changed to on) <br>
-		 * 
-		 * If a bluetooth peripheral already stored in database, check status and if not connected or connecting, then try to connect<br>
-		 * If no active bluetooth peripheral known, then do nothing<br>
-		 */
 		private static function bluetoothStatusIsOn():void {
-			if (activeBluetoothPeripheral != null && !DexcomG5) {
+			if (activeBluetoothPeripheral != null && !(isDexcomG5)) {
 				awaitingConnect = true;
 				connectionAttemptTimeStamp = (new Date()).valueOf();
 				BackgroundFetch.startTimer4(reconnectAttemptPeriodInSeconds - 2);
@@ -317,8 +325,7 @@ package services
 				myTrace("Trying to connect to known device.");
 				reconnectAttemptTimeStamp = (new Date()).valueOf();
 			} else {
-				if (BlueToothDevice.known()) {
-					//we know a device from previous connection should we should try to connect
+				if (BlueToothDevice.known() || (isDexcomG5)) {
 					myTrace("call startScanning");
 					startScanning();
 				}
@@ -328,9 +335,9 @@ package services
 		public static function startScanning():void {
 			if (!BluetoothLE.service.centralManager.isScanning) {
 				reScanIfFailed = true;
-				if (!DexcomG5)
+				if (!(isDexcomG5))
 					BackgroundFetch.startTimer3(MAX_SCAN_TIME_IN_SECONDS);
-				if (!BluetoothLE.service.centralManager.scanForPeripherals(DexcomG5 ? uuids_G5_Advertisement:uuids_G4_Service))
+				if (!BluetoothLE.service.centralManager.scanForPeripherals(isDexcomG5 ? uuids_G5_Advertisement:uuids_G4_Service))
 				{
 					myTrace("failed to start scanning for peripherals");
 					dispatchInformation('failed_to_start_scanning_for_peripherals');
@@ -368,21 +375,27 @@ package services
 		}
 		
 		private static function central_peripheralDiscoveredHandler(event:PeripheralEvent):void {//LimiTix
-			if (awaitingConnect && !DexcomG5) {
+			discoveryTimeStamp = (new Date()).valueOf();
+			if (awaitingConnect && !(isDexcomG5)) {
 				myTrace("passing in central_peripheralDiscoveredHandler but already awaiting connect, ignoring this one. peripheral name = " + event.peripheral.name);
 				return;
 			} else {
 				myTrace("passing in central_peripheralDiscoveredHandler. Peripheral name = " + event.peripheral.name);
 			}
 			
-			if (DexcomG5) {
+			if (isDexcomG5) {
 				BackgroundFetch.cancelTimer1();
 				BackgroundFetch.cancelTimer2();
 			}
 			
 			// event.peripheral will contain a Peripheral object with information about the Peripheral
+			var expectedG5_name:String;
+			if (isDexcomG5) {
+				expectedG5_name = "DEXCOM" + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID).substring(4,6);
+				myTrace("expected g5 device name = " + expectedG5_name);
+			}
 			if (
-				(!DexcomG5 && 
+				(!(isDexcomG5) && 
 					(
 						(event.peripheral.name as String).toUpperCase().indexOf("DRIP") > -1 
 						|| (event.peripheral.name as String).toUpperCase().indexOf("BRIDGE") > -1 
@@ -391,26 +404,22 @@ package services
 					)
 				) 
 				||
-				(DexcomG5 && 
+				(isDexcomG5 && 
 					(
-						(event.peripheral.name as String).toUpperCase().indexOf("DEXCOM") > -1
+						(event.peripheral.name as String).toUpperCase().indexOf(expectedG5_name) > -1
 					)
 				)
 			) {
 				var blueToothServiceEvent:BlueToothServiceEvent = new BlueToothServiceEvent(BlueToothServiceEvent.BLUETOOTH_SERVICE_INFORMATION_EVENT);
-				blueToothServiceEvent.data = new Object();
-				blueToothServiceEvent.data.information = 
-					ModelLocator.resourceManagerInstance.getString('bluetoothservice','found_peripheral_with_name') +
-					" = " + event.peripheral.name;
-				_instance.dispatchEvent(blueToothServiceEvent);
-				myTrace(blueToothServiceEvent.data.information as String);
+				var message:String =  
+					"Found peripheral with name" + " = " + event.peripheral.name;
+				myTrace(message);
 				
 				if (BlueToothDevice.address != "") {
 					if (BlueToothDevice.address != event.peripheral.uuid) {
 						//a bluetooth device address is already stored, but it's not the one for which peripheraldiscoveredhandler is called
 						//so we ignore it
-						dispatchInformation('stored_uuid_does_not_match');
-						myTrace("stop scan");
+						myTrace("UUID of found peripheral does not match with name of the UUID stored in the database - will ignore this xdrip/xbridge/LimiTTer/Dexcom., stop scan");
 						BluetoothLE.service.centralManager.stopScan();
 						return;
 					}
@@ -418,10 +427,11 @@ package services
 					//we store also this device, as of now, all future connect attempts will be only to this one, until the user choses "forget device"
 					BlueToothDevice.address = event.peripheral.uuid;
 					BlueToothDevice.name = event.peripheral.name;
-					dispatchInformation('device_id_stored');
+					myTrace("Device details will be stored in database. Future attempts will only use this device to connect to.");
 				}
 				
 				//we want to connect to this device, so stop scanning
+				myTrace("Stop scanning and try to connect");
 				BluetoothLE.service.centralManager.stopScan();
 				BackgroundFetch.cancelTimer3();
 				reScanIfFailed = false;
@@ -430,23 +440,18 @@ package services
 				connectionAttemptTimeStamp = (new Date()).valueOf();
 				BackgroundFetch.startTimer4(reconnectAttemptPeriodInSeconds - 2);
 				BluetoothLE.service.centralManager.connect(event.peripheral);
-				myTrace("Stop scanning and try to connect");
+				
 			}
 		}
 		
 		private static function central_peripheralConnectHandler(event:PeripheralEvent):void {
-			trace("xdripreadertrace central_peripheralConnectHandler");
 			if (reconnectTimer != null) {
-				trace("xdripreadertrace central_peripheralConnectHandler - 1");
 				if (reconnectTimer.running) {
-					trace("xdripreadertrace central_peripheralConnectHandler - 2");
 					reconnectTimer.stop();
 				}
 				reconnectTimer = null;
 			}
-			trace("xdripreadertrace before calling BackgroundFetch.cancelTimer4");
 			BackgroundFetch.cancelTimer4();
-			trace("xdripreadertrace after calling BackgroundFetch.cancelTimer4");
 			reconnectAttemptTimeStamp = 0;
 			
 			if (!awaitingConnect) {
@@ -457,7 +462,7 @@ package services
 			} 
 			
 			awaitingConnect = false;
-			if (DexcomG5) {
+			if (isDexcomG5) {
 				if ((new Date()).valueOf() - connectionAttemptTimeStamp > maxTimeBetweenConnectAttemptAndConnectSuccess * 1000) { //not waiting more than 3 seconds between device discovery and connection success
 					myTrace("passing in central_peripheralConnectHandler but time between connect attempt and connect success is more than " + maxTimeBetweenConnectAttemptAndConnectSuccess + " seconds. Will disconnect");
 					//activeBluetoothPeripheral = null;
@@ -486,19 +491,16 @@ package services
 			
 			if (amountOfDiscoverServicesOrCharacteristicsAttempt < MAX_RETRY_DISCOVER_SERVICES_OR_CHARACTERISTICS) {
 				amountOfDiscoverServicesOrCharacteristicsAttempt++;
-				var blueToothServiceEvent:BlueToothServiceEvent = new BlueToothServiceEvent(BlueToothServiceEvent.BLUETOOTH_SERVICE_INFORMATION_EVENT);
-				blueToothServiceEvent.data = new Object();
-				blueToothServiceEvent.data.information = ModelLocator.resourceManagerInstance.getString('bluetoothservice','launching_discoverservices_attempt_amount') + " " + amountOfDiscoverServicesOrCharacteristicsAttempt;
-				_instance.dispatchEvent(blueToothServiceEvent);
-				myTrace(blueToothServiceEvent.data.information as String);
+				var message:String = ModelLocator.resourceManagerInstance.getString('bluetoothservice','launching_discoverservices_attempt_amount') + " " + amountOfDiscoverServicesOrCharacteristicsAttempt;
+				myTrace(message);
 				
 				waitingForServicesDiscovered = true;
-				activeBluetoothPeripheral.discoverServices(DexcomG5 ? uuids_G5_Service:uuids_G4_Service);
+				activeBluetoothPeripheral.discoverServices(isDexcomG5 ? uuids_G5_Service:uuids_G4_Service);
 				discoverServiceOrCharacteristicTimer = new Timer(DISCOVER_SERVICES_OR_CHARACTERISTICS_RETRY_TIME_IN_SECONDS * 1000, 1);
 				discoverServiceOrCharacteristicTimer.addEventListener(TimerEvent.TIMER, discoverServices);
 				discoverServiceOrCharacteristicTimer.start();
 			} else {
-				dispatchInformation("max_amount_of_discover_services_attempt_reached");
+				myTrace("Maximum amount of attempts for discover bluetooth services reached.")
 				amountOfDiscoverServicesOrCharacteristicsAttempt = 0;
 				
 				//i just happens that retrying doesn't help anymore
@@ -518,7 +520,9 @@ package services
 				
 				//this will cause rescan, if scanning fails just retry, forever
 				reScanIfFailed = true;
-				bluetoothStatusIsOn();
+				if ((BluetoothLE.service.centralManager.state == BluetoothLEState.STATE_ON)) {
+					bluetoothStatusIsOn();
+				}
 			}
 		}
 		
@@ -533,11 +537,17 @@ package services
 			}
 			BackgroundFetch.cancelTimer4();
 			
-			if (DexcomG5) {
+			if (isDexcomG5) {
 				forgetBlueToothDevice();
-				myTrace("its a G5 not going to try reconnect, this will be restart when performfetch is received");
-				//myTrace("starting timer to restart scanning in 8 seconds (Timer1)");
-				//BackgroundFetch.startTimer1(8);
+				var timeDifSinceDiscovery = (new Date()).valueOf() - discoveryTimeStamp;
+				if (timeDifSinceDiscovery > waitTimeBeforeRescanAfterG5DisconnectInSeconds * 1000) {
+					myTrace("it's a G5, restarting scan immediately");
+					dexcomG5StartRescan(null);
+				}  else {
+					var waitTimeInSeconds:Number = waitTimeBeforeRescanAfterG5DisconnectInSeconds - timeDifSinceDiscovery/1000;
+					myTrace("it's a G5, not restarting scan immediately, starting timer in " + waitTimeInSeconds + " seconds");
+					BackgroundFetch.startTimer1(waitTimeInSeconds);
+				}
 				return;
 			}
 			
@@ -600,10 +610,10 @@ package services
 		}
 		
 		private static function peripheral_discoverServicesHandler(event:PeripheralEvent):void {
-			if (!waitingForServicesDiscovered && !DexcomG5) {
+			if (!waitingForServicesDiscovered && !(isDexcomG5)) {
 				myTrace("in peripheral_discoverServicesHandler but not waitingForServicesDiscovered and not dexcomg5, ignoring");
 				return;
-			} else if (waitingForServicesDiscovered && !DexcomG5) {
+			} else if (waitingForServicesDiscovered && !(isDexcomG5)) {
 				myTrace("in peripheral_discoverServicesHandler and waitingForServicesDiscovered and not dexcom g5");
 			} else 
 				myTrace("in peripheral_discoverServicesHandler and dexcom g5");
@@ -613,7 +623,7 @@ package services
 				discoverServiceOrCharacteristicTimer.stop();
 				discoverServiceOrCharacteristicTimer = null;
 			}
-			dispatchInformation("services_discovered");
+			myTrace("Bluetooth peripheral services discovered.");
 			amountOfDiscoverServicesOrCharacteristicsAttempt = 0;
 			
 			if (event.peripheral.services.length > 0)
@@ -643,7 +653,7 @@ package services
 				
 				//find the index of the service that has uuid = the one used by xdrip/xbridge or Dexcom
 				var index:int;
-				if (DexcomG5) {
+				if (isDexcomG5) {
 					for each (var o:Object in activeBluetoothPeripheral.services) {
 						if (HM10Attributes.HM_10_SERVICE_G5.indexOf((o.uuid as String).toUpperCase()) > -1) {
 							break;
@@ -660,7 +670,7 @@ package services
 				}
 				
 				waitingForPeripheralCharacteristicsDiscovered = true;
-				activeBluetoothPeripheral.discoverCharacteristics(activeBluetoothPeripheral.services[index], DexcomG5 ? uuids_G5_Characteristics:uuids_G4_Characteristics);
+				activeBluetoothPeripheral.discoverCharacteristics(activeBluetoothPeripheral.services[index], isDexcomG5 ? uuids_G5_Characteristics:uuids_G4_Characteristics);
 				discoverServiceOrCharacteristicTimer = new Timer(DISCOVER_SERVICES_OR_CHARACTERISTICS_RETRY_TIME_IN_SECONDS * 1000, 1);
 				discoverServiceOrCharacteristicTimer.addEventListener(TimerEvent.TIMER, discoverCharacteristics);
 				discoverServiceOrCharacteristicTimer.start();
@@ -669,9 +679,9 @@ package services
 					myTrace("amountOfDiscoverServicesOrCharacteristicsAttempt == MAX_RETRY_DISCOVER_SERVICES_OR_CHARACTERISTICS"); 
 					dispatchInformation("max_amount_of_discover_characteristics_attempt_reached");
 				}
-				if (activeBluetoothPeripheral.services.length == 0 && !DexcomG5) {
+				if (activeBluetoothPeripheral.services.length == 0 && !(isDexcomG5)) {
 					myTrace("activeBluetoothPeripheral.services.length == 0"); 
-				} else if (activeBluetoothPeripheral.services.length == 0 && DexcomG5) {
+				} else if (activeBluetoothPeripheral.services.length == 0 && (isDexcomG5)) {
 					myTrace("activeBluetoothPeripheral.services.length == 0 but it's a dexcomg5, not trying to reconnect");
 				}
 				tryReconnect();
@@ -689,7 +699,7 @@ package services
 				discoverServiceOrCharacteristicTimer.stop();
 				discoverServiceOrCharacteristicTimer = null;
 			}
-			dispatchInformation("characteristics_discovered");
+			myTrace("Bluetooth peripheral characteristics discovered");
 			amountOfDiscoverServicesOrCharacteristicsAttempt = 0;
 			
 			//find the index of the service that has uuid = the one used by xdrip/xbridge
@@ -699,7 +709,7 @@ package services
 			var G5CommunicationCharacteristicsIndex:int = 0;
 			var G5ControlCharacteristicsIndex:int = 0;
 			var o:Object;
-			if (DexcomG5) {
+			if (isDexcomG5) {
 				for each (o in activeBluetoothPeripheral.services) {
 					if (HM10Attributes.HM_10_SERVICE_G5.indexOf((o.uuid as String).toUpperCase()) > -1) {
 						break;
@@ -769,10 +779,6 @@ package services
 		private static function peripheral_characteristic_updatedHandler(event:CharacteristicEvent):void {
 			myTrace("peripheral_characteristic_updatedHandler characteristic uuid = " + event.characteristic.uuid +
 				" with byte 0 = " + event.characteristic.value[0] + " decimal.");
-			/*for (var i:int = 0;i < event.characteristic.value.length;i++) {
-			myTrace("bytearray element " + i + " = " + (new Number(event.characteristic.value[i])).toString(16));
-			}*/
-			
 			//now start reading the values
 			var value:ByteArray = event.characteristic.value;
 			var packetlength:int = value.readUnsignedByte();
@@ -798,7 +804,7 @@ package services
 				myTrace(traceMessage2);
 				
 				value.position = 0;
-				if (DexcomG5) {
+				if (isDexcomG5) {
 					processG5TransmitterData(value, event.characteristic);
 				} else {
 					processG4TransmitterData(value);
@@ -807,7 +813,7 @@ package services
 		}
 		
 		private static function peripheral_characteristic_writeHandler(event:CharacteristicEvent):void {
-			if (DexcomG5) {
+			if (isDexcomG5) {
 				if (event.characteristic.uuid.toUpperCase() == HM10Attributes.G5_Control_Characteristic_UUID.toUpperCase()) {
 				} else {
 				}
@@ -817,33 +823,6 @@ package services
 			
 			myTrace("peripheral_characteristic_writeHandler");
 		}
-		
-		/*private static function processAuthRequestCharacteristicWritehandler(event:CharacteristicEvent):void {
-		if (event.characteristic.value != null) {
-		var value:ByteArray = event.characteristic.value;
-		if (value.readByte() != KeepAliveTxMessage.opcode) { /* opcode keepalive? */
-		//myTrace("Auth ow: got something else than keepalive");
-		/*if (delayOn133Errors && max133RetryCounter > 1) {
-		// should we only be looking at disconnected 133 here?
-		Log.e(TAG, "Adding a delay before reading characteristic with 133 count of: " + max133RetryCounter);
-		waitFor(300);
-		}*/
-		/*if (mGatt != null) {
-		mGatt.readCharacteristic(characteristic);
-		} else {
-		Log.e(TAG, "mGatt was null when trying to read KeepAliveTxMessage");
-		}
-		} else {
-		myTrace("Auth ow: got keepalive");
-		if (useKeepAlive) {
-		Log.e(TAG, "Keepalive written, now trying bond");
-		performBondWrite(characteristic);
-		}
-		}
-		} else {
-		myTrace("processAuthRequestCharacteristicWritehandler, event.characteristic.value == null");
-		}
-		}*/
 		
 		private static function peripheral_characteristic_writeErrorHandler(event:CharacteristicEvent):void {
 			myTrace("peripheral_characteristic_writeErrorHandler");
@@ -857,7 +836,7 @@ package services
 		
 		private static function peripheral_characteristic_subscribeHandler(event:CharacteristicEvent):void {
 			myTrace("peripheral_characteristic_subscribeHandler success: " + event.characteristic.uuid);
-			if (DexcomG5) {
+			if (isDexcomG5) {
 				if (event.characteristic.uuid.toUpperCase() == HM10Attributes.G5_Control_Characteristic_UUID.toUpperCase()) {
 					myTrace("peripheral_characteristic_subscribeHandler, subscribing now to G5AuthenticationCharacteristic");
 					if (!activeBluetoothPeripheral.subscribeToCharacteristic(G5AuthenticationCharacteristic))
@@ -899,11 +878,8 @@ package services
 			BluetoothLE.service.centralManager.disconnect(activeBluetoothPeripheral);
 			activeBluetoothPeripheral = null;
 			
-			var blueToothServiceEvent:BlueToothServiceEvent = new BlueToothServiceEvent(BlueToothServiceEvent.BLUETOOTH_SERVICE_INFORMATION_EVENT);
-			blueToothServiceEvent.data = new Object();
-			blueToothServiceEvent.data.information = ModelLocator.resourceManagerInstance.getString('bluetoothservice','bluetoothdeviceforgotten');
-			_instance.dispatchEvent(blueToothServiceEvent);
-			myTrace(blueToothServiceEvent.data.information as String);
+			var message:String = ModelLocator.resourceManagerInstance.getString('bluetoothservice','bluetoothdeviceforgotten');
+			myTrace(message);
 		}
 		
 		/**
@@ -1033,8 +1009,6 @@ package services
 				}
 			}
 			forgetBlueToothDevice();
-			//myTrace("starting timer to restart scanning in 9 seconds (Timer2)");
-			//BackgroundFetch.startTimer2(9);
 			myTrace("doDisconnectMessage() finished");
 		}
 		
@@ -1070,8 +1044,7 @@ package services
 		}
 		
 		public static function cryptKey():ByteArray {
-			//var transmitterId:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID);
-			var transmitterId:String = "40RA7C";
+			var transmitterId:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID);
 			var returnValue:ByteArray =  new ByteArray();
 			returnValue.writeMultiByte("00" + transmitterId + "00" + transmitterId,"iso-8859-1");
 			return returnValue;
@@ -1194,20 +1167,33 @@ package services
 			}
 		}
 		
-		public static function dexcomG5Rescan(event:Event):void {
-			var latestBgReading:BgReading = BgReading.latest(1).getItemAt(0) as BgReading;
+		/**
+		 * to be called when performfetch is received, this will actually start the rescan 
+		 */
+		public static function dexcomG5StartRescan(event:Event):void {
+			if (!(BluetoothLE.service.centralManager.state == BluetoothLEState.STATE_ON)) {
+				myTrace("In dexcomG5StartRescanAtPerformFetch but bluetooth is not on");
+				return;
+			}
+			var latestBgReadingMoreThan5Minutes:Boolean = false;
+			var latestBgReadingList:ArrayCollection = BgReading.latest(1);
+			if (latestBgReadingList.length > 0) {
+				var latestBgReading:BgReading = latestBgReadingList.getItemAt(0) as BgReading;
+				latestBgReadingMoreThan5Minutes = ((new Date()).valueOf() - latestBgReading.timestamp > 5 * 60 * 1000);
+			} else {
+				latestBgReadingMoreThan5Minutes = true;
+			}
 			if (!BluetoothLE.service.centralManager.isScanning 
 				|| 
-				(new Date()).valueOf() - latestBgReading.timestamp > 5 * 60 * 1000) {
+				latestBgReadingMoreThan5Minutes) {
 				if (BluetoothLE.service.centralManager.isScanning) {
 					BluetoothLE.service.centralManager.stopScan();
 				}
 				myTrace("in dexcomG5Rescan calling bluetoothStatusIsOn");
 				bluetoothStatusIsOn();
 			} else {
-				myTrace("in dexcomG5Resscan but already scanning");
+				myTrace("in dexcomG5Rescan but already scanning or time since last reading < 5 minutes");
 			}
 		}
 	}
-	
 }

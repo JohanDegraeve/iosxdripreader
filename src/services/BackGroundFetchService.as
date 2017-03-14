@@ -17,6 +17,7 @@ package services
 	import Utilities.Trace;
 	import Utilities.UniqueId;
 	
+	import databaseclasses.CommonSettings;
 	import databaseclasses.LocalSettings;
 	
 	import events.BackGroundFetchServiceEvent;
@@ -180,15 +181,16 @@ package services
 		
 		private static function performFetch(event:BackgroundFetchEvent):void {
 			myTrace("performFetch");
-			if (!HomeView.peripheralConnected && !ModelLocator.isInForeground && !BluetoothService.DexcomG5) {
+			if (!HomeView.peripheralConnected && !ModelLocator.isInForeground && 
+				!(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE) == "G5")) {
 				myTrace("peripheral not connected, calling bluetoothservice.tryreconnect");
 				attemptingBluetoothReconnect = true;
 				BackgroundFetch.startReconnectTimer(20);
 				BluetoothService.forgetBlueToothDevice();
 				BluetoothService.tryReconnect(null);
 			}
-			if (BluetoothService.DexcomG5) {
-				BluetoothService.dexcomG5Rescan(null);
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE) == "G5") {
+				BluetoothService.dexcomG5StartRescan(null);
 			}
 			if (!ModelLocator.isInForeground) {
 				var backgroundfetchServiceEvent:BackGroundFetchServiceEvent = new BackGroundFetchServiceEvent(BackGroundFetchServiceEvent.LOG_INFO);

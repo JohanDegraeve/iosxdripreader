@@ -80,6 +80,7 @@ package model
 		public static var image_bluetooth_red:Image;
 		public static var image_bluetooth_green:Image;
 		public static var image_bluetooth_orange:Image
+		public static var image_G5:Image
 		public static var iconCache:ContentCache;
 
 		private static var _isInForeground:Boolean = false;
@@ -308,25 +309,6 @@ package model
 							NetworkInfo.init(DistriqtKey.distriqtKey);
 							BackGroundFetchService.init();
 							
-							/*var testString:String = "03B324D1AA8A308A8A9DD27650ACD7BF20";
-							var testbytearray:ByteArray = UniqueId.hexStringToByteArray(testString);
-							testbytearray.position = 0;
-							
-							var authRequest:AuthRequestTxMessage = null;
-							
-							var authChallenge:AuthChallengeRxMessage = new AuthChallengeRxMessage(testbytearray);
-							trace("AuthChallengeRxMessage created, tokenHash = " + UniqueId.byteArrayToString(authChallenge.tokenHash));
-							trace("AuthChallengeRxMessage created, challenge = " + UniqueId.byteArrayToString(authChallenge.challenge));
-							if (authRequest == null) {
-								authRequest = new AuthRequestTxMessage(8);
-							}
-							trace("authrequest.singleUseToken = " + UniqueId.byteArrayToString(authRequest.singleUseToken));
-							var key:ByteArray = BluetoothService.cryptKey();
-							trace("key = " + UniqueId.byteArrayToString(key));
-							var challengeHash:ByteArray = BluetoothService.calculateHash(authChallenge.challenge);
-							trace("challengeHash = " + UniqueId.byteArrayToString(challengeHash));
-							trace("should be  challenge hash[-55, 56, 32, 37, 116, -103, 78, 12]");*/
-
 							NightScoutService.init();
 							NightScoutService.sync(null);
 						} else {
@@ -354,6 +336,10 @@ package model
 			image_bluetooth_green = new Image();
 			image_bluetooth_green.contentLoader = iconCache;
 			image_bluetooth_green.source = "../assets/image_bluetooth_green.png";
+
+			image_G5 = new Image();
+			image_G5.contentLoader = iconCache;
+			image_G5.source = "../assets/image_G5.png";
 		}
 		
 		private static function coreEvent(event:Event):void {

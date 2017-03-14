@@ -119,7 +119,7 @@ package services
 							transmitterServiceEvent.data = new Object();
 							transmitterServiceEvent.data.information = "storing transmitter id received from bluetooth device = " + transmitterDataBeaconPacket.TxID;
 							_instance.dispatchEvent(transmitterServiceEvent);
-							CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID, transmitterDataBeaconPacket.TxID);
+							CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID, transmitterDataBeaconPacket.TxID.toUpperCase());
 							var value:ByteArray = new ByteArray();
 							value.writeByte(0x02);
 							value.writeByte(0xF0);
@@ -156,7 +156,7 @@ package services
 							transmitterServiceEvent.data = new Object();
 							transmitterServiceEvent.data.information = "storing transmitter id received from bluetooth device = " + transmitterDataXBridgeDataPacket.TxID;
 							_instance.dispatchEvent(transmitterServiceEvent);
-							CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID, transmitterDataXBridgeDataPacket.TxID);
+							CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID, transmitterDataXBridgeDataPacket.TxID.toUpperCase());
 							var value:ByteArray = new ByteArray();
 							value.writeByte(0x02);
 							value.writeByte(0xF0);
@@ -279,7 +279,7 @@ package services
 				value.writeInt(BluetoothService.encodeTxID(event.values[0] as String));
 				myTrace("calling BluetoothService.ackCharacteristicUpdate");
 				BluetoothService.ackCharacteristicUpdate(value);
-				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID, event.values[0] as String);
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID, (event.values[0] as String).toUpperCase());
 			}
 		}
 		

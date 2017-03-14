@@ -247,7 +247,7 @@ package services
 					}
 					
 					var bodyText:String;
-					if (!BluetoothService.DexcomG5) {
+					if (!(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE) == "G5")) {
 						bodyText = HomeView.peripheralConnected ? 
 							ModelLocator.resourceManagerInstance.getString("notificationservice","connected")
 							:

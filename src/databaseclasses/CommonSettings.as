@@ -57,7 +57,7 @@
 		  * 0 means level not known
 		  */
 		 public static const COMMON_SETTING_BRIDGE_BATTERY_PERCENTAGE:int = 2;
-		 public static const COMMON_SETTING_INITIAL_INFO_SCREEN_1_SHOWN:int = 3;
+		 public static const COMMON_SETTING_G4_INFO_SCREEN_SHOWN:int = 3;
 		 /**
 		  * Witout https:// and without /api/v1/treatments<br>
 		  */
@@ -99,12 +99,14 @@
 		 * G4 or G5, also for limitter G4 is used
 		  */
 		 public static const COMMON_SETTING_PERIPHERAL_TYPE:int = 16;
+		 public static const COMMON_SETTING_G5_INFO_SCREEN_SHOWN:int = 17;
+		 public static const COMMON_SETTING_INITIAL_SELECTION_G4_OR_G5_DONE:int = 18;
 			
 		 private static var commonSettings:Array = [
 			 "0",//COMMON_SETTING_CURRENT_SENSOR
 			 "0",//COMMON_SETTING_TRANSMITTER_BATTERY_VOLTAGE
 			 "0",//COMMON_SETTING_BRIDGE_BATTERY_PERCENTAGE
-			 "false",//COMMON_SETTING_INITIAL_INFO_SCREEN_1_SHOWN
+			 "false",//COMMON_SETTING_G4_INFO_SCREEN_SHOWN
 			 DEFAULT_SITE_NAME,//COMMON_SETTING_AZURE_WEBSITE_NAME
 			 DEFAULT_API_SECRET,//COMMON_SETTING_API_SECRET
 			 "false",//COMMON_SETTING_URL_AND_API_SECRET_TESTED
@@ -117,7 +119,9 @@
 			 "0",//COMMON_SETTING_UNUSED
 			 "",//COMMON_SETTING_G5_BATTERY_MARKER
 			 "0",//COMMON_SETTING_G5_BATTERY_FROM_MARKER
-			 "G4"//COMMON_SETTING_PERIPHERAL_TYPE
+			 "",//COMMON_SETTING_PERIPHERAL_TYPE
+			 "false",//COMMON_SETTING_G5_INFO_SCREEN_SHOWN
+			 "false"//COMMON_SETTING_INITIAL_SELECTION_G4_OR_G5_DONE
 		 ];
 		 
 		 public function CommonSettings()

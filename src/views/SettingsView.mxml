@@ -50,6 +50,8 @@
 			[Bindable]
 			private static var transmitterIdText:String="";
 			[Bindable]
+			private static var transmitterTypeText:String="";
+			[Bindable]
 			private static var versionText:String="";
 			
 			private static var resetColorTimer:Timer;
@@ -98,6 +100,7 @@
 				nightScoutAPI_SECRET = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_API_SECRET);
 				
 				transmitterIdText = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID);
+				transmitterTypeText = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE);
 				
 				LocalSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, settingChanged);
 				
@@ -107,15 +110,9 @@
 			private static function settingChanged(event:SettingsServiceEvent):void {
 				if (event.data == CommonSettings.COMMON_SETTING_TRANSMITTER_ID) {
 					transmitterIdText = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID);
+				} else if (event.data == CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE) {
+					transmitterTypeText = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE);
 				}
-			}
-			
-			protected function showLogging_clickHandler(event:MouseEvent):void
-			{
-				rect5.color = uint("0xD3D3D3");
-				rect6.color = uint("0xD3D3D3");
-				setResetColorTimer();
-				navigator.pushView(LoggingView);
 			}
 			
 			protected function sendTracingViaEmail_clickHandler(event:MouseEvent):void {
@@ -322,14 +319,12 @@
 				}
 			}
 			
-			private function changeTransmitterId_clickHandler(event:MouseEvent):void {
-				rect21.color = uint("0xD3D3D3");
-				rect22.color = uint("0xD3D3D3");
-				setResetColorTimer();
-				
+			public static function requestNewTransmitterId():void {
+				var title:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE) + " " +
+					ModelLocator.resourceManagerInstance.getString("transmitterservice","transmitter_id_settings_title");
 				var alert:DialogView = Dialog.service.create(
 					new AlertBuilder()
-					.setTitle(ModelLocator.resourceManagerInstance.getString("transmitterservice","transmitter_id_settings_title"))
+					.setTitle(title)
 					.setMessage(ModelLocator.resourceManagerInstance.getString("transmitterservice","enter_transmitter_id"))
 					.addTextField("",CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID))
 					.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
@@ -343,20 +338,45 @@
 					if (event.index == 1) {
 						return;
 					}
-					if ((event.values[0] as String).length != 5) {
+					var idLength:Number = (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE)) == "G5" ? 6:5
+					if ((event.values[0] as String).length != idLength) {
+						var alertMessage:String =
+							(ModelLocator.resourceManagerInstance.getString("transmitterservice","transmitter_id_should_be_five_chars")).replace("{max}", idLength.toString());
 						var alert:DialogView = Dialog.service.create(
 							new AlertBuilder()
 							.setTitle(ModelLocator.resourceManagerInstance.getString("transmitterservice","enter_transmitter_id_dialog_title"))
-							.setMessage(ModelLocator.resourceManagerInstance.getString("transmitterservice","transmitter_id_should_be_five_chars"))
+							.setMessage(alertMessage)
 							.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
 							.build()
 						);
 						DialogService.addDialog(alert);
 					} else {
-						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID, event.values[0] as String);
+						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID, (event.values[0] as String).toUpperCase());
 						transmitterIdText = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID);
 					}
 				}
+			}
+			
+			private function changeTransmitterId_clickHandler(event:MouseEvent):void {
+				rect21.color = uint("0xD3D3D3");
+				rect22.color = uint("0xD3D3D3");
+				setResetColorTimer();
+				requestNewTransmitterId();
+			}
+			
+			private function changeTransmitterType_clickHandler(event:MouseEvent):void {
+				rect27.color = uint("0xD3D3D3");
+				rect28.color = uint("0xD3D3D3");
+				setResetColorTimer();
+				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE) == "G4") {
+					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE, "G5");
+					transmitterTypeText = "G5";
+				} else {
+					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE, "G4");
+					transmitterTypeText = "G4";
+				}
+				//no need to request new transmitter id here, this will be initiated from homeview which is listening
+				//changes in setting COMMON_SETTING_PERIPHERAL_TYPE
 			}
 			
 			private function NSLog_clickHandler(event:MouseEvent):void {
@@ -388,8 +408,6 @@
 					rect2.color = uint("0x212121");
 					rect3.color = uint("0x212121");
 					rect4.color = uint("0x212121");
-					rect5.color = uint("0x212121");
-					rect6.color = uint("0x212121");
 					rect7.color = uint("0x212121");
 					rect8.color = uint("0x212121");
 					rect9.color = uint("0x212121");
@@ -410,6 +428,8 @@
 					rect24.color = uint("0x212121");
 					rect25.color = uint("0x212121");
 					rect26.color = uint("0x212121");
+					rect27.color = uint("0x212121");
+					rect28.color = uint("0x212121");
 				}
 			}
 			
@@ -531,7 +551,7 @@
 					</s:stroke>
 				</s:Line>	
 			</s:VGroup>
-			<!-- Chapter general settings Subsection chosen unit -->
+			<!-- Chapter general settings Subsection high value -->
 			<s:VGroup click="changeHighValue_clickHandler(event)" width="100%">
 				<s:HGroup width="100%">
 					<s:Rect height="100%" width="5" >
@@ -546,6 +566,31 @@
 					<s:Rect height="100%" width="5" >
 						<s:fill>
 							<s:SolidColor color="#212121" id="rect18"/>
+						</s:fill>
+					</s:Rect>
+				</s:HGroup>
+				<s:Line width="100%">
+					<s:stroke>
+						<s:SolidColorStroke color="0xFFFFFF" weight="1" alpha="0.25"/>
+					</s:stroke>
+				</s:Line>	
+			</s:VGroup>
+
+			<!-- Chapter general settings Subsection transmitter type -->
+			<s:VGroup click="changeTransmitterType_clickHandler(event)" width="100%">
+				<s:HGroup width="100%">
+					<s:Rect height="100%" width="5" >
+						<s:fill>
+							<s:SolidColor color="#212121" id="rect27"/>
+						</s:fill>
+					</s:Rect>
+					<s:Label text = "{ModelLocator.resourceManagerInstance.getString('settingsview','transmitter_type_settings_title')}"
+							 width="100%" paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
+					<s:Label text = "{transmitterTypeText}"  
+							 paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
+					<s:Rect height="100%" width="5" >
+						<s:fill>
+							<s:SolidColor color="#212121" id="rect28"/>
 						</s:fill>
 					</s:Rect>
 				</s:HGroup>
@@ -681,29 +726,6 @@
 					<s:SolidColorStroke color="#3B6999"  weight="3"/>
 				</s:stroke>
 			</s:Line>
-			
-			<!-- Chapter Logging and Tracing  Subsection Show logging -->
-			<s:VGroup click="showLogging_clickHandler(event)" width="100%">
-				<s:HGroup width="100%">
-					<s:Rect height="100%" width="5" >
-						<s:fill>
-							<s:SolidColor color="#212121" id="rect5"/>
-						</s:fill>
-					</s:Rect>
-					<s:Label text = "{ModelLocator.resourceManagerInstance.getString('settingsview','show_logging')}"
-							 width="100%" paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
-					<s:Rect height="100%" width="5" >
-						<s:fill>
-							<s:SolidColor color="#212121" id="rect6"/>
-						</s:fill>
-					</s:Rect>
-				</s:HGroup>
-				<s:Line width="100%">
-					<s:stroke>
-						<s:SolidColorStroke color="0xFFFFFF" weight="1" alpha="1"/>
-					</s:stroke>
-				</s:Line>	
-			</s:VGroup>
 			
 			<!-- Chapter Logging and Tracing  Subsection Tracing --> 
 			<s:VGroup width="100%" visible="true" enabled="true">
