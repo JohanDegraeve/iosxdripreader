@@ -1,8 +1,8 @@
-# iosxdripreader
+# connects to xDrip and G5
 
 Project in development phase 
 
-xdrip/xbridge reader for iOS devices
+xdrip/xbridge/G5 reader for iOS devices - 
 
 * Initial and subsequent Calibration
 * Additional calibration request alerts but not the 12-hour calibration request alert
