@@ -240,10 +240,10 @@ package services
 				testEvent["duration"] = 20;
 				testEvent["notes"] = "to test nightscout url";
 				var nightScoutTreatmentsUrl:String = "https://" + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME) + "/api/v1/treatments";
-				dispatchInformation("call_to_nightscout_to_verify_url_and_secret");
+				myTrace("call_to_nightscout_to_verify_url_and_secret");
 				createAndLoadURLRequest(nightScoutTreatmentsUrl, URLRequestMethod.PUT,null,JSON.stringify(testEvent), nightScoutUrlTestSuccess, nightScoutUrlTestError);
 			} else {
-				dispatchInformation("call_to_nightscout_to_verify_url_and_secret_can_not_be_made");
+				myTrace("call_to_nightscout_to_verify_url_and_secret_can_not_be_made");
 			}
 		}
 		
@@ -253,7 +253,7 @@ package services
 			functionToCallAtUpOrDownloadFailure = null;
 			
 			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_URL_AND_API_SECRET_TESTED,"true");
-			dispatchInformation("nightscout_test_result_ok");
+			myTrace("nightscout_test_result_ok");
 			var nightScoutTreatmentsUrl:String = "https://" + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME) + "/api/v1/treatments";
 			createAndLoadURLRequest(nightScoutTreatmentsUrl + "/" + testUniqueId, URLRequestMethod.DELETE, null, null,sync, null);
 
@@ -294,7 +294,7 @@ package services
 					.build()
 				);
 				DialogService.addDialog(alert, 60);
-				dispatchInformation("nightscout_test_result_nok");
+				myTrace("nightscout_test_result_nok");
 				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_WARNING_THAT_NIGHTSCOUT_URL_AND_SECRET_IS_NOT_OK_ALREADY_GIVEN, "true");
 			}
 		}
@@ -400,7 +400,7 @@ package services
 				/*for (var cntr2:int = 0; cntr2 < listOfReadingsAsArray.length; cntr2++) {
 				logString += " " + listOfReadingsAsArray[cntr2]["_id"] + ",";
 				}*/
-				dispatchInformation("uploading_events_with_id", logString);
+				myTrace("uploading_events_with_id" + logString);
 				createAndLoadURLRequest(_nightScoutEventsUrl, URLRequestMethod.POST, null, JSON.stringify(listOfReadingsAsArray), nightScoutUploadSuccess, nightScoutUploadFailed);
 			} else {
 				myTrace("setting syncRunning = false");
@@ -413,7 +413,7 @@ package services
 			myTrace("in nightScoutUploadSuccess");
 			BackGroundFetchService.callCompletionHandler(BackGroundFetchService.NEW_DATA);
 			
-			dispatchInformation("upload_to_nightscout_successfull");
+			myTrace("upload_to_nightscout_successfull");
 			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_SYNC_TIMESTAMP, (new Date()).valueOf().toString());
 			syncFinished(true);
 		}
@@ -430,7 +430,7 @@ package services
 				errorMessage = "";
 			}
 			
-			dispatchInformation("upload_to_nightscout_unsuccessfull", errorMessage);
+			myTrace("upload_to_nightscout_unsuccessfull" + errorMessage);
 			syncFinished(false);
 		}
 		
@@ -489,15 +489,5 @@ package services
 			syncRunning = false;
 		}
 		
-		/**
-		 * informationResourceName will look up the text in local/database.properties<br>
-		 * additionalInfo will be added after a dash, if not null
-		 */
-		private static function dispatchInformation(informationResourceName:String, additionalInfo:String = null):void {
-			var nightScoutServiceEvent:NightScoutServiceEvent = new NightScoutServiceEvent(NightScoutServiceEvent.NIGHTSCOUT_SERVICE_INFORMATION_EVENT);
-			nightScoutServiceEvent.data = new Object();
-			nightScoutServiceEvent.data.information = ModelLocator.resourceManagerInstance.getString('nightscoutservice',informationResourceName) + (additionalInfo == null ? "":" - " + additionalInfo);
-			_instance.dispatchEvent(nightScoutServiceEvent);
-		}
 	}
 }

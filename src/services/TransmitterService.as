@@ -92,8 +92,6 @@ package services
 			else {
 				if (be.data is TransmitterDataXBridgeBeaconPacket) {
 					if (((new Date()).valueOf() - lastPacketTime) < 60000) {
-						//if previous packet was less than 1 minute ago then ignore it
-						//dispatchInformation('ignoring_transmitterxbridgedatapacket');
 					} else {
 						lastPacketTime = (new Date()).valueOf();
 						var transmitterDataBeaconPacket:TransmitterDataXBridgeBeaconPacket = be.data as TransmitterDataXBridgeBeaconPacket;
@@ -145,7 +143,6 @@ package services
 					var transmitterDataXBridgeDataPacket:TransmitterDataXBridgeDataPacket = be.data as TransmitterDataXBridgeDataPacket;
 					if (((new Date()).valueOf() - lastPacketTime) < 60000) {
 						//if previous packet was less than 1 minute ago then ignore it
-						//dispatchInformation('ignoring_transmitterxbridgedatapacket');
 					} else {
 						lastPacketTime = (new Date()).valueOf();
 						if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID) == "00000" 
@@ -201,7 +198,6 @@ package services
 					var transmitterDataXdripDataPacket:TransmitterDataXdripDataPacket = be.data as TransmitterDataXdripDataPacket;
 					if (((new Date()).valueOf() - lastPacketTime) < 60000) {
 						//if previous packet was less than 1 minute ago then ignore it
-						//dispatchInformation('ignoring_transmitterxdripdatapacket');
 					} else {//it's an xdrip, with old software, 
 						lastPacketTime = (new Date()).valueOf();
 						
@@ -281,13 +277,6 @@ package services
 				BluetoothService.ackCharacteristicUpdate(value);
 				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID, (event.values[0] as String).toUpperCase());
 			}
-		}
-		
-		private static function dispatchInformation(informationResourceName:String):void {
-			var transmitterServiceEvent:TransmitterServiceEvent = new TransmitterServiceEvent(TransmitterServiceEvent.TRANSMITTER_SERVICE_INFORMATION_EVENT);
-			transmitterServiceEvent.data = new Object();
-			transmitterServiceEvent.data.information = ModelLocator.resourceManagerInstance.getString('transmitterservice',informationResourceName);
-			_instance.dispatchEvent(transmitterServiceEvent);
 		}
 		
 		private static function myTrace(log:String):void {

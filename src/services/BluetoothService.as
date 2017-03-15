@@ -258,10 +258,10 @@ package services
 							case BluetoothLEState.STATE_ON:	
 								// We can use the Bluetooth LE functions
 								bluetoothStatusIsOn();
-								dispatchInformation('bluetooth_is_switched_on');
+								myTrace("bluetooth is switched on")
 								break;
 							case BluetoothLEState.STATE_OFF:
-								dispatchInformation('bluetooth_is_switched_off');
+								myTrace("bluetooth is switched off")
 								break;
 							case BluetoothLEState.STATE_RESETTING:	
 								break;
@@ -293,12 +293,12 @@ package services
 			switch (BluetoothLE.service.centralManager.state)
 			{
 				case BluetoothLEState.STATE_ON:	
-					dispatchInformation('bluetooth_is_switched_on');
+					myTrace("bluetooth is switched on")
 					// We can use the Bluetooth LE functions
 					bluetoothStatusIsOn();
 					break;
 				case BluetoothLEState.STATE_OFF:
-					dispatchInformation('bluetooth_is_switched_off');
+					myTrace("bluetooth is switched off")
 					break;//does the device automatically change to connected ? 
 				case BluetoothLEState.STATE_RESETTING:	
 					break;
@@ -340,11 +340,9 @@ package services
 				if (!BluetoothLE.service.centralManager.scanForPeripherals(isDexcomG5 ? uuids_G5_Advertisement:uuids_G4_Service))
 				{
 					myTrace("failed to start scanning for peripherals");
-					dispatchInformation('failed_to_start_scanning_for_peripherals');
 					return;
 				} else {
 					myTrace("started scanning for peripherals");
-					dispatchInformation('started_scanning_for_peripherals');
 				}
 			} else {
 				myTrace("in startscanning but already scanning");
@@ -356,7 +354,6 @@ package services
 			if (BluetoothLE.service.centralManager.isScanning) {
 				myTrace("is scanning, call stopScan");
 				BluetoothLE.service.centralManager.stopScan();
-				dispatchInformation('stopped_scanning');	
 				_instance.dispatchEvent(new BlueToothServiceEvent(BlueToothServiceEvent.STOPPED_SCANNING));
 			}
 			if (reScanIfFailed) {
@@ -471,7 +468,7 @@ package services
 				} 
 			}
 			
-			dispatchInformation('connected_to_peripheral');
+			myTrace("connected to peripheral");
 			
 			if (activeBluetoothPeripheral == null)
 				activeBluetoothPeripheral = event.peripheral;
@@ -559,7 +556,7 @@ package services
 					var lastReconnectDifInms:Number = (new Date().valueOf() - reconnectAttemptTimeStamp);
 					if (lastReconnectDifInms > reconnectAttemptPeriodInSeconds * 1000) {
 						tryReconnect();
-						dispatchInformation('will_try_to_reconnect_now');
+						myTrace("will try to reconnect now");
 					} else {
 						var reconnectinms:Number = reconnectAttemptPeriodInSeconds * 1000 - lastReconnectDifInms;
 						reconnectTimer = new Timer(reconnectinms, 1);
@@ -677,7 +674,7 @@ package services
 			} else {
 				if (amountOfDiscoverServicesOrCharacteristicsAttempt == MAX_RETRY_DISCOVER_SERVICES_OR_CHARACTERISTICS) {
 					myTrace("amountOfDiscoverServicesOrCharacteristicsAttempt == MAX_RETRY_DISCOVER_SERVICES_OR_CHARACTERISTICS"); 
-					dispatchInformation("max_amount_of_discover_characteristics_attempt_reached");
+					myTrace("max_amount_of_discover_characteristics_attempt_reached");
 				}
 				if (activeBluetoothPeripheral.services.length == 0 && !(isDexcomG5)) {
 					myTrace("activeBluetoothPeripheral.services.length == 0"); 
@@ -826,12 +823,10 @@ package services
 		
 		private static function peripheral_characteristic_writeErrorHandler(event:CharacteristicEvent):void {
 			myTrace("peripheral_characteristic_writeErrorHandler");
-			dispatchInformation("failed_to_write_value_for_characteristic_to_device");
 		}
 		
 		private static function peripheral_characteristic_errorHandler(event:CharacteristicEvent):void {
 			myTrace("peripheral_characteristic_errorHandler" );
-			dispatchInformation("characteristic_update_error_received");
 		}
 		
 		private static function peripheral_characteristic_subscribeHandler(event:CharacteristicEvent):void {
@@ -858,15 +853,6 @@ package services
 		private static function peripheral_characteristic_unsubscribeHandler(event:CharacteristicEvent):void {
 			myTrace("peripheral_characteristic_unsubscribeHandler: " + event.characteristic.uuid);	
 		}
-		
-		private static function dispatchInformation(informationResourceName:String):void {
-			var blueToothServiceEvent:BlueToothServiceEvent = new BlueToothServiceEvent(BlueToothServiceEvent.BLUETOOTH_SERVICE_INFORMATION_EVENT);
-			blueToothServiceEvent.data = new Object();
-			blueToothServiceEvent.data.information = ModelLocator.resourceManagerInstance.getString("bluetoothservice",informationResourceName);
-			_instance.dispatchEvent(blueToothServiceEvent);
-			myTrace(blueToothServiceEvent.data.information as String);
-		}
-		
 		
 		/**
 		 * Disconnects the active bluetooth peripheral if any and sets it to null(otherwise returns without doing anything)<br>
@@ -952,7 +938,6 @@ package services
 					var sensorRx:SensorRxMessage = new SensorRxMessage(buffer);
 					var sensor_battery_level:Number = 0;
 					if (sensorRx.transmitterStatus.toString() == TransmitterStatus.BRICKED) {
-						//TODO Handle this in UI/Notification
 						sensor_battery_level = 206; //will give message "EMPTY"
 					} else if (sensorRx.transmitterStatus.toString() == TransmitterStatus.LOW) {
 						sensor_battery_level = 209; //will give message "LOW"
@@ -992,17 +977,11 @@ package services
 			if (data.length < 10) return false;
 			myTrace("Saving battery data: " + (new BatteryInfoRxMessage(data)).toString());
 			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_G5_BATTERY_MARKER, UniqueId.bytesToHex(data));
-			//PersistentStore.setBytes(G5_BATTERY_MARKER + transmitterId, data);
-			//PersistentStore.setLong(G5_BATTERY_FROM_MARKER + transmitterId, JoH.tsl());
 			return true;
 		}
 		
 		private static function doDisconnectMessageG5(characteristic:Characteristic):void {
 			myTrace("doDisconnectMessage() start");
-			//var disconnectTx:DisconnectTxMessage = new DisconnectTxMessage();
-			/*if (!activeBluetoothPeripheral.writeValueForCharacteristic(characteristic, disconnectTx.byteSequence)) {
-			myTrace("doDisconnectMessage writeValueForCharacteristic failed");
-			}*/
 			if (activeBluetoothPeripheral != null) {
 				if (!BluetoothLE.service.centralManager.disconnect(activeBluetoothPeripheral)) {
 					myTrace("doDisconnectMessage disconnect failed");

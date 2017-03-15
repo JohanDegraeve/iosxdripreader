@@ -20,11 +20,9 @@ package model
 	import com.distriqt.extension.application.Application;
 	import com.distriqt.extension.message.Message;
 	import com.distriqt.extension.networkinfo.NetworkInfo;
-	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
 	
 	import flash.events.Event;
 	import flash.events.EventDispatcher;
-	import flash.utils.ByteArray;
 	
 	import mx.collections.ArrayCollection;
 	import mx.resources.IResourceManager;
@@ -35,10 +33,7 @@ package model
 	import spark.components.Image;
 	import spark.core.ContentCache;
 	
-	import G5Model.AuthChallengeRxMessage;
-	import G5Model.AuthRequestTxMessage;
 	
-	import Utilities.UniqueId;
 	
 	import databaseclasses.BgReading;
 	import databaseclasses.Database;
@@ -47,13 +42,8 @@ package model
 	
 	import distriqtkey.DistriqtKey;
 	
-	import events.BackGroundFetchServiceEvent;
-	import events.BlueToothServiceEvent;
-	import events.CalibrationServiceEvent;
 	import events.DatabaseEvent;
-	import events.NightScoutServiceEvent;
 	import events.NotificationServiceEvent;
-	import events.TransmitterServiceEvent;
 	
 	import services.BackGroundFetchService;
 	import services.BluetoothService;
@@ -99,11 +89,6 @@ package model
 				return;
 			
 			_isInForeground = value;
-			if (_loggingList != null) {
-				_loggingList.addItem((new BlueToothServiceEvent(BlueToothServiceEvent.BLUETOOTH_SERVICE_INFORMATION_EVENT)).getTimeStampAsString() + " ML : " + "app is " + (_isInForeground ? "":"not") + " in foreground");
-				_loggingList.refresh();
-				Database.insertLogging(Utilities.UniqueId.createEventId(), (new BlueToothServiceEvent(BlueToothServiceEvent.BLUETOOTH_SERVICE_INFORMATION_EVENT)).getTimeStampAsString() + " ML : " + "app is " + (_isInForeground ? "":"not") + " in foreground", (new Date()).valueOf(), (new Date()).valueOf(),null);
-			}
 		}
 
 		
@@ -120,17 +105,6 @@ package model
 		public static function get resourceManagerInstance():IResourceManager
 		{
 			return _resourceManagerInstance;
-		}
-		
-		private static var _loggingList:ArrayCollection;
-
-		[bindable]
-		/**
-		 * logging info dispatches by several components
-		 */
-		public static function get loggingList():ArrayCollection
-		{
-			return _loggingList;
 		}
 		
 		private static var _bgReadings:ArrayCollection;
@@ -168,72 +142,6 @@ package model
 			_appStartTimestamp = (new Date()).valueOf();
 			
 			_resourceManagerInstance = ResourceManager.getInstance();
-			//event listeners for receiving bluetooth service dand database information events and to store them in the logging
-			BluetoothService.instance.addEventListener(BlueToothServiceEvent.BLUETOOTH_SERVICE_INFORMATION_EVENT,blueToothServiceInformationReceived);
-			NotificationService.instance.addEventListener(NotificationServiceEvent.LOG_INFO, notificationServiceLogInfoReceived);
-			Database.instance.addEventListener(DatabaseEvent.DATABASE_INFORMATION_EVENT, databaseInformationEventReceived);
-			NightScoutService.instance.addEventListener(NightScoutServiceEvent.NIGHTSCOUT_SERVICE_INFORMATION_EVENT, nightScoutServiceInformationReceived);
-			CalibrationService.instance.addEventListener(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT, initialCalibrationEventReceived);
-			CalibrationService.instance.addEventListener(CalibrationServiceEvent.NEW_CALIBRATION_EVENT, newCalibrationEventReceived);
-			BackGroundFetchService.instance.addEventListener(BackGroundFetchServiceEvent.LOG_INFO, backgroundFetchServiceLogInfoReceived);
-			TransmitterService.instance.addEventListener(TransmitterServiceEvent.TRANSMITTER_SERVICE_INFORMATION_EVENT, transmitterServiceInfoReceived);
-
-			function transmitterServiceInfoReceived(be:TransmitterServiceEvent):void {
-				_loggingList.addItem(be.getTimeStampAsString() + " TR : " + be.data.information);
-				_loggingList.refresh();
-				Database.insertLogging(Utilities.UniqueId.createEventId(), be.getTimeStampAsString() + " TR : " + be.data.information, be.timeStamp,(new Date()).valueOf(),null); 
-			}
-			
-			function backgroundFetchServiceLogInfoReceived(be:BackGroundFetchServiceEvent):void {
-				_loggingList.addItem(be.getTimeStampAsString() + " BG : " + be.data.information);
-				_loggingList.refresh();
-				Database.insertLogging(Utilities.UniqueId.createEventId(), be.getTimeStampAsString() + " BG : " + be.data.information, be.timeStamp,(new Date()).valueOf(),null); 
-			}
-			
-			function initialCalibrationEventReceived(be:CalibrationServiceEvent):void {
-				_loggingList.addItem(be.getTimeStampAsString() + " CS : " + "initial calibration done");
-				_loggingList.refresh();
-				Database.insertLogging(Utilities.UniqueId.createEventId(), be.getTimeStampAsString() + " CS : " + "initial calibration done", be.timeStamp,(new Date()).valueOf(),null);
-			}
-			
-			function newCalibrationEventReceived(be:CalibrationServiceEvent):void {
-				_loggingList.addItem(be.getTimeStampAsString() + " CS : " + "new calibration done");
-				_loggingList.refresh();
-				Database.insertLogging(Utilities.UniqueId.createEventId(), be.getTimeStampAsString() + " CS : " + "new calibration done", be.timeStamp,(new Date()).valueOf(),null);
-			}
-			
-			function nightScoutServiceInformationReceived(be:NightScoutServiceEvent):void {
-				_loggingList.addItem(be.getTimeStampAsString() + " NS : " + be.data.information);
-				_loggingList.refresh();
-				Database.insertLogging(Utilities.UniqueId.createEventId(), be.getTimeStampAsString() + " NS : " + be.data.information, be.timeStamp,(new Date()).valueOf(),null);				
-			}
-			
-			function databaseInformationEventReceived(be:DatabaseEvent):void {
-				_loggingList.addItem(be.getTimeStampAsString() + " DB : " + be.data.information);
-				_loggingList.refresh();
-				Database.insertLogging(Utilities.UniqueId.createEventId(), be.getTimeStampAsString() + " DB : " + be.data.information, be.timeStamp,(new Date()).valueOf(),null);				
-			}
-			
-			function blueToothServiceInformationReceived(be:BlueToothServiceEvent):void {
-				_loggingList.addItem(be.getTimeStampAsString() + " BT : " + be.data.information);
-				_loggingList.refresh();
-				//Database.insertLogging(Utilities.UniqueId.createEventId(),be.getTimeStampAsString() + " BT : " + be.data.information, be.timeStamp,(new Date()).valueOf(),null);
-			}
-			
-			function notificationServiceLogInfoReceived(be:NotificationServiceEvent):void {
-				//_loggingList.addItem(be.getTimeStampAsString() + " NI : " + be.data.information);
-				//_loggingList.refresh();
-				//Database.insertLogging(Utilities.UniqueId.createEventId(), be.getTimeStampAsString() + " NI : " + be.data.information, be.timeStamp,(new Date()).valueOf(),null);
-			}
-			
-			//create the logging list and bgreading list and assign a sorting - but don't get the logs from the database yet because maybe the database init is not finished yet
-			//sorting is alphabetical, which should result in chronologial order because every stored text will begin with a timestamp.
-			var dataSortField:SortField= new SortField();
-			dataSortField.numeric = false;
-			var dataSort:Sort = new Sort();
-			dataSort.fields=[dataSortField];
-			_loggingList = new ArrayCollection();
-			_loggingList.sort = dataSort;
 			
 			//bgreadings arraycollection
 			_bgReadings = new ArrayCollection();
@@ -286,7 +194,6 @@ package model
 				if (de.data != null)
 					if (de.data is String) {
 						if (de.data as String == Database.END_OF_RESULT) {
-							_loggingList.refresh();
 
 							//now is the time to start the bluetoothservice because as soon as this service is started, 
 							//new bgreadings may come in, being created synchronously in the database, there should be no more async transactions in the database
@@ -312,7 +219,6 @@ package model
 							NightScoutService.init();
 							NightScoutService.sync(null);
 						} else {
-							_loggingList.addItem(de.data as String);
 						}
 					}
 			}

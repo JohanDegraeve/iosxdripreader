@@ -2,12 +2,8 @@ package G5Model
 {
 	import flash.utils.ByteArray;
 	import flash.utils.Endian;
-	
 	import Utilities.Trace;
-	import Utilities.UniqueId;
-	
-	import model.TransmitterData;
-	
+
 	public class SensorRxMessage extends TransmitterMessage
 	{
 		private var opcode:int = 0x2f;
@@ -17,7 +13,6 @@ package G5Model
 		public var transmitterStatus:TransmitterStatus;
 		
 		public function SensorRxMessage(packet:ByteArray) {
-			myTrace("SensorRX dbg: " + UniqueId.bytesToHex(packet));
 			if (packet.length >= 14) {
 				byteSequence = new ByteArray();
 				byteSequence.endian = Endian.LITTLE_ENDIAN;
@@ -32,6 +27,8 @@ package G5Model
 					myTrace("SensorRX dbg: timestamp = " + timestamp + ", unfiltered = " + unfiltered + ", filtered = " + filtered + ", transmitterStatus = " + transmitterStatus.toString());
 				}
 				byteSequence.position = 0;
+			} else {
+				myTrace("SensorRX packet.length < 14");
 			}
 		}
 		
