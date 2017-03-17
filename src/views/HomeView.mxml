@@ -84,7 +84,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			
 			[ResourceBundle('homeview')]
 			[ResourceBundle("general")]
-			[ResourceBundle("bluetoothservice")]
 			[ResourceBundle("settingsview")]
 			
 			private static var initialStart:Boolean = true;
@@ -117,7 +116,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			private static var currentInfoUpdateTimer:Timer;
 			
 			
-			private static var _peripheralConnected:Boolean = false;
+			public static var _peripheralConnected:Boolean = false;
 			/**
 			 * timestamp that has changed connection status<br> 
 			 */

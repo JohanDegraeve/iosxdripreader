@@ -85,10 +85,10 @@ package services
 		private static var wishedTagList:String = "ONE";
 		private static var currentTagList:String = "ONE";
 		
-		private static var _attemptingBluetoothReconnect:Boolean = false;
-		private static var timeStampOfSettingAttemptingBluetoothReconnect:Number;
+		//private static var _attemptingBluetoothReconnect:Boolean = false;
+		//private static var timeStampOfSettingAttemptingBluetoothReconnect:Number;
 		
-		private static function get attemptingBluetoothReconnect():Boolean
+		/*private static function get attemptingBluetoothReconnect():Boolean
 		{
 			return _attemptingBluetoothReconnect;
 		}
@@ -97,10 +97,10 @@ package services
 		{
 			_attemptingBluetoothReconnect = value;
 			timeStampOfSettingAttemptingBluetoothReconnect = (new Date()).valueOf();
-		}
+		}*/
 
-		private static var waitingSyncResponse:Boolean = false;
-		private static var syncResponse:String = NO_DATA;
+		//private static var waitingSyncResponse:Boolean = false;
+		//private static var syncResponse:String = NO_DATA;
 		
 		public static function get instance():BackGroundFetchService {
 			return _instance;
@@ -125,12 +125,12 @@ package services
 			BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.LOAD_REQUEST_ERROR, loadRequestError);
 			BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.PERFORMFETCH, performFetch);
 			BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.DEVICE_TOKEN_RECEIVED, deviceTokenReceived);
-			BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.RECONNECTTIMEREXPIRED, reconnectTimerExpiry);
+			//BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.RECONNECTTIMEREXPIRED, reconnectTimerExpiry);
 			BackgroundFetch.minimumBackgroundFetchInterval = BackgroundFetch.BACKGROUND_FETCH_INTERVAL_NEVER;
-			BluetoothService.instance.addEventListener(BlueToothServiceEvent.BLUETOOTH_DEVICE_CONNECTION_COMPLETED, bluetoothDeviceConnectionCompleted);
+			//BluetoothService.instance.addEventListener(BlueToothServiceEvent.BLUETOOTH_DEVICE_CONNECTION_COMPLETED, bluetoothDeviceConnectionCompleted);
 		}
 		
-		private static function bluetoothDeviceConnectionCompleted(event:BlueToothServiceEvent):void {
+		/*private static function bluetoothDeviceConnectionCompleted(event:BlueToothServiceEvent):void {
 			myTrace("in bluetoothDeviceConnectionCompleted");
 			//if we're in foreground then no need to do all this stuff, except calling maybe completionhandler
 			if (ModelLocator.isInForeground) {
@@ -152,23 +152,23 @@ package services
 					BluetoothService.tryReconnect(null);
 				}
 			}
-		}
+		}*/
 		
 		public static function callCompletionHandler(result:String):void {
 			myTrace("callCompletionhandler with result " + result);
-			waitingSyncResponse = false;
+/*			waitingSyncResponse = false;
 			if (attemptingBluetoothReconnect) {
 				myTrace("attemptingBluetoothReconnect = true, setting syncresponse to " + result);
 				syncResponse = result;
 			} else {
-				myTrace("attemptingBluetoothReconnect = false, calling callcompletionhandler");
+				myTrace("attemptingBluetoothReconnect = false, calling callcompletionhandler");*/
 				BackgroundFetch.callCompletionHandler(result);
-				syncResponse = NO_DATA;
-				BackgroundFetch.cancelReconnectTimer();
-			}
+				//syncResponse = NO_DATA;
+				//BackgroundFetch.cancelReconnectTimer();
+			//}
 		}
 		
-		private static function reconnectTimerExpiry(event:Event):void {
+		/*private static function reconnectTimerExpiry(event:Event):void {
 			myTrace("reconnectTimerExpiry calling callCompletionHandler with result " + syncResponse); 
 			waitingSyncResponse = false;
 			if (attemptingBluetoothReconnect) {
@@ -177,26 +177,22 @@ package services
 			}
 			BackgroundFetch.callCompletionHandler(syncResponse);
 			syncResponse = NO_DATA;
-		}
+		}*/
 		
 		private static function performFetch(event:BackgroundFetchEvent):void {
 			myTrace("performFetch");
-			if (!HomeView.peripheralConnected && !ModelLocator.isInForeground && 
+			/*if (!HomeView.peripheralConnected && !ModelLocator.isInForeground && 
 				!(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE) == "G5")) {
 				myTrace("peripheral not connected, calling bluetoothservice.tryreconnect");
 				attemptingBluetoothReconnect = true;
 				BackgroundFetch.startReconnectTimer(20);
 				BluetoothService.forgetBlueToothDevice();
 				BluetoothService.tryReconnect(null);
-			}
-			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE) == "G5") {
-				BluetoothService.dexcomG5StartRescan(null);
-			}
+			}*/
+			//if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE) == "G5") {
+				BluetoothService.startRescan(null);
+			//}
 			if (!ModelLocator.isInForeground) {
-				var backgroundfetchServiceEvent:BackGroundFetchServiceEvent = new BackGroundFetchServiceEvent(BackGroundFetchServiceEvent.LOG_INFO);
-				backgroundfetchServiceEvent.data = new Object();
-				backgroundfetchServiceEvent.data.information = "BackGroundFetchService.as performFetch";
-				_instance.dispatchEvent(backgroundfetchServiceEvent);
 				var backgroundfetchServiceEvent:BackGroundFetchServiceEvent = new BackGroundFetchServiceEvent(BackGroundFetchServiceEvent.PERFORM_FETCH);
 				backgroundfetchServiceEvent.data = new Object();
 				backgroundfetchServiceEvent.data.information = event.data.result as String;
@@ -217,10 +213,6 @@ package services
 				&&
 				LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_DEVICE_TOKEN_ID) != token
 			) {
-				var backgroundfetchserviceLogInfo:BackGroundFetchServiceEvent = new BackGroundFetchServiceEvent(BackGroundFetchServiceEvent.LOG_INFO);
-				backgroundfetchserviceLogInfo.data = new Object();
-				backgroundfetchserviceLogInfo.data.information = "BackGroundFetchService.as new device_token received, start update at quickBlox";
-				_instance.dispatchEvent(backgroundfetchserviceLogInfo);
 				registerPushNotification(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_WISHED_QBLOX_SUBSCRIPTION_TAG));
 			} else if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_SUBSCRIBED_TO_PUSH_NOTIFICATIONS) ==  "true") {
 				//new device token but app not in foreground, let's locally set it as not subscribed
@@ -234,11 +226,6 @@ package services
 			myTrace("loadRequestSuccess");
 			myTrace("result = " + (event.data.result as String)); 
 			
-			var backgroundfetchserviceLogInfo:BackGroundFetchServiceEvent = new BackGroundFetchServiceEvent(BackGroundFetchServiceEvent.LOG_INFO);
-			backgroundfetchserviceLogInfo.data = new Object();
-			backgroundfetchserviceLogInfo.data.information = event.data.result as String;
-			_instance.dispatchEvent(backgroundfetchserviceLogInfo);
-			
 			var backgroundFetchServiceResult:BackGroundFetchServiceEvent = new BackGroundFetchServiceEvent(BackGroundFetchServiceEvent.LOAD_REQUEST_RESULT);
 			backgroundFetchServiceResult.data = new Object();
 			backgroundFetchServiceResult.data.information = event.data.result as String;
@@ -248,11 +235,6 @@ package services
 		private static function loadRequestError(event:BackgroundFetchEvent):void {
 			myTrace("loadRequestError");
 			myTrace("error = " + (event.data.error as String));
-			
-			var backgroundfetchserviceLogInfo:BackGroundFetchServiceEvent = new BackGroundFetchServiceEvent(BackGroundFetchServiceEvent.LOG_INFO);
-			backgroundfetchserviceLogInfo.data = new Object();
-			backgroundfetchserviceLogInfo.data.information = event.data.error as String;
-			_instance.dispatchEvent(backgroundfetchserviceLogInfo);
 			
 			var backgroundFetchServiceResult:BackGroundFetchServiceEvent = new BackGroundFetchServiceEvent(BackGroundFetchServiceEvent.LOAD_REQUEST_ERROR);
 			backgroundFetchServiceResult.data = new Object();
@@ -289,11 +271,7 @@ package services
 		}
 		
 		private static function logInfoReceived(event:BackgroundFetchEvent):void {
-			var backgroundfetchserviceEvent:BackGroundFetchServiceEvent = new BackGroundFetchServiceEvent(BackGroundFetchServiceEvent.LOG_INFO);
-			backgroundfetchserviceEvent.data = new Object();
-			backgroundfetchserviceEvent.data.information = event.data.information;
-			backgroundfetchserviceEvent.timeStamp = event.timeStamp;
-			_instance.dispatchEvent(backgroundfetchserviceEvent);
+			myTrace(event.data.information);
 		}
 		
 		public static function registerPushNotification(newTagList:String):void {
