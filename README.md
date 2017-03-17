@@ -10,11 +10,14 @@ xdrip/xbridge/G5 reader for iOS devices -
 * Always on notification (not really always but almost always) that allows to see the current value by just lifting up the phone (iOS 10).
 * Upload to Nightscout
  * When the app is in the foreground, upload will always happen immediately after receiving a new value, also at app start, 
- * When the app is in the background, then there are two mechanisms being used to trigger an upload to NightScout
-   * iOS that decides when the app is allowed to do an upload. The frequency depends on the usage of the app. One test I did is to keep the app open all day/night long. The next day/night it was triggerering a background fetch every 10 minutes. If you would keep the app open for example during one night, but not during the day, then the app will do an upload every 10 minutes as of the next night.
-   * when a remote notification arrives. The app will subscribe to a service as soon as you launch it. As soon as the first bgreading is received, the app will receive a remote notification the minute after it's supposed to receive a new bgreading. This remote notification opens the app in the background, and allows it to do an upload to NightScout. The upload may have a delay of maximum 1,5 minute. The trigger is actually being sent by another app on a spare iphone on my desk which is always on. There's no guarantee that this app is always alive.
+ * When the app is in the background, then the trigger to upload is a remote notification.
+   * The app will subscribe to a service as soon as you launch it. As soon as the first bgreading is received, the app will receive a remote notification the minute after it's supposed to receive a new bgreading. This remote notification opens the app in the background, and allows it to do an upload to NightScout. The upload may have a delay of maximum 1,5 minute. The trigger is actually being sent by another app on a spare iphone on my desk which is always on. There's no guarantee that this app is always alive. ___There's no guarantee that upload to NightScout is successful.___
 * set transmitter id
 * ___if xdrip or xbridge is out of range, bluetooth connection will fail and will not always automatically reconnect. The app needs to be opened in order to re-establish the connection___ The status of the connection is visible in the always on notification.
+* G5 instructions
+  * first use the official Dexcom app, and make sure there's at least one reading.
+  * then close the Dexcom app and start the xDrip app
+  * enter Transmitter Id and start the sensor on the app.
 
 # To Install the app.
 
