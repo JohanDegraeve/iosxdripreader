@@ -19,7 +19,10 @@ package services
 {
 	import com.distriqt.extension.dialog.Dialog;
 	import com.distriqt.extension.dialog.DialogView;
+	import com.distriqt.extension.dialog.builders.AlertBuilder;
 	import com.distriqt.extension.dialog.events.DialogViewEvent;
+	import com.distriqt.extension.dialog.objects.DialogAction;
+	import com.distriqt.extension.notifications.Notifications;
 	
 	import flash.display.Stage;
 	import flash.events.Event;
@@ -29,9 +32,14 @@ package services
 	
 	import mx.collections.ArrayCollection;
 	
+	import spark.formatters.DateTimeFormatter;
+	
 	import distriqtkey.DistriqtKey;
 	
+	import events.BlueToothServiceEvent;
 	import events.DialogServiceEvent;
+	
+	import model.ModelLocator;
 	
 	/**
 	 * Will process all dialogs - goal is that any other service that wants to interact with the user will use this service<br> 
@@ -41,13 +49,15 @@ package services
 	 */
 	public class DialogService extends EventDispatcher
 	{
+		[ResourceBundle("dialogservice")]
+		
 		private static var _instance:DialogService = new DialogService();
-
+		
 		public static function get instance():DialogService
 		{
 			return _instance;
 		}
-
+		
 		private static var initialStart:Boolean = true;
 		private static var dialogViews:ArrayCollection;
 		private static var dialogViewsMaxDurations:ArrayCollection;
@@ -58,12 +68,12 @@ package services
 		private static var maxDurationTimer:Timer;
 		
 		private static var _isInitiated:Boolean = false;
-
+		
 		public static function get isInitiated():Boolean
 		{
 			return _isInitiated;
 		}
-
+		
 		
 		public function DialogService()
 		{
@@ -84,8 +94,37 @@ package services
 			dialogViewsMaxDurations = new ArrayCollection();
 			openDialogView = null;
 			
+			BluetoothService.instance.addEventListener(BlueToothServiceEvent.DEVICE_NOT_PAIRED, deviceNotPaired);
+			
 			_isInitiated = true;
 			_instance.dispatchEvent(new DialogServiceEvent(DialogServiceEvent.DIALOG_SERVICE_INITIATED_EVENT));
+		}
+		
+		private static function deviceNotPaired(event:Event):void {
+			if (ModelLocator.isInForeground)
+				return;
+			
+			var titleText:String = ModelLocator.resourceManagerInstance.getString("dialogservice","device_not_paired_dialog_title");
+			var bodyText:String = ModelLocator.resourceManagerInstance.getString("dialogservice","device_not_paired_dialog_body");
+			var dateFormatter:DateTimeFormatter = new DateTimeFormatter();
+			dateFormatter.dateTimePattern = "HH:mm:ss";
+			dateFormatter.useUTC = false;
+			var now:Date = new Date();
+			bodyText = bodyText.replace('$time', dateFormatter.format(new Date()));
+			
+			var alert:DialogView = Dialog.service.create(
+				new AlertBuilder()
+				.setTitle(titleText)
+				.setMessage(bodyText)
+				.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
+				.build()
+			);
+			alert.addEventListener(DialogViewEvent.CLOSED, deviceNotPairedDialogClosed);
+			DialogService.addDialog(alert, 240);
+		}
+		
+		private static function deviceNotPairedDialogClosed(event:Event):void {
+			Notifications.service.cancel(NotificationService.ID_FOR_DEVICE_NOT_PAIRED);
 		}
 		
 		/**

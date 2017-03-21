@@ -297,7 +297,24 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 				}
 			}
 			
-			private static function dialogServiceInitiated(ev:DialogServiceEvent):void {
+			private static function dialogServiceInitiated(event:Event):void {
+				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_LICENSE_INFO_CONFIRMED) == "false") {
+					var alert:DialogView = Dialog.service.create(
+						new AlertBuilder()
+						.setTitle("xDrip for iOS")
+						.setMessage(ModelLocator.resourceManagerInstance.getString('homeview', "licenseinfo"))//info about buttons top right corner
+						.addOption("Ok", DialogAction.STYLE_POSITIVE, 1)
+						.build()
+					);
+					alert.addEventListener(DialogViewEvent.CLOSED, licenseInfoConfirmed);
+					DialogService.addDialog(alert);
+					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_LICENSE_INFO_CONFIRMED,"true");
+				} else {
+					licenseInfoConfirmed(null);
+				}
+			}
+			
+			private static function licenseInfoConfirmed(ev:Event):void {
 				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_INITIAL_SELECTION_G4_OR_G5_DONE) == "false") {
 					var alert:DialogView = Dialog.service.create(
 						new AlertBuilder()

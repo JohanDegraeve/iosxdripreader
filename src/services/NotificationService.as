@@ -41,6 +41,7 @@ package services
 	
 	import distriqtkey.DistriqtKey;
 	
+	import events.BlueToothServiceEvent;
 	import events.CalibrationServiceEvent;
 	import events.NotificationServiceEvent;
 	import events.TimerServiceEvent;
@@ -96,6 +97,8 @@ package services
 		 */
 		public static const ID_FOR_ENTER_TRANSMITTER_ID:int = 4;
 		
+		public static const ID_FOR_DEVICE_NOT_PAIRED:int = 5;
+		
 		public function NotificationService()
 		{
 			if (_instance != null) {
@@ -103,7 +106,22 @@ package services
 			}
 		}
 		
-		
+		private static function deviceNotPaired(event:Event):void {
+			var titleText:String = ModelLocator.resourceManagerInstance.getString("notificationservice","device_not_paired_notification_title");
+			var bodyText:String = ModelLocator.resourceManagerInstance.getString("notificationservice","device_not_paired_body_text_background");
+			if (ModelLocator.isInForeground)
+				var bodyText:String = ModelLocator.resourceManagerInstance.getString("notificationservice","device_not_paired_body_text_foreground");
+			Notifications.service.cancel(ID_FOR_DEVICE_NOT_PAIRED);
+			Notifications.service.notify(
+				new NotificationBuilder()
+				.setId(ID_FOR_DEVICE_NOT_PAIRED)
+				.setAlert("Device Not Paired")
+				.setTitle(titleText)
+				.setBody(bodyText)
+				.enableLights(true)
+				.enableVibration(true)
+				.build());
+		}
 		
 		public static function init():void {
 			if (!initialStart)
@@ -121,6 +139,8 @@ package services
 			service.enableNotificationsWhenActive = true;
 			
 			Notifications.service.setup(service);
+			
+			BluetoothService.instance.addEventListener(BlueToothServiceEvent.DEVICE_NOT_PAIRED, deviceNotPaired);
 			
 			//var object:Object = Notifications.service.authorisationStatus();
 			switch (Notifications.service.authorisationStatus())

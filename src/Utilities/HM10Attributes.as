@@ -32,14 +32,14 @@ package Utilities
 		 * only to be used in tracing, to get the name of a UUID 
 		 */
 		public var UUIDMap:Object;
-
+		
 		private static var _instance:HM10Attributes = new HM10Attributes();
 		
 		public static function get instance():HM10Attributes
 		{
 			return _instance;
 		}
-
+		
 		public function HM10Attributes()
 		{
 			UUIDMap = new Object();
@@ -49,6 +49,17 @@ package Utilities
 			UUIDMap[G5_Communication_Characteristic_UUID] = "G5_Communication_Characteristic_UUID";
 			UUIDMap[G5_Control_Characteristic_UUID] = "G5_Control_Characteristic_UUID";
 			UUIDMap[G5_Authentication_Characteristic_UUID] = "G5_Authentication_Characteristic_UUID";
+		}
+		
+		public static function getCharacteristicName(uuid:String):String {
+			if (uuid.toUpperCase() == G5_Communication_Characteristic_UUID) {
+				return "G5_Communication_Characteristic_UUID";
+			} else if (uuid.toUpperCase() == G5_Authentication_Characteristic_UUID) {
+				return "G5_Authentication_Characteristic_UUID";
+			} else if (uuid.toUpperCase() == G5_Control_Characteristic_UUID) {
+				return "G5_Control_Characteristic_UUID";
+			} 
+			return "";
 		}
 	}
 }

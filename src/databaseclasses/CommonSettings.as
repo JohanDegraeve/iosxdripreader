@@ -101,6 +101,7 @@
 		 public static const COMMON_SETTING_PERIPHERAL_TYPE:int = 16;
 		 public static const COMMON_SETTING_G5_INFO_SCREEN_SHOWN:int = 17;
 		 public static const COMMON_SETTING_INITIAL_SELECTION_G4_OR_G5_DONE:int = 18;
+		 public static const COMMON_SETTING_LICENSE_INFO_CONFIRMED:int = 19;
 			
 		 private static var commonSettings:Array = [
 			 "0",//COMMON_SETTING_CURRENT_SENSOR
@@ -121,7 +122,8 @@
 			 "0",//COMMON_SETTING_G5_BATTERY_FROM_MARKER
 			 "",//COMMON_SETTING_PERIPHERAL_TYPE
 			 "false",//COMMON_SETTING_G5_INFO_SCREEN_SHOWN
-			 "false"//COMMON_SETTING_INITIAL_SELECTION_G4_OR_G5_DONE
+			 "false",//COMMON_SETTING_INITIAL_SELECTION_G4_OR_G5_DONE
+			 "false"//COMMON_SETTING_LICENSE_INFO_CONFIRMED
 		 ];
 		 
 		 public function CommonSettings()

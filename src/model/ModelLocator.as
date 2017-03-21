@@ -32,8 +32,7 @@ package model
 	import spark.collections.SortField;
 	import spark.components.Image;
 	import spark.core.ContentCache;
-	
-	
+	import spark.formatters.DateTimeFormatter;
 	
 	import databaseclasses.BgReading;
 	import databaseclasses.Database;

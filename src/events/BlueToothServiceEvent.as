@@ -24,6 +24,7 @@ package events
 	[Event(name="TransmitterData",type="events.BlueToothServiceEvent")]
 	[Event(name="BluetoothServiceInitiated",type="events.BlueToothServiceEvent")]
 	[Event(name="StoppedScanning",type="events.BlueToothServiceEvent")]
+	[Event(name="DeviceNotPaired",type="events.BlueToothServiceEvent")]
 
 	/**
 	 * used by bluetoothservice to notify on all kinds of events : information messages like bluetooth state change, bluetooth state change,
@@ -49,6 +50,10 @@ package events
 		 * To inform that scanning is programmatically stopped after timer expiry
 		 */
 		public static const STOPPED_SCANNING:String = "StoppedScanning";
+		/**
+		 * to inform that g5 transmitter is not paired 
+		 */
+		public static const DEVICE_NOT_PAIRED:String = "DeviceNotPaired"
 		
 		/**
 		 * To pass transmitter data<br>

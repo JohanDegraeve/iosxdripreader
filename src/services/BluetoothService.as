@@ -37,6 +37,8 @@ package services
 	
 	import mx.collections.ArrayCollection;
 	
+	import spark.formatters.DateTimeFormatter;
+	
 	import G5Model.AuthChallengeRxMessage;
 	import G5Model.AuthChallengeTxMessage;
 	import G5Model.AuthRequestTxMessage;
@@ -223,6 +225,7 @@ package services
 				return;
 			else
 				initialStart = false;
+			
 			BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.TIMER1_EXPIRED, startRescan);
 			BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.TIMER3_EXPIRED, stopScanning);
 			BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.TIMER4_EXPIRED, central_peripheralDisconnectHandler);
@@ -286,6 +289,11 @@ package services
 					isDexcomG5 = true;					
 				} else {
 					isDexcomG5 = false;
+				}
+			} else if (event.data == CommonSettings.COMMON_SETTING_TRANSMITTER_ID) {
+				if (isDexcomG5) {
+					myTrace("in settingChanged, event.data = COMMON_SETTING_TRANSMITTER_ID, calling forgetbluetoothdevice");
+					BlueToothDevice.forgetBlueToothDevice();
 				}
 			}
 		}
@@ -455,7 +463,7 @@ package services
 			} 
 			
 			awaitingConnect = false;
-			if (isDexcomG5) {
+			if (!isDexcomG5) {
 				if ((new Date()).valueOf() - connectionAttemptTimeStamp > maxTimeBetweenConnectAttemptAndConnectSuccess * 1000) { //not waiting more than 3 seconds between device discovery and connection success
 					myTrace("passing in central_peripheralConnectHandler but time between connect attempt and connect success is more than " + maxTimeBetweenConnectAttemptAndConnectSuccess + " seconds. Will disconnect");
 					//activeBluetoothPeripheral = null;
@@ -722,9 +730,9 @@ package services
 				G5AuthenticationCharacteristic = event.peripheral.services[servicesIndex].characteristics[G5AuthenticationCharacteristicsIndex];
 				G5CommunicationCharacteristic = event.peripheral.services[servicesIndex].characteristics[G5CommunicationCharacteristicsIndex];
 				G5ControlCharacteristic = event.peripheral.services[servicesIndex].characteristics[G5ControlCharacteristicsIndex];
-				myTrace("subscribing to G5ControlCharacteristic");
+				myTrace("subscribing to G5AuthenticationCharacteristic");
 				
-				if (!activeBluetoothPeripheral.subscribeToCharacteristic(G5ControlCharacteristic))
+				if (!activeBluetoothPeripheral.subscribeToCharacteristic(G5AuthenticationCharacteristic))
 				{
 					myTrace("Subscribe to characteristic failed due to invalid adapter state.");
 				}
@@ -762,7 +770,7 @@ package services
 		}
 		
 		private static function peripheral_characteristic_updatedHandler(event:CharacteristicEvent):void {
-			myTrace("peripheral_characteristic_updatedHandler characteristic uuid = " + event.characteristic.uuid +
+			myTrace("peripheral_characteristic_updatedHandler characteristic uuid = " + HM10Attributes.getCharacteristicName(event.characteristic.uuid) +
 				" with byte 0 = " + event.characteristic.value[0] + " decimal.");
 			//now start reading the values
 			var value:ByteArray = event.characteristic.value;
@@ -798,34 +806,36 @@ package services
 		}
 		
 		private static function peripheral_characteristic_writeHandler(event:CharacteristicEvent):void {
+			myTrace("peripheral_characteristic_writeHandler" + HM10Attributes.getCharacteristicName(event.characteristic.uuid));
 			if (isDexcomG5) {
-				if (event.characteristic.uuid.toUpperCase() == HM10Attributes.G5_Control_Characteristic_UUID.toUpperCase()) {
-				} else {
+				/*if (event.characteristic.uuid.toUpperCase() == HM10Attributes.G5_Authentication_Characteristic_UUID.toUpperCase()) {
+				if (event.characteristic.value[0] == 3) {
+				myTrace("event.characteristic.value[0] = " + event.characteristic.value[0] + ". Subscribing to G5ControlCharacteristic");
+				if (!activeBluetoothPeripheral.subscribeToCharacteristic(G5ControlCharacteristic))
+				{
+				myTrace("Subscribe to characteristic failed due to invalid adapter state.");
 				}
+				}
+				} else {
+				}*/
 			} else {
 				_instance.dispatchEvent(new BlueToothServiceEvent(BlueToothServiceEvent.BLUETOOTH_DEVICE_CONNECTION_COMPLETED));
 			}
-			
-			myTrace("peripheral_characteristic_writeHandler");
 		}
 		
 		private static function peripheral_characteristic_writeErrorHandler(event:CharacteristicEvent):void {
-			myTrace("peripheral_characteristic_writeErrorHandler");
+			myTrace("peripheral_characteristic_writeErrorHandler"  + HM10Attributes.getCharacteristicName(event.characteristic.uuid));
 		}
 		
 		private static function peripheral_characteristic_errorHandler(event:CharacteristicEvent):void {
-			myTrace("peripheral_characteristic_errorHandler" );
+			myTrace("peripheral_characteristic_errorHandler"  + HM10Attributes.getCharacteristicName(event.characteristic.uuid));
 		}
 		
 		private static function peripheral_characteristic_subscribeHandler(event:CharacteristicEvent):void {
-			myTrace("peripheral_characteristic_subscribeHandler success: " + event.characteristic.uuid);
+			myTrace("peripheral_characteristic_subscribeHandler success: " + HM10Attributes.getCharacteristicName(event.characteristic.uuid));
 			if (isDexcomG5) {
 				if (event.characteristic.uuid.toUpperCase() == HM10Attributes.G5_Control_Characteristic_UUID.toUpperCase()) {
-					myTrace("peripheral_characteristic_subscribeHandler, subscribing now to G5AuthenticationCharacteristic");
-					if (!activeBluetoothPeripheral.subscribeToCharacteristic(G5AuthenticationCharacteristic))
-					{
-						myTrace("Subscribe to characteristic failed due to invalid adapter state.");
-					}
+					getSensorData();
 				} else {
 					fullAuthenticateG5();
 				}
@@ -835,7 +845,13 @@ package services
 		}
 		
 		private static function peripheral_characteristic_subscribeErrorHandler(event:CharacteristicEvent):void {
-			myTrace("peripheral_characteristic_subscribeErrorHandler: " + event.characteristic.uuid);
+			myTrace("peripheral_characteristic_subscribeErrorHandler: " + HM10Attributes.getCharacteristicName(event.characteristic.uuid));
+			/*if (event.characteristic.uuid.toUpperCase() == HM10Attributes.G5_Control_Characteristic_UUID.toUpperCase()) {
+				if (event.errorCode == 15) {
+					var blueToothServiceEvent:BlueToothServiceEvent = new BlueToothServiceEvent(BlueToothServiceEvent.DEVICE_NOT_PAIRED);
+					_instance.dispatchEvent(blueToothServiceEvent);
+				}
+			}*/
 		}
 		
 		private static function peripheral_characteristic_unsubscribeHandler(event:CharacteristicEvent):void {
@@ -894,26 +910,28 @@ package services
 				case 5:
 					authStatus = new AuthStatusRxMessage(buffer);
 					myTrace("AuthStatusRxMessage created = " + UniqueId.byteArrayToString(authStatus.byteSequence));
-					myTrace("authenticated = " + authStatus.authenticated);
-					myTrace("bonded = " + authStatus.bonded);
-					getSensorData();
+					//getSensorData();
+					if (!authStatus.bonded) {
+						myTrace("not bonded, dispatching DEVICE_NOT_PAIRED event");
+						var blueToothServiceEvent:BlueToothServiceEvent = new BlueToothServiceEvent(BlueToothServiceEvent.DEVICE_NOT_PAIRED);
+						_instance.dispatchEvent(blueToothServiceEvent);
+					}
+					myTrace("Subscribing to G5ControlCharacteristic");
+					if (!activeBluetoothPeripheral.subscribeToCharacteristic(G5ControlCharacteristic))
+					{
+						myTrace("Subscribe to characteristic failed due to invalid adapter state.");
+					}
 					break;
 				case 3:
 					buffer.position = 0;
 					var authChallenge:AuthChallengeRxMessage = new AuthChallengeRxMessage(buffer);
-					myTrace("AuthChallengeRxMessage created, tokenHash = " + UniqueId.byteArrayToString(authChallenge.tokenHash));
-					myTrace("AuthChallengeRxMessage created, challenge = " + UniqueId.byteArrayToString(authChallenge.challenge));
 					if (authRequest == null) {
 						authRequest = new AuthRequestTxMessage(getTokenSize());
 					}
-					myTrace("authrequest.singleUseToken = " + UniqueId.byteArrayToString(authRequest.singleUseToken));
 					var key:ByteArray = cryptKey();
-					myTrace("key = " + UniqueId.byteArrayToString(key));
 					var challengeHash:ByteArray = calculateHash(authChallenge.challenge);
-					myTrace("challengeHash = " + UniqueId.byteArrayToString(challengeHash));
 					if (challengeHash != null) {
 						var authChallengeTx:AuthChallengeTxMessage = new AuthChallengeTxMessage(challengeHash);
-						myTrace("authChallengeTx = " + UniqueId.byteArrayToString(authChallengeTx.byteSequence));
 						if (!activeBluetoothPeripheral.writeValueForCharacteristic(characteristic, authChallengeTx.byteSequence)) {
 							myTrace("processG5TransmitterData case 3 writeValueForCharacteristic failed");
 						}
@@ -993,19 +1011,15 @@ package services
 				return null;
 			}
 			var key:ByteArray = cryptKey();
-			myTrace("calculateHash, key = " + UniqueId.byteArrayToString(key));
 			if (key == null)
 				return null;
 			var doubleData:ByteArray = new ByteArray();
 			doubleData.writeBytes(data);
 			doubleData.writeBytes(data);
-			myTrace("calculateHash, doubleData = " + UniqueId.byteArrayToString(doubleData));
 			var aesBytes:ByteArray = BackgroundFetch.AESEncryptWithKey(key, doubleData);
-			myTrace("calculateHash, aesBytes = " + UniqueId.byteArrayToString(aesBytes));
 			var returnValue:ByteArray = new ByteArray();
 			returnValue.writeBytes(aesBytes, 0, 8);
 			//aesBytes.readBytes(returnValue, 0, 8);
-			myTrace("calculateHash, returnValue = " + UniqueId.byteArrayToString(returnValue));
 			return returnValue;
 		}
 		
