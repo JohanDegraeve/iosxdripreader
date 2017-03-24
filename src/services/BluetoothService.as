@@ -997,12 +997,11 @@ package services
 		}
 		
 		private static function doBatteryInfoRequestMessage(characteristic:Characteristic):void {
-			myTrace("doBatteryInfoMessage() start");
+			myTrace("doBatteryInfoMessage");
 			var batteryInfoTxMessage:BatteryInfoTxMessage =  new BatteryInfoTxMessage();
 			if (!activeBluetoothPeripheral.writeValueForCharacteristic(characteristic, batteryInfoTxMessage.byteSequence)) {
 				myTrace("doBatteryInfoRequestMessage writeValueForCharacteristic failed");
 			}
-			myTrace("doBatteryInfoMessage() finished");
 		}
 		
 		public static function calculateHash(data:ByteArray):ByteArray {
@@ -1116,7 +1115,7 @@ package services
 		
 		private static function sendAuthRequestTxMessage(characteristic:Characteristic):void {
 			authRequest = new AuthRequestTxMessage(getTokenSize());
-			myTrace("Sending new AuthRequestTxMessage with AuthRequestTX: " + UniqueId.byteArrayToString(authRequest.byteSequence));
+			//myTrace("Sending new AuthRequestTxMessage with AuthRequestTX: " + UniqueId.byteArrayToString(authRequest.byteSequence));
 			
 			if (!activeBluetoothPeripheral.writeValueForCharacteristic(characteristic, authRequest.byteSequence)) {
 				myTrace("sendAuthRequestTxMessage writeValueForCharacteristic failed");

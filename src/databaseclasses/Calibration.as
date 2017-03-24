@@ -322,7 +322,6 @@ package databaseclasses
 		 * the calibrations will be order in descending order by timestamp
 		 */
 		public static function allForSensor():ArrayCollection {
-			myTrace("allForSensor");
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CURRENT_SENSOR) == "0")
 				return new ArrayCollection();//an empty arraycollection
 			

@@ -28,8 +28,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 		<![CDATA[
 			import Utilities.Trace;
 			
+			import databaseclasses.LocalSettings;
+			
 			import model.ModelLocator;
 			
+			import services.BackGroundFetchService;
 			import services.DialogService;
 			import services.NightScoutService;
 			
@@ -56,9 +59,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			{
 				ModelLocator.isInForeground = true;
 				myTrace("setting ModelLocator.isInForeground = true");
-				
 				myTrace("calling NightScoutService.sync");
 				NightScoutService.sync();
+				myTrace("BackGroundFetchService.registerPushNotification");
+				BackGroundFetchService.registerPushNotification(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_WISHED_QBLOX_SUBSCRIPTION_TAG));				
 			}
 			
 			private static function myTrace(log:String):void {

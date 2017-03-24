@@ -63,6 +63,7 @@ package Utilities
 				
 			} else {
 				var fileName:String = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_TRACE_FILE_NAME);
+				BackgroundFetch.traceNSLog("TRACEFILENAME = " + fileName);
 				BackgroundFetch.writeStringToFile(filePath, traceText.replace(" xdripreadertrace ", " "));			
 			}
 		}

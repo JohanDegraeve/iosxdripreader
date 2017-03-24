@@ -32,7 +32,6 @@ package model
 	import spark.collections.SortField;
 	import spark.components.Image;
 	import spark.core.ContentCache;
-	import spark.formatters.DateTimeFormatter;
 	
 	import databaseclasses.BgReading;
 	import databaseclasses.Database;
@@ -134,8 +133,6 @@ package model
 			if (_instance != null) {
 				throw new Error("ModelLocator class can only be instantiated through ModelLocator.getInstance()");	
 			}
-			trace("Modellocator.as, instantiating modellocator");
-			trace("Modellocator.as, setting ModelLocator.isInForeground = true");
 			_isInForeground = true;
 			
 			_appStartTimestamp = (new Date()).valueOf();
