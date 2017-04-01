@@ -320,10 +320,7 @@ package services
 				
 			
 			if (syncRunning) {
-				var nightScoutServiceEvent:NightScoutServiceEvent = new NightScoutServiceEvent(NightScoutServiceEvent.NIGHTSCOUT_SERVICE_INFORMATION_EVENT);
-				nightScoutServiceEvent.data = new Object();
-				nightScoutServiceEvent.data.information = "NightScoutService.as sync : sync running already, return";
-				_instance.dispatchEvent(nightScoutServiceEvent);
+				myTrace("NightScoutService.as sync : sync running already, return");
 				return;
 			}
 			

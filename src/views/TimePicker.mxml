@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Copyright (C) 2013  hippoandfriends
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
+
+-->
+<!--
+user wil enter a time, can be between 00:00 and 24:00, local time 
+client needs to set currentTime, which is a timestamp in ms. User can only change hour, minutes, but year, month, date, ms and seconds will remain uncahnged.
+There are just a few differences here with TimePicker36Hour.mxml :
+- complete tame will be taken over (year, month, day, seconds) here, in 36Hour these are set to 0
+- locale is set to capabilities.language, that means for americans, it will be with the am/pm, in 36Hour it's always 24 hour format
+- comments are taken over from 36Hour version, i think it's still correct
+
+-->
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 creationComplete="group1_creationCompleteHandler(event)"
+		 implements="mx.managers.IFocusManagerContainer"
+		 xmlns:s="library://ns.adobe.com/flex/spark" xmlns:components="spark.components.*" xmlns:myComponents="myComponents.*"
+		 >
+	<fx:Declarations>
+	</fx:Declarations>
+	<fx:Metadata>
+		[ResourceBundle("general")]
+	</fx:Metadata>
+	<fx:Script>
+		<![CDATA[
+			import mx.core.ContainerGlobals;
+			import mx.core.IFlexDisplayObject;
+			import mx.events.FlexEvent;
+			import mx.managers.IFocusManagerContainer;
+			import mx.managers.PopUpManager;
+			
+			import myComponents.PickerEvent;
+			
+			import utilities.DateTimeUtilities;
+			
+			private var _defaultButton:IFlexDisplayObject;
+			
+			public function get defaultButton():IFlexDisplayObject
+			{
+				return _defaultButton;
+			}
+			public function set defaultButton(value:IFlexDisplayObject):void
+			{
+				_defaultButton = value;
+				ContainerGlobals.focusedContainer = null;
+			}
+			
+			private var timeOriginallySet:Date;
+			
+			private var _currentTime: Date;
+			[Bindable]
+			/**
+			 * This is considered as local time<br>
+			 * Example setting currentTime to new Date( 120*60*1000 (or 7.200.000)) will set the currentTime to 2 in the morning local time, no matter what localtime zone<br>
+			 * So if local time is UTC + 1, then the time will be set to 1 in stead of 2 (2 - 1)<br>
+			 * Meaning if you want a for example 2 hour in the morning local time, you would set currentTime to new Date(2*60*60*1000)<br>
+			 * seconds and milliseconds are set to 0;<br>
+			 * <br>
+			 * This is a different behaviour than in TimePicker.mxml
+			 */
+			public function get currentTime(): Date
+			{
+				if (_currentTime != null)
+					return DateTimeUtilities.convertFromUTC(_currentTime);
+				return new Date(0);
+			}
+			public function set currentTime(value: Date): void
+			{
+				if (value == null)
+					return;
+				timeOriginallySet = value;
+				_currentTime = DateTimeUtilities.convertToUTC(new Date((value.hours * 60 + value.minutes) * 60 * 1000));
+			}
+			
+			private var _maxTime:Date = DateTimeUtilities.convertToUTC(new Date(86400000));
+			
+			/**
+			 * This is considered as local time<br>
+			 * Example setting maxTime to new Date( 120*60*1000 (or 7.200.000)) will set the maximum time to 2 in the morning local time, no matter what localtime zone<br>
+			 * So if local time is UTC + 1, then the time will be set to 1 in stead of 2 (2 - 1)<br>
+			 * Meaning if you want a maximum of for example 2 hour in the morning local time, you would set maxTime to new Date(2*60*60*1000)<br>
+			 * seconds and milliseconds are set to 0;<br>
+			 * <br>
+			 * This is a different behaviour than in TimePicker.mxml
+			 */
+			public function get maxTime():Date
+			{
+				if (_maxTime != null)
+					return DateTimeUtilities.convertFromUTC(_maxTime);
+				return new Date(0);
+			}
+			
+			public function set maxTime(value:Date):void
+			{
+				if (value == null)
+					return;
+				value.seconds = 0;
+				value.milliseconds = 0;
+				_maxTime = DateTimeUtilities.convertToUTC(value);
+			}
+			
+			private var _minTime:Date = DateTimeUtilities.convertToUTC(new Date(0));
+			
+			/**
+			 * This is considered as local time<br>
+			 * Example setting minTime to new Date( 120*60*1000 (or 7.200.000)) will set the minimum time to 2 in the morning local time, no matter what localtime zone<br>
+			 * So if local time is UTC + 1, then the time will be set to 1 in stead of 2 (2 - 1)<br>
+			 * Meaning if you want a minimum of for example 2 hour in the morning local time, you would set minTime to new Date(2*60*60*1000)<br>
+			 * seconds and milliseconds are set to 0;<br>
+			 * <br> 
+			 * This is a different behaviour than in TimePicker.mxml
+			 */
+			public function get minTime():Date
+			{
+				if (_minTime != null)
+					return DateTimeUtilities.convertFromUTC(_minTime);
+				return new Date(0);
+			}
+			
+			public function set minTime(value:Date):void
+			{
+				if (value == null)
+					return;
+				value.seconds = 0;
+				value.milliseconds = 0;
+				_minTime = DateTimeUtilities.convertToUTC(value);
+			}
+			
+			private function setTime(): void
+			{
+				var tpe: PickerEvent = new PickerEvent(PickerEvent.PICKER_SET);
+				tpe.newValue = timeOriginallySet;
+				(tpe.newValue  as Date).hours = dt.selectedDate.hours;
+				(tpe.newValue  as Date).minutes = dt.selectedDate.minutes;
+				dispatchEvent(tpe);
+				PopUpManager.removePopUp(this);
+
+			}
+			private function cancelTime(): void
+			{
+				var tpe: PickerEvent = new PickerEvent(PickerEvent.PICKER_CANCEL);
+				dispatchEvent(tpe);
+				PopUpManager.removePopUp(this);
+			}
+			
+			protected function group1_creationCompleteHandler(event:FlexEvent):void
+			{
+				dt.setStyle("locale",Capabilities.language);
+				
+				dt.minDate = _minTime;
+				dt.maxDate = _maxTime;
+				dt.selectedDate = _currentTime;
+			}
+		]]>
+	</fx:Script>
+	<myComponents:MyBorderContainer>
+		
+		<s:VGroup width="100%" gap="10" paddingBottom="10" paddingLeft="10" paddingRight="10" paddingTop="10">
+			<myComponents:TimeSpinner36Hours id="dt" skinClass="spark.skins.mobile.DateSpinnerSkin"/>
+			<s:BorderContainer backgroundColor="0xcccccc" width="100%">
+				<s:VGroup width="100%" verticalAlign="middle" paddingTop="0" paddingBottom="0" paddingLeft="0" paddingRight="0">
+					<s:Button height="50%" width="100%" minHeight="60" label="{resourceManager.getStringArray('general','ok')}" click="setTime()"/>
+					<s:Button height="50%" width="100%" minHeight="60" label="{resourceManager.getStringArray('general','cancel')}" click="cancelTime()"/>
+				</s:VGroup>
+			</s:BorderContainer>
+		</s:VGroup>
+	</myComponents:MyBorderContainer>
+</s:Group>

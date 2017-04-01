@@ -67,8 +67,9 @@ package model
 		public static var image_calibrate_active:Image;
 		public static var image_bluetooth_red:Image;
 		public static var image_bluetooth_green:Image;
-		public static var image_bluetooth_orange:Image
-		public static var image_G5:Image
+		public static var image_bluetooth_orange:Image;
+		public static var image_G5:Image;
+		public static var imageDone:Image;
 		public static var iconCache:ContentCache;
 
 		private static var _isInForeground:Boolean = false;
@@ -242,6 +243,11 @@ package model
 			image_G5 = new Image();
 			image_G5.contentLoader = iconCache;
 			image_G5.source = "../assets/image_G5.png";
+			
+			imageDone = new Image();
+			imageDone.contentLoader = iconCache;
+			imageDone.source = "../assets/Done_48x48.png";
+			
 		}
 		
 		private static function coreEvent(event:Event):void {

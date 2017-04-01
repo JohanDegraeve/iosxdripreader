@@ -102,6 +102,11 @@
 		 public static const COMMON_SETTING_G5_INFO_SCREEN_SHOWN:int = 17;
 		 public static const COMMON_SETTING_INITIAL_SELECTION_G4_OR_G5_DONE:int = 18;
 		 public static const COMMON_SETTING_LICENSE_INFO_CONFIRMED:int = 19;
+		 /**
+		 * only related to quickblox subscription in iosxdripreader.mxml activateHandler 
+		  */
+		 public static const COMMON_SETTING_TIME_SINCE_LAST_QUICK_BLOX_SUBSCRIPTION:int = 20;
+		 public static const COMMON_SETTING_LOW_ALERT:int = 21;
 			
 		 private static var commonSettings:Array = [
 			 "0",//COMMON_SETTING_CURRENT_SENSOR
@@ -123,7 +128,9 @@
 			 "",//COMMON_SETTING_PERIPHERAL_TYPE
 			 "false",//COMMON_SETTING_G5_INFO_SCREEN_SHOWN
 			 "false",//COMMON_SETTING_INITIAL_SELECTION_G4_OR_G5_DONE
-			 "false"//COMMON_SETTING_LICENSE_INFO_CONFIRMED
+			 "false",//COMMON_SETTING_LICENSE_INFO_CONFIRMED
+			 "0",//COMMON_SETTING_TIME_SINCE_LAST_QUICK_BLOX_SUBSCRIPTION
+			 "00:00>70>Default"//COMMON_SETTING_LOW_ALERT
 		 ];
 		 
 		 public function CommonSettings()

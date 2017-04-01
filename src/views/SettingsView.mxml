@@ -319,6 +319,21 @@
 				}
 			}
 			
+			private function lowAlert_clickHandler(event:MouseEvent):void {
+				rect29.color = uint("0xD3D3D3");
+				rect30.color = uint("0xD3D3D3");
+				
+				setResetColorTimer();
+				var dataToSend:Object = new Object();
+				dataToSend.title = ModelLocator.resourceManagerInstance.getString("settingsview","low_alert");
+				dataToSend.topText = ModelLocator.resourceManagerInstance.getString("settingsview","low_alert_top_text");
+				dataToSend.settingid = CommonSettings.COMMON_SETTING_LOW_ALERT;
+				dataToSend.titleforFromtimeAndValueElementView = "";//resourceManager.getString('settingsview','edit_alert');
+				dataToSend.topTextforFromtimeAndValueElementView = resourceManager.getString('settingsview','edit_alert');
+				
+				navigator.pushView(FromtimeAndValueListView,dataToSend);
+			}
+			
 			public static function requestNewTransmitterId():void {
 				var title:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE) + " " +
 					ModelLocator.resourceManagerInstance.getString("transmitterservice","transmitter_id_settings_title");
@@ -430,6 +445,8 @@
 					rect26.color = uint("0x212121");
 					rect27.color = uint("0x212121");
 					rect28.color = uint("0x212121");
+					rect29.color = uint("0x212121");
+					rect30.color = uint("0x212121");
 				}
 			}
 			
@@ -485,6 +502,28 @@
 					<s:Rect height="100%" width="5" >
 						<s:fill>
 							<s:SolidColor color="#212121" id="rect20"/>
+						</s:fill>
+					</s:Rect>
+				</s:HGroup>
+				<s:Line width="100%">
+					<s:stroke>
+						<s:SolidColorStroke color="0xFFFFFF"  weight="1" alpha="0.25"/>
+					</s:stroke>
+				</s:Line>	
+			</s:VGroup>
+			<!-- Chapter Alerts Low Alert -->
+			<s:VGroup click="lowAlert_clickHandler(event)" width="100%">
+				<s:HGroup width="100%">
+					<s:Rect height="100%" width="5" >
+						<s:fill>
+							<s:SolidColor color="#212121" id="rect29"/>
+						</s:fill>
+					</s:Rect>
+					<s:Label text = "{ModelLocator.resourceManagerInstance.getString('settingsview','low_alert')}"
+							 width="100%" paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
+					<s:Rect height="100%" width="5" >
+						<s:fill>
+							<s:SolidColor color="#212121" id="rect30"/>
 						</s:fill>
 					</s:Rect>
 				</s:HGroup>

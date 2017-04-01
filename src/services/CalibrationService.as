@@ -316,7 +316,7 @@ package services
 						new AlertBuilder()
 						.setTitle(ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_calibration_title"))
 						.setMessage(ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_bg_value_without_override"))
-						.addTextField("",ModelLocator.resourceManagerInstance.getString("calibrationservice",ModelLocator.resourceManagerInstance.getString("calibrationservice",ModelLocator.resourceManagerInstance.getString("calibrationservice","blood_glucose_calibration_value"))))
+						.addTextField("",ModelLocator.resourceManagerInstance.getString("calibrationservice","blood_glucose_calibration_value"))
 						.addOption(ModelLocator.resourceManagerInstance.getString("general","cancel"), DialogAction.STYLE_CANCEL, 1)
 						.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
 						.build()

@@ -16,6 +16,25 @@ package Utilities
 			var returnValue:String =  dateAndTime.fullYearUTC + "-" + month + "-" + day + "T" + hours + ":" + minutes + ":" + seconds + "."  + milliseconds + "Z";
 			return returnValue;
 		}
-
+		
+		/**
+		 * returns a new Date object<br>
+		 * use this when dtDate has been created with local time in ms, eg new Date(0) is 00:00 1970... local time, ie locally this could be UTC time -1<br>
+		 * in that case returnvalue will be the exact UTC time
+		 */
+		public static function convertToUTC(dtDate:Date):Date{
+			var returnValue:Date = new Date();
+			returnValue.setTime(dtDate.getTime() + (dtDate.getTimezoneOffset() * 60000))
+			return returnValue;
+		}
+		
+		/**
+		 * the opposite of convertToUTC
+		 */
+		public static function convertFromUTC(dtDate:Date):Date{
+			var returnValue:Date = new Date();
+			returnValue.setTime(dtDate.getTime() - (dtDate.getTimezoneOffset() * 60000))
+			return returnValue;
+		}
 	}
 }

@@ -1,5 +1,5 @@
 /**
- Copyright (C) 2016  Johan Degraeve
+ Copyright (C) 2  Johan Degraeve
  
  This program is free software: you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -293,6 +293,10 @@ package databaseclasses
 		
 		public static function mmolConvert(mgdl:Number):Number {
 			return mgdl * MGDL_TO_MMOLL;
+		}
+		
+		public static function mgdlConvert(mmoll:Number):Number {
+			return mmoll * MMOLL_TO_MGDL;
 		}
 		
 		public function displayValue():String {

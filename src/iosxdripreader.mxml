@@ -28,6 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 		<![CDATA[
 			import Utilities.Trace;
 			
+			import databaseclasses.CommonSettings;
 			import databaseclasses.LocalSettings;
 			
 			import model.ModelLocator;
@@ -62,7 +63,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 				myTrace("calling NightScoutService.sync");
 				NightScoutService.sync();
 				myTrace("BackGroundFetchService.registerPushNotification");
-				BackGroundFetchService.registerPushNotification(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_WISHED_QBLOX_SUBSCRIPTION_TAG));				
+				if (((new Date()).valueOf() - new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TIME_SINCE_LAST_QUICK_BLOX_SUBSCRIPTION))) > 24 * 60 * 60 * 1000) {
+					BackGroundFetchService.registerPushNotification(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_WISHED_QBLOX_SUBSCRIPTION_TAG));
+					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_TIME_SINCE_LAST_QUICK_BLOX_SUBSCRIPTION, (new Date()).valueOf().toString());
+				}
 			}
 			
 			private static function myTrace(log:String):void {
