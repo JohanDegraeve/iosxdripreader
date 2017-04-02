@@ -132,7 +132,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 				} else if (editClicked) {
 					dataToSend.selectedIndex = event.newIndex;
 					dataToSend.listOfElements = listOfElements;
-					navigator.pushView(FromtimeAndValueElementView,dataToSend,CONTEXT_EDIT_LIST_ELEMENT);
+					navigator.pushView(FromtimeAndValueElementView, dataToSend, CONTEXT_EDIT_LIST_ELEMENT);
 					editClicked = false;
 				} else if (addClicked)  {
 					var clickedItem:FromtimeAndValue = listOfElements.getItemAt(event.newIndex) as FromtimeAndValue;
@@ -215,30 +215,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 					change="list_changeHandler(event)"
 					scrollSnappingMode="leadingEdge">
 			</s:List>
-			<!-- Alert Value  this is good for fromtimeandvalueelementview >
-			<s:VGroup click="alertValueClickHandler(event)" width="100%">
-				<s:HGroup width="100%">
-					<s:Rect height="100%" width="5" >
-						<s:fill>
-							<s:SolidColor color="#212121" id="rect11"/>
-						</s:fill>
-					</s:Rect>
-					<s:Label text = "{ModelLocator.resourceManagerInstance.getString('fromtimeandvaluelistview','value')}"
-							 width="100%" paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
-					<s:Label text = "{alertValueText}"  
-							 paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
-					<s:Rect height="100%" width="5" >
-						<s:fill>
-							<s:SolidColor color="#212121" id="rect12"/>
-						</s:fill>
-					</s:Rect>
-				</s:HGroup>
-				<s:Line width="100%">
-					<s:stroke>
-						<s:SolidColorStroke color="0xFFFFFF" weight="1" alpha="0.25"/>
-					</s:stroke>
-				</s:Line>	
-			</s:VGroup-->
 		</s:VGroup>
 	</s:Scroller>
 </s:View>

@@ -674,7 +674,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 				sensorStartYear = event.date.fullYear;
 			}
 			
-			private function date_closedRequestHandler( event:DialogViewEvent ):void
+			private function date_closedRequestHandler(event:DialogViewEvent ):void
 			{
 				if (sensorStartYear == 0) {
 					//use pressed cancel

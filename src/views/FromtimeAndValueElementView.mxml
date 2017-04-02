@@ -29,20 +29,30 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 	</fx:Metadata>
 	<fx:Script>
 		<![CDATA[
+			import com.distriqt.extension.dialog.DateTimeDialogView;
 			import com.distriqt.extension.dialog.Dialog;
+			import com.distriqt.extension.dialog.DialogType;
 			import com.distriqt.extension.dialog.DialogView;
 			import com.distriqt.extension.dialog.builders.AlertBuilder;
+			import com.distriqt.extension.dialog.builders.DateTimeDialogBuilder;
+			import com.distriqt.extension.dialog.events.DialogDateTimeEvent;
 			import com.distriqt.extension.dialog.events.DialogViewEvent;
 			import com.distriqt.extension.dialog.objects.DialogAction;
+			
 			import mx.events.FlexEvent;
-			import mx.managers.PopUpManager;
+			
 			import spark.components.View;
+			
 			import Utilities.FromtimeAndValue;
 			import Utilities.FromtimeAndValueArrayCollection;
+			
 			import databaseclasses.BgReading;
 			import databaseclasses.CommonSettings;
+			
 			import events.PickerEvent;
+			
 			import model.ModelLocator;
+			
 			import services.DialogService;
 			
 			
@@ -74,6 +84,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			private var newFromtimeAndValue:FromtimeAndValue;//if stays null then nothing's changed
 			private var thisView:View;
 			
+			private static var fromStartMinutes:int = 0;
+			private static var fromStartHours:int = 0;
+			private static var userSelectedTime:Boolean = false;
 			
 			/**
 			 * the selected index
@@ -115,40 +128,66 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			 }
 			
 			private function fromGroupClicked(event:Event):void {
-				timePicker36Hour = new TimePicker36Hour();
-				timePicker36Hour.currentTime = 
-					new Date(((new Number(timeText.split(":")[0])) * 60 + (new Number(timeText.split(":")[1])))*60*1000);//in ms
-				timePicker36Hour.addEventListener(PickerEvent.PICKER_SET, onTimeSet);
-				timePicker36Hour.addEventListener(PickerEvent.PICKER_CANCEL, onTimeOrDateCancel);
+				if (selectedIndex == 0) {
+					var alert:DialogView = Dialog.service.create(
+						new AlertBuilder()
+						.setTitle(ModelLocator.resourceManagerInstance.getString('fromtimeandvalueelementview', 'change_from_alert_title'))
+						.setMessage(ModelLocator.resourceManagerInstance.getString('fromtimeandvalueelementview', 'first_element_can_not_change_time'))
+						.addOption("Ok", DialogAction.STYLE_POSITIVE, 1)
+						.build()
+					);
+					DialogService.addDialog(alert);
+					return;
+				} 
+				var minTime:Date;
+				var maxTime:Date;
+				userSelectedTime = false;
+				fromStartHours = 0;
+				fromStartMinutes = 0;
+				userSelectedTime = false;
 				
-				if (selectedIndex > 0) {
-					timePicker36Hour.minTime = new Date((listOfElements.getItemAt(selectedIndex - 1) as FromtimeAndValue).from * 1000 + 1 * 60 * 1000);
-					
-					if (selectedIndex < listOfElements.length - 1) {
-						timePicker36Hour.maxTime = new Date((listOfElements.getItemAt(selectedIndex + 1) as FromtimeAndValue).from * 1000 - 1 * 60 * 1000);
-					} else 
-						timePicker36Hour.maxTime = new Date(24 * 3600 * 1000 - 1 * 60 * 1000);
-				} else {
-					//first element should not have a configurable time
-					timePicker36Hour.minTime = new Date((listOfElements.getItemAt(selectedIndex) as FromtimeAndValue).from * 1000 );
-					timePicker36Hour.maxTime = new Date((listOfElements.getItemAt(selectedIndex) as FromtimeAndValue).from * 1000 );
-				}				
+				minTime = new Date((listOfElements.getItemAt(selectedIndex - 1) as FromtimeAndValue).from * 1000 + 1 * 60 * 1000);
 				
-				PopUpManager.addPopUp(timePicker36Hour, this, true);
-				PopUpManager.centerPopUp(timePicker36Hour);
+				if (selectedIndex < listOfElements.length - 1) {
+					maxTime = new Date((listOfElements.getItemAt(selectedIndex + 1) as FromtimeAndValue).from * 1000 - 1 * 60 * 1000);
+				} else 
+					maxTime = new Date(24 * 3600 * 1000 - 1 * 60 * 1000);
+				
+				var dateTime:DateTimeDialogView = Dialog.service.create(
+					new DateTimeDialogBuilder()
+					.setMode(DialogType.MODE_TIME)
+					.setTitle(ModelLocator.resourceManagerInstance.getString('fromtimeandvalueelementview',"choose_from_time"))
+					.setAcceptLabel("Ok")
+					.setCancelable(true)
+					.setMinTimestamp(minTime.valueOf())
+					.setMaxTimestamp(maxTime.valueOf())
+					.setCancelLabel(ModelLocator.resourceManagerInstance.getString('general','cancel'))
+					.build()
+				);
+				dateTime.addEventListener(DialogViewEvent.CLOSED, time_closedRequestHandler);
+				dateTime.addEventListener(DialogDateTimeEvent.SELECTED, time_selectedHandler);
+				DialogService.addDialog(dateTime);
 			}
 			
-			private function onTimeOrDateCancel(event: PickerEvent): void
+			private function time_selectedHandler( event:DialogDateTimeEvent ):void
 			{
-				timePicker36Hour.removeEventListener(PickerEvent.PICKER_SET, onTimeSet);
-				timePicker36Hour.removeEventListener(PickerEvent.PICKER_CANCEL, onTimeOrDateCancel);
+				fromStartHours = event.date.hours;
+				fromStartMinutes = event.date.minutes;
+				userSelectedTime = true;
 			}
 			
-			private function onTimeSet(event:PickerEvent):void {
-				timePicker36Hour.removeEventListener(PickerEvent.PICKER_SET, onTimeSet);
-				timePicker36Hour.removeEventListener(PickerEvent.PICKER_CANCEL, onTimeOrDateCancel);
-				var hours:String = (new Number((event.newValue as Date).hoursUTC) + (new Number((event.newValue as Date).dateUTC - 1))*24).toString();
-				var minutes:String = new Number((event.newValue as Date).minutesUTC).toString();
+			private function time_closedRequestHandler(event:DialogViewEvent):void {
+				if (!userSelectedTime) {
+					//use pressed cancel
+					return;
+				}
+				
+				var dateTime:DateTimeDialogView = DateTimeDialogView(event.currentTarget);
+				dateTime.dispose();
+				//var fromTimeAsDate:Date = new Date(0, 0, 0, fromStartHours, fromStartMinutes, 0);
+				//var fromTimeAsNumber:Number = fromTimeAsDate.valueOf();
+				var hours:String = fromStartHours.toString();
+				var minutes:String = fromStartMinutes.toString();
 				
 				if (timeText == (hours.length == 1 ? "0" + hours:hours) + ":" + (minutes.length == 1 ? "0" + minutes:minutes))
 					return;
@@ -166,18 +205,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 				
 				var alert:DialogView = Dialog.service.create(
 					new AlertBuilder()
-					.setTitle("dummy_title1")
-					.setMessage("dummy_message1")
-					.addTextField("","dummy_placeholder1")
+					.setTitle(ModelLocator.resourceManagerInstance.getString('fromtimeandvalueelementview', 'change_value_alert_title'))
+					.setMessage(ModelLocator.resourceManagerInstance.getString('fromtimeandvalueelementview', 'change_value_alert_message'))
+					.addTextField("",value)
 					.addOption(ModelLocator.resourceManagerInstance.getString("general","cancel"), DialogAction.STYLE_CANCEL, 1)
 					.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
 					.build()
 				);
 				alert.addEventListener(DialogViewEvent.CLOSED, onAmountSet);
-				alert.addEventListener(DialogViewEvent.CANCELLED, onAmountCancel);
-				
-				function onAmountCancel(event: PickerEvent): void {
-				}
+				DialogService.addDialog(alert);
 				
 				function onAmountSet(event:DialogViewEvent): void {
 					if (event.index == 1) {
@@ -188,7 +224,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 					if (isNaN(asNumber)) {
 						var alert:DialogView = Dialog.service.create(
 							new AlertBuilder()
-							.setTitle("dummy_title2")
+							.setTitle(ModelLocator.resourceManagerInstance.getString('fromtimeandvalueelementview', 'change_value_alert_title'))
 							.setMessage(ModelLocator.resourceManagerInstance.getString("calibrationservice","value_should_be_numeric"))
 							.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
 							.build()
@@ -196,13 +232,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 						DialogService.addDialog(alert);
 						//and ask again a value
 						valueGroupClicked(null);
+						return;
 					} else {
 						if(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) != "true") {
 							asNumber = asNumber * BgReading.MMOLL_TO_MGDL; 	
 						}
 					}
-
-
+					
+					
 					if (value ==  (asNumber).toString())
 						return;
 					
@@ -282,7 +319,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 		<s:VGroup id="fromGroup" width="100%" click="fromGroupClicked(event)">
 			<s:HGroup width="100%">
 				<s:Rect height="100%" width="5" ><s:fill><s:SolidColor color="#212121"/></s:fill></s:Rect>
-				<s:Label  id="fromGroupLabelId" width="100%"  paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
+				<s:Label  id="fromGroupLabelId" width="100%" paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
 				<s:Label id="time" text="@{timeText}" paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
 				<s:Rect height="100%" width="5" ><s:fill><s:SolidColor color="#212121"/></s:fill></s:Rect>
 			</s:HGroup>
@@ -292,15 +329,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 				</s:stroke>
 			</s:Line>	
 		</s:VGroup>
-		<s:Group id="valueGroup" y="0" x="0" width="100%" click="valueGroupClicked(event)">
-			<s:layout>
-				<s:HorizontalLayout verticalAlign="middle">
-				</s:HorizontalLayout>
-			</s:layout>
-			<s:Label  id="valueGroupLabelIdforValue" height="47" width="30%" verticalAlign="middle"/>
-			<s:Button id="valueId" height="47" width="40%" label="@{value}" />
-			<s:Label  id="valueGroupLabelIdforUnit" height="47" width="30%" verticalAlign="middle"/>
-		</s:Group>
+		<s:VGroup id="valueGroup" width="100%" click="valueGroupClicked(event)">
+			<s:HGroup width="100%">
+				<s:Rect height="100%" width="5" ><s:fill><s:SolidColor color="#212121"/></s:fill></s:Rect>
+				<s:Label  id="valueGroupLabelIdforValue" width="100%" paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
+				<s:Label id="valueId" text="@{value}" paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
+				<s:Label  id="valueGroupLabelIdforUnit" paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
+				<s:Rect height="100%" width="5" ><s:fill><s:SolidColor color="#212121"/></s:fill></s:Rect>
+			</s:HGroup>
+		</s:VGroup>
 		<s:Line width="100%">
 			<s:stroke>
 				<s:SolidColorStroke color="0xFFFFFF"  weight="1" alpha="0.25"/>
