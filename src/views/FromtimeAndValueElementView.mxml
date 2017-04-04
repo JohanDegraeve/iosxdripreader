@@ -73,6 +73,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			
 			[Bindable]
 			/**
+			 * the alarmName in text format
+			 */private var alarmName:String;
+			
+			[Bindable]
+			/**
 			 * topText shown on top of the view.
 			 */private var timeText:String;
 			
@@ -103,6 +108,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			 {
 				 back_label = ModelLocator.resourceManagerInstance.getString('general','back');
 				 valueGroupLabelIdforValue.text = ModelLocator.resourceManagerInstance.getString('fromtimeandvalueelementview','value');
+				 alarmNameGroupLabelIdforAlarmName.text = ModelLocator.resourceManagerInstance.getString('fromtimeandvalueelementview','alarmname');
 				 fromGroupLabelId.text = ModelLocator.resourceManagerInstance.getString('fromtimeandvalueelementview','from');
 				 if (data.title)
 					 title = data.title;
@@ -124,6 +130,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 						 :
 						 (Math.round((valueInCorrectUnit * 10)) / 10).toString());
 					 valueGroupLabelIdforUnit.text = ModelLocator.resourceManagerInstance.getString('settingsview','mgdl');
+					 alarmName = fromtimeAndValue.alarmName;
+					 
+					 if (alarmName == ModelLocator.resourceManagerInstance.getString('settingsview', 'no_alert')) {
+						 valueGroup.enabled = false;
+						 valueGroup.alpha = 0.5;
+					 } else {
+						 valueGroup.enabled = true;
+						 valueGroup.alpha = 1;
+					 }
 				 }
 			 }
 			
@@ -252,6 +267,45 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 				}
 			}
 			
+			private function alarmNameGroupClicked(event:Event = null):void {
+				var alert:DialogView = Dialog.service.create(
+					new AlertBuilder()
+					.setTitle(ModelLocator.resourceManagerInstance.getString('fromtimeandvalueelementview', 'change_alarmname_alert_title'))
+					.setMessage(ModelLocator.resourceManagerInstance.getString('fromtimeandvalueelementview', 'change_alarmname_alert_message'))
+					.addTextField("",alarmName)
+					.addOption(ModelLocator.resourceManagerInstance.getString("general","cancel"), DialogAction.STYLE_CANCEL, 1)
+					.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
+					.build()
+				);
+				alert.addEventListener(DialogViewEvent.CLOSED, onAlarmNameSet);
+				DialogService.addDialog(alert);
+				
+				function onAlarmNameSet(event:DialogViewEvent): void {
+					if (event.index == 1) {
+						return;
+					}
+					
+					var newAlarmName:String = event.values[0] as String;
+					if (alarmName == newAlarmName)
+						return;
+					
+					alarmName = newAlarmName;
+					
+					if (newFromtimeAndValue == null)
+						newFromtimeAndValue = (listOfElements.getItemAt(selectedIndex) as FromtimeAndValue);
+					newFromtimeAndValue = 
+						new FromtimeAndValue(newFromtimeAndValue.from, newFromtimeAndValue.value, newAlarmName, newFromtimeAndValue.editable, newFromtimeAndValue.deletable);
+					
+					if (alarmName.toUpperCase() == ModelLocator.resourceManagerInstance.getString('settingsview', 'no_alert').toUpperCase()) {
+						valueGroup.enabled = false;
+						valueGroup.alpha = 0.5;
+					} else {
+						valueGroup.enabled = true;
+						valueGroup.alpha = 1;
+					}
+				}
+			}
+			
 			private function okClicked(e:MouseEvent = null):void {
 				if (newFromtimeAndValue != null) {
 					listOfElements.removeItemAt(selectedIndex);
@@ -335,6 +389,19 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 				<s:Label  id="valueGroupLabelIdforValue" width="100%" paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
 				<s:Label id="valueId" text="@{value}" paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
 				<s:Label  id="valueGroupLabelIdforUnit" paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
+				<s:Rect height="100%" width="5" ><s:fill><s:SolidColor color="#212121"/></s:fill></s:Rect>
+			</s:HGroup>
+			<s:Line width="100%">
+				<s:stroke>
+					<s:SolidColorStroke color="0xFFFFFF"  weight="1" alpha="0.25"/>
+				</s:stroke>
+			</s:Line>	
+		</s:VGroup>
+		<s:VGroup id="alarmNameGroup" width="100%" click="alarmNameGroupClicked(event)">
+			<s:HGroup width="100%">
+				<s:Rect height="100%" width="5" ><s:fill><s:SolidColor color="#212121"/></s:fill></s:Rect>
+				<s:Label  id="alarmNameGroupLabelIdforAlarmName" width="100%" paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
+				<s:Label id="alarmNameId" text="@{alarmName}" paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
 				<s:Rect height="100%" width="5" ><s:fill><s:SolidColor color="#212121"/></s:fill></s:Rect>
 			</s:HGroup>
 		</s:VGroup>

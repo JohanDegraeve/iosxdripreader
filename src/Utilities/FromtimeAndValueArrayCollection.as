@@ -219,7 +219,7 @@ package Utilities
 		 public static function createList(alarmListAsString:String):FromtimeAndValueArrayCollection {
 			 var splittedByDash:Array = alarmListAsString.split("-");
 			 var returnValue:FromtimeAndValueArrayCollection = new FromtimeAndValueArrayCollection(null);
-			 for (var ctr:int = 2;ctr < splittedByDash.length;ctr++) {
+			 for (var ctr:int = 0;ctr < splittedByDash.length;ctr++) {
 				 returnValue.addItem( 
 					 new FromtimeAndValue(
 						 splittedByDash[ctr].split(">")[0],
