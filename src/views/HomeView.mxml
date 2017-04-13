@@ -148,7 +148,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 					Trace.init();
 					Database.instance.addEventListener(DatabaseEvent.DATABASE_INIT_FINISHED_EVENT,onInitResult);
 					Database.instance.addEventListener(DatabaseEvent.ERROR_EVENT,onInitError);
-					Database.instance.addEventListener(DatabaseEvent.DATABASE_INFORMATION_EVENT, databaseInformationEventReceived);
 					//need to know when modellocator is populated, then we can also update display
 					Database.instance.addEventListener(DatabaseEvent.BGREADING_RETRIEVAL_EVENT, bgReadingReceivedFromDatabase);
 					TimerService.instance.addEventListener(TimerServiceEvent.BG_READING_NOT_RECEIVED_ON_TIME, bgReadingNotReceivedOnTime);
@@ -447,10 +446,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			
 			private function newCalibrationEventReceived(be:CalibrationServiceEvent):void {
 				displayCurrentInfoFromReading();
-			}
-			
-			private function databaseInformationEventReceived(be:DatabaseEvent):void {
-				//trace((new Date()).toTimeString() + " : HomeView : received database  information = " + be.data.information);
 			}
 			
 			protected function initializeHandler(event:FlexEvent):void

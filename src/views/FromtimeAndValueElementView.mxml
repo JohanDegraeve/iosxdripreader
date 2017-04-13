@@ -49,14 +49,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			import databaseclasses.BgReading;
 			import databaseclasses.CommonSettings;
 			
-			import events.PickerEvent;
-			
 			import model.ModelLocator;
 			
 			import services.DialogService;
-			
-			
-			private var timePicker36Hour:views.TimePicker36Hour;
 			
 			[Bindable]
 			private var back_label:String;
@@ -154,19 +149,24 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 					DialogService.addDialog(alert);
 					return;
 				} 
-				var minTime:Date;
-				var maxTime:Date;
+				var minTime:Number;
+				var maxTime:Number;
 				userSelectedTime = false;
 				fromStartHours = 0;
 				fromStartMinutes = 0;
 				userSelectedTime = false;
 				
-				minTime = new Date((listOfElements.getItemAt(selectedIndex - 1) as FromtimeAndValue).from * 1000 + 1 * 60 * 1000);
+				var now:Date = new Date();
+				var nowAt0000:Date = new Date(now.fullYear, now.month, now.date);
+				var test:int = (listOfElements.getItemAt(selectedIndex - 1) as FromtimeAndValue).from;
+				minTime = (listOfElements.getItemAt(selectedIndex - 1) as FromtimeAndValue).from * 1000 + 1 * 60 * 1000;
+				var minimumTimeStamp:Date = new Date(nowAt0000.valueOf() + minTime);
 				
 				if (selectedIndex < listOfElements.length - 1) {
-					maxTime = new Date((listOfElements.getItemAt(selectedIndex + 1) as FromtimeAndValue).from * 1000 - 1 * 60 * 1000);
+					maxTime = (listOfElements.getItemAt(selectedIndex + 1) as FromtimeAndValue).from * 1000 - 1 * 60 * 1000;
 				} else 
-					maxTime = new Date(24 * 3600 * 1000 - 1 * 60 * 1000);
+					maxTime = 24 * 3600 * 1000 - 1 * 60 * 1000;
+				var maximumTimeStamp:Date = new Date(nowAt0000.valueOf() + maxTime);
 				
 				var dateTime:DateTimeDialogView = Dialog.service.create(
 					new DateTimeDialogBuilder()
@@ -174,9 +174,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 					.setTitle(ModelLocator.resourceManagerInstance.getString('fromtimeandvalueelementview',"choose_from_time"))
 					.setAcceptLabel("Ok")
 					.setCancelable(true)
-					.setMinTimestamp(minTime.valueOf())
-					.setMaxTimestamp(maxTime.valueOf())
+					.setMinTimestamp(minimumTimeStamp.valueOf())
+					.setMaxTimestamp(maximumTimeStamp.valueOf())
 					.setCancelLabel(ModelLocator.resourceManagerInstance.getString('general','cancel'))
+					.is24Hour(true)
 					.build()
 				);
 				dateTime.addEventListener(DialogViewEvent.CLOSED, time_closedRequestHandler);
@@ -323,27 +324,25 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 				if (newFromtimeAndValue != null) {
 					var alert:DialogView = Dialog.service.create(
 						new AlertBuilder()
-						.setTitle(ModelLocator.resourceManagerInstance.getString('fromtimeandvalueelementview',"savechanges"))
-						.setMessage(ModelLocator.resourceManagerInstance.getString('fromtimeandvalueelementview',"savechanges"))
-						.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
+						.setTitle(ModelLocator.resourceManagerInstance.getString('fromtimeandvaluelistview',"savechanges"))
+						.setMessage(ModelLocator.resourceManagerInstance.getString('fromtimeandvaluelistview',"chose_yes_or_no"))
+						.addOption(ModelLocator.resourceManagerInstance.getString("general","yes"), DialogAction.STYLE_POSITIVE, 0)
 						.addOption(ModelLocator.resourceManagerInstance.getString("general","no"), DialogAction.STYLE_CANCEL, 1)
 						.build()
 					);
 					alert.addEventListener(DialogViewEvent.CLOSED, onYesClicked);
-					alert.addEventListener(DialogViewEvent.CANCELLED, onNoClicked);
 					DialogService.addDialog(alert);
 				} else 
 					navigator.popView();
 			}
 			
-			private function onYesClicked(event:PickerEvent): void
+			private function onYesClicked(event:DialogViewEvent): void
 			{
-				okClicked();
-			}
-			
-			private function onNoClicked(event:PickerEvent): void
-			{
-				navigator.popView();
+				if (event.index == 1) {
+					navigator.popView();
+				} else if (event.index == 0) {
+					okClicked();
+				}
 			}
 			
 			protected function view1_initializeHandler(event:FlexEvent):void

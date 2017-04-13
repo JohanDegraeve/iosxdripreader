@@ -19,7 +19,6 @@ package events
 {
 	[Event(name="ResultEvent",type="events.DatabaseEvent")]
 	[Event(name="ErrorEvent",type="events.DatabaseEvent")]
-	[Event(name="DatabaseInformation",type="events.DatabaseEvent")]
 	[Event(name="LoggingInsertedEvent",type="events.DatabaseEvent")]
 	[Event(name="LoggingInsertionFailedEvent",type="events.DatabaseEvent")]
 	[Event(name="DatabaseInitFinishedEvent",type="events.DatabaseEvent")]
@@ -35,11 +34,6 @@ package events
 		public static const DATABASE_INIT_FINISHED_EVENT:String = "DatabaseInitFinishedEvent";
 		public static const BGREADING_RETRIEVAL_EVENT:String = "BGReadingRetrievedEvent";
 		public static const LOGRETRIEVED_EVENT:String = "LogRetrievedEvent";
-		/**
-		 * To pass status information, this is just text that can be shown to the user to display progress info<br>
-		 * data.information will be a string with this info. 
-		 */
-		public static const DATABASE_INFORMATION_EVENT:String = "DatabaseInformation";
 		
 		public var data:*;
 		

@@ -40,8 +40,6 @@ package databaseclasses
 	
 	public class Database extends EventDispatcher
 	{
-		//Actual Database error : 0036
-		[ResourceBundle("database")]
 		private static var _instance:Database = new Database();
 		public static function get instance():Database {
 			return _instance;
@@ -152,6 +150,18 @@ package databaseclasses
 			"value TEXT, " +
 			"lastmodifiedtimestamp TIMESTAMP NOT NULL)";
 		
+		private static const CREATE_TABLE_ALERT_TYPES:String = "CREATE TABLE IF NOT EXISTS alerttypes(" +
+			"alerttypeid STRING PRIMARY KEY," +
+			"alarname BOOLEAN," +
+			"enablelights BOOLEAN," +
+			"enablevibration BOOLEAN," +
+			"snoozefromnotification BOOLEAN," +
+			"soundtext STRING," +
+			"defaultsnoozeperiod INTEGER," + // in minutes
+			"lastmodifiedtimestamp TIMESTAMP NOT NULL," +
+			"enabled BOOLEAN," + 
+			"overridesilentmode BOOLEAN)";
+		
 		private static const SELECT_ALL_BLUETOOTH_DEVICES:String = "SELECT * from bluetoothdevice";
 		private static const INSERT_DEFAULT_BLUETOOTH_DEVICE:String = "INSERT into bluetoothdevice (bluetoothdevice_id, name, address, lastmodifiedtimestamp) VALUES (:bluetoothdevice_id,:name, :address, :lastmodifiedtimestamp)";
 		private static const INSERT_LOG:String = "INSERT into logging (logging_id, log, logtimestamp, lastmodifiedtimestamp) VALUES (:logging_id, :log, :logtimestamp, :lastmodifiedtimestamp)";
@@ -164,8 +174,6 @@ package databaseclasses
 		/**
 		 * constructor, should not be used
 		 */
-		
-		private static var databaseInformationEvent:DatabaseEvent;
 		
 		public function Database()
 		{
@@ -573,7 +581,7 @@ package databaseclasses
 			function oldBgReadingsDeleted(se:SQLEvent):void {
 				sqlStatement.removeEventListener(SQLEvent.RESULT,oldBgReadingsDeleted);
 				sqlStatement.removeEventListener(SQLErrorEvent.ERROR,oldBgReadingDeletionFailed);
-				finishedCreatingTables();
+				createAlertTypeTable();
 			}
 			
 			function oldBgReadingDeletionFailed(see:SQLErrorEvent):void {
@@ -584,8 +592,33 @@ package databaseclasses
 			}
 		}
 		
-		private static function finishedCreatingTables():void {
+		private static function createAlertTypeTable():void {
+			sqlStatement.clearParameters();
+			sqlStatement.text = CREATE_TABLE_ALERT_TYPES;
+			sqlStatement.addEventListener(SQLEvent.RESULT,tableCreated);
+			sqlStatement.addEventListener(SQLErrorEvent.ERROR,tableCreationError);
+			sqlStatement.execute();
 			
+			function tableCreated(se:SQLEvent):void {
+				sqlStatement.removeEventListener(SQLEvent.RESULT,tableCreated);
+				sqlStatement.removeEventListener(SQLErrorEvent.ERROR,tableCreationError);
+				var noAlertName:String = ModelLocator.resourceManagerInstance.getString("settingsview","no_alert")
+				if (getAlertType(noAlertName) == null) {
+					var noAlert:AlertType = new AlertType(null, Number.NaN, noAlertName, false, false, false, false, false, "", 10);
+					insertAlertTypeSychronous(noAlert);
+				}
+				finishedCreatingTables();
+			}
+			
+			function tableCreationError(see:SQLErrorEvent):void {
+				if (debugMode) trace("Database.as : Failed to create alerttype table.");
+				sqlStatement.removeEventListener(SQLEvent.RESULT,tableCreated);
+				sqlStatement.removeEventListener(SQLErrorEvent.ERROR,tableCreationError);
+				dispatchInformation('failed_to_create_bgreading_table', see != null ? see.error.message:null);
+			}
+		}
+		
+		private static function finishedCreatingTables():void {
 			var event:DatabaseEvent = new DatabaseEvent(DatabaseEvent.DATABASE_INIT_FINISHED_EVENT);
 			instance.dispatchEvent(event);
 		}
@@ -737,7 +770,7 @@ package databaseclasses
 						}
 						if (debugMode)
 							trace("End of retrieved LogInfo from db During Stratup.");
-
+						
 					}
 				} else {
 					//no need to dispatch anything, there are no loggings
@@ -802,6 +835,47 @@ package databaseclasses
 			}
 		}
 		
+		public static function insertAlertTypeSychronous(alertType:AlertType):void {
+			var insertRequest:SQLStatement;
+			try {
+				var conn:SQLConnection = new SQLConnection();
+				conn.open(dbFile, SQLMode.UPDATE);
+				conn.begin();
+				insertRequest = new SQLStatement();
+				insertRequest.sqlConnection = conn;
+				insertRequest.text = "INSERT INTO alerttypes (alerttypeid, " +
+					"lastmodifiedtimestamp, " +
+					"alarmname, " +
+					"enablelights, " +
+					"enablevibration, " +
+					"snoozefromnotification, " +
+					"soundtext, " +
+					"defaultsnoozeperiod, " +
+					"enabled, " +
+					"overridesilentmode) " +
+					"VALUES ('" + alertType.uniqueId + "', " +
+					alertType.lastModifiedTimestamp + ", " +
+					"'" + alertType.alarmName + "', " +
+					(alertType.enableLights ? "1":"0")  +", " +
+					(alertType.enableVibration ? "1":"0")  +", " +
+					(alertType.snoozeFromNotification ? "1":"0")  +", " +
+					"'" + alertType.sound + "', " +
+					alertType.defaultSnoozePeriod +
+					(alertType.enabled ? "1":"0")
+					(alertType.overrideSilentMode ? "1":"0")
+					 + ")";
+				insertRequest.execute();
+				conn.commit();
+				conn.close();
+			} catch (error:SQLError) {
+				if (conn.connected) {
+					conn.rollback();
+					conn.close();
+				}			
+				dispatchInformation('error while inserting alerttype', error.message + " - " + error.details);
+			}
+		}
+		
 		/**
 		 * deletes a calibrationrequest in the database<br>
 		 * dispatches info if anything goes wrong 
@@ -826,6 +900,26 @@ package databaseclasses
 			}
 		}
 		
+		public static function deleteAlertTypeSynchronous(alertType:AlertType):void {
+			try {
+				var conn:SQLConnection = new SQLConnection();
+				conn.open(dbFile, SQLMode.UPDATE);
+				conn.begin();
+				var deleteRequest:SQLStatement = new SQLStatement();
+				deleteRequest.sqlConnection = conn;
+				deleteRequest.text = "DELETE from alerttypes where alerttypeid = " + "'" + alertType.uniqueId + "'";
+				deleteRequest.execute();
+				conn.commit();
+				conn.close();
+			} catch (error:SQLError) {
+				if (conn.connected) {
+					conn.rollback();
+					conn.close();
+				}			
+				dispatchInformation('error while deleting alerttype', error.message + " - " + error.details);
+			}
+		}
+		
 		/**
 		 * updates a calibrationrequest in the database<br>
 		 * dispatches info if anything goes wrong 
@@ -842,7 +936,7 @@ package databaseclasses
 					"lastmodifiedtimestamp = " + calibrationRequest.lastModifiedTimestamp.toString() + "," +
 					"requestifabove = " + calibrationRequest.requestIfAbove + ", " + 
 					"requestifbelow = " + calibrationRequest.requestIfBelow + 
-					" WHERE calibrationrequestid = " + "'" + calibrationRequest.uniqueId + "'"; 
+					" WHERE alerttypeid = " + "'" + calibrationRequest.uniqueId + "'"; 
 				insertRequest.execute();
 				conn.commit();
 				conn.close();
@@ -854,7 +948,120 @@ package databaseclasses
 				dispatchInformation('error_while_updating_calibration_request_in_db', error.message + " - " + error.details + "\ninsertRequest.txt = " + insertRequest.text);
 			}
 		}
+
+		public static function updateAlertTypeSynchronous(alertType:AlertType):void {
+			var insertRequest:SQLStatement;
+			try {
+				var conn:SQLConnection = new SQLConnection();
+				conn.open(dbFile, SQLMode.UPDATE);
+				conn.begin();
+				insertRequest = new SQLStatement();
+				insertRequest.sqlConnection = conn;
+				insertRequest.text = "UPDATE alerttypes SET " +
+					"lastmodifiedtimestamp = " + alertType.lastModifiedTimestamp.toString() + "," +
+					"alarmname = '" + alertType.alarmName + "', " +
+					"enablelights = " + (alertType.enableLights ? "1":"0") + ", " + 
+					"enablevibration = " + (alertType.enableVibration ? "1":"0") + ", " + 
+					"snoozefromnotification = " + (alertType.snoozeFromNotification ? "1":"0") + ", " + 
+					"soundtext = '" + alertType.sound + "', " + 
+					"defaultsnoozeperiod = " + alertType.defaultSnoozePeriod + ", " + 
+					"overridesilentmode = " + (alertType.overrideSilentMode ? "1":"0") + ", " + 
+					"enabled = " + (alertType.enabled ? "1":"0") + ", " + 
+					" WHERE alerttypeid = " + "'" + alertType.uniqueId + "'"; 
+				insertRequest.execute();
+				conn.commit();
+				conn.close();
+			} catch (error:SQLError) {
+				if (conn.connected) {
+					conn.rollback();
+					conn.close();
+				}			
+				dispatchInformation('error while updating alerttype', error.message + " - " + error.details + "\ninsertRequest.txt = " + insertRequest.text);
+			}
+		}
 		
+		/**
+		 * returns null if no alerttype with that name
+		 */
+		public static function getAlertType(alarmName:String):AlertType {
+			var returnValue:AlertType = null;
+			try {
+				var conn:SQLConnection = new SQLConnection();
+				conn.open(dbFile, SQLMode.READ);
+				conn.begin();
+				var getRequest:SQLStatement = new SQLStatement();
+				getRequest.sqlConnection = conn;
+				getRequest.text = "SELECT * FROM alerttypes WHERE alarmname = '" + alarmName +"'";
+				getRequest.execute();
+				var result:SQLResult = getRequest.getResult();
+				conn.close();
+				if (result.data != null) {
+						returnValue = new AlertType(
+							result.data[0].alerttypeid,
+							result.data[0].lastmodifiedtimestamp,
+							result.data[0].alarmname,
+							result.data[0].enablelights == "1" ? true:false,
+							result.data[0].enablevibration == "1" ? true:false,
+							result.data[0].snoozefromnotification == "1" ? true:false,
+							result.data[0].enabled == "1" ? true:false,
+							result.data[0].overridesilentmode == "1" ? true:false,
+							result.data[0].soundtext,
+							result.data[0].defaultsnoozeperiod
+						);
+				}
+			} catch (error:SQLError) {
+				if (conn.connected) conn.close();
+				myTrace('error in getAlertType for alarmName ' + alarmName + "," + error.message + " - " + error.details);
+			} catch (other:Error) {
+				if (conn.connected) conn.close();
+				myTrace('error in getAlertType for alarmName ' + alarmName + "," + other.getStackTrace().toString());
+			} finally {
+				if (conn.connected) conn.close();
+				return returnValue;
+			}
+		}
+		
+		public static function getAllAlertTypes():ArrayCollection {
+			var returnValue:ArrayCollection = new ArrayCollection();
+			try {
+				var conn:SQLConnection = new SQLConnection();
+				conn.open(dbFile, SQLMode.READ);
+				conn.begin();
+				var getRequest:SQLStatement = new SQLStatement();
+				getRequest.sqlConnection = conn;
+				getRequest.text = "SELECT * FROM alerttypes";
+				getRequest.execute();
+				var result:SQLResult = getRequest.getResult();
+				conn.close();
+				if (result.data != null) {
+					var numResults:int = result.data.length;
+					for (var i:int = 0; i < numResults; i++) 
+					{ 
+						returnValue.addItem(new AlertType(
+							result.data[i].alerttypeid,
+							result.data[i].lastmodifiedtimestamp,
+							result.data[i].alarmname,
+							result.data[i].enablelights == "1" ? true:false,
+							result.data[i].enablevibration == "1" ? true:false,
+							result.data[i].snoozefromnotification == "1" ? true:false,
+							result.data[i].enabled == "1" ? true:false,
+							result.data[i].overridesilentmode == "1" ? true:false,
+							result.data[i].soundtext,
+							result.data[i].defaultsnoozeperiod
+						));
+					} 
+				}
+			} catch (error:SQLError) {
+				if (conn.connected) conn.close();
+				myTrace('error_while_getting_alerttypes_in_db' + ", " + error.message + " - " + error.details);
+			} catch (other:Error) {
+				if (conn.connected) conn.close();
+				myTrace('error_while_getting_alerttypes_in_db' + ", " + other.getStackTrace().toString());
+			} finally {
+				if (conn.connected) conn.close();
+				return returnValue;
+			}
+		}
 		
 		/**
 		 * deletes all calibrations<br>
@@ -1447,7 +1654,7 @@ package databaseclasses
 					dataSortForBGReadings.fields=[dataSortFieldForReturnValue];
 					returnValue.sort = dataSortForBGReadings;
 					returnValue.refresh();
-
+					
 				}
 			} catch (error:SQLError) {
 				if (conn.connected) conn.close();
@@ -1534,12 +1741,12 @@ package databaseclasses
 				var updateRequest:SQLStatement = new SQLStatement();
 				updateRequest.sqlConnection = conn;
 				var text:String = "UPDATE sensor SET ";
-					text += "lastmodifiedtimestamp = " + sensor.lastModifiedTimestamp + ", "; 
-						text += 					"startedat = " + sensor.startedAt + ", "; 
-						text += "stoppedat = " + sensor.stoppedAt + ", ";
-						text += "latestbatterylevel = " + sensor.latestBatteryLevel + " ";
-						text += "WHERE sensorid = " + "'" + sensor.uniqueId + "'";
-						updateRequest.text = text;
+				text += "lastmodifiedtimestamp = " + sensor.lastModifiedTimestamp + ", "; 
+				text += 					"startedat = " + sensor.startedAt + ", "; 
+				text += "stoppedat = " + sensor.stoppedAt + ", ";
+				text += "latestbatterylevel = " + sensor.latestBatteryLevel + " ";
+				text += "WHERE sensorid = " + "'" + sensor.uniqueId + "'";
+				updateRequest.text = text;
 				updateRequest.execute();
 				conn.commit();
 				conn.close();
@@ -1863,10 +2070,10 @@ package databaseclasses
 				var insertRequest:SQLStatement = new SQLStatement();
 				insertRequest.sqlConnection = conn;
 				var text:String = "INSERT INTO commonsettings (lastmodifiedtimestamp, value, id) ";
-					text += "VALUES (" + (isNaN(lastModifiedTimeStamp) ? (new Date()).valueOf() : lastModifiedTimeStamp) + ", ";
-						text += "'" + newValue + "'" + ", ";
-						text += settingId + ")"; 
-						insertRequest.text = text;
+				text += "VALUES (" + (isNaN(lastModifiedTimeStamp) ? (new Date()).valueOf() : lastModifiedTimeStamp) + ", ";
+				text += "'" + newValue + "'" + ", ";
+				text += settingId + ")"; 
+				insertRequest.text = text;
 				insertRequest.execute();
 				conn.commit();
 				conn.close();
@@ -1888,10 +2095,10 @@ package databaseclasses
 				var updateRequest:SQLStatement = new SQLStatement();
 				updateRequest.sqlConnection = conn;
 				var text:String =  "UPDATE localsettings SET ";
-					text += "lastmodifiedtimestamp = " + (isNaN(lastModifiedTimeStamp) ? (new Date()).valueOf() : lastModifiedTimeStamp) + ",";
-						text += " value = '" + newValue + "'";
-						text += " where id  = " + settingId;
-						updateRequest.text = text;
+				text += "lastmodifiedtimestamp = " + (isNaN(lastModifiedTimeStamp) ? (new Date()).valueOf() : lastModifiedTimeStamp) + ",";
+				text += " value = '" + newValue + "'";
+				text += " where id  = " + settingId;
+				updateRequest.text = text;
 				updateRequest.execute();
 				conn.commit();
 				conn.close();
@@ -1965,20 +2172,14 @@ package databaseclasses
 			}
 		}
 		
-		/**
-		 * informationResourceName will look up the text in local/database.properties<br>
-		 * additionalInfo will be added after a dash, if not null
-		 */
 		private static function dispatchInformation(informationResourceName:String, additionalInfo:String = null):void {
-			databaseInformationEvent = new DatabaseEvent(DatabaseEvent.DATABASE_INFORMATION_EVENT);
-			databaseInformationEvent.data = new Object();
-			databaseInformationEvent.data.information = ModelLocator.resourceManagerInstance.getString('database',informationResourceName) + (additionalInfo == null ? "":" - ") + additionalInfo;
-			instance.dispatchEvent(databaseInformationEvent);
+			var information:String = informationResourceName + (additionalInfo == null ? "":" - ") + additionalInfo;
+			myTrace(information);
 		}
 		
 		private static function myTrace(log:String):void {
 			Trace.myTrace("Database.as", log);
 		}
-
+		
 	}
 }

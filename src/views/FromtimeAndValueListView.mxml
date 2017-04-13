@@ -44,8 +44,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			
 			import databaseclasses.CommonSettings;
 			
-			import events.PickerEvent;
-			
 			import model.ModelLocator;
 			
 			import renderers.FromtimeAndValueItemRenderer;
@@ -163,39 +161,37 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 				navigator.popView();
 			}
 			
-			protected function back_clickHandler(event:MouseEvent):void
-			{
+			protected function back_clickHandler(event:MouseEvent):void {
 				if (listOfElements.arrayChanged) {
 					var alert:DialogView = Dialog.service.create(
 						new AlertBuilder()
-						.setTitle(ModelLocator.resourceManagerInstance.getString('fromtimeandvalueelementview',"savechanges"))
-						.setMessage(ModelLocator.resourceManagerInstance.getString('fromtimeandvalueelementview',"savechanges"))
-						.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
+						.setTitle(ModelLocator.resourceManagerInstance.getString('fromtimeandvaluelistview',"savechanges"))
+						.setMessage(ModelLocator.resourceManagerInstance.getString('fromtimeandvaluelistview',"chose_yes_or_no"))
+						.addOption(ModelLocator.resourceManagerInstance.getString("general","yes"), DialogAction.STYLE_POSITIVE, 0)
 						.addOption(ModelLocator.resourceManagerInstance.getString("general","no"), DialogAction.STYLE_CANCEL, 1)
 						.build()
 					);
 					alert.addEventListener(DialogViewEvent.CLOSED, onYesClicked);
-					alert.addEventListener(DialogViewEvent.CANCELLED, onNoClicked);
 					DialogService.addDialog(alert);
 				} else {
 					navigator.popView();
 				}
 				
-				function onYesClicked(event:Event): void
+				function onYesClicked(event:DialogViewEvent): void
 				{
-					okClicked();
+					if (event.index == 1) {
+						navigator.popView();
+					} else if (event.index == 0) {
+						okClicked();
+					}
 				}
 				
-				function onNoClicked(event:Event): void
-				{
-					navigator.popView();
-				}
 			}
 			
 		]]>
 	</fx:Script>
 	<s:navigationContent>
-		<s:Button   label="{back_label}" click="navigator.popView()" height="48"/>
+		<s:Button   label="{back_label}" click="back_clickHandler(event)" height="48"/>
 	</s:navigationContent>
 	<s:actionContent>
 		<s:Button icon="{ModelLocator.imageDone}" id="OkButton" click="okClicked(event)"/>

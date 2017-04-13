@@ -20,13 +20,15 @@
  	
  	import events.SettingsServiceEvent;
  	
- 	import services.BluetoothService;
+ 	import model.ModelLocator;
 
 	 /**
 	  * common settings are settings that are shared with other devices, ie settings that will be synchronized
 	  */
 	 public class CommonSettings extends EventDispatcher
 	 {
+		 [ResourceBundle("settingsview")]
+		 
 		 private static var _instance:CommonSettings = new CommonSettings();
 
 		 public static function get instance():CommonSettings
@@ -130,13 +132,18 @@
 			 "false",//COMMON_SETTING_INITIAL_SELECTION_G4_OR_G5_DONE
 			 "false",//COMMON_SETTING_LICENSE_INFO_CONFIRMED
 			 "0",//COMMON_SETTING_TIME_SINCE_LAST_QUICK_BLOX_SUBSCRIPTION
-			 "00:00>70>Default"//COMMON_SETTING_LOW_ALERT
+			 "00:00>70>DefaultNoAlertToBeReplaced"//COMMON_SETTING_LOW_ALERT
 		 ];
 		 
 		 public function CommonSettings()
 		 {
 			 if (_instance != null) {
 				 throw new Error("CommonSettings class  constructor can not be used");	
+			 }
+			 if ((commonSettings[COMMON_SETTING_LOW_ALERT] as String).indexOf('DefaultNoAlertToBeReplaced') > -1) {
+				 var noAlert:String = ModelLocator.resourceManagerInstance.getString("settingsview","no_alert")
+				 var newString:String = (commonSettings[COMMON_SETTING_LOW_ALERT] as String)
+					 .replace('DefaultNoAlertToBeReplaced', noAlert);
 			 }
 		 }
 		 

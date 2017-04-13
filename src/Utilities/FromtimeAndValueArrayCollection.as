@@ -22,6 +22,8 @@ package Utilities
 	import spark.collections.Sort;
 	import spark.collections.SortField;
 	
+	import model.ModelLocator;
+	
 	/**
 	 * Will hold a list of FromAndValueElements<br>
 	 * Offers methods to get the value and alarmname for a specific timing (between 00:00 and maximum 24:00:00 = 86400 seconds)<br>
@@ -29,6 +31,8 @@ package Utilities
 	 * 
 	 */public class FromtimeAndValueArrayCollection extends ArrayCollection
 	 {
+		 [ResourceBundle("settingsview")]
+
 		 private var _arrayChanged:Boolean = false;
 		 
 		 /**
@@ -63,7 +67,8 @@ package Utilities
 				 }
 			 }
 			 if (cntr == length) {
-				 super.addItem(new FromtimeAndValue("00:00", 100, "No Alert", true, false));
+				 var noAlert:String = ModelLocator.resourceManagerInstance.getString("settingsview","no_alert")
+				 super.addItem(new FromtimeAndValue("00:00", 100, noAlert, true, false));
 			 }
 			 
 			 dataSortField.name="from";//value in FromtimeAndValue
