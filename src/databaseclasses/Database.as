@@ -152,7 +152,7 @@ package databaseclasses
 		
 		private static const CREATE_TABLE_ALERT_TYPES:String = "CREATE TABLE IF NOT EXISTS alerttypes(" +
 			"alerttypeid STRING PRIMARY KEY," +
-			"alarname BOOLEAN," +
+			"alarmname STRING," +
 			"enablelights BOOLEAN," +
 			"enablevibration BOOLEAN," +
 			"snoozefromnotification BOOLEAN," +
@@ -860,8 +860,8 @@ package databaseclasses
 					(alertType.enableVibration ? "1":"0")  +", " +
 					(alertType.snoozeFromNotification ? "1":"0")  +", " +
 					"'" + alertType.sound + "', " +
-					alertType.defaultSnoozePeriod +
-					(alertType.enabled ? "1":"0")
+					alertType.defaultSnoozePeriod +  ", " +
+					(alertType.enabled ? "1":"0") + ", " +
 					(alertType.overrideSilentMode ? "1":"0")
 					 + ")";
 				insertRequest.execute();

@@ -88,8 +88,7 @@ package renderers
 			super.data = value;
 			if (value == null)
 				return;
-			var theDataAsAlertType:FromtimeAndValue = value as AlertType
-				;
+			var theDataAsAlertType:FromtimeAndValue = value as AlertType;
 			var valueInCorrectUnit:Number = theDataAsAlertType.value;
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) != "true") {
 				valueInCorrectUnit = valueInCorrectUnit * BgReading.MGDL_TO_MMOLL;
@@ -103,9 +102,6 @@ package renderers
 					(Math.round((valueInCorrectUnit * 10)) / 10).toString())
 				+ " "
 				+ theDataAsAlertType.alarmName;
-			deletable = theDataAsAlertType.deletable;
-			editable = theDataAsAlertType.editable;
-			elementCanBeAdded = (theDataAsAlertType.from == 86400 || theDataAsAlertType.from == (86400 - 60)) ? false:true;
 		} 
 		
 		/**
@@ -130,8 +126,7 @@ package renderers
 		 * super.drawBackground() if you do not need to.
 		 */
 		override protected function drawBackground(unscaledWidth:Number, 
-												   unscaledHeight:Number):void
-		{
+												   unscaledHeight:Number):void {
 			//only draw a border line
 			graphics.lineStyle(1, 0x212121);
 			graphics.moveTo(0,unscaledHeight - 1);
@@ -139,28 +134,15 @@ package renderers
 			graphics.endFill();
 		}
 		
-		/**
-		 * @private
-		 *  
-		 * Override this method to change how the background is drawn for this 
-		 * item renderer. For performance reasons, do not call 
-		 * super.layoutContents() if you do not need to.
-		 */
 		override protected function layoutContents(unscaledWidth:Number, 
-												   unscaledHeight:Number):void
-		{
-			//super.layoutContents(unscaledWidth, unscaledHeight);
+												   unscaledHeight:Number):void {
 			if (editImage) {
 				setElementSize(editImage,ICON_WIDTH,ITEM_HEIGHT);
 				setElementPosition(editImage,unscaledWidth - ICON_WIDTH,0);
 			}
-			if (addImage) {
-				setElementSize(addImage,ICON_WIDTH,ITEM_HEIGHT);
-				setElementPosition(addImage,unscaledWidth - ICON_WIDTH - (editImage?ICON_WIDTH:0),0); 
-			}
 			if (deleteImage) {
 				setElementSize(deleteImage,ICON_WIDTH,ITEM_HEIGHT);
-				setElementPosition(deleteImage,unscaledWidth - ICON_WIDTH - (editImage?ICON_WIDTH:0) - (addImage?ICON_WIDTH:0),0); 
+				setElementPosition(deleteImage, unscaledWidth - ICON_WIDTH - (editImage?ICON_WIDTH:0), 0); 
 			}
 			setElementSize(labelDisplay,unscaledWidth - ICON_WIDTH *2 ,ITEM_HEIGHT);
 			setElementPosition(labelDisplay,0,offsetToPutTextInTheMiddle);

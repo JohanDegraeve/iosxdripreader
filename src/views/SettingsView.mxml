@@ -448,6 +448,8 @@
 					rect28.color = uint("0x212121");
 					rect29.color = uint("0x212121");
 					rect30.color = uint("0x212121");
+					rect31.color = uint("0x212121");//alert types
+					rect32.color = uint("0x212121");//alert types
 				}
 			}
 			
@@ -525,6 +527,28 @@
 					<s:Rect height="100%" width="5" >
 						<s:fill>
 							<s:SolidColor color="#212121" id="rect30"/>
+						</s:fill>
+					</s:Rect>
+				</s:HGroup>
+				<s:Line width="100%">
+					<s:stroke>
+						<s:SolidColorStroke color="#3B6999"  weight="3"/>
+					</s:stroke>
+				</s:Line>	
+			</s:VGroup>
+			<!-- Chapter Alerts Alert Types -->
+			<s:VGroup click="lowAlert_clickHandler(event)" width="100%">
+				<s:HGroup width="100%">
+					<s:Rect height="100%" width="5" >
+						<s:fill>
+							<s:SolidColor color="#212121" id="rect31"/>
+						</s:fill>
+					</s:Rect>
+					<s:Label text = "{ModelLocator.resourceManagerInstance.getString('settingsview','low_alert')}"
+							 width="100%" paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
+					<s:Rect height="100%" width="5" >
+						<s:fill>
+							<s:SolidColor color="#212121" id="rect32"/>
 						</s:fill>
 					</s:Rect>
 				</s:HGroup>

@@ -193,7 +193,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 	<s:navigationContent>
 		<s:Button   label="{back_label}" click="back_clickHandler(event)" height="48"/>
 	</s:navigationContent>
-	<s:actionContent>
+	<s:actionContent> 
 		<s:Button icon="{ModelLocator.imageDone}" id="OkButton" click="okClicked(event)"/>
 	</s:actionContent>
 

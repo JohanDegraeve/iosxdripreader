@@ -20,6 +20,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 		xmlns:s="library://ns.adobe.com/flex/spark" title="">
 	<fx:Script>
 		<![CDATA[
+			import model.ModelLocator;
+			
+			import renderers.FromtimeAndValueItemRenderer;
 			private var 
 			protected function back_clickHandler(event:MouseEvent):void {
 				navigator.popView();
@@ -31,5 +34,21 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 	<s:actionContent>
 		<s:Button   label="{back_label}" click="back_clickHandler(event)" height="48"/>
 	</s:actionContent>
-	
+
+	<s:Scroller width="100%" height="100%" >
+		<s:VGroup width="100%" paddingTop="10">
+			<s:Label text="@{topText}"  textAlign="center"  color="#3B6999" 
+					 width="100%" paddingLeft="3" paddingRight="0" fontSize="20" fontWeight="bold" paddingTop="3"/>
+			<s:Line width="100%">
+				<s:stroke>
+					<s:SolidColorStroke color="#3B6999"  weight="3"/>
+				</s:stroke>
+			</s:Line>
+			<s:List id="list" width="100%" height="100%" itemRenderer="renderers.FromtimeAndValueItemRenderer"
+					dataProvider="{listOfElements}" 
+					change="list_changeHandler(event)"
+					scrollSnappingMode="leadingEdge">
+			</s:List>
+		</s:VGroup>
+	</s:Scroller>
 </s:View>

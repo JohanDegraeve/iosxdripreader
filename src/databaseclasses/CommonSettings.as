@@ -140,14 +140,15 @@
 			 if (_instance != null) {
 				 throw new Error("CommonSettings class  constructor can not be used");	
 			 }
+		 }
+		 
+		 public static function getCommonSetting(commonSettingId:int):String {
 			 if ((commonSettings[COMMON_SETTING_LOW_ALERT] as String).indexOf('DefaultNoAlertToBeReplaced') > -1) {
 				 var noAlert:String = ModelLocator.resourceManagerInstance.getString("settingsview","no_alert")
 				 var newString:String = (commonSettings[COMMON_SETTING_LOW_ALERT] as String)
 					 .replace('DefaultNoAlertToBeReplaced', noAlert);
+				 commonSettings[commonSettingId] = newString;
 			 }
-		 }
-		 
-		 public static function getCommonSetting(commonSettingId:int):String {
 			 return commonSettings[commonSettingId];
 		 }
 		 
