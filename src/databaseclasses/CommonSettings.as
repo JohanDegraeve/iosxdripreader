@@ -143,11 +143,13 @@
 		 }
 		 
 		 public static function getCommonSetting(commonSettingId:int):String {
-			 if ((commonSettings[COMMON_SETTING_LOW_ALERT] as String).indexOf('DefaultNoAlertToBeReplaced') > -1) {
-				 var noAlert:String = ModelLocator.resourceManagerInstance.getString("settingsview","no_alert")
-				 var newString:String = (commonSettings[COMMON_SETTING_LOW_ALERT] as String)
-					 .replace('DefaultNoAlertToBeReplaced', noAlert);
-				 commonSettings[commonSettingId] = newString;
+			 if (commonSettingId == COMMON_SETTING_LOW_ALERT) {
+				 if ((commonSettings[COMMON_SETTING_LOW_ALERT] as String).indexOf('DefaultNoAlertToBeReplaced') > -1) {
+					 var noAlert:String = ModelLocator.resourceManagerInstance.getString("settingsview","no_alert")
+					 var newString:String = (commonSettings[COMMON_SETTING_LOW_ALERT] as String)
+						 .replace('DefaultNoAlertToBeReplaced', noAlert);
+					 commonSettings[COMMON_SETTING_LOW_ALERT] = newString;
+				 }
 			 }
 			 return commonSettings[commonSettingId];
 		 }

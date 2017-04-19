@@ -25,8 +25,6 @@ package renderers
 	import spark.components.Image;
 	import spark.components.LabelItemRenderer;
 	
-	import Utilities.FromtimeAndValue;
-	
 	import databaseclasses.AlertType;
 	import databaseclasses.BgReading;
 	import databaseclasses.CommonSettings;
@@ -88,20 +86,8 @@ package renderers
 			super.data = value;
 			if (value == null)
 				return;
-			var theDataAsAlertType:FromtimeAndValue = value as AlertType;
-			var valueInCorrectUnit:Number = theDataAsAlertType.value;
-			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) != "true") {
-				valueInCorrectUnit = valueInCorrectUnit * BgReading.MGDL_TO_MMOLL;
-			}
-			label = 
-				theDataAsAlertType.fromAsString() 
-				+ " "
-				+ (Math.round(valueInCorrectUnit) == valueInCorrectUnit ?
-					valueInCorrectUnit
-					:
-					(Math.round((valueInCorrectUnit * 10)) / 10).toString())
-				+ " "
-				+ theDataAsAlertType.alarmName;
+			var theDataAsAlertType:AlertType = value as AlertType;
+			label = theDataAsAlertType.alarmName; 
 		} 
 		
 		/**

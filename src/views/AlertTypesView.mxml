@@ -17,24 +17,93 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 
 -->
 <s:View xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		creationComplete="view1_creationCompleteHandler(event)"
 		xmlns:s="library://ns.adobe.com/flex/spark" title="">
 	<fx:Script>
 		<![CDATA[
+			import mx.collections.ArrayCollection;
+			import mx.events.FlexEvent;
+			import spark.events.IndexChangeEvent;
+			import databaseclasses.Database;
 			import model.ModelLocator;
+			import renderers.AlertTypeItemRenderer;
 			
-			import renderers.FromtimeAndValueItemRenderer;
-			private var 
+			private var _listOfElements:ArrayCollection;
+			private var deleteClicked:Boolean;
+			private var editClicked:Boolean;
+
+			[Bindable]
+			private var back_label:String;
+			
+			[Bindable]
+			/**
+			 * topText shown on top of the view.
+			 */
+			private var topText:String;
+			
+			[Bindable]
+			/**
+			 * list of elements, should be list of FromtimeAndValue objects
+			 */
+			public function get listOfElements():ArrayCollection
+			{
+				return _listOfElements;
+			}
+			
+			/**
+			 * @private
+			 */
+			public function set listOfElements(value:ArrayCollection):void
+			{
+				_listOfElements = value;
+			}
+			
+			
+			protected function view1_creationCompleteHandler(event:FlexEvent):void
+			{
+				back_label = ModelLocator.resourceManagerInstance.getString('general','back');
+				title = ModelLocator.resourceManagerInstance.getString('settingsview','alert_types');
+				listOfElements =  Database.getAllAlertTypes();
+				topText = ModelLocator.resourceManagerInstance.getString('settingsview','alert_types_list_top_text');
+				list.addEventListener(AlertTypeItemRenderer.DELETE_CLICKED,deleteTheSelectedItem);
+				list.addEventListener(AlertTypeItemRenderer.EDIT_CLICKED,editTheSelectedItem);
+
+			}
+			
+			private function deleteTheSelectedItem(event:Event):void {
+				deleteClicked = true;
+			}
+
+			private function editTheSelectedItem(event:Event):void {
+				editClicked = true;
+			}
+			
 			protected function back_clickHandler(event:MouseEvent):void {
 				navigator.popView();
+			}
+			
+			protected function list_changeHandler(event:IndexChangeEvent):void {
+				var dataToSend:Object = new Object;
+				dataToSend.title = ...;
+				dataToSend.topText = ...;
+				if (deleteClicked) {
+					listOfElements.removeItemAt(event.newIndex);
+					deleteClicked = false;
+				} else if (editClicked) {
+					dataToSend.selectedIndex = event.newIndex;
+					dataToSend.listOfElements = listOfElements;
+					navigator.pushView(AlertTypeView, dataToSend, CONTEXT_EDIT_LIST_ELEMENT);
+					editClicked = false;
+				}
 			}
 			
 		]]>
 	</fx:Script>
 	
-	<s:actionContent>
+	<s:navigationContent>
 		<s:Button   label="{back_label}" click="back_clickHandler(event)" height="48"/>
-	</s:actionContent>
-
+	</s:navigationContent>
+	
 	<s:Scroller width="100%" height="100%" >
 		<s:VGroup width="100%" paddingTop="10">
 			<s:Label text="@{topText}"  textAlign="center"  color="#3B6999" 
@@ -44,7 +113,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 					<s:SolidColorStroke color="#3B6999"  weight="3"/>
 				</s:stroke>
 			</s:Line>
-			<s:List id="list" width="100%" height="100%" itemRenderer="renderers.FromtimeAndValueItemRenderer"
+			<s:List id="list" width="100%" height="100%" itemRenderer="renderers.AlertTypeItemRenderer"
 					dataProvider="{listOfElements}" 
 					change="list_changeHandler(event)"
 					scrollSnappingMode="leadingEdge">

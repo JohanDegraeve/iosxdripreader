@@ -335,6 +335,14 @@
 				navigator.pushView(FromtimeAndValueListView,dataToSend);
 			}
 			
+			private function alertTypes_clickHandler(event:MouseEvent):void {
+				rect31.color = uint("0xD3D3D3");
+				rect32.color = uint("0xD3D3D3");
+				
+				setResetColorTimer();
+				navigator.pushView(AlertTypesView);
+			}
+			
 			public static function requestNewTransmitterId():void {
 				var title:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE) + " " +
 					ModelLocator.resourceManagerInstance.getString("transmitterservice","transmitter_id_settings_title");
@@ -514,7 +522,7 @@
 					</s:stroke>
 				</s:Line>	
 			</s:VGroup>
-			<!-- Chapter Alerts Low Alert -->
+			<!-- Chapter Alerts Subsection Low Alert -->
 			<s:VGroup click="lowAlert_clickHandler(event)" width="100%">
 				<s:HGroup width="100%">
 					<s:Rect height="100%" width="5" >
@@ -532,19 +540,20 @@
 				</s:HGroup>
 				<s:Line width="100%">
 					<s:stroke>
-						<s:SolidColorStroke color="#3B6999"  weight="3"/>
+						<s:SolidColorStroke color="0xFFFFFF" weight="1" alpha="0.25"/>
 					</s:stroke>
 				</s:Line>	
 			</s:VGroup>
-			<!-- Chapter Alerts Alert Types -->
-			<s:VGroup click="lowAlert_clickHandler(event)" width="100%">
+			
+			<!-- Chapter Alerts Subsection Alert Types -->
+			<s:VGroup click="alertTypes_clickHandler(event)" width="100%">
 				<s:HGroup width="100%">
 					<s:Rect height="100%" width="5" >
 						<s:fill>
 							<s:SolidColor color="#212121" id="rect31"/>
 						</s:fill>
 					</s:Rect>
-					<s:Label text = "{ModelLocator.resourceManagerInstance.getString('settingsview','low_alert')}"
+					<s:Label text = "{ModelLocator.resourceManagerInstance.getString('settingsview','alert_types')}"
 							 width="100%" paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
 					<s:Rect height="100%" width="5" >
 						<s:fill>

@@ -37,8 +37,6 @@ package services
 	
 	import mx.collections.ArrayCollection;
 	
-	import spark.formatters.DateTimeFormatter;
-	
 	import G5Model.AuthChallengeRxMessage;
 	import G5Model.AuthChallengeTxMessage;
 	import G5Model.AuthRequestTxMessage;
@@ -65,7 +63,6 @@ package services
 	import events.BlueToothServiceEvent;
 	import events.SettingsServiceEvent;
 	
-	import model.ModelLocator;
 	import model.TransmitterDataG5Packet;
 	import model.TransmitterDataXBridgeBeaconPacket;
 	import model.TransmitterDataXBridgeDataPacket;
@@ -103,10 +100,8 @@ package services
 		private static const MAX_RETRY_DISCOVER_SERVICES_OR_CHARACTERISTICS:int = 5;
 		private static var amountOfDiscoverServicesOrCharacteristicsAttempt:int = 0;
 		
-		//private static const reconnectAttemptPeriodInSeconds:int = 25;
 		private static var reconnectTimer:Timer;
 		private static var reconnectAttemptTimeStamp:Number = 0;
-		//private static var reScanIfFailed:Boolean = false;
 		private static var awaitingConnect:Boolean = false;
 		
 		private static const lengthOfDataPacket:int = 17;
@@ -343,7 +338,6 @@ package services
 		
 		public static function startScanning():void {
 			if (!BluetoothLE.service.centralManager.isScanning) {
-				//reScanIfFailed = true;
 				/*if (!(isDexcomG5))
 				never stop scanning no matter type of device G4 or G5
 				BackgroundFetch.startTimer3(MAX_SCAN_TIME_IN_SECONDS);*/
@@ -366,11 +360,6 @@ package services
 				BluetoothLE.service.centralManager.stopScan();
 				_instance.dispatchEvent(new BlueToothServiceEvent(BlueToothServiceEvent.STOPPED_SCANNING));
 			}
-			/*if (reScanIfFailed) {
-			if ((BluetoothLE.service.centralManager.state == BluetoothLEState.STATE_ON)) {
-			bluetoothStatusIsOn();
-			}
-			}*/
 		}
 		
 		public static function stopScanningIfScanning():void {
@@ -545,46 +534,6 @@ package services
 				BackgroundFetch.startTimer1(waitTimeInSeconds);
 			}
 			return;
-			//}
-			
-			//setting to 0 because i had a case where the maximum was reached after a few re and disconnects
-			/*amountOfDiscoverServicesOrCharacteristicsAttempt = 0;
-			
-			if ((BluetoothLE.service.centralManager.state == BluetoothLEState.STATE_ON) && activeBluetoothPeripheral != null) {
-			if (reconnectAttemptTimeStamp != 0) {
-			var lastReconnectDifInms:Number = (new Date().valueOf() - reconnectAttemptTimeStamp);
-			if (lastReconnectDifInms > reconnectAttemptPeriodInSeconds * 1000) {
-			tryReconnect();
-			myTrace("will try to reconnect now");
-			} else {
-			var reconnectinms:Number = reconnectAttemptPeriodInSeconds * 1000 - lastReconnectDifInms;
-			reconnectTimer = new Timer(reconnectinms, 1);
-			reconnectTimer.addEventListener(TimerEvent.TIMER, tryReconnect);
-			reconnectTimer.start();
-			var blueToothServiceEvent:BlueToothServiceEvent = new BlueToothServiceEvent(BlueToothServiceEvent.BLUETOOTH_SERVICE_INFORMATION_EVENT);
-			blueToothServiceEvent.data = new Object();
-			var reconnectins:int = reconnectinms/1000;
-			blueToothServiceEvent.data.information = 
-			ModelLocator.resourceManagerInstance.getString('bluetoothservice','will_try_to_reconnect_in') +
-			" " + reconnectins + " " +
-			ModelLocator.resourceManagerInstance.getString('bluetoothservice','seconds');
-			_instance.dispatchEvent(blueToothServiceEvent);
-			myTrace(blueToothServiceEvent.data.information as String);
-			}
-			} else {
-			reconnectTimer = new Timer(reconnectAttemptPeriodInSeconds * 1000, 1);
-			reconnectTimer.addEventListener(TimerEvent.TIMER, tryReconnect);
-			reconnectTimer.start();
-			var blueToothServiceEvent:BlueToothServiceEvent = new BlueToothServiceEvent(BlueToothServiceEvent.BLUETOOTH_SERVICE_INFORMATION_EVENT);
-			blueToothServiceEvent.data = new Object();
-			blueToothServiceEvent.data.information = 
-			ModelLocator.resourceManagerInstance.getString('bluetoothservice','will_try_to_reconnect_in') +
-			" " + reconnectAttemptPeriodInSeconds + " " +
-			ModelLocator.resourceManagerInstance.getString('bluetoothservice','seconds');
-			_instance.dispatchEvent(blueToothServiceEvent);
-			myTrace(blueToothServiceEvent.data.information as String);
-			}
-			}*/
 		}
 		
 		public static function tryReconnect(event:Event = null):void {
@@ -808,16 +757,6 @@ package services
 		private static function peripheral_characteristic_writeHandler(event:CharacteristicEvent):void {
 			myTrace("peripheral_characteristic_writeHandler" + HM10Attributes.getCharacteristicName(event.characteristic.uuid));
 			if (isDexcomG5) {
-				/*if (event.characteristic.uuid.toUpperCase() == HM10Attributes.G5_Authentication_Characteristic_UUID.toUpperCase()) {
-				if (event.characteristic.value[0] == 3) {
-				myTrace("event.characteristic.value[0] = " + event.characteristic.value[0] + ". Subscribing to G5ControlCharacteristic");
-				if (!activeBluetoothPeripheral.subscribeToCharacteristic(G5ControlCharacteristic))
-				{
-				myTrace("Subscribe to characteristic failed due to invalid adapter state.");
-				}
-				}
-				} else {
-				}*/
 			} else {
 				_instance.dispatchEvent(new BlueToothServiceEvent(BlueToothServiceEvent.BLUETOOTH_DEVICE_CONNECTION_COMPLETED));
 			}
@@ -846,12 +785,6 @@ package services
 		
 		private static function peripheral_characteristic_subscribeErrorHandler(event:CharacteristicEvent):void {
 			myTrace("peripheral_characteristic_subscribeErrorHandler: " + HM10Attributes.getCharacteristicName(event.characteristic.uuid));
-			/*if (event.characteristic.uuid.toUpperCase() == HM10Attributes.G5_Control_Characteristic_UUID.toUpperCase()) {
-				if (event.errorCode == 15) {
-					var blueToothServiceEvent:BlueToothServiceEvent = new BlueToothServiceEvent(BlueToothServiceEvent.DEVICE_NOT_PAIRED);
-					_instance.dispatchEvent(blueToothServiceEvent);
-				}
-			}*/
 		}
 		
 		private static function peripheral_characteristic_unsubscribeHandler(event:CharacteristicEvent):void {
@@ -1074,17 +1007,6 @@ package services
 					_instance.dispatchEvent(blueToothServiceEvent);
 					
 					xBridgeProtocolLevel = buffer.readUnsignedByte();//not needed for the moment
-					
-					//TODO do this somewhere else
-					
-					/*var value:ByteArray = new ByteArray();
-					value.endian = Endian.LITTLE_ENDIAN;
-					value.writeByte(0x06);
-					value.writeByte(0x01);
-					value.writeInt(encodeTxID("6DJK1"));
-					if (!activeBluetoothPeripheral.writeValueForCharacteristic(characteristic, value)) {
-					dispatchInformation("write_value_for_characteristic_failed_due_to_invalid_state");
-					}*/
 					break;
 			}
 		}
@@ -1101,10 +1023,6 @@ package services
 		}
 		
 		public static function fullAuthenticateG5():void {
-			//myTrace("G5 fullAuthenticate() start");
-			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_G5_ALWAYS_UNBOUND) == "true") {
-				//forgetDevice();
-			}
 			myTrace("Start Auth Process(fullAuthenticate)");
 			if (G5AuthenticationCharacteristic != null) {
 				sendAuthRequestTxMessage(G5AuthenticationCharacteristic);
@@ -1128,10 +1046,6 @@ package services
 		
 		private static function authenticate():void {
 			myTrace("authenticate() start");
-			/*				mGatt.setCharacteristicNotification(authCharacteristic, true);
-			if (!mGatt.readCharacteristic(authCharacteristic)) {
-			Log.e(TAG, "onCharacteristicRead : ReadCharacteristicError");
-			}*/
 		}
 		
 		public static function getSensorData():void {
