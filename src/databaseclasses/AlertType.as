@@ -71,22 +71,22 @@ package databaseclasses
 			return _sound;
 		}
 		
-		private var _defaultSnoozePeriod:int;
+		private var _defaultSnoozePeriodInMinutes:int;
 
-		public function get defaultSnoozePeriod():int
+		public function get defaultSnoozePeriodInMinutes():int
 		{
-			return _defaultSnoozePeriod;
+			return _defaultSnoozePeriodInMinutes;
 		}
 
 
 		/**
 		 * uniqueId and lastmodifiedtimestamp can be null, value will be assigned 
 		 */
-		public function AlertType(uniqueId:String, lastmodifiedtimestamp:Number, alarmName:String, enableLights:Boolean, enableVibration:Boolean, snoozeFromNotification:Boolean, enabled:Boolean, overrideSilentMode:Boolean, sound:String, defaultSnoozePeriod:int)
+		public function AlertType(uniqueId:String, lastmodifiedtimestamp:Number, alarmName:String, enableLights:Boolean, enableVibration:Boolean, snoozeFromNotification:Boolean, enabled:Boolean, overrideSilentMode:Boolean, sound:String, defaultSnoozePeriodInMinutes:int)
 		{
 			super(uniqueId, lastmodifiedtimestamp);
 			this._alarmName = alarmName;
-			this._defaultSnoozePeriod = defaultSnoozePeriod;
+			this._defaultSnoozePeriodInMinutes = defaultSnoozePeriodInMinutes;
 			this._enableLights = enableLights;
 			this._enableVibration = enableVibration;
 			this._overrideSilentMode = overrideSilentMode;

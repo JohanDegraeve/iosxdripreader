@@ -860,7 +860,7 @@ package databaseclasses
 					(alertType.enableVibration ? "1":"0")  +", " +
 					(alertType.snoozeFromNotification ? "1":"0")  +", " +
 					"'" + alertType.sound + "', " +
-					alertType.defaultSnoozePeriod +  ", " +
+					alertType.defaultSnoozePeriodInMinutes +  ", " +
 					(alertType.enabled ? "1":"0") + ", " +
 					(alertType.overrideSilentMode ? "1":"0")
 					 + ")";
@@ -964,7 +964,7 @@ package databaseclasses
 					"enablevibration = " + (alertType.enableVibration ? "1":"0") + ", " + 
 					"snoozefromnotification = " + (alertType.snoozeFromNotification ? "1":"0") + ", " + 
 					"soundtext = '" + alertType.sound + "', " + 
-					"defaultsnoozeperiod = " + alertType.defaultSnoozePeriod + ", " + 
+					"defaultsnoozeperiod = " + alertType.defaultSnoozePeriodInMinutes + ", " + 
 					"overridesilentmode = " + (alertType.overrideSilentMode ? "1":"0") + ", " + 
 					"enabled = " + (alertType.enabled ? "1":"0") + ", " + 
 					" WHERE alerttypeid = " + "'" + alertType.uniqueId + "'"; 

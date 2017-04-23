@@ -23,14 +23,20 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 		<![CDATA[
 			import mx.collections.ArrayCollection;
 			import mx.events.FlexEvent;
+			
 			import spark.events.IndexChangeEvent;
+			
 			import databaseclasses.Database;
+			
 			import model.ModelLocator;
+			
 			import renderers.AlertTypeItemRenderer;
 			
 			private var _listOfElements:ArrayCollection;
 			private var deleteClicked:Boolean;
 			private var editClicked:Boolean;
+
+			private const CONTEXT_EDIT_LIST_ELEMENT:String = "context_edit_list_element";
 
 			[Bindable]
 			private var back_label:String;
@@ -67,7 +73,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 				topText = ModelLocator.resourceManagerInstance.getString('settingsview','alert_types_list_top_text');
 				list.addEventListener(AlertTypeItemRenderer.DELETE_CLICKED,deleteTheSelectedItem);
 				list.addEventListener(AlertTypeItemRenderer.EDIT_CLICKED,editTheSelectedItem);
-
 			}
 			
 			private function deleteTheSelectedItem(event:Event):void {
@@ -83,17 +88,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			}
 			
 			protected function list_changeHandler(event:IndexChangeEvent):void {
-				var dataToSend:Object = new Object;
-				dataToSend.title = ...;
-				dataToSend.topText = ...;
 				if (deleteClicked) {
 					listOfElements.removeItemAt(event.newIndex);
 					deleteClicked = false;
 				} else if (editClicked) {
+					var dataToSend:Object = new Object;
 					dataToSend.selectedIndex = event.newIndex;
 					dataToSend.listOfElements = listOfElements;
 					navigator.pushView(AlertTypeView, dataToSend, CONTEXT_EDIT_LIST_ELEMENT);
-					editClicked = false;
 				}
 			}
 			

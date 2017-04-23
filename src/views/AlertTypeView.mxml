@@ -1,0 +1,298 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Copyright (C) 2017  Johan Degraeve
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
+
+-->
+<s:View xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		creationComplete="view1_creationCompleteHandler(event)"
+		xmlns:s="library://ns.adobe.com/flex/spark" title="AlertTypeView">
+	
+	<fx:Script>
+		<![CDATA[
+			import mx.events.FlexEvent;
+			
+			import Utilities.FromtimeAndValue;
+			import Utilities.FromtimeAndValueArrayCollection;
+			
+			import databaseclasses.AlertType;
+			
+			import model.ModelLocator;
+			
+			[Bindable]
+			private var back_label:String;
+			private var alertType:AlertType;
+			[Bindable]
+			private var alarmEnabled:Boolean;
+			[Bindable]
+			private var alarmName:String;
+			[Bindable]
+			private var vibrationenabled:Boolean;
+			[Bindable]
+			private var snoozefromnotification:Boolean;
+			[Bindable]
+			private var defaultSnoozePeriodInMinutes:int;
+			
+			private static var resetColorTimer:Timer;
+			private var listOfElements:FromtimeAndValueArrayCollection;
+			
+			protected function view1_creationCompleteHandler(event:FlexEvent):void
+			{
+				back_label = ModelLocator.resourceManagerInstance.getString('general','back');
+				title = ModelLocator.resourceManagerInstance.getString('settingsview','alert_types');
+				listOfElements = data.listOfElements;
+				alertType = listOfElements.getItemAt(data.selectedIndex as int) as AlertType;
+				alarmEnabled = alertType.enabled;
+				
+				alarmName = alertType.alarmName;
+				if (alarmEnabled) {
+					alarmnamegroup.alpha = 1;
+				} else {
+					alarmnamegroup.alpha = 0.25;
+				}
+				
+				vibrationenabled = alertType.enableVibration;
+				if (alarmEnabled) {
+					enablevibrationgroup.alpha = 1;
+				} else {
+					enablevibrationgroup.alpha = 0.25;
+				}
+				
+				snoozefromnotification = alertType.snoozeFromNotification;
+				if (alarmEnabled) {
+					snoozefromnotificationgroup.alpha = 1;
+				} else {
+					snoozefromnotificationgroup.alpha = 0.25;
+				}
+				
+				defaultSnoozePeriodInMinutes = alertType.defaultSnoozePeriodInMinutes;
+				if (alarmEnabled) {
+					defaultsnoozeperiodgroup.alpha = 1;
+				} else {
+					defaultsnoozeperiodgroup.alpha = 0.25;
+				}
+			}
+			
+			protected function enabled_clickHandler(event:MouseEvent):void {
+				rect01.color = uint("0xD3D3D3");
+				rect02.color = uint("0xD3D3D3");
+				setResetColorTimer();
+				if (enabled) {
+					enabled = false;
+					alarmnamegroup.alpha = 0.25;
+				} else {
+					enabled = true;
+					alarmnamegroup.alpha = 1;
+				}
+			}
+			
+			protected function alarmName_clickHandler(event:MouseEvent):void {
+				if (!enabled)
+					return;
+				rect03.color = uint("0xD3D3D3");
+				rect04.color = uint("0xD3D3D3");
+				setResetColorTimer();
+			}
+			
+			protected function enablevibration_clickHandler(event:MouseEvent):void {
+				if (!enabled)
+					return;
+				rect05.color = uint("0xD3D3D3");
+				rect06.color = uint("0xD3D3D3");
+				setResetColorTimer();
+			}
+			
+			protected function snoozefromnotification_clickHandler(event:MouseEvent):void {
+				if (!enabled)
+					return;
+				rect07.color = uint("0xD3D3D3");
+				rect08.color = uint("0xD3D3D3");
+				setResetColorTimer();
+			}
+			
+			protected function defaultsnoozeperiod_clickHandler(event:MouseEvent):void {
+				if (!enabled)
+					return;
+				rect09.color = uint("0xD3D3D3");
+				rect10.color = uint("0xD3D3D3");
+				setResetColorTimer();
+			}
+			
+			private function setResetColorTimer():void {
+				if (resetColorTimer != null)
+					if (resetColorTimer.running) {
+						resetColorTimer.stop();					
+					}
+				
+				resetColorTimer = new Timer(100, 1);
+				resetColorTimer.addEventListener(TimerEvent.TIMER, resetColor);
+				resetColorTimer.start();
+				
+				function resetColor(event:Event):void {
+					rect01.color = uint("0x212121");//enabled or disabled
+					rect02.color = uint("0x212121");
+					rect03.color = uint("0x212121");//alarmname
+					rect04.color = uint("0x212121");
+					rect05.color = uint("0x212121");//alarmname
+					rect06.color = uint("0x212121");
+					rect07.color = uint("0x212121");//snoozefromnotification
+					rect08.color = uint("0x212121");
+					rect09.color = uint("0x212121");//defaultsnoozeperiod
+					rect10.color = uint("0x212121");
+				}
+			}
+			
+			override public function createReturnObject():Object {
+				return listOfElements;
+			}
+			
+		]]>
+	</fx:Script>
+	
+	<s:navigationContent>
+		<s:Button   label="{back_label}" click="back_clickHandler(event)" height="48"/>
+	</s:navigationContent>
+	<s:Scroller width="100%" height="100%" >
+		<s:VGroup width="100%" paddingTop="10">
+			<s:Label text="@{topText}"  textAlign="center"  color="#3B6999" 
+					 width="100%" paddingLeft="3" paddingRight="0" fontSize="20" fontWeight="bold" paddingTop="3"/>
+			<s:Line width="100%">
+				<s:stroke>
+					<s:SolidColorStroke color="#3B6999"  weight="3"/>
+				</s:stroke>
+			</s:Line>
+		</s:VGroup>
+		
+		<!-- enabled or disabled -->
+		<s:VGroup click="enabled_clickHandler(event)" width="100%">
+			<s:HGroup width="100%">
+				<s:Rect height="100%" width="5" >
+					<s:fill>
+						<s:SolidColor color="#212121" id="rect01"/>
+					</s:fill>
+				</s:Rect>
+				<s:Label text = "{enabled ? ModelLocator.resourceManagerInstance.getString('alerttypeview','enabled'):ModelLocator.resourceManagerInstance.getString('alerttypeview','disabled')}"
+						 width="100%" paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
+				<s:Rect height="100%" width="5" >
+					<s:fill>
+						<s:SolidColor color="#212121" id="rect02"/>
+					</s:fill>
+				</s:Rect>
+			</s:HGroup>
+			<s:Line width="100%">
+				<s:stroke>
+					<s:SolidColorStroke color="0xFFFFFF" weight="1" alpha="0.25"/>
+				</s:stroke>
+			</s:Line>	
+		</s:VGroup>
+		
+		
+		<s:VGroup width="100%" >
+			<!-- alarmname -->
+			<s:HGroup id="alarmnamegroup" click="alarmName_clickHandler(event)" width="100%">
+				<s:Rect height="100%" width="5" >
+					<s:fill>
+						<s:SolidColor color="#212121" id="rect03"/>
+					</s:fill>
+				</s:Rect>
+				<s:Label text = "{ModelLocator.resourceManagerInstance.getString('alerttypeview','alarmname')}"
+						 width="100%" paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
+				<s:Label text = "@{alarmName}"  
+						 paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
+				<s:Rect height="100%" width="5" >
+					<s:fill>
+						<s:SolidColor color="#212121" id="rect04"/>
+					</s:fill>
+				</s:Rect>
+			</s:HGroup>
+			<s:Line width="100%">
+				<s:stroke>
+					<s:SolidColorStroke color="0xFFFFFF" weight="1" alpha="0.25"/>
+				</s:stroke>
+			</s:Line>	
+			
+			<!-- enablevibration -->
+			<s:HGroup id="enablevibrationgroup" click="enablevibration_clickHandler(event)" width="100%">
+				<s:Rect height="100%" width="5" >
+					<s:fill>
+						<s:SolidColor color="#212121" id="rect05"/>
+					</s:fill>
+				</s:Rect>
+				<s:Label text = "{ModelLocator.resourceManagerInstance.getString('alerttypeview','vibrationenabled')}"
+						 width="100%" paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
+				<s:Label text = "{vibrationenabled ? ModelLocator.resourceManagerInstance.getString('general','yes') : ModelLocator.resourceManagerInstance.getString('general','no')}"  
+						 paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
+				<s:Rect height="100%" width="5" >
+					<s:fill>
+						<s:SolidColor color="#212121" id="rect06"/>
+					</s:fill>
+				</s:Rect>
+			</s:HGroup>
+			<s:Line width="100%">
+				<s:stroke>
+					<s:SolidColorStroke color="0xFFFFFF" weight="1" alpha="0.25"/>
+				</s:stroke>
+			</s:Line>	
+			
+			<!-- snoozefromnotification -->
+			<s:HGroup id="snoozefromnotificationgroup" click="snoozefromnotification_clickHandler(event)" width="100%">
+				<s:Rect height="100%" width="5" >
+					<s:fill>
+						<s:SolidColor color="#212121" id="rect07"/>
+					</s:fill>
+				</s:Rect>
+				<s:Label text = "{ModelLocator.resourceManagerInstance.getString('alerttypeview','snoozefromnotification')}"
+						 width="100%" paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
+				<s:Label text = "{snoozefromnotification ? ModelLocator.resourceManagerInstance.getString('general','yes') : ModelLocator.resourceManagerInstance.getString('general','no')}"  
+						 paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
+				<s:Rect height="100%" width="5" >
+					<s:fill>
+						<s:SolidColor color="#212121" id="rect08"/>
+					</s:fill>
+				</s:Rect>
+			</s:HGroup>
+			<s:Line width="100%">
+				<s:stroke>
+					<s:SolidColorStroke color="0xFFFFFF" weight="1" alpha="0.25"/>
+				</s:stroke>
+			</s:Line>	
+
+			<!-- defaultsnoozeperiod -->
+			<s:HGroup id="defaultsnoozeperiodgroup" click="defaultsnoozeperiod_clickHandler(event)" width="100%">
+				<s:Rect height="100%" width="5" >
+					<s:fill>
+						<s:SolidColor color="#212121" id="rect09"/>
+					</s:fill>
+				</s:Rect>
+				<s:Label text = "{ModelLocator.resourceManagerInstance.getString('alerttypeview','defaultsnoozeperiod')}"
+						 width="100%" paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
+				<s:Label text = "{defaultSnoozePeriodInMinutes}"  
+						 paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
+				<s:Rect height="100%" width="5" >
+					<s:fill>
+						<s:SolidColor color="#212121" id="rect10"/>
+					</s:fill>
+				</s:Rect>
+			</s:HGroup>
+			<s:Line width="100%">
+				<s:stroke>
+					<s:SolidColorStroke color="0xFFFFFF" weight="1" alpha="0.25"/>
+				</s:stroke>
+			</s:Line>	
+</s:VGroup>
+		
+		
+	</s:Scroller>
+</s:View>

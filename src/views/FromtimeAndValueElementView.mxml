@@ -158,7 +158,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 				
 				var now:Date = new Date();
 				var nowAt0000:Date = new Date(now.fullYear, now.month, now.date);
-				var test:int = (listOfElements.getItemAt(selectedIndex - 1) as FromtimeAndValue).from;
 				minTime = (listOfElements.getItemAt(selectedIndex - 1) as FromtimeAndValue).from * 1000 + 1 * 60 * 1000;
 				var minimumTimeStamp:Date = new Date(nowAt0000.valueOf() + minTime);
 				
