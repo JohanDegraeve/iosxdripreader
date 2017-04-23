@@ -24,7 +24,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 		<![CDATA[
 			import mx.events.FlexEvent;
 			
-			import Utilities.FromtimeAndValue;
 			import Utilities.FromtimeAndValueArrayCollection;
 			
 			import databaseclasses.AlertType;
@@ -44,13 +43,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			private var snoozefromnotification:Boolean;
 			[Bindable]
 			private var defaultSnoozePeriodInMinutes:int;
-			
+			[Bindable]
+			private static var topText:String="";
+
 			private static var resetColorTimer:Timer;
 			private var listOfElements:FromtimeAndValueArrayCollection;
 			
 			protected function view1_creationCompleteHandler(event:FlexEvent):void
 			{
 				back_label = ModelLocator.resourceManagerInstance.getString('general','back');
+				topText = ModelLocator.resourceManagerInstance.getString('alerttypeview','edit_alert_type');
 				title = ModelLocator.resourceManagerInstance.getString('settingsview','alert_types');
 				listOfElements = data.listOfElements;
 				alertType = listOfElements.getItemAt(data.selectedIndex as int) as AlertType;
@@ -158,6 +160,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 				return listOfElements;
 			}
 			
+			protected function back_clickHandler(event:MouseEvent):void {
+				navigator.popView();
+			}
+
+			
 		]]>
 	</fx:Script>
 	
@@ -173,126 +180,124 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 					<s:SolidColorStroke color="#3B6999"  weight="3"/>
 				</s:stroke>
 			</s:Line>
-		</s:VGroup>
-		
-		<!-- enabled or disabled -->
-		<s:VGroup click="enabled_clickHandler(event)" width="100%">
-			<s:HGroup width="100%">
-				<s:Rect height="100%" width="5" >
-					<s:fill>
-						<s:SolidColor color="#212121" id="rect01"/>
-					</s:fill>
-				</s:Rect>
-				<s:Label text = "{enabled ? ModelLocator.resourceManagerInstance.getString('alerttypeview','enabled'):ModelLocator.resourceManagerInstance.getString('alerttypeview','disabled')}"
-						 width="100%" paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
-				<s:Rect height="100%" width="5" >
-					<s:fill>
-						<s:SolidColor color="#212121" id="rect02"/>
-					</s:fill>
-				</s:Rect>
-			</s:HGroup>
-			<s:Line width="100%">
-				<s:stroke>
-					<s:SolidColorStroke color="0xFFFFFF" weight="1" alpha="0.25"/>
-				</s:stroke>
-			</s:Line>	
-		</s:VGroup>
-		
-		
-		<s:VGroup width="100%" >
-			<!-- alarmname -->
-			<s:HGroup id="alarmnamegroup" click="alarmName_clickHandler(event)" width="100%">
-				<s:Rect height="100%" width="5" >
-					<s:fill>
-						<s:SolidColor color="#212121" id="rect03"/>
-					</s:fill>
-				</s:Rect>
-				<s:Label text = "{ModelLocator.resourceManagerInstance.getString('alerttypeview','alarmname')}"
-						 width="100%" paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
-				<s:Label text = "@{alarmName}"  
-						 paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
-				<s:Rect height="100%" width="5" >
-					<s:fill>
-						<s:SolidColor color="#212121" id="rect04"/>
-					</s:fill>
-				</s:Rect>
-			</s:HGroup>
-			<s:Line width="100%">
-				<s:stroke>
-					<s:SolidColorStroke color="0xFFFFFF" weight="1" alpha="0.25"/>
-				</s:stroke>
-			</s:Line>	
 			
-			<!-- enablevibration -->
-			<s:HGroup id="enablevibrationgroup" click="enablevibration_clickHandler(event)" width="100%">
-				<s:Rect height="100%" width="5" >
-					<s:fill>
-						<s:SolidColor color="#212121" id="rect05"/>
-					</s:fill>
-				</s:Rect>
-				<s:Label text = "{ModelLocator.resourceManagerInstance.getString('alerttypeview','vibrationenabled')}"
-						 width="100%" paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
-				<s:Label text = "{vibrationenabled ? ModelLocator.resourceManagerInstance.getString('general','yes') : ModelLocator.resourceManagerInstance.getString('general','no')}"  
-						 paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
-				<s:Rect height="100%" width="5" >
-					<s:fill>
-						<s:SolidColor color="#212121" id="rect06"/>
-					</s:fill>
-				</s:Rect>
-			</s:HGroup>
-			<s:Line width="100%">
-				<s:stroke>
-					<s:SolidColorStroke color="0xFFFFFF" weight="1" alpha="0.25"/>
-				</s:stroke>
-			</s:Line>	
+			<!-- enabled or disabled -->
+			<s:VGroup click="enabled_clickHandler(event)" width="100%">
+				<s:HGroup width="100%">
+					<s:Rect height="100%" width="5" >
+						<s:fill>
+							<s:SolidColor color="#212121" id="rect01"/>
+						</s:fill>
+					</s:Rect>
+					<s:Label text = "{enabled ? ModelLocator.resourceManagerInstance.getString('alerttypeview','enabled'):ModelLocator.resourceManagerInstance.getString('alerttypeview','disabled')}"
+							 width="100%" paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
+					<s:Rect height="100%" width="5" >
+						<s:fill>
+							<s:SolidColor color="#212121" id="rect02"/>
+						</s:fill>
+					</s:Rect>
+				</s:HGroup>
+				<s:Line width="100%">
+					<s:stroke>
+						<s:SolidColorStroke color="0xFFFFFF" weight="1" alpha="0.25"/>
+					</s:stroke>
+				</s:Line>	
+			</s:VGroup>
 			
-			<!-- snoozefromnotification -->
-			<s:HGroup id="snoozefromnotificationgroup" click="snoozefromnotification_clickHandler(event)" width="100%">
-				<s:Rect height="100%" width="5" >
-					<s:fill>
-						<s:SolidColor color="#212121" id="rect07"/>
-					</s:fill>
-				</s:Rect>
-				<s:Label text = "{ModelLocator.resourceManagerInstance.getString('alerttypeview','snoozefromnotification')}"
-						 width="100%" paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
-				<s:Label text = "{snoozefromnotification ? ModelLocator.resourceManagerInstance.getString('general','yes') : ModelLocator.resourceManagerInstance.getString('general','no')}"  
-						 paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
-				<s:Rect height="100%" width="5" >
-					<s:fill>
-						<s:SolidColor color="#212121" id="rect08"/>
-					</s:fill>
-				</s:Rect>
-			</s:HGroup>
-			<s:Line width="100%">
-				<s:stroke>
-					<s:SolidColorStroke color="0xFFFFFF" weight="1" alpha="0.25"/>
-				</s:stroke>
-			</s:Line>	
-
-			<!-- defaultsnoozeperiod -->
-			<s:HGroup id="defaultsnoozeperiodgroup" click="defaultsnoozeperiod_clickHandler(event)" width="100%">
-				<s:Rect height="100%" width="5" >
-					<s:fill>
-						<s:SolidColor color="#212121" id="rect09"/>
-					</s:fill>
-				</s:Rect>
-				<s:Label text = "{ModelLocator.resourceManagerInstance.getString('alerttypeview','defaultsnoozeperiod')}"
-						 width="100%" paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
-				<s:Label text = "{defaultSnoozePeriodInMinutes}"  
-						 paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
-				<s:Rect height="100%" width="5" >
-					<s:fill>
-						<s:SolidColor color="#212121" id="rect10"/>
-					</s:fill>
-				</s:Rect>
-			</s:HGroup>
-			<s:Line width="100%">
-				<s:stroke>
-					<s:SolidColorStroke color="0xFFFFFF" weight="1" alpha="0.25"/>
-				</s:stroke>
-			</s:Line>	
-</s:VGroup>
-		
-		
+			
+			<s:VGroup width="100%" >
+				<!-- alarmname -->
+				<s:HGroup id="alarmnamegroup" click="alarmName_clickHandler(event)" width="100%">
+					<s:Rect height="100%" width="5" >
+						<s:fill>
+							<s:SolidColor color="#212121" id="rect03"/>
+						</s:fill>
+					</s:Rect>
+					<s:Label text = "{ModelLocator.resourceManagerInstance.getString('alerttypeview','alarmname')}"
+							 width="100%" paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
+					<s:Label text = "@{alarmName}"  
+							 paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
+					<s:Rect height="100%" width="5" >
+						<s:fill>
+							<s:SolidColor color="#212121" id="rect04"/>
+						</s:fill>
+					</s:Rect>
+				</s:HGroup>
+				<s:Line width="100%">
+					<s:stroke>
+						<s:SolidColorStroke color="0xFFFFFF" weight="1" alpha="0.25"/>
+					</s:stroke>
+				</s:Line>	
+				
+				<!-- enablevibration -->
+				<s:HGroup id="enablevibrationgroup" click="enablevibration_clickHandler(event)" width="100%">
+					<s:Rect height="100%" width="5" >
+						<s:fill>
+							<s:SolidColor color="#212121" id="rect05"/>
+						</s:fill>
+					</s:Rect>
+					<s:Label text = "{ModelLocator.resourceManagerInstance.getString('alerttypeview','vibrationenabled')}"
+							 width="100%" paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
+					<s:Label text = "{vibrationenabled ? ModelLocator.resourceManagerInstance.getString('general','yes') : ModelLocator.resourceManagerInstance.getString('general','no')}"  
+							 paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
+					<s:Rect height="100%" width="5" >
+						<s:fill>
+							<s:SolidColor color="#212121" id="rect06"/>
+						</s:fill>
+					</s:Rect>
+				</s:HGroup>
+				<s:Line width="100%">
+					<s:stroke>
+						<s:SolidColorStroke color="0xFFFFFF" weight="1" alpha="0.25"/>
+					</s:stroke>
+				</s:Line>	
+				
+				<!-- snoozefromnotification -->
+				<s:HGroup id="snoozefromnotificationgroup" click="snoozefromnotification_clickHandler(event)" width="100%">
+					<s:Rect height="100%" width="5" >
+						<s:fill>
+							<s:SolidColor color="#212121" id="rect07"/>
+						</s:fill>
+					</s:Rect>
+					<s:Label text = "{ModelLocator.resourceManagerInstance.getString('alerttypeview','snoozefromnotification')}"
+							 width="100%" paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
+					<s:Label text = "{snoozefromnotification ? ModelLocator.resourceManagerInstance.getString('general','yes') : ModelLocator.resourceManagerInstance.getString('general','no')}"  
+							 paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
+					<s:Rect height="100%" width="5" >
+						<s:fill>
+							<s:SolidColor color="#212121" id="rect08"/>
+						</s:fill>
+					</s:Rect>
+				</s:HGroup>
+				<s:Line width="100%">
+					<s:stroke>
+						<s:SolidColorStroke color="0xFFFFFF" weight="1" alpha="0.25"/>
+					</s:stroke>
+				</s:Line>	
+				
+				<!-- defaultsnoozeperiod -->
+				<s:HGroup id="defaultsnoozeperiodgroup" click="defaultsnoozeperiod_clickHandler(event)" width="100%">
+					<s:Rect height="100%" width="5" >
+						<s:fill>
+							<s:SolidColor color="#212121" id="rect09"/>
+						</s:fill>
+					</s:Rect>
+					<s:Label text = "{ModelLocator.resourceManagerInstance.getString('alerttypeview','defaultsnoozeperiod')}"
+							 width="100%" paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
+					<s:Label text = "{defaultSnoozePeriodInMinutes}"  
+							 paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
+					<s:Rect height="100%" width="5" >
+						<s:fill>
+							<s:SolidColor color="#212121" id="rect10"/>
+						</s:fill>
+					</s:Rect>
+				</s:HGroup>
+				<s:Line width="100%">
+					<s:stroke>
+						<s:SolidColorStroke color="0xFFFFFF" weight="1" alpha="0.25"/>
+					</s:stroke>
+				</s:Line>	
+			</s:VGroup>
+		</s:VGroup>
 	</s:Scroller>
 </s:View>
