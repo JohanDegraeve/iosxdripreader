@@ -25,12 +25,25 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 	</fx:Metadata>
 	<fx:Script>
 		<![CDATA[
+			import com.distriqt.extension.dialog.Dialog;
+			import com.distriqt.extension.dialog.DialogView;
+			import com.distriqt.extension.dialog.builders.AlertBuilder;
+			import com.distriqt.extension.dialog.events.DialogViewEvent;
+			import com.distriqt.extension.dialog.objects.DialogAction;
+			
 			import mx.collections.ArrayCollection;
 			import mx.events.FlexEvent;
 			
 			import databaseclasses.AlertType;
+			import databaseclasses.BgReading;
+			import databaseclasses.Calibration;
+			import databaseclasses.CommonSettings;
+			
+			import events.CalibrationServiceEvent;
 			
 			import model.ModelLocator;
+			
+			import services.DialogService;
 			
 			[Bindable]
 			private var back_label:String;
@@ -126,6 +139,27 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 				rect03.color = uint("0xD3D3D3");
 				rect04.color = uint("0xD3D3D3");
 				setResetColorTimer();
+				var alert:DialogView = Dialog.service.create(
+					new AlertBuilder()
+					.setTitle(ModelLocator.resourceManagerInstance.getString("alerttypeview","alarm_name"))
+					.setMessage(ModelLocator.resourceManagerInstance.getString("alerttypeview","enter_alarm_name"))
+					.addTextField(alarmName,"")
+					.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
+					.addOption(ModelLocator.resourceManagerInstance.getString("general","cancel"), DialogAction.STYLE_CANCEL, 1)
+					.build()
+				);
+				DialogService.addDialog(alert);
+				alert.addEventListener(DialogViewEvent.CLOSED, alarmnameentered);
+				
+				function alarmnameentered(event:DialogViewEvent):void {
+					if (event.index == 1) {
+						return;
+					}
+					if (event.values.length < 1)
+						return;
+					
+					alarmName = event.values[0] as String;
+				}
 			}
 			
 			protected function enablevibration_clickHandler(event:MouseEvent):void {
@@ -134,6 +168,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 				rect05.color = uint("0xD3D3D3");
 				rect06.color = uint("0xD3D3D3");
 				setResetColorTimer();
+				vibrationenabled = !vibrationenabled;
+				labelvibrationenabled.text = vibrationenabled ? ModelLocator.resourceManagerInstance.getString('general','yes') : ModelLocator.resourceManagerInstance.getString('general','no');
 			}
 			
 			protected function snoozefromnotification_clickHandler(event:MouseEvent):void {
@@ -142,6 +178,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 				rect07.color = uint("0xD3D3D3");
 				rect08.color = uint("0xD3D3D3");
 				setResetColorTimer();
+				snoozefromnotification = ! snoozefromnotification
+				labelsnoozefromnotification.text = snoozefromnotification ? ModelLocator.resourceManagerInstance.getString('general','yes') : ModelLocator.resourceManagerInstance.getString('general','no');
 			}
 			
 			protected function defaultsnoozeperiod_clickHandler(event:MouseEvent):void {
@@ -150,6 +188,41 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 				rect09.color = uint("0xD3D3D3");
 				rect10.color = uint("0xD3D3D3");
 				setResetColorTimer();
+				var alert:DialogView = Dialog.service.create(
+					new AlertBuilder()
+					.setTitle(ModelLocator.resourceManagerInstance.getString("alerttypeview","default_snooze"))
+					.setMessage(ModelLocator.resourceManagerInstance.getString("alerttypeview","default_snooze_text"))
+					.addTextField((new Number(defaultSnoozePeriodInMinutes)).toString(),"")
+					.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
+					.addOption(ModelLocator.resourceManagerInstance.getString("general","cancel"), DialogAction.STYLE_CANCEL, 1)
+					.build()
+				);
+				DialogService.addDialog(alert);
+				alert.addEventListener(DialogViewEvent.CLOSED, snoozeperiodentered);
+				
+				function snoozeperiodentered(event:DialogViewEvent):void {
+					if (event.index == 1) {
+						return;
+					}
+					if (event.values.length < 1)
+						return;
+					
+					var asNumber:Number = new Number(event.values[0] as String);
+					if (isNaN(asNumber)) {
+						var alert:DialogView = Dialog.service.create(
+							new AlertBuilder()
+							.setTitle(ModelLocator.resourceManagerInstance.getString("alerttypeview","default_snooze"))
+							.setMessage(ModelLocator.resourceManagerInstance.getString("alerttypeview","value_should_be_numeric"))
+							.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
+							.build()
+						);
+						DialogService.addDialog(alert);
+						//and ask again a value
+						defaultsnoozeperiod_clickHandler(null);
+					} else {
+						defaultSnoozePeriodInMinutes = (new Number(asNumber));
+					}
+				}
 			}
 			
 			protected function sound_clickHandler(event:MouseEvent):void {

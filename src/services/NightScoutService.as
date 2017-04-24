@@ -179,7 +179,8 @@ package services
 					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_URL_AND_API_SECRET_TESTED,"false");
 				} else if (event.data == CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME) {
 					LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_WARNING_THAT_NIGHTSCOUT_URL_AND_SECRET_IS_NOT_OK_ALREADY_GIVEN, "false");
-					_nightScoutEventsUrl = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME) + "/api/v1/entries";event			if (_nightScoutEventsUrl.indexOf('http') == -1) {
+					_nightScoutEventsUrl = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME) + "/api/v1/entries";			
+					if (_nightScoutEventsUrl.indexOf('http') == -1) {
 						_nightScoutEventsUrl = "https://" + _nightScoutEventsUrl;
 					}
 
@@ -247,7 +248,7 @@ package services
 				testEvent["notes"] = "to test nightscout url";
 				var nightScoutTreatmentsUrl:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME) + "/api/v1/treatments";
 				if (nightScoutTreatmentsUrl.indexOf('http') == -1) {
-					nightScoutTreatmentsUrl = "https://" + _nightScoutEventsUrl;
+					nightScoutTreatmentsUrl = "https://" + nightScoutTreatmentsUrl;
 				}
 
 				myTrace("call_to_nightscout_to_verify_url_and_secret");
