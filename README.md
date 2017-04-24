@@ -19,6 +19,7 @@ xdrip/xbridge/G5 reader for iOS devices -
 # To Install the app.
 
 If you need a package for your device, sent my the UDID of your device in a mail please. (johan.degraeve@gmail.com).
+To retrieve your UDID you must use iTunes (apps don't give you the right UDID). Here you can find an explanation how to find the UDID http://whatsmyudid.com/ . Follow the instructions "iTunes".
 I'll update the latest release version with a release signed for your device.
 
 Then
