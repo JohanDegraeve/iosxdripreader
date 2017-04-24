@@ -28,7 +28,7 @@
 			import services.DialogService;
 			[ResourceBundle("settingsview")]
 			[ResourceBundle("calibrationservice")]
-			
+						
 			[Bindable]
 			private static var detailedTracingOnOrOffText:String = "";
 			[Bindable]

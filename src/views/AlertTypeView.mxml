@@ -20,11 +20,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 		creationComplete="view1_creationCompleteHandler(event)"
 		xmlns:s="library://ns.adobe.com/flex/spark" title="AlertTypeView">
 	
+	<fx:Metadata> 
+		[ResourceBundle("alerttypeview")] 
+	</fx:Metadata>
 	<fx:Script>
 		<![CDATA[
+			import mx.collections.ArrayCollection;
 			import mx.events.FlexEvent;
-			
-			import Utilities.FromtimeAndValueArrayCollection;
 			
 			import databaseclasses.AlertType;
 			
@@ -33,13 +35,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			[Bindable]
 			private var back_label:String;
 			private var alertType:AlertType;
-			[Bindable]
 			private var alarmEnabled:Boolean;
 			[Bindable]
 			private var alarmName:String;
 			[Bindable]
+			private var soundName:String;
 			private var vibrationenabled:Boolean;
-			[Bindable]
 			private var snoozefromnotification:Boolean;
 			[Bindable]
 			private var defaultSnoozePeriodInMinutes:int;
@@ -47,7 +48,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			private static var topText:String="";
 
 			private static var resetColorTimer:Timer;
-			private var listOfElements:FromtimeAndValueArrayCollection;
+			private var listOfElements:ArrayCollection;
 			
 			protected function view1_creationCompleteHandler(event:FlexEvent):void
 			{
@@ -57,6 +58,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 				listOfElements = data.listOfElements;
 				alertType = listOfElements.getItemAt(data.selectedIndex as int) as AlertType;
 				alarmEnabled = alertType.enabled;
+				labelenabledornot.text = alarmEnabled ? ModelLocator.resourceManagerInstance.getString('alerttypeview','enabled'):ModelLocator.resourceManagerInstance.getString('alerttypeview','disabled');
 				
 				alarmName = alertType.alarmName;
 				if (alarmEnabled) {
@@ -65,12 +67,20 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 					alarmnamegroup.alpha = 0.25;
 				}
 				
+				soundName = alertType.sound;
+				if (alarmEnabled) {
+					soundgroup.alpha = 1;
+				} else {
+					soundgroup.alpha = 0.25;
+				}
+				
 				vibrationenabled = alertType.enableVibration;
 				if (alarmEnabled) {
 					enablevibrationgroup.alpha = 1;
 				} else {
 					enablevibrationgroup.alpha = 0.25;
 				}
+				labelvibrationenabled.text = vibrationenabled ? ModelLocator.resourceManagerInstance.getString('general','yes') : ModelLocator.resourceManagerInstance.getString('general','no');
 				
 				snoozefromnotification = alertType.snoozeFromNotification;
 				if (alarmEnabled) {
@@ -78,6 +88,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 				} else {
 					snoozefromnotificationgroup.alpha = 0.25;
 				}
+				labelsnoozefromnotification.text = snoozefromnotification ? ModelLocator.resourceManagerInstance.getString('general','yes') : ModelLocator.resourceManagerInstance.getString('general','no');
 				
 				defaultSnoozePeriodInMinutes = alertType.defaultSnoozePeriodInMinutes;
 				if (alarmEnabled) {
@@ -91,17 +102,26 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 				rect01.color = uint("0xD3D3D3");
 				rect02.color = uint("0xD3D3D3");
 				setResetColorTimer();
-				if (enabled) {
-					enabled = false;
+				if (alarmEnabled) {
+					alarmEnabled = false;
 					alarmnamegroup.alpha = 0.25;
+					enablevibrationgroup.alpha = 0.25;
+					snoozefromnotificationgroup.alpha = 0.25;
+					defaultsnoozeperiodgroup.alpha = 0.25;
+					soundgroup.alpha = 0.25;
 				} else {
-					enabled = true;
+					alarmEnabled = true;
 					alarmnamegroup.alpha = 1;
+					enablevibrationgroup.alpha = 1;
+					snoozefromnotificationgroup.alpha = 1;
+					defaultsnoozeperiodgroup.alpha = 1;
+					soundgroup.alpha = 1;
 				}
+				labelenabledornot.text = alarmEnabled ? ModelLocator.resourceManagerInstance.getString('alerttypeview','enabled'):ModelLocator.resourceManagerInstance.getString('alerttypeview','disabled');
 			}
 			
 			protected function alarmName_clickHandler(event:MouseEvent):void {
-				if (!enabled)
+				if (!alarmEnabled)
 					return;
 				rect03.color = uint("0xD3D3D3");
 				rect04.color = uint("0xD3D3D3");
@@ -109,7 +129,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			}
 			
 			protected function enablevibration_clickHandler(event:MouseEvent):void {
-				if (!enabled)
+				if (!alarmEnabled)
 					return;
 				rect05.color = uint("0xD3D3D3");
 				rect06.color = uint("0xD3D3D3");
@@ -117,7 +137,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			}
 			
 			protected function snoozefromnotification_clickHandler(event:MouseEvent):void {
-				if (!enabled)
+				if (!alarmEnabled)
 					return;
 				rect07.color = uint("0xD3D3D3");
 				rect08.color = uint("0xD3D3D3");
@@ -125,10 +145,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			}
 			
 			protected function defaultsnoozeperiod_clickHandler(event:MouseEvent):void {
-				if (!enabled)
+				if (!alarmEnabled)
 					return;
 				rect09.color = uint("0xD3D3D3");
 				rect10.color = uint("0xD3D3D3");
+				setResetColorTimer();
+			}
+			
+			protected function sound_clickHandler(event:MouseEvent):void {
+				if (!alarmEnabled)
+					return;
+				rect11.color = uint("0xD3D3D3");
+				rect12.color = uint("0xD3D3D3");
 				setResetColorTimer();
 			}
 			
@@ -153,6 +181,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 					rect08.color = uint("0x212121");
 					rect09.color = uint("0x212121");//defaultsnoozeperiod
 					rect10.color = uint("0x212121");
+					rect11.color = uint("0x212121");//sound
+					rect12.color = uint("0x212121");
 				}
 			}
 			
@@ -189,7 +219,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 							<s:SolidColor color="#212121" id="rect01"/>
 						</s:fill>
 					</s:Rect>
-					<s:Label text = "{enabled ? ModelLocator.resourceManagerInstance.getString('alerttypeview','enabled'):ModelLocator.resourceManagerInstance.getString('alerttypeview','disabled')}"
+					<s:Label id="labelenabledornot"
 							 width="100%" paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
 					<s:Rect height="100%" width="5" >
 						<s:fill>
@@ -213,7 +243,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 							<s:SolidColor color="#212121" id="rect03"/>
 						</s:fill>
 					</s:Rect>
-					<s:Label text = "{ModelLocator.resourceManagerInstance.getString('alerttypeview','alarmname')}"
+					<s:Label text="{ModelLocator.resourceManagerInstance.getString('alerttypeview','alarmname')}"
 							 width="100%" paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
 					<s:Label text = "@{alarmName}"  
 							 paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
@@ -238,7 +268,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 					</s:Rect>
 					<s:Label text = "{ModelLocator.resourceManagerInstance.getString('alerttypeview','vibrationenabled')}"
 							 width="100%" paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
-					<s:Label text = "{vibrationenabled ? ModelLocator.resourceManagerInstance.getString('general','yes') : ModelLocator.resourceManagerInstance.getString('general','no')}"  
+					<s:Label id="labelvibrationenabled"  
 							 paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
 					<s:Rect height="100%" width="5" >
 						<s:fill>
@@ -261,7 +291,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 					</s:Rect>
 					<s:Label text = "{ModelLocator.resourceManagerInstance.getString('alerttypeview','snoozefromnotification')}"
 							 width="100%" paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
-					<s:Label text = "{snoozefromnotification ? ModelLocator.resourceManagerInstance.getString('general','yes') : ModelLocator.resourceManagerInstance.getString('general','no')}"  
+					<s:Label id="labelsnoozefromnotification"  
 							 paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
 					<s:Rect height="100%" width="5" >
 						<s:fill>
@@ -289,6 +319,29 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 					<s:Rect height="100%" width="5" >
 						<s:fill>
 							<s:SolidColor color="#212121" id="rect10"/>
+						</s:fill>
+					</s:Rect>
+				</s:HGroup>
+				<s:Line width="100%">
+					<s:stroke>
+						<s:SolidColorStroke color="0xFFFFFF" weight="1" alpha="0.25"/>
+					</s:stroke>
+				</s:Line>	
+				
+				<!-- sound -->
+				<s:HGroup id="soundgroup" click="sound_clickHandler(event)" width="100%">
+					<s:Rect height="100%" width="5" >
+						<s:fill>
+							<s:SolidColor color="#212121" id="rect11"/>
+						</s:fill>
+					</s:Rect>
+					<s:Label text="{ModelLocator.resourceManagerInstance.getString('alerttypeview','soundname')}"
+							 width="100%" paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
+					<s:Label text = "@{soundName}"  
+							 paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
+					<s:Rect height="100%" width="5" >
+						<s:fill>
+							<s:SolidColor color="#212121" id="rect12"/>
 						</s:fill>
 					</s:Rect>
 				</s:HGroup>
