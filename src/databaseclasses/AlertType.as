@@ -77,12 +77,22 @@ package databaseclasses
 		{
 			return _defaultSnoozePeriodInMinutes;
 		}
+		
+		private var _repeatInMinutes:int;
+
+		/**
+		 * 0 is no repeat 
+		 */
+		public function get repeatInMinutes():int
+		{
+			return _repeatInMinutes;
+		}
 
 
 		/**
 		 * uniqueId and lastmodifiedtimestamp can be null, value will be assigned 
 		 */
-		public function AlertType(uniqueId:String, lastmodifiedtimestamp:Number, alarmName:String, enableLights:Boolean, enableVibration:Boolean, snoozeFromNotification:Boolean, enabled:Boolean, overrideSilentMode:Boolean, sound:String, defaultSnoozePeriodInMinutes:int)
+		public function AlertType(uniqueId:String, lastmodifiedtimestamp:Number, alarmName:String, enableLights:Boolean, enableVibration:Boolean, snoozeFromNotification:Boolean, enabled:Boolean, overrideSilentMode:Boolean, sound:String, defaultSnoozePeriodInMinutes:int, repeatInMinutes:int)
 		{
 			super(uniqueId, lastmodifiedtimestamp);
 			this._alarmName = alarmName;
@@ -93,6 +103,7 @@ package databaseclasses
 			this._snoozeFromNotification = snoozeFromNotification;
 			this._sound = sound;
 			this._enabled = enabled;
+			this._repeatInMinutes = repeatInMinutes;
 		}
 		
 		public function storeInDatabase():void {

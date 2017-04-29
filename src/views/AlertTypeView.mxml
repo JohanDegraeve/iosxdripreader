@@ -35,11 +35,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			import mx.events.FlexEvent;
 			
 			import databaseclasses.AlertType;
-			import databaseclasses.BgReading;
-			import databaseclasses.Calibration;
-			import databaseclasses.CommonSettings;
-			
-			import events.CalibrationServiceEvent;
+			import databaseclasses.Database;
 			
 			import model.ModelLocator;
 			
@@ -58,20 +54,24 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			[Bindable]
 			private var defaultSnoozePeriodInMinutes:int;
 			[Bindable]
-			private static var topText:String="";
-
-			private static var resetColorTimer:Timer;
-			private var listOfElements:ArrayCollection;
+			private var repeatInMinutes:int;
+			[Bindable]
+			private var topText:String="";
+			
+			private var resetColorTimer:Timer;
+			private var alertTypeChanged:Boolean;
+			private var selectedIndex:int;
 			
 			protected function view1_creationCompleteHandler(event:FlexEvent):void
 			{
 				back_label = ModelLocator.resourceManagerInstance.getString('general','back');
 				topText = ModelLocator.resourceManagerInstance.getString('alerttypeview','edit_alert_type');
 				title = ModelLocator.resourceManagerInstance.getString('settingsview','alert_types');
-				listOfElements = data.listOfElements;
-				alertType = listOfElements.getItemAt(data.selectedIndex as int) as AlertType;
+				alertType = data.alertType;
+				selectedIndex = data.selectedIndex;
 				alarmEnabled = alertType.enabled;
 				labelenabledornot.text = alarmEnabled ? ModelLocator.resourceManagerInstance.getString('alerttypeview','enabled'):ModelLocator.resourceManagerInstance.getString('alerttypeview','disabled');
+				alertTypeChanged = false;
 				
 				alarmName = alertType.alarmName;
 				if (alarmEnabled) {
@@ -109,6 +109,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 				} else {
 					defaultsnoozeperiodgroup.alpha = 0.25;
 				}
+				
+				repeatInMinutes = alertType.repeatInMinutes;
+				if (alarmEnabled) {
+					repeatinminutesgroup.alpha = 1;
+				} else {
+					repeatinminutesgroup.alpha = 0.25;
+				}
+				labelrepeatinminutes.text = repeatInMinutes == 5 ? ModelLocator.resourceManagerInstance.getString('general','yes') : ModelLocator.resourceManagerInstance.getString('general','no');
 			}
 			
 			protected function enabled_clickHandler(event:MouseEvent):void {
@@ -122,6 +130,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 					snoozefromnotificationgroup.alpha = 0.25;
 					defaultsnoozeperiodgroup.alpha = 0.25;
 					soundgroup.alpha = 0.25;
+					repeatinminutesgroup.alpha = 0.25;
 				} else {
 					alarmEnabled = true;
 					alarmnamegroup.alpha = 1;
@@ -129,7 +138,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 					snoozefromnotificationgroup.alpha = 1;
 					defaultsnoozeperiodgroup.alpha = 1;
 					soundgroup.alpha = 1;
+					repeatinminutesgroup.alpha = 1;
 				}
+				alertTypeChanged = true;
 				labelenabledornot.text = alarmEnabled ? ModelLocator.resourceManagerInstance.getString('alerttypeview','enabled'):ModelLocator.resourceManagerInstance.getString('alerttypeview','disabled');
 			}
 			
@@ -158,7 +169,29 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 					if (event.values.length < 1)
 						return;
 					
-					alarmName = event.values[0] as String;
+					if (((event.values[0] as String).toUpperCase() == alarmName.toUpperCase()) ||
+						((event.values[0] as String).toUpperCase() == alertType.alarmName.toUpperCase())) {
+						
+					} else {
+						var listOfAlarmname:ArrayCollection = Database.getAllAlertTypes();
+						for (var i:int = 0;i < listOfAlarmname.length;i++) {
+							if ((event.values[0] as String).toUpperCase() == (listOfAlarmname.getItemAt(i) as AlertType).alarmName.toUpperCase()) {
+								var alert:DialogView = Dialog.service.create(
+									new AlertBuilder()
+									.setTitle(ModelLocator.resourceManagerInstance.getString("alerttypeview","alarm_name_invalid"))
+									.setMessage(ModelLocator.resourceManagerInstance.getString("alerttypeview","alarm_name_already_exists"))
+									.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
+									.build()
+								);
+								DialogService.addDialog(alert);
+								return;
+							}
+						}
+					}
+					if (alarmName != (event.values[0] as String)) {
+						alertTypeChanged = true;
+						alarmName = event.values[0] as String;
+					}
 				}
 			}
 			
@@ -170,6 +203,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 				setResetColorTimer();
 				vibrationenabled = !vibrationenabled;
 				labelvibrationenabled.text = vibrationenabled ? ModelLocator.resourceManagerInstance.getString('general','yes') : ModelLocator.resourceManagerInstance.getString('general','no');
+				alertTypeChanged = true;
+			}
+			
+			protected function repeatinminutes_clickHandler(event:MouseEvent):void {
+				if (!alarmEnabled)
+					return;
+				rect13.color = uint("0xD3D3D3");
+				rect14.color = uint("0xD3D3D3");
+				setResetColorTimer();
+				repeatInMinutes = (repeatInMinutes == 5 ? 0:5);
+				labelrepeatinminutes.text = repeatInMinutes == 5 ? ModelLocator.resourceManagerInstance.getString('general','yes') : ModelLocator.resourceManagerInstance.getString('general','no');
+				alertTypeChanged = true;
 			}
 			
 			protected function snoozefromnotification_clickHandler(event:MouseEvent):void {
@@ -180,6 +225,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 				setResetColorTimer();
 				snoozefromnotification = ! snoozefromnotification
 				labelsnoozefromnotification.text = snoozefromnotification ? ModelLocator.resourceManagerInstance.getString('general','yes') : ModelLocator.resourceManagerInstance.getString('general','no');
+				alertTypeChanged = true;
 			}
 			
 			protected function defaultsnoozeperiod_clickHandler(event:MouseEvent):void {
@@ -211,7 +257,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 					if (isNaN(asNumber)) {
 						var alert:DialogView = Dialog.service.create(
 							new AlertBuilder()
-							.setTitle(ModelLocator.resourceManagerInstance.getString("alerttypeview","default_snooze"))
+							.setTitle(ModelLocator.resourceManagerInstance.getString("alerttypeview","default_snooze_set_failed"))
 							.setMessage(ModelLocator.resourceManagerInstance.getString("alerttypeview","value_should_be_numeric"))
 							.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
 							.build()
@@ -221,6 +267,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 						defaultsnoozeperiod_clickHandler(null);
 					} else {
 						defaultSnoozePeriodInMinutes = (new Number(asNumber));
+						if (defaultSnoozePeriodInMinutes == alertType.defaultSnoozePeriodInMinutes) {
+							alertTypeChanged = true;
+						}
 					}
 				}
 			}
@@ -231,6 +280,27 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 				rect11.color = uint("0xD3D3D3");
 				rect12.color = uint("0xD3D3D3");
 				setResetColorTimer();
+				var alert:DialogView = Dialog.service.create(
+					new AlertBuilder()
+					.setTitle(ModelLocator.resourceManagerInstance.getString("alerttypeview","sound_name"))
+					.setMessage(ModelLocator.resourceManagerInstance.getString("alerttypeview","enter_sound_name"))
+					.addTextField(soundName,"")
+					.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
+					.addOption(ModelLocator.resourceManagerInstance.getString("general","cancel"), DialogAction.STYLE_CANCEL, 1)
+					.build()
+				);
+				DialogService.addDialog(alert);
+				alert.addEventListener(DialogViewEvent.CLOSED, soundnameentered);
+				
+				function soundnameentered(event:DialogViewEvent):void {
+					if (event.index == 1) {
+						return;
+					}
+					soundName = event.values[0] as String;
+					if (soundName != alertType.sound) {
+						alertTypeChanged = true;
+					}
+				}
 			}
 			
 			private function setResetColorTimer():void {
@@ -256,24 +326,80 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 					rect10.color = uint("0x212121");
 					rect11.color = uint("0x212121");//sound
 					rect12.color = uint("0x212121");
+					rect13.color = uint("0x212121");//sound
+					rect14.color = uint("0x212121");
 				}
 			}
 			
-			override public function createReturnObject():Object {
-				return listOfElements;
+			protected function back_clickHandler(event:MouseEvent):void {
+				if (alertTypeChanged) {
+					var alert:DialogView = Dialog.service.create(
+						new AlertBuilder()
+						.setTitle(ModelLocator.resourceManagerInstance.getString('fromtimeandvaluelistview',"savechanges"))
+						.setMessage(ModelLocator.resourceManagerInstance.getString('fromtimeandvaluelistview',"chose_yes_or_no"))
+						.addOption(ModelLocator.resourceManagerInstance.getString("general","yes"), DialogAction.STYLE_POSITIVE, 0)
+						.addOption(ModelLocator.resourceManagerInstance.getString("general","no"), DialogAction.STYLE_CANCEL, 1)
+						.build()
+					);
+					alert.addEventListener(DialogViewEvent.CLOSED, onYesClicked);
+					DialogService.addDialog(alert);
+				} else 
+					navigator.popView();
 			}
 			
-			protected function back_clickHandler(event:MouseEvent):void {
+			private function onYesClicked(event:DialogViewEvent): void
+			{
+				if (event.index == 1) {
+					navigator.popView();
+				} else if (event.index == 0) {
+					okClicked();
+				}
+			}
+			
+			private function okClicked(e:MouseEvent = null):void {
+				var alertTypeInDatabase:AlertType = Database.getAlertType(alertType.alarmName);
+				var neworExistingAlertType:AlertType; 
+				if (alertTypeInDatabase != null) {
+					neworExistingAlertType = new AlertType(
+						alertTypeInDatabase.uniqueId, 
+						Number.NaN, 
+						alarmName, 
+						false, 
+						vibrationenabled, 
+						snoozefromnotification, 
+						alarmEnabled, 
+						false, 
+						soundName,
+						defaultSnoozePeriodInMinutes,
+						repeatInMinutes);
+					Database.updateAlertTypeSynchronous(neworExistingAlertType);
+				} else {
+					neworExistingAlertType = new AlertType(
+						null, 
+						Number.NaN, 
+						alarmName, 
+						false, 
+						vibrationenabled, 
+						snoozefromnotification, 
+						alarmEnabled, 
+						false, 
+						soundName,
+						defaultSnoozePeriodInMinutes,
+						repeatInMinutes);
+					Database.insertAlertTypeSychronous(neworExistingAlertType);
+				}
 				navigator.popView();
 			}
-
-			
 		]]>
 	</fx:Script>
 	
 	<s:navigationContent>
 		<s:Button   label="{back_label}" click="back_clickHandler(event)" height="48"/>
 	</s:navigationContent>
+	<s:actionContent>
+		<s:Button icon="{ModelLocator.imageDone}" id="OkButton" click="okClicked(event)"/>
+	</s:actionContent>
+	
 	<s:Scroller width="100%" height="100%" >
 		<s:VGroup width="100%" paddingTop="10">
 			<s:Label text="@{topText}"  textAlign="center"  color="#3B6999" 
@@ -369,6 +495,29 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 					<s:Rect height="100%" width="5" >
 						<s:fill>
 							<s:SolidColor color="#212121" id="rect08"/>
+						</s:fill>
+					</s:Rect>
+				</s:HGroup>
+				<s:Line width="100%">
+					<s:stroke>
+						<s:SolidColorStroke color="0xFFFFFF" weight="1" alpha="0.25"/>
+					</s:stroke>
+				</s:Line>	
+				
+				<!-- repeatinminutes -->
+				<s:HGroup id="repeatinminutesgroup" click="repeatinminutes_clickHandler(event)" width="100%">
+					<s:Rect height="100%" width="5" >
+						<s:fill>
+							<s:SolidColor color="#212121" id="rect13"/>
+						</s:fill>
+					</s:Rect>
+					<s:Label text = "{ModelLocator.resourceManagerInstance.getString('alerttypeview','repeat')}"
+							 width="100%" paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
+					<s:Label id="labelrepeatinminutes"  
+							 paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
+					<s:Rect height="100%" width="5" >
+						<s:fill>
+							<s:SolidColor color="#212121" id="rect14"/>
 						</s:fill>
 					</s:Rect>
 				</s:HGroup>

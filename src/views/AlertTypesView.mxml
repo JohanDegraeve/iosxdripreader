@@ -19,25 +19,44 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 <s:View xmlns:fx="http://ns.adobe.com/mxml/2009" 
 		creationComplete="view1_creationCompleteHandler(event)"
 		xmlns:s="library://ns.adobe.com/flex/spark" title="">
+	<fx:Metadata>
+		[ResourceBundle("alerttypesview")]
+	</fx:Metadata>
+
 	<fx:Script>
 		<![CDATA[
+			import com.distriqt.extension.dialog.Dialog;
+			import com.distriqt.extension.dialog.DialogView;
+			import com.distriqt.extension.dialog.builders.AlertBuilder;
+			import com.distriqt.extension.dialog.events.DialogViewEvent;
+			import com.distriqt.extension.dialog.objects.DialogAction;
+			
+			import mx.binding.utils.ChangeWatcher;
 			import mx.collections.ArrayCollection;
 			import mx.events.FlexEvent;
+			import mx.events.IndexChangedEvent;
 			
 			import spark.events.IndexChangeEvent;
 			
+			import Utilities.FromtimeAndValue;
+			import Utilities.FromtimeAndValueArrayCollection;
+			
+			import databaseclasses.AlertType;
+			import databaseclasses.CommonSettings;
 			import databaseclasses.Database;
+			
+			import events.DialogServiceEvent;
 			
 			import model.ModelLocator;
 			
 			import renderers.AlertTypeItemRenderer;
 			
+			import services.DialogService;
+			
 			private var _listOfElements:ArrayCollection;
 			private var deleteClicked:Boolean;
 			private var editClicked:Boolean;
-
-			private const CONTEXT_EDIT_LIST_ELEMENT:String = "context_edit_list_element";
-
+			
 			[Bindable]
 			private var back_label:String;
 			
@@ -77,7 +96,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			private function deleteTheSelectedItem(event:Event):void {
 				deleteClicked = true;
 			}
-
+			
 			private function editTheSelectedItem(event:Event):void {
 				editClicked = true;
 			}
@@ -88,22 +107,68 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			
 			protected function list_changeHandler(event:IndexChangeEvent):void {
 				if (deleteClicked) {
+					var alarmNameOfItemToDelete:String = (listOfElements.getItemAt(event.newIndex) as AlertType).alarmName;
+					for (var cntr2:int = CommonSettings.COMMON_SETTING_LOW_ALERT; cntr2 < CommonSettings.COMMON_SETTING_LOW_ALERT + 1;cntr2++) {
+						var setting:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_LOW_ALERT);
+						var listOfAlertsInTheSetting:FromtimeAndValueArrayCollection =  FromtimeAndValueArrayCollection.createList(setting);
+						for (var cntr3:int = 0;cntr3 < listOfAlertsInTheSetting.length;cntr3++) {
+							var fromTimeAndValue:FromtimeAndValue = listOfAlertsInTheSetting.getItemAt(cntr3) as FromtimeAndValue;
+							if (fromTimeAndValue.alarmName.toUpperCase() == alarmNameOfItemToDelete.toUpperCase()) {
+								var alert:DialogView = Dialog.service.create(
+									new AlertBuilder()
+									.setTitle(ModelLocator.resourceManagerInstance.getString("alerttypesview","delete_alert_type"))
+									.setMessage(ModelLocator.resourceManagerInstance.getString("alerttypesview","alerttype_still_used"))
+									.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
+									.build()
+								);
+								DialogService.addDialog(alert);
+								return;
+							}
+						}
+					}
 					listOfElements.removeItemAt(event.newIndex);
 					deleteClicked = false;
 				} else if (editClicked) {
 					var dataToSend:Object = new Object;
-					dataToSend.selectedIndex = event.newIndex;
-					dataToSend.listOfElements = listOfElements;
-					navigator.pushView(AlertTypeView, dataToSend, CONTEXT_EDIT_LIST_ELEMENT);
+					dataToSend.alertType = listOfElements.getItemAt(event.newIndex) as AlertType;
+					navigator.pushView(AlertTypeView, dataToSend);
 				}
 			}
 			
+			private function addClicked(e:MouseEvent = null):void {
+				var dataToSend:Object = new Object;
+				var defaultAlarmName:String = ModelLocator.resourceManagerInstance.getString("alerttypesview","default_alarm_name");
+				var existingAlertTypes:ArrayCollection = Database.getAllAlertTypes();
+				var nameOk:Boolean = false;
+				var namecntr:int = 0;
+				while (!nameOk) {
+					namecntr++;
+					var newName:String = defaultAlarmName + "_" + namecntr;
+					var cntr:int;
+					for (cntr = 0; cntr < existingAlertTypes.length; cntr++) {
+						if (((existingAlertTypes.getItemAt(cntr)) as AlertType).alarmName.toUpperCase() == newName.toUpperCase()) {
+							break;
+						}
+					}
+					if (cntr == existingAlertTypes.length) {
+						nameOk = true;
+					}
+				}
+				defaultAlarmName += "_" + namecntr;
+				var newAlertType = new AlertType(null, Number.NaN, defaultAlarmName, false, false, false, false, false, "", 5, 0);
+				dataToSend.alertType = newAlertType;
+				navigator.pushView(AlertTypeView, dataToSend);
+			}
+
 		]]>
 	</fx:Script>
 	
 	<s:navigationContent>
 		<s:Button   label="{back_label}" click="back_clickHandler(event)" height="48"/>
 	</s:navigationContent>
+	<s:actionContent>
+		<s:Button icon="{ModelLocator.image_add}" id="AddButton" click="addClicked(event)"/>
+	</s:actionContent>
 	
 	<s:Scroller width="100%" height="100%" >
 		<s:VGroup width="100%" paddingTop="10">

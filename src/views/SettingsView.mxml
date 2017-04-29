@@ -343,7 +343,7 @@
 				navigator.pushView(AlertTypesView);
 			}
 			
-			public static function requestNewTransmitterId():void {
+			public static function requestNewTransmitterId(calledFromHomeView:Boolean = false):void {
 				var title:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE) + " " +
 					ModelLocator.resourceManagerInstance.getString("transmitterservice","transmitter_id_settings_title");
 				var alert:DialogView = Dialog.service.create(
@@ -366,6 +366,9 @@
 					if ((event.values[0] as String).length != idLength) {
 						var alertMessage:String =
 							(ModelLocator.resourceManagerInstance.getString("transmitterservice","transmitter_id_should_be_five_chars")).replace("{max}", idLength.toString());
+						if (calledFromHomeView) {
+							alertMessage += " " + (ModelLocator.resourceManagerInstance.getString("transmitterservice","set_transmitter_id_in_settings"));
+						}
 						var alert:DialogView = Dialog.service.create(
 							new AlertBuilder()
 							.setTitle(ModelLocator.resourceManagerInstance.getString("transmitterservice","enter_transmitter_id_dialog_title"))

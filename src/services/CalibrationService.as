@@ -5,6 +5,7 @@ package services
 	import com.distriqt.extension.dialog.builders.AlertBuilder;
 	import com.distriqt.extension.dialog.events.DialogViewEvent;
 	import com.distriqt.extension.dialog.objects.DialogAction;
+	import com.distriqt.extension.notifications.NotificationRepeatInterval;
 	import com.distriqt.extension.notifications.Notifications;
 	import com.distriqt.extension.notifications.builders.NotificationBuilder;
 	import com.distriqt.extension.notifications.events.NotificationEvent;
@@ -12,6 +13,8 @@ package services
 	import flash.events.EventDispatcher;
 	import flash.events.TimerEvent;
 	import flash.utils.Timer;
+	
+	import spark.effects.animation.RepeatBehavior;
 	
 	import Utilities.Trace;
 	
@@ -194,7 +197,7 @@ package services
 				//add the warning message
 				var alert:DialogView = Dialog.service.create(
 					new AlertBuilder()
-					.setTitle(isNaN(bgLevel1) ? ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_first_calibration_title") : ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_second_calibration_title"))
+					.setTitle(ModelLocator.resourceManagerInstance.getString("calibrationservice","invalid_value"))
 					.setMessage(ModelLocator.resourceManagerInstance.getString("calibrationservice","value_should_be_numeric"))
 					.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
 					.build()
@@ -367,7 +370,7 @@ package services
 				//add the warning message
 				var alert:DialogView = Dialog.service.create(
 					new AlertBuilder()
-					.setTitle(ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_calibration_title"))
+					.setTitle(ModelLocator.resourceManagerInstance.getString("calibrationservice","invalid_value"))
 					.setMessage(ModelLocator.resourceManagerInstance.getString("calibrationservice","value_should_be_numeric"))
 					.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
 					.build()

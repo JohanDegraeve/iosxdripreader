@@ -158,6 +158,7 @@ package databaseclasses
 			"snoozefromnotification BOOLEAN," +
 			"soundtext STRING," +
 			"defaultsnoozeperiod INTEGER," + // in minutes
+			"repeatinminutes INTEGER," + // in minutes
 			"lastmodifiedtimestamp TIMESTAMP NOT NULL," +
 			"enabled BOOLEAN," + 
 			"overridesilentmode BOOLEAN)";
@@ -604,7 +605,7 @@ package databaseclasses
 				sqlStatement.removeEventListener(SQLErrorEvent.ERROR,tableCreationError);
 				var noAlertName:String = ModelLocator.resourceManagerInstance.getString("settingsview","no_alert")
 				if (getAlertType(noAlertName) == null) {
-					var noAlert:AlertType = new AlertType(null, Number.NaN, noAlertName, false, false, false, false, false, "", 10);
+					var noAlert:AlertType = new AlertType(null, Number.NaN, noAlertName, false, false, false, false, false, "", 10, 0);
 					insertAlertTypeSychronous(noAlert);
 				}
 				finishedCreatingTables();
@@ -851,6 +852,7 @@ package databaseclasses
 					"snoozefromnotification, " +
 					"soundtext, " +
 					"defaultsnoozeperiod, " +
+					"repeatinminutes, " +
 					"enabled, " +
 					"overridesilentmode) " +
 					"VALUES ('" + alertType.uniqueId + "', " +
@@ -861,6 +863,7 @@ package databaseclasses
 					(alertType.snoozeFromNotification ? "1":"0")  +", " +
 					"'" + alertType.sound + "', " +
 					alertType.defaultSnoozePeriodInMinutes +  ", " +
+					alertType.repeatInMinutes +  ", " +
 					(alertType.enabled ? "1":"0") + ", " +
 					(alertType.overrideSilentMode ? "1":"0")
 					 + ")";
@@ -965,8 +968,9 @@ package databaseclasses
 					"snoozefromnotification = " + (alertType.snoozeFromNotification ? "1":"0") + ", " + 
 					"soundtext = '" + alertType.sound + "', " + 
 					"defaultsnoozeperiod = " + alertType.defaultSnoozePeriodInMinutes + ", " + 
+					"repeatinminutes = " + alertType.repeatInMinutes + ", " + 
 					"overridesilentmode = " + (alertType.overrideSilentMode ? "1":"0") + ", " + 
-					"enabled = " + (alertType.enabled ? "1":"0") + ", " + 
+					"enabled = " + (alertType.enabled ? "1":"0") + 
 					" WHERE alerttypeid = " + "'" + alertType.uniqueId + "'"; 
 				insertRequest.execute();
 				conn.commit();
@@ -1006,7 +1010,8 @@ package databaseclasses
 							result.data[0].enabled == "1" ? true:false,
 							result.data[0].overridesilentmode == "1" ? true:false,
 							result.data[0].soundtext,
-							result.data[0].defaultsnoozeperiod
+							result.data[0].defaultsnoozeperiod,
+							result.data[0].repeatinminutes
 						);
 				}
 			} catch (error:SQLError) {
@@ -1047,7 +1052,8 @@ package databaseclasses
 							result.data[i].enabled == "1" ? true:false,
 							result.data[i].overridesilentmode == "1" ? true:false,
 							result.data[i].soundtext,
-							result.data[i].defaultsnoozeperiod
+							result.data[i].defaultsnoozeperiod,
+							result.data[i].repeatinminutes
 						));
 					} 
 				}

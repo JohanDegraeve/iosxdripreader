@@ -68,6 +68,7 @@ package model
 		public static var image_bluetooth_red:Image;
 		public static var image_bluetooth_green:Image;
 		public static var image_bluetooth_orange:Image;
+		public static var image_add:Image;
 		public static var image_G5:Image;
 		public static var imageDone:Image;
 		public static var iconCache:ContentCache;
@@ -235,6 +236,10 @@ package model
 			image_bluetooth_orange = new Image();
 			image_bluetooth_orange.contentLoader = iconCache;
 			image_bluetooth_orange.source = "../assets/image_bluetooth_orange.png";
+			
+			image_add = new Image();
+			image_add.contentLoader = iconCache;
+			image_add.source = "../assets/add48x48.png";
 			
 			image_bluetooth_green = new Image();
 			image_bluetooth_green.contentLoader = iconCache;
