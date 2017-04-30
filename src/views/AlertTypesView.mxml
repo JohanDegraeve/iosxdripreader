@@ -28,13 +28,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			import com.distriqt.extension.dialog.Dialog;
 			import com.distriqt.extension.dialog.DialogView;
 			import com.distriqt.extension.dialog.builders.AlertBuilder;
-			import com.distriqt.extension.dialog.events.DialogViewEvent;
 			import com.distriqt.extension.dialog.objects.DialogAction;
 			
-			import mx.binding.utils.ChangeWatcher;
 			import mx.collections.ArrayCollection;
 			import mx.events.FlexEvent;
-			import mx.events.IndexChangedEvent;
 			
 			import spark.events.IndexChangeEvent;
 			
@@ -44,8 +41,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			import databaseclasses.AlertType;
 			import databaseclasses.CommonSettings;
 			import databaseclasses.Database;
-			
-			import events.DialogServiceEvent;
 			
 			import model.ModelLocator;
 			
@@ -126,6 +121,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 							}
 						}
 					}
+					Database.deleteAlertTypeSynchronous(listOfElements.getItemAt(event.newIndex) as AlertType);
 					listOfElements.removeItemAt(event.newIndex);
 					deleteClicked = false;
 				} else if (editClicked) {

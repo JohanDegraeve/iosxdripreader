@@ -126,14 +126,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 						 (Math.round((valueInCorrectUnit * 10)) / 10).toString());
 					 valueGroupLabelIdforUnit.text = ModelLocator.resourceManagerInstance.getString('settingsview','mgdl');
 					 alarmName = fromtimeAndValue.alarmName;
-					 
-					 if (alarmName == ModelLocator.resourceManagerInstance.getString('settingsview', 'no_alert')) {
-						 valueGroup.enabled = false;
-						 valueGroup.alpha = 0.5;
-					 } else {
-						 valueGroup.enabled = true;
-						 valueGroup.alpha = 1;
-					 }
 				 }
 			 }
 			
@@ -295,14 +287,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 						newFromtimeAndValue = (listOfElements.getItemAt(selectedIndex) as FromtimeAndValue);
 					newFromtimeAndValue = 
 						new FromtimeAndValue(newFromtimeAndValue.from, newFromtimeAndValue.value, newAlarmName, newFromtimeAndValue.editable, newFromtimeAndValue.deletable);
-					
-					if (alarmName.toUpperCase() == ModelLocator.resourceManagerInstance.getString('settingsview', 'no_alert').toUpperCase()) {
-						valueGroup.enabled = false;
-						valueGroup.alpha = 0.5;
-					} else {
-						valueGroup.enabled = true;
-						valueGroup.alpha = 1;
-					}
+
 				}
 			}
 			
