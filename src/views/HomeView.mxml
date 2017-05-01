@@ -800,13 +800,5 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			</s:Group>
 			<s:Label id = "currentBgLabel" text="{currentBgLabelText}" fontSize="60" lineThrough="{currentBgLabellinethrough}" color="{currentBgLabelColor}"/>
 		</s:Group>
-		<charts:LineChart id="chart" height="100%" width="100%" showDataTips="false"
-						  paddingRight="5" paddingLeft="5" 
-						  dataProvider="{chartValues}" >
-			<charts:series>
-				<series:LineSeries>
-				</series:LineSeries>
-			</charts:series>
-		</charts:LineChart> 
 	</s:Group>
 </s:View>
