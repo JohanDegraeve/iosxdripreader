@@ -11,7 +11,7 @@ xdrip/xbridge/G5 reader for iOS devices -
 * Upload to Nightscout
  * When the app is in the foreground, upload will always happen immediately after receiving a new value, also at app start, 
  * When the app is in the background, then the trigger to upload is a remote notification.
-   * The app will subscribe to a service as soon as you launch it. As soon as the first bgreading is received, the app will receive a remote notification the minute after it's supposed to receive a new bgreading. This remote notification opens the app in the background, and allows it to do an upload to NightScout. The upload may have a delay of maximum 1,5 minute. The trigger is actually being sent by another app on a spare iphone on my desk which is always on. There's no guarantee that this app is always alive. ___There's no guarantee that upload to NightScout is successful.___
+   * The app will subscribe (anonymously) to a service (QuickBlox) as soon as you launch it. As soon as the first bloodglucose reading is received, the app will receive a remote notification the minute after it's supposed to receive a new reading. This remote notification opens the app in the background, and allows it to do an upload to NightScout. The upload may have a delay of maximum 1,5 minute. The trigger is actually being sent by another app on a spare iphone on my desk which is always on. There's no guarantee that this app is always alive. ___There's no guarantee that upload to NightScout is successful.___
 * set transmitter id
 
 
