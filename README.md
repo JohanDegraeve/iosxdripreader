@@ -1,6 +1,6 @@
 # connects to xDrip and G5
 
-Project in development phase 
+
 
 xdrip/xbridge/G5 reader for iOS devices - 
 
