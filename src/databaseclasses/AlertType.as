@@ -81,7 +81,7 @@ package databaseclasses
 		private var _repeatInMinutes:int;
 
 		/**
-		 * 0 is no repeat 
+		 * 0 is no repeat, for most alerts (or all ?), different from 0 just means repeat every minute using iOS, ie repeat not handled by app
 		 */
 		public function get repeatInMinutes():int
 		{

@@ -43,6 +43,7 @@ package model
 	import events.DatabaseEvent;
 	import events.NotificationServiceEvent;
 	
+	import services.AlarmService;
 	import services.BackGroundFetchService;
 	import services.BluetoothService;
 	import services.CalibrationService;
@@ -208,6 +209,7 @@ package model
 
 							NotificationService.instance.addEventListener(NotificationServiceEvent.NOTIFICATION_SERVICE_INITIATED_EVENT, HomeView.notificationServiceInitiated);
 							NotificationService.init();
+							AlarmService.init();
 							
 							CalibrationService.init();
 							TimerService.init();

@@ -17,17 +17,13 @@ package services
 	import Utilities.Trace;
 	import Utilities.UniqueId;
 	
-	import databaseclasses.CommonSettings;
 	import databaseclasses.LocalSettings;
 	
 	import events.BackGroundFetchServiceEvent;
-	import events.BlueToothServiceEvent;
 	
 	import model.ModelLocator;
 	
 	import quickbloxsecrets.QuickBloxSecrets;
-	
-	import views.HomeView;
 	
 	/**
 	 * controls all services that need up or download<br>
@@ -85,23 +81,6 @@ package services
 		private static var wishedTagList:String = "ONE";
 		private static var currentTagList:String = "ONE";
 		
-		//private static var _attemptingBluetoothReconnect:Boolean = false;
-		//private static var timeStampOfSettingAttemptingBluetoothReconnect:Number;
-		
-		/*private static function get attemptingBluetoothReconnect():Boolean
-		{
-		return _attemptingBluetoothReconnect;
-		}
-		
-		private static function set attemptingBluetoothReconnect(value:Boolean):void
-		{
-		_attemptingBluetoothReconnect = value;
-		timeStampOfSettingAttemptingBluetoothReconnect = (new Date()).valueOf();
-		}*/
-		
-		//private static var waitingSyncResponse:Boolean = false;
-		//private static var syncResponse:String = NO_DATA;
-		
 		public static function get instance():BackGroundFetchService {
 			return _instance;
 		}
@@ -119,86 +98,27 @@ package services
 				initialStart = false;
 			
 			BackgroundFetch.init();
-			//BackgroundFetch.initHealthKit();
 			BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.LOG_INFO, logInfoReceived);
 			BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.LOAD_REQUEST_RESULT, loadRequestSuccess);
 			BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.LOAD_REQUEST_ERROR, loadRequestError);
 			BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.PERFORMLOCALFETCH, performFetch);
 			BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.PERFORMREMOTEFETCH, performFetch);
 			BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.DEVICE_TOKEN_RECEIVED, deviceTokenReceived);
-			//BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.RECONNECTTIMEREXPIRED, reconnectTimerExpiry);
 			BackgroundFetch.minimumBackgroundFetchInterval = BackgroundFetch.BACKGROUND_FETCH_INTERVAL_NEVER;
-			//BluetoothService.instance.addEventListener(BlueToothServiceEvent.BLUETOOTH_DEVICE_CONNECTION_COMPLETED, bluetoothDeviceConnectionCompleted);
 		}
-		
-		/*private static function bluetoothDeviceConnectionCompleted(event:BlueToothServiceEvent):void {
-		myTrace("in bluetoothDeviceConnectionCompleted");
-		//if we're in foreground then no need to do all this stuff, except calling maybe completionhandler
-		if (ModelLocator.isInForeground) {
-		attemptingBluetoothReconnect = false;
-		} else {
-		if (attemptingBluetoothReconnect && ((new Date()).valueOf() - timeStampOfSettingAttemptingBluetoothReconnect < 60 * 1000)) {
-		myTrace("bluetoothDeviceConnectionCompleted attemptingBluetoothReconnect = true & retry from within BackGroundFetchService < 60 seconds");
-		attemptingBluetoothReconnect = false;
-		BackgroundFetch.cancelReconnectTimer();
-		if (!waitingSyncResponse) {
-		myTrace("bluetoothDeviceConnectionCompleted watingsyncresponse = false, calling callcompletion");
-		callCompletionHandler(syncResponse);
-		}
-		} else if (attemptingBluetoothReconnect) {
-		myTrace("bluetoothDeviceConnectionCompleted attemptingBluetoothReconnect = true & retry from within BackGroundFetchService > 60 seconds");
-		attemptingBluetoothReconnect = true;
-		BackgroundFetch.startReconnectTimer(20);
-		BluetoothService.forgetBlueToothDevice();
-		BluetoothService.tryReconnect(null);
-		}
-		}
-		}*/
 		
 		public static function callCompletionHandler(result:String):void {
 			myTrace("callCompletionhandler with result " + result);
-			/*			waitingSyncResponse = false;
-			if (attemptingBluetoothReconnect) {
-			myTrace("attemptingBluetoothReconnect = true, setting syncresponse to " + result);
-			syncResponse = result;
-			} else {
-			myTrace("attemptingBluetoothReconnect = false, calling callcompletionhandler");*/
 			BackgroundFetch.callCompletionHandler(result);
-			//syncResponse = NO_DATA;
-			//BackgroundFetch.cancelReconnectTimer();
-			//}
 		}
-		
-		/*private static function reconnectTimerExpiry(event:Event):void {
-		myTrace("reconnectTimerExpiry calling callCompletionHandler with result " + syncResponse); 
-		waitingSyncResponse = false;
-		if (attemptingBluetoothReconnect) {
-		attemptingBluetoothReconnect = false;
-		BluetoothService.stopScanningIfScanning();
-		}
-		BackgroundFetch.callCompletionHandler(syncResponse);
-		syncResponse = NO_DATA;
-		}*/
 		
 		private static function performFetch(event:BackgroundFetchEvent):void {
-			/*if (!HomeView.peripheralConnected && !ModelLocator.isInForeground && 
-			!(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE) == "G5")) {
-			myTrace("peripheral not connected, calling bluetoothservice.tryreconnect");
-			attemptingBluetoothReconnect = true;
-			BackgroundFetch.startReconnectTimer(20);
-			BluetoothService.forgetBlueToothDevice();
-			BluetoothService.tryReconnect(null);
-			}*/
-			//if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE) == "G5") {
 			if (event.type == BackgroundFetchEvent.PERFORMREMOTEFETCH) {
 				myTrace("performRemoteFetch");
-				//local fetch can occur at any time, eg during a G5 connection.
-				//the performfetch is always 1 or 2  minutes after this connection
 				BluetoothService.startRescan(null);
 			} else {
 				myTrace("performLocalFetch");
 			}
-			//}
 			if (!ModelLocator.isInForeground) {
 				var backgroundfetchServiceEvent:BackGroundFetchServiceEvent = new BackGroundFetchServiceEvent(BackGroundFetchServiceEvent.PERFORM_FETCH);
 				backgroundfetchServiceEvent.data = new Object();

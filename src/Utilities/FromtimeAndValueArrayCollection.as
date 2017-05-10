@@ -137,7 +137,7 @@ package Utilities
 		  * </li>
 		  * </ul>
 		  */
-		 public function getValue(timeAsNumber:Number = Number.NaN,timeAsString:String = "",timeAsDate:Date = null):Number {
+		 public function getValue(timeAsNumber:Number, timeAsString:String, timeAsDate:Date):Number {
 			 if (!isNaN(timeAsNumber)) {
 				 if (timeAsNumber > 86400) {
 					 myTrace("in getAlarmName, fromTimeAsNumber should not be > 86400, throwing exception");
@@ -145,11 +145,11 @@ package Utilities
 				 }
 			 }
 			 if (!timeAsString == "") {
-				 return getValue(((new Number(timeAsString.split(":")[0])) * 60 + (new Number(timeAsString.split(":")[1])))*60); 
+				 return getValue(((new Number(timeAsString.split(":")[0])) * 60 + (new Number(timeAsString.split(":")[1])))*60, "", null); 
 			 }
 			 
 			 if (timeAsDate != null) {
-				 return getValue(((new Number(timeAsDate.hours)) * 60 + (new Number(timeAsDate.minutes)))*60); 
+				 return getValue(((new Number(timeAsDate.hours)) * 60 + (new Number(timeAsDate.minutes)))*60, "", null); 
 			 }
 			 
 			 var previousItem:int;

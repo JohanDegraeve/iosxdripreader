@@ -151,7 +151,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 					}
 				}
 				defaultAlarmName += "_" + namecntr;
-				var newAlertType = new AlertType(null, Number.NaN, defaultAlarmName, false, false, false, false, false, "", 5, 0);
+				var defaultSound:String = ModelLocator.resourceManagerInstance.getString("alerttypeview","default_sound_no_translation_needed");
+				var newAlertType:AlertType = new AlertType(null, Number.NaN, defaultAlarmName, false, false, false, false, false, defaultSound, 5, 0);
 				dataToSend.alertType = newAlertType;
 				navigator.pushView(AlertTypeView, dataToSend);
 			}

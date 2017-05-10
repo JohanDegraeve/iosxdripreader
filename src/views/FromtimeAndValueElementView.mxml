@@ -33,12 +33,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			import com.distriqt.extension.dialog.Dialog;
 			import com.distriqt.extension.dialog.DialogType;
 			import com.distriqt.extension.dialog.DialogView;
+			import com.distriqt.extension.dialog.PickerDialogView;
 			import com.distriqt.extension.dialog.builders.AlertBuilder;
 			import com.distriqt.extension.dialog.builders.DateTimeDialogBuilder;
+			import com.distriqt.extension.dialog.builders.PickerDialogBuilder;
 			import com.distriqt.extension.dialog.events.DialogDateTimeEvent;
 			import com.distriqt.extension.dialog.events.DialogViewEvent;
 			import com.distriqt.extension.dialog.objects.DialogAction;
 			
+			import mx.collections.ArrayCollection;
 			import mx.events.FlexEvent;
 			
 			import spark.components.View;
@@ -46,8 +49,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			import Utilities.FromtimeAndValue;
 			import Utilities.FromtimeAndValueArrayCollection;
 			
+			import databaseclasses.AlertType;
 			import databaseclasses.BgReading;
 			import databaseclasses.CommonSettings;
+			import databaseclasses.Database;
 			
 			import model.ModelLocator;
 			
@@ -260,24 +265,29 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			}
 			
 			private function alarmNameGroupClicked(event:Event = null):void {
-				var alert:DialogView = Dialog.service.create(
-					new AlertBuilder()
-					.setTitle(ModelLocator.resourceManagerInstance.getString('fromtimeandvalueelementview', 'change_alarmname_alert_title'))
-					.setMessage(ModelLocator.resourceManagerInstance.getString('fromtimeandvalueelementview', 'change_alarmname_alert_message'))
-					.addTextField("",alarmName)
-					.addOption(ModelLocator.resourceManagerInstance.getString("general","cancel"), DialogAction.STYLE_CANCEL, 1)
-					.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
+				var alarmNames:Array = new Array();
+				var index:int = 0;
+				var alertTypes:ArrayCollection = Database.getAllAlertTypes();
+				for (var cntr:int = 0;cntr < alertTypes.length;cntr++) {
+					alarmNames.push((alertTypes.getItemAt(cntr) as AlertType).alarmName);
+					if (alarmName == alarmNames[cntr] as String)
+						index = cntr;
+				}
+				var picker:PickerDialogView = Dialog.service.create(
+					new PickerDialogBuilder()
+					.setTitle(ModelLocator.resourceManagerInstance.getString('fromtimeandvalueelementview', 'alarm_picker_title'))
+					.setCancelLabel(ModelLocator.resourceManagerInstance.getString("general","cancel"))
+					.setAcceptLabel("Ok")
+					.addColumn( alarmNames, index )
 					.build()
 				);
-				alert.addEventListener(DialogViewEvent.CLOSED, onAlarmNameSet);
-				DialogService.addDialog(alert);
 				
-				function onAlarmNameSet(event:DialogViewEvent): void {
-					if (event.index == 1) {
-						return;
-					}
-					
-					var newAlarmName:String = event.values[0] as String;
+				picker.addEventListener( DialogViewEvent.CLOSED, picker_closedHandler );
+				picker.show();
+
+				function picker_closedHandler(event:DialogViewEvent): void {
+					var newAlarmName:String = event.values[0];
+
 					if (alarmName == newAlarmName)
 						return;
 					
@@ -287,7 +297,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 						newFromtimeAndValue = (listOfElements.getItemAt(selectedIndex) as FromtimeAndValue);
 					newFromtimeAndValue = 
 						new FromtimeAndValue(newFromtimeAndValue.from, newFromtimeAndValue.value, newAlarmName, newFromtimeAndValue.editable, newFromtimeAndValue.deletable);
-
 				}
 			}
 			

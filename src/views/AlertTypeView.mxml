@@ -27,7 +27,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 		<![CDATA[
 			import com.distriqt.extension.dialog.Dialog;
 			import com.distriqt.extension.dialog.DialogView;
+			import com.distriqt.extension.dialog.PickerDialogView;
 			import com.distriqt.extension.dialog.builders.AlertBuilder;
+			import com.distriqt.extension.dialog.builders.PickerDialogBuilder;
 			import com.distriqt.extension.dialog.events.DialogViewEvent;
 			import com.distriqt.extension.dialog.objects.DialogAction;
 			
@@ -61,6 +63,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			private var resetColorTimer:Timer;
 			private var alertTypeChanged:Boolean;
 			private var selectedIndex:int;
+			
+			/**
+			 * this is the default value for 5 minutes, to be used as repeat interval<br>
+			 * the real value is a bit less than 5 minutes because if we would take 5 minutes then there's a risk that the check is done just a bit too soon 
+			 */
+			private const fiveMinutesInMs:int = 5 * 60 * 1000 - 10000;
 			
 			protected function view1_creationCompleteHandler(event:FlexEvent):void
 			{
@@ -116,7 +124,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 				} else {
 					repeatinminutesgroup.alpha = 0.25;
 				}
-				labelrepeatinminutes.text = repeatInMinutes == 5 ? ModelLocator.resourceManagerInstance.getString('general','yes') : ModelLocator.resourceManagerInstance.getString('general','no');
+				labelrepeatinminutes.text = (repeatInMinutes == fiveMinutesInMs ? ModelLocator.resourceManagerInstance.getString('general','yes') : ModelLocator.resourceManagerInstance.getString('general','no'));
 			}
 			
 			protected function enabled_clickHandler(event:MouseEvent):void {
@@ -212,8 +220,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 				rect13.color = uint("0xD3D3D3");
 				rect14.color = uint("0xD3D3D3");
 				setResetColorTimer();
-				repeatInMinutes = (repeatInMinutes == 5 ? 0:5);
-				labelrepeatinminutes.text = repeatInMinutes == 5 ? ModelLocator.resourceManagerInstance.getString('general','yes') : ModelLocator.resourceManagerInstance.getString('general','no');
+				repeatInMinutes = (repeatInMinutes == fiveMinutesInMs ? 0:fiveMinutesInMs);
+				labelrepeatinminutes.text = (repeatInMinutes == fiveMinutesInMs ? ModelLocator.resourceManagerInstance.getString('general','yes') : ModelLocator.resourceManagerInstance.getString('general','no'));
 				alertTypeChanged = true;
 			}
 			
@@ -280,26 +288,39 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 				rect11.color = uint("0xD3D3D3");
 				rect12.color = uint("0xD3D3D3");
 				setResetColorTimer();
-				var alert:DialogView = Dialog.service.create(
-					new AlertBuilder()
-					.setTitle(ModelLocator.resourceManagerInstance.getString("alerttypeview","sound_name"))
-					.setMessage(ModelLocator.resourceManagerInstance.getString("alerttypeview","enter_sound_name"))
-					.addTextField(soundName,"")
-					.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
-					.addOption(ModelLocator.resourceManagerInstance.getString("general","cancel"), DialogAction.STYLE_CANCEL, 1)
+
+				var selectedSound:int = 0;
+				var soundNames:Array = new Array();
+				var sounds:String = ModelLocator.resourceManagerInstance.getString("alerttypeview","default_sounds_no_translation_needed_comma_seperated");
+				var soundsSplitted:Array = sounds.split(',');
+				for (var cntr:int = 0;cntr < soundsSplitted.length;cntr++) {
+					var newSound:String = soundsSplitted[cntr];
+					if (newSound.length > 0) {
+						soundNames.push(newSound);
+						if (newSound.toUpperCase() == soundName.toUpperCase())
+							selectedSound = cntr;
+					}
+				}
+
+				var picker:PickerDialogView = Dialog.service.create(
+					new PickerDialogBuilder()
+					.setTitle(ModelLocator.resourceManagerInstance.getString('fromtimeandvalueelementview', 'alarm_picker_title'))
+					.setCancelLabel(ModelLocator.resourceManagerInstance.getString("general","cancel"))
+					.setAcceptLabel("Ok")
+					.addColumn(soundNames, selectedSound)
 					.build()
 				);
-				DialogService.addDialog(alert);
-				alert.addEventListener(DialogViewEvent.CLOSED, soundnameentered);
 				
-				function soundnameentered(event:DialogViewEvent):void {
-					if (event.index == 1) {
+				picker.addEventListener( DialogViewEvent.CLOSED, picker_closedHandler );
+				picker.show();
+				
+				function picker_closedHandler(event:DialogViewEvent): void {
+					var newSoundName:String = event.values[0];
+					if (soundName == newSoundName)
 						return;
-					}
-					soundName = event.values[0] as String;
-					if (soundName != alertType.sound) {
-						alertTypeChanged = true;
-					}
+					
+					soundName = newSoundName;
+					alertTypeChanged = true;					
 				}
 			}
 			
@@ -504,29 +525,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 					</s:stroke>
 				</s:Line>	
 				
-				<!-- repeatinminutes -->
-				<s:HGroup id="repeatinminutesgroup" click="repeatinminutes_clickHandler(event)" width="100%">
-					<s:Rect height="100%" width="5" >
-						<s:fill>
-							<s:SolidColor color="#212121" id="rect13"/>
-						</s:fill>
-					</s:Rect>
-					<s:Label text = "{ModelLocator.resourceManagerInstance.getString('alerttypeview','repeat')}"
-							 width="100%" paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
-					<s:Label id="labelrepeatinminutes"  
-							 paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
-					<s:Rect height="100%" width="5" >
-						<s:fill>
-							<s:SolidColor color="#212121" id="rect14"/>
-						</s:fill>
-					</s:Rect>
-				</s:HGroup>
-				<s:Line width="100%">
-					<s:stroke>
-						<s:SolidColorStroke color="0xFFFFFF" weight="1" alpha="0.25"/>
-					</s:stroke>
-				</s:Line>	
-				
 				<!-- defaultsnoozeperiod -->
 				<s:HGroup id="defaultsnoozeperiodgroup" click="defaultsnoozeperiod_clickHandler(event)" width="100%">
 					<s:Rect height="100%" width="5" >
@@ -541,6 +539,29 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 					<s:Rect height="100%" width="5" >
 						<s:fill>
 							<s:SolidColor color="#212121" id="rect10"/>
+						</s:fill>
+					</s:Rect>
+				</s:HGroup>
+				<s:Line width="100%">
+					<s:stroke>
+						<s:SolidColorStroke color="0xFFFFFF" weight="1" alpha="0.25"/>
+					</s:stroke>
+				</s:Line>	
+				
+				<!-- repeatinminutes -->
+				<s:HGroup id="repeatinminutesgroup" click="repeatinminutes_clickHandler(event)" width="100%">
+					<s:Rect height="100%" width="5" >
+						<s:fill>
+							<s:SolidColor color="#212121" id="rect13"/>
+						</s:fill>
+					</s:Rect>
+					<s:Label text = "{ModelLocator.resourceManagerInstance.getString('alerttypeview','repeat')}"
+							 width="100%" paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
+					<s:Label id="labelrepeatinminutes"  
+							 paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
+					<s:Rect height="100%" width="5" >
+						<s:fill>
+							<s:SolidColor color="#212121" id="rect14"/>
 						</s:fill>
 					</s:Rect>
 				</s:HGroup>

@@ -23,6 +23,8 @@ package services
 	import com.distriqt.extension.notifications.AuthorisationStatus;
 	import com.distriqt.extension.notifications.Notifications;
 	import com.distriqt.extension.notifications.Service;
+	import com.distriqt.extension.notifications.builders.ActionBuilder;
+	import com.distriqt.extension.notifications.builders.CategoryBuilder;
 	import com.distriqt.extension.notifications.builders.NotificationBuilder;
 	import com.distriqt.extension.notifications.events.AuthorisationEvent;
 	import com.distriqt.extension.notifications.events.NotificationEvent;
@@ -99,6 +101,12 @@ package services
 		
 		public static const ID_FOR_DEVICE_NOT_PAIRED:int = 5;
 		
+		public static const ID_FOR_LOW_ALERT:int = 6;
+		
+		public static const ID_FOR_LOW_ALERT_CATEGORY:String = "LOW_ALERT_CATEGORY";
+		
+		public static const ID_FOR_LOW_ALERT_SNOOZE_IDENTIFIER:String = "LOW_ALERT_SNOOZE_IDENTIFIER";
+		
 		public function NotificationService()
 		{
 			if (_instance != null) {
@@ -138,6 +146,17 @@ package services
 			var service:Service = new Service();
 			service.enableNotificationsWhenActive = true;
 			
+			service.categories.push( 
+				new CategoryBuilder()
+				.setIdentifier(ID_FOR_LOW_ALERT_CATEGORY)
+				.addAction( 
+					new ActionBuilder()
+					.setTitle(ModelLocator.resourceManagerInstance.getString("notificationservice","snooze_for_snoozin_alarm_in_notification_screen"))
+					.setIdentifier(ID_FOR_LOW_ALERT_SNOOZE_IDENTIFIER)
+					.build()
+				)
+				.build()
+			);
 			Notifications.service.setup(service);
 			
 			BluetoothService.instance.addEventListener(BlueToothServiceEvent.DEVICE_NOT_PAIRED, deviceNotPaired);
@@ -179,6 +198,7 @@ package services
 			function register():void {
 				Notifications.service.addEventListener(NotificationEvent.NOTIFICATION_SELECTED, notificationHandler);
 				Notifications.service.addEventListener(NotificationEvent.NOTIFICATION, notificationHandler);
+				Notifications.service.addEventListener(NotificationEvent.ACTION, notificationHandler);
 				TimerService.instance.addEventListener(TimerServiceEvent.BG_READING_NOT_RECEIVED_ON_TIME, bgReadingNotReceivedOnTime);
 				CalibrationService.instance.addEventListener(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT, updateAllNotifications);
 				TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, bgReadingEventReceived);
