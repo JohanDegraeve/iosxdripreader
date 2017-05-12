@@ -291,8 +291,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 
 				var selectedSound:int = 0;
 				var soundNames:Array = new Array();
-				var sounds:String = ModelLocator.resourceManagerInstance.getString("alerttypeview","default_sounds_no_translation_needed_comma_seperated");
+				var sounds:String = ModelLocator.resourceManagerInstance.getString("alerttypeview","sound_names_as_displayed_can_be_translated_must_match_above_list");
 				var soundsSplitted:Array = sounds.split(',');
+				soundNames.push(ModelLocator.resourceManagerInstance.getString("alerttypeview","no_sound"));
 				for (var cntr:int = 0;cntr < soundsSplitted.length;cntr++) {
 					var newSound:String = soundsSplitted[cntr];
 					if (newSound.length > 0) {

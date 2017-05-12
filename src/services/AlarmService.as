@@ -1,7 +1,9 @@
 package services
 {
 	import com.distriqt.extension.dialog.Dialog;
+	import com.distriqt.extension.dialog.DialogView;
 	import com.distriqt.extension.dialog.PickerDialogView;
+	import com.distriqt.extension.dialog.builders.AlertBuilder;
 	import com.distriqt.extension.dialog.builders.PickerDialogBuilder;
 	import com.distriqt.extension.dialog.events.DialogViewEvent;
 	import com.distriqt.extension.notifications.NotificationRepeatInterval;
@@ -49,7 +51,7 @@ package services
 		private static var snoozeValueStrings:Array = ["5 minutes", "10 minutes", "15 minutes", "20 minutes", "25 minutes", "30 minutes", "35 minutes",
 			"40 minutes", "45 minutes", "50 minutes", "55 minutes", "1 hour", "1 hour 15 minutes", "1,5 hours", "2 hours", "2,5 hours", "3 hours", "4 hours",
 			"5 hours", "6 hours", "7 hours", "8 hours", "9 hours", "10 hours"];
-
+		
 		public static function get instance():AlarmService {
 			return _instance;
 		}
@@ -92,16 +94,16 @@ package services
 						}
 					}
 					if (notificationEvent.identifier == null) {
-						var picker:PickerDialogView = Dialog.service.create(
+						var snoozePeriodPicker:DialogView = Dialog.service.create(
 							new PickerDialogBuilder()
-							.setTitle(ModelLocator.resourceManagerInstance.getString('alarmservice', 'picker_title'))
+							.setTitle(ModelLocator.resourceManagerInstance.getString('alarmservice', 'snooze_picker_title'))
 							.setCancelLabel(ModelLocator.resourceManagerInstance.getString("general","cancel"))
 							.setAcceptLabel("Ok")
 							.addColumn( snoozeValueStrings, index )
 							.build()
 						);
-						picker.addEventListener( DialogViewEvent.CLOSED, picker_closedHandler );
-						picker.show();
+						snoozePeriodPicker.addEventListener( DialogViewEvent.CLOSED, picker_closedHandler );
+						snoozePeriodPicker.show();
 					} else if (notificationEvent.identifier == NotificationService.ID_FOR_LOW_ALERT_SNOOZE_IDENTIFIER) {
 						myTrace("in notificationReceived with id = ID_FOR_LOW_ALERT, snoozing the notification");
 						_lowAlertSnoozePeriodInMinutes = alertType.defaultSnoozePeriodInMinutes;
@@ -115,9 +117,7 @@ package services
 				_lowAlertSnoozePeriodInMinutes = snoozeValueMinutes[event.indexes[0]];
 				_lowAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
 			}
-
 		}
-
 		
 		private static function checkAlarms(be:TransmitterServiceEvent):void {
 			myTrace("in checkAlarms");
@@ -136,7 +136,7 @@ package services
 						isNaN(_lowAlertLatestSnoozeTimeInMs)) {
 						myTrace("in checkAlarms, alarm not snoozed (anymore)");
 						//not snoozed
-						
+
 						if (alertValue > BgReading.lastNoSensor().calculatedValue) {
 							myTrace("in checkAlarms, alertvalue to low");
 							var notificationBuilder:NotificationBuilder = new NotificationBuilder()
@@ -149,6 +149,25 @@ package services
 								.setCategory(NotificationService.ID_FOR_LOW_ALERT_CATEGORY);
 							if (alertType.repeatInMinutes > 0)
 								notificationBuilder.setRepeatInterval(NotificationRepeatInterval.REPEAT_MINUTE);
+							if (alertType.sound == ModelLocator.resourceManagerInstance.getString("alerttypeview","no_sound")) {
+								notificationBuilder.setSound("");
+							} else {
+								var soundsAsDisplayed:String = ModelLocator.resourceManagerInstance.getString("alerttypeview","sound_names_as_displayed_can_be_translated_must_match_above_list");
+								var soundsAsStoredInAssets:String = ModelLocator.resourceManagerInstance.getString("alerttypeview","sound_names_as_in_assets_no_translation_needed_comma_seperated");
+								var soundsAsDisplayedSplitted:Array = soundsAsDisplayed.split(',');
+								var soundsAsStoredInAssetsSplitted:Array = soundsAsDisplayed.split(',');
+								for (var cntr:int = 0;cntr < soundsAsDisplayedSplitted.length;cntr++) {
+									var newSound:String = soundsAsDisplayedSplitted[cntr];
+									if (newSound == alertType.sound) {
+										if (cntr == 0) {
+											//it's the default sound, nothing to do
+										} else {
+											notificationBuilder.setSound(soundsAsStoredInAssetsSplitted[cntr]);
+										}
+										break;
+									}
+								}
+							}
 							Notifications.service.notify(notificationBuilder.build());
 							_lowAlertLatestSnoozeTimeInMs = Number.NaN;
 							_lowAlertSnoozePeriodInMinutes = 0;
