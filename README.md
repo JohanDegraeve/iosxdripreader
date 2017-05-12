@@ -20,7 +20,8 @@ xdrip/xbridge/G5 reader for iOS devices -
 Alerts are configured in the Settings.
 
 Each Alert requires an Alert Type, except the "Always on Notification" which is either always on or always off. 
-Per Alert Type define
+
+__Per Alert Type define__
  * enabled or disabled : Example between 8 in the morning and midnight I don't need a low alert. For me the Low alert has a disabled alert type between 8 and midnight. There's
  always an alert named "No Alert" created by the application which is disabled. You can use that one for all cases where you want a disabled alert type.
  * Name : name of the alert type
