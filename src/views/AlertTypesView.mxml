@@ -81,7 +81,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			protected function view1_creationCompleteHandler(event:FlexEvent):void
 			{
 				back_label = ModelLocator.resourceManagerInstance.getString('general','back');
-				title = ModelLocator.resourceManagerInstance.getString('settingsview','alert_types');
 				listOfElements =  Database.getAllAlertTypes();
 				topText = ModelLocator.resourceManagerInstance.getString('settingsview','alert_types_list_top_text');
 				list.addEventListener(AlertTypeItemRenderer.DELETE_CLICKED,deleteTheSelectedItem);

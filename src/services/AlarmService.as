@@ -13,6 +13,7 @@ package services
 	
 	import flash.events.EventDispatcher;
 	
+	import Utilities.DateTimeUtilities;
 	import Utilities.FromtimeAndValueArrayCollection;
 	import Utilities.Trace;
 	
@@ -155,7 +156,7 @@ package services
 								var soundsAsDisplayed:String = ModelLocator.resourceManagerInstance.getString("alerttypeview","sound_names_as_displayed_can_be_translated_must_match_above_list");
 								var soundsAsStoredInAssets:String = ModelLocator.resourceManagerInstance.getString("alerttypeview","sound_names_as_in_assets_no_translation_needed_comma_seperated");
 								var soundsAsDisplayedSplitted:Array = soundsAsDisplayed.split(',');
-								var soundsAsStoredInAssetsSplitted:Array = soundsAsDisplayed.split(',');
+								var soundsAsStoredInAssetsSplitted:Array = soundsAsStoredInAssets.split(',');
 								for (var cntr:int = 0;cntr < soundsAsDisplayedSplitted.length;cntr++) {
 									var newSound:String = soundsAsDisplayedSplitted[cntr];
 									if (newSound == alertType.sound) {
@@ -174,7 +175,7 @@ package services
 						}
 					} else {
 						//snoozed no need to do anything
-						myTrace("in checkAlarms, alarm snoozed");
+						myTrace("in checkAlarms, alarm snoozed, _lowAlertLatestSnoozeTimeInMs = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date(_lowAlertLatestSnoozeTimeInMs)) + ", _lowAlertSnoozePeriodInMinutes = " + _lowAlertSnoozePeriodInMinutes + ", actual time = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date()));
 					}
 				} else {
 					//remove notification, even if there isn't any

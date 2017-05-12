@@ -468,109 +468,7 @@
 	</fx:Script>
 	<s:Scroller width="100%" height="100%" >
 		<s:VGroup width="100%" paddingTop="10">
-			
-			<!-- Chapter Alerts-->
-			<s:Label text = "{ModelLocator.resourceManagerInstance.getString('settingsview','alerts')}" textAlign="center"  color="#3B6999" 
-					 width="100%" paddingLeft="3" paddingRight="0" fontSize="20" fontWeight="bold" paddingTop="3"/>
-			<s:Line width="100%">
-				<s:stroke>
-					<s:SolidColorStroke color="#3B6999"  weight="3"/>
-				</s:stroke>
-			</s:Line>
-			<!-- Chapter Alerts Subsection Additional Calibration Request Alert -->
-			<s:VGroup click="additionalCalibrationRequestAlert_clickHandler(event)" width="100%">
-				<s:HGroup width="100%">
-					<s:Rect height="100%" width="5" >
-						<s:fill>
-							<s:SolidColor color="#212121" id="rect11"/>
-						</s:fill>
-					</s:Rect>
-					<s:Label text = "{ModelLocator.resourceManagerInstance.getString('settingsview','additional_calibration_request')}"
-							 width="100%" paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
-					<s:Label text = "{additionalCalibrationRequestOnOrOffText}"  
-							 paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
-					<s:Rect height="100%" width="5" >
-						<s:fill>
-							<s:SolidColor color="#212121" id="rect12"/>
-						</s:fill>
-					</s:Rect>
-				</s:HGroup>
-				<s:Line width="100%">
-					<s:stroke>
-						<s:SolidColorStroke color="0xFFFFFF" weight="1" alpha="0.25"/>
-					</s:stroke>
-				</s:Line>	
-			</s:VGroup>
-			<!-- Chapter Alerts Subsection Always HomeScreen Notification -->
-			<s:VGroup click="alwaysOnNotification_clickHandler(event)" width="100%">
-				<s:HGroup width="100%">
-					<s:Rect height="100%" width="5" >
-						<s:fill>
-							<s:SolidColor color="#212121" id="rect19"/>
-						</s:fill>
-					</s:Rect>
-					<s:Label text = "{ModelLocator.resourceManagerInstance.getString('settingsview','always_on_notification')}"
-							 width="100%" paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
-					<s:Label text = "{alwaysOnNotificationTextOnOrOff}"  
-							 paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
-					<s:Rect height="100%" width="5" >
-						<s:fill>
-							<s:SolidColor color="#212121" id="rect20"/>
-						</s:fill>
-					</s:Rect>
-				</s:HGroup>
-				<s:Line width="100%">
-					<s:stroke>
-						<s:SolidColorStroke color="0xFFFFFF"  weight="1" alpha="0.25"/>
-					</s:stroke>
-				</s:Line>	
-			</s:VGroup>
-			<!-- Chapter Alerts Subsection Low Alert -->
-			<s:VGroup click="lowAlert_clickHandler(event)" width="100%">
-				<s:HGroup width="100%">
-					<s:Rect height="100%" width="5" >
-						<s:fill>
-							<s:SolidColor color="#212121" id="rect29"/>
-						</s:fill>
-					</s:Rect>
-					<s:Label text = "{ModelLocator.resourceManagerInstance.getString('settingsview','low_alert')}"
-							 width="100%" paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
-					<s:Rect height="100%" width="5" >
-						<s:fill>
-							<s:SolidColor color="#212121" id="rect30"/>
-						</s:fill>
-					</s:Rect>
-				</s:HGroup>
-				<s:Line width="100%">
-					<s:stroke>
-						<s:SolidColorStroke color="0xFFFFFF" weight="1" alpha="0.25"/>
-					</s:stroke>
-				</s:Line>	
-			</s:VGroup>
-			
-			<!-- Chapter Alerts Subsection Alert Types -->
-			<s:VGroup click="alertTypes_clickHandler(event)" width="100%">
-				<s:HGroup width="100%">
-					<s:Rect height="100%" width="5" >
-						<s:fill>
-							<s:SolidColor color="#212121" id="rect31"/>
-						</s:fill>
-					</s:Rect>
-					<s:Label text = "{ModelLocator.resourceManagerInstance.getString('settingsview','alert_types')}"
-							 width="100%" paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
-					<s:Rect height="100%" width="5" >
-						<s:fill>
-							<s:SolidColor color="#212121" id="rect32"/>
-						</s:fill>
-					</s:Rect>
-				</s:HGroup>
-				<s:Line width="100%">
-					<s:stroke>
-						<s:SolidColorStroke color="#3B6999"  weight="3"/>
-					</s:stroke>
-				</s:Line>	
-			</s:VGroup>
-			
+	
 			<!-- Chapter general settings -->
 			<s:Label text = "{ModelLocator.resourceManagerInstance.getString('settingsview','general_settings')}" textAlign="center"  color="#3B6999" 
 					 width="100%" paddingLeft="3" paddingRight="0" fontSize="20" fontWeight="bold" paddingTop="3"/>
@@ -651,7 +549,7 @@
 					</s:stroke>
 				</s:Line>	
 			</s:VGroup>
-
+			
 			<!-- Chapter general settings Subsection transmitter type -->
 			<s:VGroup click="changeTransmitterType_clickHandler(event)" width="100%">
 				<s:HGroup width="100%">
@@ -698,6 +596,109 @@
 				<s:Line width="100%">
 					<s:stroke>
 						<s:SolidColorStroke color="#3B6999"  weight="3"/>
+					</s:stroke>
+				</s:Line>	
+			</s:VGroup>
+			
+			<!-- Chapter Alerts-->
+			<s:Label text = "{ModelLocator.resourceManagerInstance.getString('settingsview','alerts')}" textAlign="center"  color="#3B6999" 
+					 width="100%" paddingLeft="3" paddingRight="0" fontSize="20" fontWeight="bold" paddingTop="3"/>
+			<s:Line width="100%">
+				<s:stroke>
+					<s:SolidColorStroke color="#3B6999"  weight="3"/>
+				</s:stroke>
+			</s:Line>
+			
+			<!-- Chapter Alerts Subsection Alert Types -->
+			<s:VGroup click="alertTypes_clickHandler(event)" width="100%">
+				<s:HGroup width="100%">
+					<s:Rect height="100%" width="5" >
+						<s:fill>
+							<s:SolidColor color="#212121" id="rect31"/>
+						</s:fill>
+					</s:Rect>
+					<s:Label text = "{ModelLocator.resourceManagerInstance.getString('settingsview','alert_types')}"
+							 width="100%" paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
+					<s:Rect height="100%" width="5" >
+						<s:fill>
+							<s:SolidColor color="#212121" id="rect32"/>
+						</s:fill>
+					</s:Rect>
+				</s:HGroup>
+				<s:Line width="100%">
+					<s:stroke>
+						<s:SolidColorStroke color="#FFFFFF" weight="1" alpha="0.25"/>
+					</s:stroke>
+				</s:Line>	
+			</s:VGroup>
+
+			<!-- Chapter Alerts Subsection Additional Calibration Request Alert -->
+			<s:VGroup click="additionalCalibrationRequestAlert_clickHandler(event)" width="100%">
+				<s:HGroup width="100%">
+					<s:Rect height="100%" width="5" >
+						<s:fill>
+							<s:SolidColor color="#212121" id="rect11"/>
+						</s:fill>
+					</s:Rect>
+					<s:Label text = "{ModelLocator.resourceManagerInstance.getString('settingsview','additional_calibration_request')}"
+							 width="100%" paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
+					<s:Label text = "{additionalCalibrationRequestOnOrOffText}"  
+							 paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
+					<s:Rect height="100%" width="5" >
+						<s:fill>
+							<s:SolidColor color="#212121" id="rect12"/>
+						</s:fill>
+					</s:Rect>
+				</s:HGroup>
+				<s:Line width="100%">
+					<s:stroke>
+						<s:SolidColorStroke color="0xFFFFFF" weight="1" alpha="0.25"/>
+					</s:stroke>
+				</s:Line>	
+			</s:VGroup>
+			<!-- Chapter Alerts Subsection Always HomeScreen Notification -->
+			<s:VGroup click="alwaysOnNotification_clickHandler(event)" width="100%">
+				<s:HGroup width="100%">
+					<s:Rect height="100%" width="5" >
+						<s:fill>
+							<s:SolidColor color="#212121" id="rect19"/>
+						</s:fill>
+					</s:Rect>
+					<s:Label text = "{ModelLocator.resourceManagerInstance.getString('settingsview','always_on_notification')}"
+							 width="100%" paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
+					<s:Label text = "{alwaysOnNotificationTextOnOrOff}"  
+							 paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
+					<s:Rect height="100%" width="5" >
+						<s:fill>
+							<s:SolidColor color="#212121" id="rect20"/>
+						</s:fill>
+					</s:Rect>
+				</s:HGroup>
+				<s:Line width="100%">
+					<s:stroke>
+						<s:SolidColorStroke color="0xFFFFFF"  weight="1" alpha="0.25"/>
+					</s:stroke>
+				</s:Line>	
+			</s:VGroup>
+			<!-- Chapter Alerts Subsection Low -->
+			<s:VGroup click="lowAlert_clickHandler(event)" width="100%">
+				<s:HGroup width="100%">
+					<s:Rect height="100%" width="5" >
+						<s:fill>
+							<s:SolidColor color="#212121" id="rect29"/>
+						</s:fill>
+					</s:Rect>
+					<s:Label text = "{ModelLocator.resourceManagerInstance.getString('settingsview','low_alert')}"
+							 width="100%" paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
+					<s:Rect height="100%" width="5" >
+						<s:fill>
+							<s:SolidColor color="#212121" id="rect30"/>
+						</s:fill>
+					</s:Rect>
+				</s:HGroup>
+				<s:Line width="100%">
+					<s:stroke>
+						<s:SolidColorStroke color="0X3B6999" weight="3"/>
 					</s:stroke>
 				</s:Line>	
 			</s:VGroup>

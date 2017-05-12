@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 -->
 <s:View xmlns:fx="http://ns.adobe.com/mxml/2009" 
 		creationComplete="view1_creationCompleteHandler(event)"
-		xmlns:s="library://ns.adobe.com/flex/spark" title="AlertTypeView">
+		xmlns:s="library://ns.adobe.com/flex/spark" title="">
 	
 	<fx:Metadata> 
 		[ResourceBundle("alerttypeview")] 
@@ -74,7 +74,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			{
 				back_label = ModelLocator.resourceManagerInstance.getString('general','back');
 				topText = ModelLocator.resourceManagerInstance.getString('alerttypeview','edit_alert_type');
-				title = ModelLocator.resourceManagerInstance.getString('settingsview','alert_types');
 				alertType = data.alertType;
 				selectedIndex = data.selectedIndex;
 				alarmEnabled = alertType.enabled;
