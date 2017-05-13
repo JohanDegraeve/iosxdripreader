@@ -18,6 +18,7 @@
 			
 			import Utilities.Trace;
 			
+			import databaseclasses.BgReading;
 			import databaseclasses.CommonSettings;
 			import databaseclasses.LocalSettings;
 			
@@ -74,8 +75,13 @@
 					chosenUnitText = ModelLocator.resourceManagerInstance.getString('settingsview','mmol');
 				}
 				
-				lowValueText = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_LOW_MARK);
-				highValueText = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_HIGH_MARK);
+				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) != "true") {
+					lowValueText = (Math.round(((BgReading.mgdlToMmol((new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_LOW_MARK))))) * 10)) / 10).toString();
+					highValueText = (Math.round(((BgReading.mgdlToMmol((new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_HIGH_MARK))))) * 10)) / 10).toString();
+				} else {
+					lowValueText = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_LOW_MARK);
+					highValueText = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_HIGH_MARK);
+				}
 				
 				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_ADDITIONAL_CALIBRATION_REQUEST_ALERT) == "true") {
 					additionalCalibrationRequestOnOrOffText = ModelLocator.resourceManagerInstance.getString('settingsview','on');
@@ -207,9 +213,13 @@
 				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true") {
 					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL, "false");
 					chosenUnitText = ModelLocator.resourceManagerInstance.getString('settingsview','mmol');
+					lowValueText = (Math.round(((BgReading.mgdlToMmol((new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_LOW_MARK))))) * 10)) / 10).toString();
+					highValueText = (Math.round(((BgReading.mgdlToMmol((new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_HIGH_MARK))))) * 10)) / 10).toString();
 				} else {
 					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL, "true");
 					chosenUnitText = ModelLocator.resourceManagerInstance.getString('settingsview','mgdl');
+					lowValueText = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_LOW_MARK);
+					highValueText = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_HIGH_MARK);
 				}
 			}
 			
@@ -247,7 +257,10 @@
 					);
 					DialogService.addDialog(alert);
 				} else {
-					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_LOW_MARK, asNumber.toString());
+					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_LOW_MARK,
+						CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true" ?
+						asNumber.toString() 
+						: ((Math.round(BgReading.mmolToMgdl(asNumber)) * 10) / 10).toString());
 					lowValueText = asNumber.toString();
 				}
 			}
@@ -286,7 +299,10 @@
 					);
 					DialogService.addDialog(alert);
 				} else {
-					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_HIGH_MARK, asNumber.toString());
+					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_HIGH_MARK,
+						CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true" ?
+						asNumber.toString() 
+						: ((Math.round(BgReading.mmolToMgdl(asNumber)) * 10) / 10).toString());
 					highValueText = asNumber.toString();
 				}
 			}
@@ -329,8 +345,9 @@
 				dataToSend.topText = ModelLocator.resourceManagerInstance.getString("settingsview","low_alert_top_text");
 				dataToSend.settingid = CommonSettings.COMMON_SETTING_LOW_ALERT;
 				dataToSend.titleforFromtimeAndValueElementView = "";//resourceManager.getString('settingsview','edit_alert');
-				dataToSend.topTextforFromtimeAndValueElementView = ModelLocator.resourceManagerInstance.getString('settingsview','edit') + 
-					" " + ModelLocator.resourceManagerInstance.getString("settingsview","low_alert");
+				dataToSend.topTextforFromtimeAndValueElementView = ModelLocator.resourceManagerInstance.getString('settingsview','edit_low_alert');
+				dataToSend.isBgValue = true;
+				dataToSend.additionalTopText = ModelLocator.resourceManagerInstance.getString('settingsview','explain_low_alert_list');
 				
 				navigator.pushView(FromtimeAndValueListView,dataToSend);
 			}

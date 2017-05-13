@@ -29,6 +29,7 @@ package renderers
 	
 	import databaseclasses.BgReading;
 	import databaseclasses.CommonSettings;
+	import databaseclasses.Database;
 	
 	import model.ModelLocator;
 	
@@ -152,15 +153,20 @@ package renderers
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) != "true") {
 				valueInCorrectUnit = valueInCorrectUnit * BgReading.MGDL_TO_MMOLL;
 			}
-			label = 
-				theDataAsFromToAndValue.fromAsString() 
-				+ " "
-				+ (Math.round(valueInCorrectUnit) == valueInCorrectUnit ?
-					valueInCorrectUnit
-					:
-					(Math.round((valueInCorrectUnit * 10)) / 10).toString())
-				+ " "
-				+ theDataAsFromToAndValue.alarmName;
+			
+			if (Database.getAlertType(theDataAsFromToAndValue.alarmName).enabled) {
+				label = 
+					theDataAsFromToAndValue.fromAsString() 
+					+ " "
+					+ (Math.round(valueInCorrectUnit) == valueInCorrectUnit ?
+						valueInCorrectUnit
+						:
+						(Math.round((valueInCorrectUnit * 10)) / 10).toString())
+					+ " "
+					+ theDataAsFromToAndValue.alarmName;
+			} else {
+				label = theDataAsFromToAndValue.fromAsString() + " " + theDataAsFromToAndValue.alarmName;
+			}
 			deletable = theDataAsFromToAndValue.deletable;
 			editable = theDataAsFromToAndValue.editable;
 			elementCanBeAdded = (theDataAsFromToAndValue.from == 86400 || theDataAsFromToAndValue.from == (86400 - 60)) ? false:true;

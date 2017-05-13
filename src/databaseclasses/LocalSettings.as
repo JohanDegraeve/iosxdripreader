@@ -94,6 +94,7 @@ package databaseclasses
 		 * taken over from Android version xdripplus 
 		 */
 		public static const LOCAL_SETTING_G5_ALWAYS_UNBOUND:int = 11;
+		public static const LOCAL_SETTING_FromtimeAndValueListView_INFO_SHOWN:int = 12;
 
 		private static var localSettings:Array = [
 			"false",//LOCAL_SETTING_DETAILED_TRACING_ENABLED
@@ -107,7 +108,8 @@ package databaseclasses
 			"ONE",//LOCAL_SETTING_ACTUAL_QBLOX_SUBSCRIPTION_TAG
 			"false",//LOCAL_SETTING_NSLOG
 			"false",//LOCAL_SETTING_G5_ALWAYS_AUTHENTICATE
-			"false"//LOCAL_SETTING_G5_ALWAYS_UNBOUND
+			"false",//LOCAL_SETTING_G5_ALWAYS_UNBOUND
+			"false"//LOCAL_SETTING_FromtimeAndValueListView_INFO_SHOWN
 		];
 		
 		public function LocalSettings() {

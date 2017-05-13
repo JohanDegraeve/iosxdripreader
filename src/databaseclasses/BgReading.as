@@ -291,11 +291,11 @@ package databaseclasses
 			_noise = noise;
 		}
 		
-		public static function mmolConvert(mgdl:Number):Number {
+		public static function mgdlToMmol(mgdl:Number):Number {
 			return mgdl * MGDL_TO_MMOLL;
 		}
 		
-		public static function mgdlConvert(mmoll:Number):Number {
+		public static function mmolToMgdl(mmoll:Number):Number {
 			return mmoll * MMOLL_TO_MGDL;
 		}
 		

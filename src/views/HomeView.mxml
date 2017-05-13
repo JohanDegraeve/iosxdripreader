@@ -620,8 +620,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 						.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
 						.build()
 					);
-					//alert.addEventListener(DialogViewEvent.CLOSED, stopSensorConfirmation);
-					//alert.addEventListener(DialogViewEvent.CANCELLED, stopSensorcancellation);
 					DialogService.addDialog(alert, 60);
 				}
 			}

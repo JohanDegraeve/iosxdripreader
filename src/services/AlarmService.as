@@ -2,8 +2,6 @@ package services
 {
 	import com.distriqt.extension.dialog.Dialog;
 	import com.distriqt.extension.dialog.DialogView;
-	import com.distriqt.extension.dialog.PickerDialogView;
-	import com.distriqt.extension.dialog.builders.AlertBuilder;
 	import com.distriqt.extension.dialog.builders.PickerDialogBuilder;
 	import com.distriqt.extension.dialog.events.DialogViewEvent;
 	import com.distriqt.extension.notifications.NotificationRepeatInterval;

@@ -43,7 +43,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			import Utilities.FromtimeAndValueArrayCollection;
 			
 			import databaseclasses.CommonSettings;
-			
+			import databaseclasses.LocalSettings;
 			import model.ModelLocator;
 			
 			import renderers.FromtimeAndValueItemRenderer;
@@ -59,7 +59,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			private var editClicked:Boolean;
 			private var addClicked:Boolean;
 			private var thisView:View;
-			
+			private static var isBgValue:Boolean = false;
+			[Bindable]
+			private static var additionalTopText:String;
+			[Bindable]
+			private static var additionalTopTextVisible:Boolean;
+
 			[Bindable]
 			/**
 			 * list of elements, should be list of FromtimeAndValue objects
@@ -96,15 +101,40 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 					//this would only reset the list to the initial value, as it still exists in the settings
 					if (data.settingid) {
 						//expecting the settingid that contains the list to be edit
-						listOfElements =  FromtimeAndValueArrayCollection.createList(
+						listOfElements = FromtimeAndValueArrayCollection.createList(
 							CommonSettings.getCommonSetting(new Number(data.settingid)));
 						listOfElements.setArrayChangedToFalse();
 					}
 				if (data.topText)
 					topText = data.topText;
+				if (data.isBgValue)
+					isBgValue = data.isBgValue;
+				if (data.additionalTopText) {
+					additionalTopText = data.additionalTopText;
+					additionalTopTextVisible = true;
+				} else {
+					additionalTopTextVisible = false;
+				}
 				list.addEventListener(FromtimeAndValueItemRenderer.DELETE_CLICKED,deleteTheSelectedItem);
 				list.addEventListener(FromtimeAndValueItemRenderer.EDIT_CLICKED,editTheSelectedItem);
 				list.addEventListener(FromtimeAndValueItemRenderer.ADD_CLICKED,addANewItem);
+				
+				if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_FromtimeAndValueListView_INFO_SHOWN) != "true") {
+					var alert:DialogView = Dialog.service.create(
+						new AlertBuilder()
+						.setTitle(ModelLocator.resourceManagerInstance.getString('homeview',"info"))
+						.setMessage(ModelLocator.resourceManagerInstance.getString('fromtimeandvaluelistview',"fromtimeandvaluelistview_info"))
+						.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
+						.build()
+					);
+					alert.addEventListener(DialogViewEvent.CLOSED, infoDialogClosed);
+					DialogService.addDialog(alert, 60);
+
+				}
+			}
+			
+			private static function infoDialogClosed(event:DialogViewEvent):void {
+				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_FromtimeAndValueListView_INFO_SHOWN,"true");
 			}
 			
 			private function deleteTheSelectedItem(event:Event):void {
@@ -124,6 +154,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 				var dataToSend:Object = new Object;
 				dataToSend.title = data.titleforFromtimeAndValueElementView;
 				dataToSend.topText = data.topTextforFromtimeAndValueElementView;
+				dataToSend.isBgValue = isBgValue;
 				if (deleteClicked) {
 					listOfElements.removeItemAt(event.newIndex);
 					deleteClicked = false;
@@ -201,11 +232,19 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 		<s:VGroup width="100%" paddingTop="10">
 			<s:Label text="@{topText}"  textAlign="center"  color="#3B6999" 
 					 width="100%" paddingLeft="3" paddingRight="0" fontSize="20" fontWeight="bold" paddingTop="3"/>
-			<s:Line width="100%">
+			<s:Line width="100%" >
 				<s:stroke>
 					<s:SolidColorStroke color="#3B6999"  weight="3"/>
 				</s:stroke>
 			</s:Line>
+			<s:Label text = "@{additionalTopText}" visible="{additionalTopTextVisible}" enabled="{additionalTopTextVisible}" 
+					 width="100%" paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
+			<s:Line width="100%" visible="{additionalTopTextVisible}">
+				<s:stroke>
+					<s:SolidColorStroke color="0xFFFFFF" weight="1" alpha="0.25"/>
+				</s:stroke>
+			</s:Line>	
+
 			<s:List id="list" width="100%" height="100%" itemRenderer="renderers.FromtimeAndValueItemRenderer"
 					dataProvider="{listOfElements}" 
 					change="list_changeHandler(event)"

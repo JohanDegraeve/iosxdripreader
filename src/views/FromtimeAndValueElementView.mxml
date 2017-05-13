@@ -92,6 +92,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			private static var fromStartMinutes:int = 0;
 			private static var fromStartHours:int = 0;
 			private static var userSelectedTime:Boolean = false;
+			private static var isBgValue:Boolean = false;
 			
 			/**
 			 * the selected index
@@ -115,6 +116,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 				 if (data.topText)
 					 topTextLabelId.text = data.topText;
 				 listOfElements = data.listOfElements;
+				 if (data.isBgValue)
+					 isBgValue = data.isBgValue;
 				 
 				 if (data.selectedIndex != null) {
 					 var fromtimeAndValue:FromtimeAndValue;
@@ -233,6 +236,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 					}
 					
 					var asNumber:Number = new Number(event.values[0] as String);
+					var asNumberAndToStore = asNumber;
 					if (isNaN(asNumber)) {
 						var alert:DialogView = Dialog.service.create(
 							new AlertBuilder()
@@ -247,7 +251,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 						return;
 					} else {
 						if(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) != "true") {
-							asNumber = asNumber * BgReading.MMOLL_TO_MGDL; 	
+							if (isBgValue)
+								asNumberAndToStore = Math.round(asNumber * BgReading.MMOLL_TO_MGDL); 	
 						}
 					}
 					
@@ -260,7 +265,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 					if (newFromtimeAndValue == null)
 						newFromtimeAndValue = (listOfElements.getItemAt(selectedIndex) as FromtimeAndValue);
 					newFromtimeAndValue = 
-						new FromtimeAndValue(newFromtimeAndValue.from, new Number(value), newFromtimeAndValue.alarmName, newFromtimeAndValue.editable, newFromtimeAndValue.deletable);
+						new FromtimeAndValue(newFromtimeAndValue.from, new Number(asNumberAndToStore), newFromtimeAndValue.alarmName, newFromtimeAndValue.editable, newFromtimeAndValue.deletable);
 				}
 			}
 			
@@ -284,10 +289,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 				
 				picker.addEventListener( DialogViewEvent.CLOSED, picker_closedHandler );
 				picker.show();
-
+				
 				function picker_closedHandler(event:DialogViewEvent): void {
 					var newAlarmName:String = event.values[0];
-
+					
 					if (alarmName == newAlarmName)
 						return;
 					
