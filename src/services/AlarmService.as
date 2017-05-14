@@ -227,6 +227,8 @@ package services
 							Notifications.service.notify(notificationBuilder.build());
 							_lowAlertLatestSnoozeTimeInMs = Number.NaN;
 							_lowAlertSnoozePeriodInMinutes = 0;
+						} else {
+							Notifications.service.cancel(NotificationService.ID_FOR_LOW_ALERT);
 						}
 					} else {
 						//snoozed no need to do anything
@@ -288,6 +290,8 @@ package services
 							Notifications.service.notify(notificationBuilder.build());
 							_highAlertLatestSnoozeTimeInMs = Number.NaN;
 							_highAlertSnoozePeriodInMinutes = 0;
+						} else {
+							Notifications.service.cancel(NotificationService.ID_FOR_HIGH_ALERT);
 						}
 					} else {
 						//snoozed no need to do anything
