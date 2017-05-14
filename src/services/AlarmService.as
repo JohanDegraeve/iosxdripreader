@@ -92,15 +92,21 @@ package services
 		
 		private static function notificationReceived(event:NotificationServiceEvent):void {
 			if (event != null) {
+				var listOfAlerts:FromtimeAndValueArrayCollection;
+				var alertName:String ;
+				var alertType:AlertType;
+				var index:int;
+				var snoozePeriodPicker:DialogView;
+				
 				var notificationEvent:NotificationEvent = event.data as NotificationEvent;
 				if (notificationEvent.id == NotificationService.ID_FOR_LOW_ALERT) {
-					var listOfAlerts:FromtimeAndValueArrayCollection = FromtimeAndValueArrayCollection.createList(
+					listOfAlerts = FromtimeAndValueArrayCollection.createList(
 						CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_LOW_ALERT));
-					var alertName:String = listOfAlerts.getAlarmName(Number.NaN, "", new Date());
-					var alertType:AlertType = Database.getAlertType(alertName);
+					alertName = listOfAlerts.getAlarmName(Number.NaN, "", new Date());
+					alertType = Database.getAlertType(alertName);
 					myTrace("in notificationReceived with id = ID_FOR_LOW_ALERT, cancelling notification");
 					Notifications.service.cancel(NotificationService.ID_FOR_LOW_ALERT);
-					var index:int = 0;
+					index = 0;
 					for (var cntr:int = 0;cntr < snoozeValueMinutes.length;cntr++) {
 						if ((snoozeValueMinutes[cntr]) >= alertType.defaultSnoozePeriodInMinutes) {
 							index = cntr;
@@ -108,7 +114,7 @@ package services
 						}
 					}
 					if (notificationEvent.identifier == null) {
-						var snoozePeriodPicker:DialogView = Dialog.service.create(
+						snoozePeriodPicker = Dialog.service.create(
 							new PickerDialogBuilder()
 							.setTitle(ModelLocator.resourceManagerInstance.getString('alarmservice', 'snooze_picker_title'))
 							.setCancelLabel(ModelLocator.resourceManagerInstance.getString("general","cancel"))
@@ -124,13 +130,13 @@ package services
 						_lowAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
 					}
 				} else if (notificationEvent.id == NotificationService.ID_FOR_HIGH_ALERT) {
-					var listOfAlerts:FromtimeAndValueArrayCollection = FromtimeAndValueArrayCollection.createList(
+					listOfAlerts = FromtimeAndValueArrayCollection.createList(
 						CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_HIGH_ALERT));
-					var alertName:String = listOfAlerts.getAlarmName(Number.NaN, "", new Date());
-					var alertType:AlertType = Database.getAlertType(alertName);
+					alertName = listOfAlerts.getAlarmName(Number.NaN, "", new Date());
+					alertType = Database.getAlertType(alertName);
 					myTrace("in notificationReceived with id = ID_FOR_HIGH_ALERT, cancelling notification");
 					Notifications.service.cancel(NotificationService.ID_FOR_HIGH_ALERT);
-					var index:int = 0;
+					index = 0;
 					for (var cntr:int = 0;cntr < snoozeValueMinutes.length;cntr++) {
 						if ((snoozeValueMinutes[cntr]) >= alertType.defaultSnoozePeriodInMinutes) {
 							index = cntr;
@@ -138,7 +144,7 @@ package services
 						}
 					}
 					if (notificationEvent.identifier == null) {
-						var snoozePeriodPicker:DialogView = Dialog.service.create(
+						snoozePeriodPicker = Dialog.service.create(
 							new PickerDialogBuilder()
 							.setTitle(ModelLocator.resourceManagerInstance.getString('alarmservice', 'snooze_picker_title'))
 							.setCancelLabel(ModelLocator.resourceManagerInstance.getString("general","cancel"))
@@ -184,11 +190,11 @@ package services
 					if (((new Date()).valueOf() - _lowAlertLatestSnoozeTimeInMs) > _lowAlertSnoozePeriodInMinutes * 60 * 1000
 						||
 						isNaN(_lowAlertLatestSnoozeTimeInMs)) {
-						myTrace("in checkAlarms, alarm not snoozed (anymore)");
+						myTrace("in checkAlarms, low alert not snoozed (anymore)");
 						//not snoozed
 						
 						if (alertValue > BgReading.lastNoSensor().calculatedValue) {
-							myTrace("in checkAlarms, alertvalue to low");
+							myTrace("in checkAlarms, reading is too low");
 							var notificationBuilder:NotificationBuilder = new NotificationBuilder()
 								.setId(NotificationService.ID_FOR_LOW_ALERT)
 								.setAlert(ModelLocator.resourceManagerInstance.getString("alarmservice","low_alert_notification_alert_text"))
@@ -196,7 +202,7 @@ package services
 								.setBody(" ")
 								.enableVibration(alertType.enableVibration)
 								.enableLights(alertType.enableLights)
-								.setCategory(NotificationService.ID_FOR_ALERT_CATEGORY);
+								.setCategory(NotificationService.ID_FOR_ALERT_LOW_CATEGORY);
 							if (alertType.repeatInMinutes > 0)
 								notificationBuilder.setRepeatInterval(NotificationRepeatInterval.REPEAT_MINUTE);
 							if (alertType.sound == ModelLocator.resourceManagerInstance.getString("alerttypeview","no_sound")) {
@@ -227,7 +233,7 @@ package services
 						myTrace("in checkAlarms, alarm snoozed, _lowAlertLatestSnoozeTimeInMs = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date(_lowAlertLatestSnoozeTimeInMs)) + ", _lowAlertSnoozePeriodInMinutes = " + _lowAlertSnoozePeriodInMinutes + ", actual time = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date()));
 					}
 				} else {
-					//remove notification, even if there isn't any
+					//remove low notification, even if there isn't any
 					Notifications.service.cancel(NotificationService.ID_FOR_LOW_ALERT);
 					_lowAlertLatestSnoozeTimeInMs = Number.NaN;
 					_lowAlertLatestNotificationTime = Number.NaN;
@@ -245,11 +251,11 @@ package services
 					if (((new Date()).valueOf() - _highAlertLatestSnoozeTimeInMs) > _highAlertSnoozePeriodInMinutes * 60 * 1000
 						||
 						isNaN(_highAlertLatestSnoozeTimeInMs)) {
-						myTrace("in checkAlarms, alarm not snoozed (anymore)");
+						myTrace("in checkAlarms, high alert not snoozed (anymore)");
 						//not snoozed
 						
 						if (alertValue < BgReading.lastNoSensor().calculatedValue) {
-							myTrace("in checkAlarms, alertvalue to high");
+							myTrace("in checkAlarms, reading is too high");
 							var notificationBuilder:NotificationBuilder = new NotificationBuilder()
 								.setId(NotificationService.ID_FOR_HIGH_ALERT)
 								.setAlert(ModelLocator.resourceManagerInstance.getString("alarmservice","high_alert_notification_alert_text"))
@@ -257,7 +263,7 @@ package services
 								.setBody(" ")
 								.enableVibration(alertType.enableVibration)
 								.enableLights(alertType.enableLights)
-								.setCategory(NotificationService.ID_FOR_ALERT_CATEGORY);
+								.setCategory(NotificationService.ID_FOR_ALERT_HIGH_CATEGORY);
 							if (alertType.repeatInMinutes > 0)
 								notificationBuilder.setRepeatInterval(NotificationRepeatInterval.REPEAT_MINUTE);
 							if (alertType.sound == ModelLocator.resourceManagerInstance.getString("alerttypeview","no_sound")) {
