@@ -108,7 +108,14 @@
 		 * only related to quickblox subscription in iosxdripreader.mxml activateHandler 
 		  */
 		 public static const COMMON_SETTING_TIME_SINCE_LAST_QUICK_BLOX_SUBSCRIPTION:int = 20;
+		 /**
+		 * the string that has all the intervals with low alert types 
+		  */
 		 public static const COMMON_SETTING_LOW_ALERT:int = 21;
+		 /**
+		 * the string that has all the intervals with high alert types 
+		  */
+		 public static const COMMON_SETTING_HIGH_ALERT:int = 22;
 			
 		 private static var commonSettings:Array = [
 			 "0",//COMMON_SETTING_CURRENT_SENSOR
@@ -132,7 +139,8 @@
 			 "false",//COMMON_SETTING_INITIAL_SELECTION_G4_OR_G5_DONE
 			 "false",//COMMON_SETTING_LICENSE_INFO_CONFIRMED
 			 "0",//COMMON_SETTING_TIME_SINCE_LAST_QUICK_BLOX_SUBSCRIPTION
-			 "00:00>70>DefaultNoAlertToBeReplaced"//COMMON_SETTING_LOW_ALERT
+			 "00:00>70>DefaultNoAlertToBeReplaced",//COMMON_SETTING_LOW_ALERT
+			 "00:00>170>DefaultNoAlertToBeReplaced"//COMMON_SETTING_HIGH_ALERT
 		 ];
 		 
 		 public function CommonSettings()
@@ -149,6 +157,14 @@
 					 var newString:String = (commonSettings[COMMON_SETTING_LOW_ALERT] as String)
 						 .replace('DefaultNoAlertToBeReplaced', noAlert);
 					 commonSettings[COMMON_SETTING_LOW_ALERT] = newString;
+				 }
+			 }
+			 if (commonSettingId == COMMON_SETTING_HIGH_ALERT) {
+				 if ((commonSettings[COMMON_SETTING_HIGH_ALERT] as String).indexOf('DefaultNoAlertToBeReplaced') > -1) {
+					 var noAlert:String = ModelLocator.resourceManagerInstance.getString("settingsview","no_alert")
+					 var newString:String = (commonSettings[COMMON_SETTING_HIGH_ALERT] as String)
+						 .replace('DefaultNoAlertToBeReplaced', noAlert);
+					 commonSettings[COMMON_SETTING_HIGH_ALERT] = newString;
 				 }
 			 }
 			 return commonSettings[commonSettingId];

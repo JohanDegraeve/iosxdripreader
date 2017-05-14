@@ -26,8 +26,6 @@ package renderers
 	import spark.components.LabelItemRenderer;
 	
 	import databaseclasses.AlertType;
-	import databaseclasses.BgReading;
-	import databaseclasses.CommonSettings;
 	
 	import model.ModelLocator;
 	

@@ -103,7 +103,7 @@ package services
 		
 		public static const ID_FOR_LOW_ALERT:int = 6;
 		
-		public static const ID_FOR_LOW_ALERT_CATEGORY:String = "LOW_ALERT_CATEGORY";
+		public static const ID_FOR_ALERT_CATEGORY:String = "ALERT_CATEGORY";
 		
 		public static const ID_FOR_LOW_ALERT_SNOOZE_IDENTIFIER:String = "LOW_ALERT_SNOOZE_IDENTIFIER";
 		
@@ -148,7 +148,7 @@ package services
 			
 			service.categories.push( 
 				new CategoryBuilder()
-				.setIdentifier(ID_FOR_LOW_ALERT_CATEGORY)
+				.setIdentifier(ID_FOR_ALERT_CATEGORY)
 				.addAction( 
 					new ActionBuilder()
 					.setTitle(ModelLocator.resourceManagerInstance.getString("notificationservice","snooze_for_snoozin_alarm_in_notification_screen"))

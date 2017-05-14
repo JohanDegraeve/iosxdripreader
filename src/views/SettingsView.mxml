@@ -342,7 +342,7 @@
 				setResetColorTimer();
 				var dataToSend:Object = new Object();
 				dataToSend.title = ModelLocator.resourceManagerInstance.getString("settingsview","low_alert");
-				dataToSend.topText = ModelLocator.resourceManagerInstance.getString("settingsview","low_alert_top_text");
+				dataToSend.topText = ModelLocator.resourceManagerInstance.getString("settingsview","alert_top_text");
 				dataToSend.settingid = CommonSettings.COMMON_SETTING_LOW_ALERT;
 				dataToSend.titleforFromtimeAndValueElementView = "";//resourceManager.getString('settingsview','edit_alert');
 				dataToSend.topTextforFromtimeAndValueElementView = ModelLocator.resourceManagerInstance.getString('settingsview','edit_low_alert');
