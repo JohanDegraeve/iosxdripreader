@@ -105,6 +105,8 @@ package services
 		
 		public static const ID_FOR_HIGH_ALERT:int = 7;
 		
+		public static const ID_FOR_MISSED_READING:int = 8;
+		
 		public static const ID_FOR_ALERT_LOW_CATEGORY:String = "LOW_ALERT_CATEGORY";
 		
 		public static const ID_FOR_ALERT_HIGH_CATEGORY:String = "HIGH_ALERT_CATEGORY";

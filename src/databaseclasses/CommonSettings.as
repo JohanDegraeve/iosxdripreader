@@ -117,6 +117,11 @@
 		  */
 		 public static const COMMON_SETTING_HIGH_ALERT:int = 22;
 			
+		 /**
+		  * the string that has all the intervals with high alert types 
+		  */
+		 public static const COMMON_SETTING_MISSED_READING_ALERT:int = 22;
+		 
 		 private static var commonSettings:Array = [
 			 "0",//COMMON_SETTING_CURRENT_SENSOR
 			 "0",//COMMON_SETTING_TRANSMITTER_BATTERY_VOLTAGE

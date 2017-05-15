@@ -241,7 +241,7 @@ package services
 					_lowAlertLatestNotificationTime = Number.NaN;
 					_lowAlertSnoozePeriodInMinutes = 0;
 				}
-
+				
 				//high alert
 				listOfAlerts = FromtimeAndValueArrayCollection.createList(
 					CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_HIGH_ALERT));
@@ -304,7 +304,15 @@ package services
 					_highAlertLatestNotificationTime = Number.NaN;
 					_highAlertSnoozePeriodInMinutes = 0;
 				}
-}
+				
+				//missed reading
+				listOfAlerts = FromtimeAndValueArrayCollection.createList(
+					CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_MISSED_READING_ALERT));
+				alertValue = listOfAlerts.getValue(Number.NaN, "", new Date());
+				alertName = listOfAlerts.getAlarmName(Number.NaN, "", new Date());
+				alertType = Database.getAlertType(alertName);
+                
+			}
 		}
 		
 		private static function myTrace(log:String):void {
