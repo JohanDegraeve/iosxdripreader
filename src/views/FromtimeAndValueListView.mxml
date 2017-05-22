@@ -60,6 +60,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			private var addClicked:Boolean;
 			private var thisView:View;
 			private static var isBgValue:Boolean = false;
+			private static var unit:String = null;
 			[Bindable]
 			private static var additionalTopText:String;
 			[Bindable]
@@ -109,6 +110,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 					topText = data.topText;
 				if (data.isBgValue)
 					isBgValue = data.isBgValue;
+				if (data.unit)
+					unit = data.unit;
+				else
+					unit = null;
 				if (data.additionalTopText) {
 					additionalTopText = data.additionalTopText;
 					additionalTopTextVisible = true;
@@ -155,6 +160,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 				dataToSend.title = data.titleforFromtimeAndValueElementView;
 				dataToSend.topText = data.topTextforFromtimeAndValueElementView;
 				dataToSend.isBgValue = isBgValue;
+				if (unit != null)
+					dataToSend.unit = unit;
 				if (deleteClicked) {
 					listOfElements.removeItemAt(event.newIndex);
 					deleteClicked = false;

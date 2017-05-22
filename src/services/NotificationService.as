@@ -102,18 +102,16 @@ package services
 		public static const ID_FOR_DEVICE_NOT_PAIRED:int = 5;
 		
 		public static const ID_FOR_LOW_ALERT:int = 6;
-		
 		public static const ID_FOR_HIGH_ALERT:int = 7;
-		
-		public static const ID_FOR_MISSED_READING:int = 8;
+		public static const ID_FOR_MISSED_READING_ALERT:int = 8;
 		
 		public static const ID_FOR_ALERT_LOW_CATEGORY:String = "LOW_ALERT_CATEGORY";
-		
 		public static const ID_FOR_ALERT_HIGH_CATEGORY:String = "HIGH_ALERT_CATEGORY";
+		public static const ID_FOR_ALERT_MISSED_READING_CATEGORY:String = "MISSED_READING_CATEGORY";
 
 		public static const ID_FOR_LOW_ALERT_SNOOZE_IDENTIFIER:String = "LOW_ALERT_SNOOZE_IDENTIFIER";
-		
 		public static const ID_FOR_HIGH_ALERT_SNOOZE_IDENTIFIER:String = "HIGH_ALERT_SNOOZE_IDENTIFIER";
+		public static const ID_FOR_MISSED_READING_ALERT_SNOOZE_IDENTIFIER:String = "HIGH_ALERT_SNOOZE_IDENTIFIER";
 		
 		public function NotificationService()
 		{
@@ -176,6 +174,18 @@ package services
 				)
 				.build()
 			);
+			service.categories.push( 
+				new CategoryBuilder()
+				.setIdentifier(ID_FOR_ALERT_MISSED_READING_CATEGORY)
+				.addAction( 
+					new ActionBuilder()
+					.setTitle(ModelLocator.resourceManagerInstance.getString("notificationservice","snooze_for_snoozin_alarm_in_notification_screen"))
+					.setIdentifier(ID_FOR_MISSED_READING_ALERT_SNOOZE_IDENTIFIER)
+					.build()
+				)
+				.build()
+			);
+			
 			Notifications.service.setup(service);
 			
 			BluetoothService.instance.addEventListener(BlueToothServiceEvent.DEVICE_NOT_PAIRED, deviceNotPaired);

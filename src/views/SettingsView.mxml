@@ -29,6 +29,7 @@
 			import services.DialogService;
 			[ResourceBundle("settingsview")]
 			[ResourceBundle("calibrationservice")]
+			[ResourceBundle("alarmservice")]
 						
 			[Bindable]
 			private static var detailedTracingOnOrOffText:String = "";
@@ -369,6 +370,24 @@
 				navigator.pushView(FromtimeAndValueListView,dataToSend);
 			}
 			
+			private function missedReadingAlert_clickHandler(event:MouseEvent):void {
+				rect35.color = uint("0xD3D3D3");
+				rect36.color = uint("0xD3D3D3");
+				
+				setResetColorTimer();
+				var dataToSend:Object = new Object();
+				dataToSend.title = ModelLocator.resourceManagerInstance.getString("settingsview","missed_reading_alert");
+				dataToSend.topText = ModelLocator.resourceManagerInstance.getString("settingsview","alert_top_text");
+				dataToSend.settingid = CommonSettings.COMMON_SETTING_MISSED_READING_ALERT;
+				dataToSend.titleforFromtimeAndValueElementView = "";
+				dataToSend.topTextforFromtimeAndValueElementView = ModelLocator.resourceManagerInstance.getString('settingsview','edit_missed_reading_alert');
+				dataToSend.isBgValue = false;
+				dataToSend.unit = ModelLocator.resourceManagerInstance.getString('alarmservice','minutes');
+				dataToSend.additionalTopText = ModelLocator.resourceManagerInstance.getString('settingsview','explain_missed_reading_alert');
+				
+				navigator.pushView(FromtimeAndValueListView,dataToSend);
+			}
+			
 			private function alertTypes_clickHandler(event:MouseEvent):void {
 				rect31.color = uint("0xD3D3D3");
 				rect32.color = uint("0xD3D3D3");
@@ -497,6 +516,8 @@
 					rect32.color = uint("0x212121");//alert types
 					rect33.color = uint("0x212121");//high alert
 					rect34.color = uint("0x212121");//high alert
+					rect35.color = uint("0x212121");//missed reading alert
+					rect36.color = uint("0x212121");//missed reading alert
 				}
 			}
 			
@@ -752,6 +773,29 @@
 					<s:Rect height="100%" width="5" >
 						<s:fill>
 							<s:SolidColor color="#212121" id="rect34"/>
+						</s:fill>
+					</s:Rect>
+				</s:HGroup>
+				<s:Line width="100%">
+					<s:stroke>
+						<s:SolidColorStroke color="0xFFFFFF" weight="1" alpha="0.25"/>
+					</s:stroke>
+				</s:Line>	
+			</s:VGroup>
+			
+			<!-- Chapter Alerts Subsection Missed Reading -->
+			<s:VGroup click="missedReadingAlert_clickHandler(event)" width="100%">
+				<s:HGroup width="100%">
+					<s:Rect height="100%" width="5" >
+						<s:fill>
+							<s:SolidColor color="#212121" id="rect35"/>
+						</s:fill>
+					</s:Rect>
+					<s:Label text = "{ModelLocator.resourceManagerInstance.getString('settingsview','missed_reading_alert')}"
+							 width="100%" paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
+					<s:Rect height="100%" width="5" >
+						<s:fill>
+							<s:SolidColor color="#212121" id="rect36"/>
 						</s:fill>
 					</s:Rect>
 				</s:HGroup>

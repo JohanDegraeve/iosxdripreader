@@ -116,11 +116,10 @@
 		 * the string that has all the intervals with high alert types 
 		  */
 		 public static const COMMON_SETTING_HIGH_ALERT:int = 22;
-			
 		 /**
 		  * the string that has all the intervals with high alert types 
 		  */
-		 public static const COMMON_SETTING_MISSED_READING_ALERT:int = 22;
+		 public static const COMMON_SETTING_MISSED_READING_ALERT:int = 23;
 		 
 		 private static var commonSettings:Array = [
 			 "0",//COMMON_SETTING_CURRENT_SENSOR
@@ -145,7 +144,8 @@
 			 "false",//COMMON_SETTING_LICENSE_INFO_CONFIRMED
 			 "0",//COMMON_SETTING_TIME_SINCE_LAST_QUICK_BLOX_SUBSCRIPTION
 			 "00:00>70>DefaultNoAlertToBeReplaced",//COMMON_SETTING_LOW_ALERT
-			 "00:00>170>DefaultNoAlertToBeReplaced"//COMMON_SETTING_HIGH_ALERT
+			 "00:00>170>DefaultNoAlertToBeReplaced",//COMMON_SETTING_HIGH_ALERT
+			 "00:00>30>DefaultNoAlertToBeReplaced"//COMMON_SETTING_MISSED_READING_ALERT
 		 ];
 		 
 		 public function CommonSettings()
@@ -170,6 +170,14 @@
 					 var newString:String = (commonSettings[COMMON_SETTING_HIGH_ALERT] as String)
 						 .replace('DefaultNoAlertToBeReplaced', noAlert);
 					 commonSettings[COMMON_SETTING_HIGH_ALERT] = newString;
+				 }
+			 }
+			 if (commonSettingId == COMMON_SETTING_MISSED_READING_ALERT) {
+				 if ((commonSettings[COMMON_SETTING_MISSED_READING_ALERT] as String).indexOf('DefaultNoAlertToBeReplaced') > -1) {
+					 var noAlert:String = ModelLocator.resourceManagerInstance.getString("settingsview","no_alert")
+					 var newString:String = (commonSettings[COMMON_SETTING_MISSED_READING_ALERT] as String)
+						 .replace('DefaultNoAlertToBeReplaced', noAlert);
+					 commonSettings[COMMON_SETTING_MISSED_READING_ALERT] = newString;
 				 }
 			 }
 			 return commonSettings[commonSettingId];

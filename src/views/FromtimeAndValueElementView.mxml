@@ -93,6 +93,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			private static var fromStartHours:int = 0;
 			private static var userSelectedTime:Boolean = false;
 			private static var isBgValue:Boolean = false;
+			private static var unit:String = null;
 			
 			/**
 			 * the selected index
@@ -105,37 +106,48 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			 * data.listOfElements (mandatory), list of existing elements, required in order to check the entered values
 			 * data.selectedIndex (optional), if present, then this is about modifying an existing element, selectedIndex points to that element. If not present, then it's about creating a new element.
 			 * 
-			 */protected function view1_creationCompleteHandler(event:FlexEvent):void
-			 {
-				 back_label = ModelLocator.resourceManagerInstance.getString('general','back');
-				 valueGroupLabelIdforValue.text = ModelLocator.resourceManagerInstance.getString('fromtimeandvalueelementview','value');
-				 alarmNameGroupLabelIdforAlarmName.text = ModelLocator.resourceManagerInstance.getString('fromtimeandvalueelementview','alarmname');
-				 fromGroupLabelId.text = ModelLocator.resourceManagerInstance.getString('fromtimeandvalueelementview','from');
-				 if (data.title)
-					 title = data.title;
-				 if (data.topText)
-					 topTextLabelId.text = data.topText;
-				 listOfElements = data.listOfElements;
-				 if (data.isBgValue)
-					 isBgValue = data.isBgValue;
-				 
-				 if (data.selectedIndex != null) {
-					 var fromtimeAndValue:FromtimeAndValue;
-					 selectedIndex = data.selectedIndex;
-					 fromtimeAndValue = listOfElements.getItemAt(selectedIndex) as FromtimeAndValue;
-					 timeText = fromtimeAndValue.fromAsString();
-					 var valueInCorrectUnit:Number = fromtimeAndValue.value;
-					 if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) != "true") {
-						 valueInCorrectUnit = valueInCorrectUnit * BgReading.MGDL_TO_MMOLL;
-					 }
-					 value = (Math.round(valueInCorrectUnit) == valueInCorrectUnit ?
-						 valueInCorrectUnit.toString()
-						 :
-						 (Math.round((valueInCorrectUnit * 10)) / 10).toString());
-					 valueGroupLabelIdforUnit.text = ModelLocator.resourceManagerInstance.getString('settingsview','mgdl');
-					 alarmName = fromtimeAndValue.alarmName;
-				 }
-			 }
+			 */
+			protected function view1_creationCompleteHandler(event:FlexEvent):void {
+				back_label = ModelLocator.resourceManagerInstance.getString('general','back');
+				valueGroupLabelIdforValue.text = ModelLocator.resourceManagerInstance.getString('fromtimeandvalueelementview','value');
+				alarmNameGroupLabelIdforAlarmName.text = ModelLocator.resourceManagerInstance.getString('fromtimeandvalueelementview','alarmname');
+				fromGroupLabelId.text = ModelLocator.resourceManagerInstance.getString('fromtimeandvalueelementview','from');
+				if (data.title)
+					title = data.title;
+				if (data.topText)
+					topTextLabelId.text = data.topText;
+				listOfElements = data.listOfElements;
+				if (data.isBgValue)
+					isBgValue = data.isBgValue;
+				if (data.unit)
+					unit = data.unit;
+				if (data.selectedIndex != null) {
+					var fromtimeAndValue:FromtimeAndValue;
+					selectedIndex = data.selectedIndex;
+					fromtimeAndValue = listOfElements.getItemAt(selectedIndex) as FromtimeAndValue;
+					timeText = fromtimeAndValue.fromAsString();
+					var valueInCorrectUnit:Number = fromtimeAndValue.value;
+					if (isBgValue) {
+						if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) != "true") {
+							valueInCorrectUnit = valueInCorrectUnit * BgReading.MGDL_TO_MMOLL;
+						}
+					}
+					value = (Math.round(valueInCorrectUnit) == valueInCorrectUnit ?
+						valueInCorrectUnit.toString()
+						:
+						(Math.round((valueInCorrectUnit * 10)) / 10).toString());
+					if (unit == null) {
+						if(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true") {
+							valueGroupLabelIdforUnit.text = ModelLocator.resourceManagerInstance.getString('settingsview','mgdl');
+						} else {
+							valueGroupLabelIdforUnit.text = ModelLocator.resourceManagerInstance.getString('settingsview','mmol');
+						}
+					} else {
+						valueGroupLabelIdforUnit.text = unit;
+					}
+					alarmName = fromtimeAndValue.alarmName;
+				}
+			}
 			
 			private function fromGroupClicked(event:Event):void {
 				if (selectedIndex == 0) {

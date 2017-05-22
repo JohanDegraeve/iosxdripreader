@@ -32,7 +32,7 @@ package Utilities
 	 */public class FromtimeAndValueArrayCollection extends ArrayCollection
 	 {
 		 [ResourceBundle("settingsview")]
-
+		 
 		 private var _arrayChanged:Boolean = false;
 		 
 		 /**
@@ -140,7 +140,7 @@ package Utilities
 		 public function getValue(timeAsNumber:Number, timeAsString:String, timeAsDate:Date):Number {
 			 if (!isNaN(timeAsNumber)) {
 				 if (timeAsNumber > 86400) {
-					 myTrace("in getAlarmName, fromTimeAsNumber should not be > 86400, throwing exception");
+					 myTrace("in getValue, fromTimeAsNumber should not be > 86400, throwing exception");
 					 throw new Error("fromTimeAsNumber should not be > 86400");
 				 }
 			 }
@@ -152,16 +152,47 @@ package Utilities
 				 return getValue(((new Number(timeAsDate.hours)) * 60 + (new Number(timeAsDate.minutes)))*60, "", null); 
 			 }
 			 
-			 var previousItem:int;
-			 previousItem = 0;
-			 
 			 if (length == 1)
 				 return (getItemAt(0) as FromtimeAndValue).value;
 			 
+			 var previousItem:int = 0;
 			 while (previousItem < length - 1 && (getItemAt(previousItem + 1) as FromtimeAndValue).from < timeAsNumber)
 				 previousItem++;
 			 
 			 myTrace("in getValue, returnvalue = " + (getItemAt(previousItem) as FromtimeAndValue).value);
+			 return  (getItemAt(previousItem) as FromtimeAndValue).value;
+		 }
+		 
+		 /**
+		  * same as getvalue, but gets the next value
+		  */
+		 public function getNextValue(timeAsNumber:Number, timeAsString:String, timeAsDate:Date):Number {
+			 if (!isNaN(timeAsNumber)) {
+				 if (timeAsNumber > 86400) {
+					 myTrace("in getNextValue, fromTimeAsNumber should not be > 86400, throwing exception");
+					 throw new Error("fromTimeAsNumber should not be > 86400");
+				 }
+			 }
+			 if (!timeAsString == "") {
+				 return getNextValue(((new Number(timeAsString.split(":")[0])) * 60 + (new Number(timeAsString.split(":")[1])))*60, "", null); 
+			 }
+			 
+			 if (timeAsDate != null) {
+				 return getNextValue(((new Number(timeAsDate.hours)) * 60 + (new Number(timeAsDate.minutes)))*60, "", null); 
+			 }
+			 
+			 if (length == 1)
+				 return (getItemAt(0) as FromtimeAndValue).value;
+			 
+			 var previousItem:int = 0;
+			 while (previousItem < length - 1 && (getItemAt(previousItem + 1) as FromtimeAndValue).from < timeAsNumber)
+				 previousItem++;
+			 
+			 previousItem++;
+			 if (previousItem == length)
+				 previousItem = 0;
+			 
+			 myTrace("in getNextValue, returnvalue = " + (getItemAt(previousItem) as FromtimeAndValue).value);
 			 return  (getItemAt(previousItem) as FromtimeAndValue).value;
 		 }
 		 
@@ -198,16 +229,78 @@ package Utilities
 				 return getAlarmName(((new Number(timeAsDate.hours)) * 60 + (new Number(timeAsDate.minutes)))*60); 
 			 }
 			 
-			 var previousItem:int;
-			 previousItem = 0;
+			 if (length == 1)
+				 return (getItemAt(0) as FromtimeAndValue).alarmName;
+			 
+			 var previousItem:int = 0;
+			 while (previousItem < length - 1 && (getItemAt(previousItem + 1) as FromtimeAndValue).from < timeAsNumber)
+				 previousItem++;
+			 
+			 myTrace("in getAlarmName, returnvalue = " + (getItemAt(previousItem) as FromtimeAndValue).alarmName);
+			 return  (getItemAt(previousItem) as FromtimeAndValue).alarmName;
+		 }
+		 
+		 /**
+		  * same as getAlarmName but gets next value
+		  */
+		 public function getNextAlarmName(timeAsNumber:Number = Number.NaN,timeAsString:String = "",timeAsDate:Date = null):String {
+			 if (!isNaN(timeAsNumber)) {
+				 if (timeAsNumber > 86400) {
+					 myTrace("in getNextAlarmName, fromTimeAsNumber should not be > 86400, throwing exception");
+					 throw new Error("fromTimeAsNumber should not be > 86400");
+				 }
+			 }
+			 if (!timeAsString == "") {
+				 return getNextAlarmName(((new Number(timeAsString.split(":")[0])) * 60 + (new Number(timeAsString.split(":")[1])))*60); 
+			 }
+			 
+			 if (timeAsDate != null) {
+				 return getNextAlarmName(((new Number(timeAsDate.hours)) * 60 + (new Number(timeAsDate.minutes)))*60); 
+			 }
 			 
 			 if (length == 1)
 				 return (getItemAt(0) as FromtimeAndValue).alarmName;
 			 
+			 var previousItem:int = 0;
 			 while (previousItem < length - 1 && (getItemAt(previousItem + 1) as FromtimeAndValue).from < timeAsNumber)
 				 previousItem++;
-			 myTrace("in getAlarmName, returnvalue = " + (getItemAt(previousItem) as FromtimeAndValue).alarmName);
+			 
+			 previousItem++;
+			 if (previousItem == length)
+				 previousItem = 0;
+		 
+			 myTrace("in getNextAlarmName, returnvalue = " + (getItemAt(previousItem) as FromtimeAndValue).alarmName);
 			 return  (getItemAt(previousItem) as FromtimeAndValue).alarmName;
+		 }
+		 
+		 public function getNextFromTime(timeAsNumber:Number = Number.NaN,timeAsString:String = "",timeAsDate:Date = null):int {
+			 if (!isNaN(timeAsNumber)) {
+				 if (timeAsNumber > 86400) {
+					 myTrace("in getNextFromTime, fromTimeAsNumber should not be > 86400, throwing exception");
+					 throw new Error("fromTimeAsNumber should not be > 86400");
+				 }
+			 }
+			 if (!timeAsString == "") {
+				 return getNextFromTime(((new Number(timeAsString.split(":")[0])) * 60 + (new Number(timeAsString.split(":")[1])))*60); 
+			 }
+			 
+			 if (timeAsDate != null) {
+				 return getNextFromTime(((new Number(timeAsDate.hours)) * 60 + (new Number(timeAsDate.minutes)))*60); 
+			 }
+			 
+			 if (length == 1)
+				 return (getItemAt(0) as FromtimeAndValue).from;
+			 
+			 var previousItem:int = 0;
+			 while (previousItem < length - 1 && (getItemAt(previousItem + 1) as FromtimeAndValue).from < timeAsNumber)
+				 previousItem++;
+			 
+			 previousItem++;
+			 if (previousItem == length)
+				 previousItem = 0;
+			 
+			 myTrace("in getNextFromTime, returnvalue = " + (getItemAt(previousItem) as FromtimeAndValue).from);
+			 return  (getItemAt(previousItem) as FromtimeAndValue).from;
 		 }
 		 
 		 /**
@@ -245,31 +338,31 @@ package Utilities
 		  * better to use addItem, then do getItemIndex to know the new index. 
 		  */
 		 override public function addItemAt(newObject:Object,index:int):void {
-			  return super.addItemAt(newObject,index);
-		  }
+			 return super.addItemAt(newObject,index);
+		 }
 		 
 		 /**
 		  * creates the alarmstring list in a string as it's stored in the settings
 		  */
 		 public function createAlarmString():String {
-			  var returnValue:String = "";
-			  for (var cntr:int = 0;cntr < length;cntr++) {
-				  if (returnValue.length > 0) {
-					  returnValue += "-";
-				  }
-				  returnValue += (getItemAt(cntr) as FromtimeAndValue).fromAsString();
-				  returnValue += ">";
-				  returnValue += (getItemAt(cntr) as FromtimeAndValue).value.toString();
-				  returnValue += ">";
-				  returnValue += (getItemAt(cntr) as FromtimeAndValue).alarmName;
-			  }
-			  myTrace("in createAlarmString, returnvalue = " + returnValue);
-			  return returnValue;
-		  }
+			 var returnValue:String = "";
+			 for (var cntr:int = 0;cntr < length;cntr++) {
+				 if (returnValue.length > 0) {
+					 returnValue += "-";
+				 }
+				 returnValue += (getItemAt(cntr) as FromtimeAndValue).fromAsString();
+				 returnValue += ">";
+				 returnValue += (getItemAt(cntr) as FromtimeAndValue).value.toString();
+				 returnValue += ">";
+				 returnValue += (getItemAt(cntr) as FromtimeAndValue).alarmName;
+			 }
+			 myTrace("in createAlarmString, returnvalue = " + returnValue);
+			 return returnValue;
+		 }
 		 
 		 private static function myTrace(log:String):void {
 			 Trace.myTrace("FromtimeAndValueArrayCollection.as", log);
 		 }
-
+		 
 	 }
 }
