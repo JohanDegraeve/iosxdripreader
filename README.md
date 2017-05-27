@@ -15,11 +15,16 @@ xdrip/xbridge/G5 reader for iOS devices -
 * set transmitter id
   * for xDrip/xBridge, if the device already has a transmitter id programmed, then there's no need anymore (but allowed) to configured it in the Settings, the app will automatically read and store the transmitter id
 
-# Alerts - CHAPTER UNDER CONSTRUCTION
+# Alerts
 
-Alerts are configured in the Settings.
+Alerts are configured in the Settings. 
+Possible alerts are
+ * High
+ * Low
+ * Missed Reading
+ * Additional Calibration Request
 
-Each Alert requires an Alert Type, except the "Always on Notification" which is either always on or always off. 
+Each Alert requires an Alert Type.
 
 __Per Alert Type define__
  * enabled or disabled : Example between 8 in the morning and midnight I don't need a low alert. For me the Low alert has a disabled alert type between 8 and midnight. There's
