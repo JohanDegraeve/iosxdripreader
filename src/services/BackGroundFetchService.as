@@ -7,12 +7,14 @@ package services
 	import flash.events.Event;
 	import flash.events.EventDispatcher;
 	import flash.events.IOErrorEvent;
+	import flash.events.TimerEvent;
 	import flash.net.URLLoader;
 	import flash.net.URLRequest;
 	import flash.net.URLRequestHeader;
 	import flash.net.URLRequestMethod;
 	import flash.net.URLVariables;
 	import flash.utils.ByteArray;
+	import flash.utils.Timer;
 	
 	import Utilities.Trace;
 	import Utilities.UniqueId;
@@ -48,7 +50,8 @@ package services
 		private static var QB_Token:String = "";
 		private static var _QBSessionBusy:Boolean = false;
 		private static var QBSessionBusySetToTrueTimestamp:Number = 0;
-		
+		private static var callCompletionHandlerTimer:Timer;
+		private static var completionHandlerResult:String;
 		private static function get QBSessionBusy():Boolean
 		{
 			if ((new Date()).valueOf() - QBSessionBusySetToTrueTimestamp > 15 * 1000) {//if one qbsession has finished within 15 seconds and a second is starting, then this second one will be ignored
@@ -108,8 +111,17 @@ package services
 		}
 		
 		public static function callCompletionHandler(result:String):void {
-			myTrace("callCompletionhandler with result " + result);
-			BackgroundFetch.callCompletionHandler(result);
+			myTrace("in callCompletionhandler with result " + result + " setting timer to call completionhandler");
+			
+			//waiting some time before actually calling the completionhandler, this gives other services time to finish some tasks, eg alarmservice
+			callCompletionHandlerTimer = new Timer(2 * 1000, 1);
+			callCompletionHandlerTimer.addEventListener(TimerEvent.TIMER, finallyCallCompletionHandler);
+			callCompletionHandlerTimer.start();
+			completionHandlerResult = result
+		}
+		
+		private static function finallyCallCompletionHandler(event:Event = null):void {
+			BackgroundFetch.callCompletionHandler(completionHandlerResult);
 		}
 		
 		private static function performFetch(event:BackgroundFetchEvent):void {

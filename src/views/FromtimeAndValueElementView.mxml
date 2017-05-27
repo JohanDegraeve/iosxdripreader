@@ -94,7 +94,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			private static var userSelectedTime:Boolean = false;
 			private static var isBgValue:Boolean = false;
 			private static var unit:String = null;
-			
+						
 			/**
 			 * the selected index
 			 */private var selectedIndex:int;
@@ -114,13 +114,23 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 				fromGroupLabelId.text = ModelLocator.resourceManagerInstance.getString('fromtimeandvalueelementview','from');
 				if (data.title)
 					title = data.title;
+				else 
+					title = "";
 				if (data.topText)
 					topTextLabelId.text = data.topText;
+				else {
+					topTextLabelId.text = "";
+				}
 				listOfElements = data.listOfElements;
 				if (data.isBgValue)
 					isBgValue = data.isBgValue;
+				else 
+					isBgValue = false;
 				if (data.unit)
 					unit = data.unit;
+				else {
+					unit = null;
+				}
 				if (data.selectedIndex != null) {
 					var fromtimeAndValue:FromtimeAndValue;
 					selectedIndex = data.selectedIndex;
@@ -146,6 +156,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 						valueGroupLabelIdforUnit.text = unit;
 					}
 					alarmName = fromtimeAndValue.alarmName;
+					var alertType:AlertType = Database.getAlertType(alarmName);
+					if (!alertType.enabled) {
+						valueGroup.enabled = false;
+						valueGroup.alpha = 0.25;
+					}
 				}
 			}
 			
@@ -228,6 +243,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			}
 			
 			private function valueGroupClicked(event:Event = null):void {
+				if (!valueGroup.enabled)
+					return;
 				var newAmount:Number;
 				
 				var alert:DialogView = Dialog.service.create(
@@ -309,6 +326,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 						return;
 					
 					alarmName = newAlarmName;
+					
+					var alertType:AlertType = Database.getAlertType(alarmName);
+					if (!alertType.enabled) {
+						valueGroup.enabled = false;
+						valueGroup.alpha = 0.25;
+					} else {
+						valueGroup.enabled = true;
+						valueGroup.alpha = 1;
+					}
 					
 					if (newFromtimeAndValue == null)
 						newFromtimeAndValue = (listOfElements.getItemAt(selectedIndex) as FromtimeAndValue);

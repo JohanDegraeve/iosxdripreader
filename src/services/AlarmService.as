@@ -8,6 +8,8 @@ package services
 	import com.distriqt.extension.notifications.Notifications;
 	import com.distriqt.extension.notifications.builders.NotificationBuilder;
 	import com.distriqt.extension.notifications.events.NotificationEvent;
+	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
+	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetchEvent;
 	
 	import flash.events.EventDispatcher;
 	
@@ -81,6 +83,9 @@ package services
 			"40 minutes", "45 minutes", "50 minutes", "55 minutes", "1 hour", "1 hour 15 minutes", "1,5 hours", "2 hours", "2,5 hours", "3 hours", "4 hours",
 			"5 hours", "6 hours", "7 hours", "8 hours", "9 hours", "10 hours"];
 		
+		private static var lastAlarmCheckTimeStamp:Number;
+		private static var latestAlertTypeUsedInMissedReadingNotification:AlertType;
+		
 		public static function get instance():AlarmService {
 			return _instance;
 		}
@@ -98,6 +103,8 @@ package services
 				initialStart = false;
 			TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, checkAlarms);
 			NotificationService.instance.addEventListener(NotificationServiceEvent.NOTIFICATION_EVENT, notificationReceived);
+			BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.PERFORMREMOTEFETCH, checkAlarmsAfterPerformFetch);
+
 			for (var cntr:int = 0;cntr < snoozeValueMinutes.length;cntr++) {
 				snoozeValueStrings[cntr] = (snoozeValueStrings[cntr] as String).replace("minutes", ModelLocator.resourceManagerInstance.getString("alarmservice","minutes"));
 				snoozeValueStrings[cntr] = (snoozeValueStrings[cntr] as String).replace("hour", ModelLocator.resourceManagerInstance.getString("alarmservice","hour"));
@@ -140,7 +147,7 @@ package services
 						snoozePeriodPicker.addEventListener( DialogViewEvent.CLOSED, lowSnoozePicker_closedHandler );
 						snoozePeriodPicker.show();
 					} else if (notificationEvent.identifier == NotificationService.ID_FOR_LOW_ALERT_SNOOZE_IDENTIFIER) {
-						myTrace("in notificationReceived with id = ID_FOR_LOW_ALERT, snoozing the notification");
+						myTrace("in notificationReceived with id = ID_FOR_LOW_ALERT, snoozing the notification for " + _lowAlertSnoozePeriodInMinutes + "minutes");
 						_lowAlertSnoozePeriodInMinutes = alertType.defaultSnoozePeriodInMinutes;
 						_lowAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
 					}
@@ -170,7 +177,7 @@ package services
 						snoozePeriodPicker.addEventListener( DialogViewEvent.CLOSED, highSnoozePicker_closedHandler );
 						snoozePeriodPicker.show();
 					} else if (notificationEvent.identifier == NotificationService.ID_FOR_HIGH_ALERT_SNOOZE_IDENTIFIER) {
-						myTrace("in notificationReceived with id = ID_FOR_HIGH_ALERT, snoozing the notification");
+						myTrace("in notificationReceived with id = ID_FOR_HIGH_ALERT, snoozing the notification for " + _highAlertSnoozePeriodInMinutes + " minutes");
 						_highAlertSnoozePeriodInMinutes = alertType.defaultSnoozePeriodInMinutes;
 						_highAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
 					}
@@ -200,7 +207,7 @@ package services
 						snoozePeriodPicker.addEventListener( DialogViewEvent.CLOSED, missedReadingSnoozePicker_closedHandler );
 						snoozePeriodPicker.show();
 					} else if (notificationEvent.identifier == NotificationService.ID_FOR_MISSED_READING_ALERT_SNOOZE_IDENTIFIER) {
-						myTrace("in notificationReceived with id = ID_FOR_MISSED_READING_ALERT, snoozing the notification");
+						myTrace("in notificationReceived with id = ID_FOR_MISSED_READING_ALERT, snoozing the notification for " + _missedReadingAlertSnoozePeriodInMinutes);
 						_missedReadingAlertSnoozePeriodInMinutes = alertType.defaultSnoozePeriodInMinutes;
 						_missedReadingAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
 					}
@@ -211,6 +218,19 @@ package services
 				myTrace("in missedReadingSnoozePicker_closedHandler snoozing the notification for " + snoozeValueStrings[event.indexes[0]]);
 				_missedReadingAlertSnoozePeriodInMinutes = snoozeValueMinutes[event.indexes[0]];
 				_missedReadingAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
+				myTrace("in missedReadingSnoozePicker_closedHandler planning a new notification of the same type with delay in minues " + _missedReadingAlertSnoozePeriodInMinutes);
+				
+				fireAlert(
+					latestAlertTypeUsedInMissedReadingNotification, 
+					NotificationService.ID_FOR_MISSED_READING_ALERT, 
+					ModelLocator.resourceManagerInstance.getString("alarmservice","missed_reading_alert_notification_alert"), 
+					ModelLocator.resourceManagerInstance.getString("alarmservice","missed_reading_alert_notification_alert"),
+					alertType.enableVibration,
+					alertType.enableLights,
+					NotificationService.ID_FOR_ALERT_MISSED_READING_CATEGORY,
+					_missedReadingAlertSnoozePeriodInMinutes * 60
+				); 
+
 			}
 			
 			function lowSnoozePicker_closedHandler(event:DialogViewEvent): void {
@@ -226,9 +246,21 @@ package services
 			}
 		}
 		
+		private static function checkAlarmsAfterPerformFetch(event:BackgroundFetchEvent):void {
+			myTrace("in checkAlarmsAfterPerformFetch");
+			if ((new Date()).valueOf() - lastAlarmCheckTimeStamp > (4 * 60 + 45) * 1000) {
+				myTrace("in checkAlarmsAfterPerformFetch, calling checkAlarms because it's been more than 4 minutes 45 seconds");
+				checkAlarms(null);
+			}
+		}
+		
+		/**
+		 * if be == null, then check was triggered by  checkAlarmsAfterPerformFetch
+		 */
 		private static function checkAlarms(be:TransmitterServiceEvent):void {
 			myTrace("in checkAlarms");
 			var now:Date = new Date();
+			lastAlarmCheckTimeStamp = now.valueOf();
 			
 			var lastbgreading:BgReading = BgReading.lastNoSensor();
 			if (lastbgreading != null) {
@@ -316,6 +348,7 @@ package services
 					_highAlertSnoozePeriodInMinutes = 0;
 				}
 				
+				//missed reading alert
 				listOfAlerts = FromtimeAndValueArrayCollection.createList(
 					CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_MISSED_READING_ALERT));
 				alertValue = listOfAlerts.getValue(Number.NaN, "", now);
@@ -332,8 +365,17 @@ package services
 						//check if missed reading alert is still enabled at the time it's supposed to fire
 						var dateOfFire:Date = new Date(now.valueOf() + alertValue * 60 * 1000);
 						var delay:int = alertValue * 60;
+						myTrace("in checkAlarms, calculated delay in minutes = " + delay/60);
+						if (be == null) {
+							var diffInSeconds:Number = (now.valueOf() - lastbgreading.timestamp)/1000;
+							delay = delay - diffInSeconds;
+							if (delay <= 0)
+								delay = 0;
+							myTrace("in checkAlarms, was triggered by performFetch, reducing delay with time since last bgreading, new delay value = " + delay);
+						}
 						if (Database.getAlertType(listOfAlerts.getAlarmName(Number.NaN, "", dateOfFire)).enabled) {
 							myTrace("in checkAlarms, missed reading planned with delay in minutes = " + delay/60);
+							latestAlertTypeUsedInMissedReadingNotification = alertType;
 							fireAlert(
 								alertType, 
 								NotificationService.ID_FOR_MISSED_READING_ALERT, 
@@ -347,7 +389,7 @@ package services
 							_missedReadingAlertLatestSnoozeTimeInMs = Number.NaN;
 							_missedReadingAlertSnoozePeriodInMinutes = 0;
 						} else {
-							myTrace("in checkAlarms, current missed reading alert is enabled, but the time it's supposed to expire, the alarm is not enabled so not setting it");
+							myTrace("in checkAlarms, current missed reading alert is enabled, but the time it's supposed to expire it is not enabled so not setting it");
 						}
 						
 					} else {
@@ -369,13 +411,16 @@ package services
 							var currentMinuteLocal:int = now.minutes;
 							var currentSecondsLocal:int = now.seconds;
 							var currentTimeInSeconds:int = 3600 * currentHourLocal + 60 * currentMinuteLocal + currentSecondsLocal;
-							var fromTimeNextAlert:int = listOfAlerts.getNextFromTime(Number.NaN, "", now);
+							var fromTimeNextAlertInSeconds:int = listOfAlerts.getNextFromTime(Number.NaN, "", now);
 							var delay:int;
-							if (fromTimeNextAlert > currentTimeInSeconds)
-								delay = (fromTimeNextAlert - currentTimeInSeconds)/1000;
+							if (fromTimeNextAlertInSeconds > currentTimeInSeconds)
+								delay = fromTimeNextAlertInSeconds - currentTimeInSeconds;
 							else 
-								delay = (currentTimeInSeconds - fromTimeNextAlert)/1000;
+								delay = 24 * 3600  - (currentTimeInSeconds - fromTimeNextAlertInSeconds);
+							if (delay < alertValue * 60)
+								delay = alertValue * 60;
 							myTrace("in checkAlarms, missed reading planned with delay in minutes = " + delay/60);
+							latestAlertTypeUsedInMissedReadingNotification = alertType;
 							fireAlert(
 								alertType, 
 								NotificationService.ID_FOR_MISSED_READING_ALERT, 

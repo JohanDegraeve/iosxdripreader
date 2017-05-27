@@ -97,6 +97,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 				back_label = resourceManager.getString('general','back');
 				if (data.title)
 					title = data.title;
+				else 
+					title = "";
 				if (!listOfElements)
 					//if listOfElements is not null, then it means listOfElements has already been assigned in addhandler, so no need to check again on the data.settingid value
 					//this would only reset the list to the initial value, as it still exists in the settings
@@ -108,8 +110,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 					}
 				if (data.topText)
 					topText = data.topText;
+				else
+				    topText = "";
 				if (data.isBgValue)
 					isBgValue = data.isBgValue;
+				else
+				    isBgValue = "";
 				if (data.unit)
 					unit = data.unit;
 				else
@@ -119,6 +125,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 					additionalTopTextVisible = true;
 				} else {
 					additionalTopTextVisible = false;
+					additionalTopText = "";
 				}
 				list.addEventListener(FromtimeAndValueItemRenderer.DELETE_CLICKED,deleteTheSelectedItem);
 				list.addEventListener(FromtimeAndValueItemRenderer.EDIT_CLICKED,editTheSelectedItem);
@@ -237,15 +244,42 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 
 	<s:Scroller width="100%" height="100%" >
 		<s:VGroup width="100%" paddingTop="10">
-			<s:Label text="@{topText}"  textAlign="center"  color="#3B6999" 
-					 width="100%" paddingLeft="3" paddingRight="0" fontSize="20" fontWeight="bold" paddingTop="3"/>
+			
+			<s:HGroup width="100%" verticalAlign="bottom">
+				<s:Rect height="100%" width="5" >
+					<s:fill>
+						<s:SolidColor color="#212121"/>
+					</s:fill>
+				</s:Rect>
+				<s:Label text="@{topText}"  textAlign="center"  color="#3B6999" 
+						 width="100%" paddingLeft="0" paddingRight="0" fontSize="20" fontWeight="bold" paddingTop="3"/>
+				<s:Rect height="100%" width="5" >
+					<s:fill>
+						<s:SolidColor color="#212121"/>
+					</s:fill>
+				</s:Rect>
+			</s:HGroup>
+			
 			<s:Line width="100%" >
 				<s:stroke>
 					<s:SolidColorStroke color="#3B6999"  weight="3"/>
 				</s:stroke>
 			</s:Line>
-			<s:Label text = "@{additionalTopText}" visible="{additionalTopTextVisible}" enabled="{additionalTopTextVisible}" 
-					 width="100%" paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
+			<s:HGroup width="100%" verticalAlign="bottom">
+				<s:Rect height="100%" width="5" >
+					<s:fill>
+						<s:SolidColor color="#212121"/>
+					</s:fill>
+				</s:Rect>
+				<s:Label text = "@{additionalTopText}" visible="{additionalTopTextVisible}" enabled="{additionalTopTextVisible}" 
+						 width="100%" paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
+				<s:Rect height="100%" width="5" >
+					<s:fill>
+						<s:SolidColor color="#212121"/>
+					</s:fill>
+				</s:Rect>
+			</s:HGroup>
+
 			<s:Line width="100%" visible="{additionalTopTextVisible}">
 				<s:stroke>
 					<s:SolidColorStroke color="0xFFFFFF" weight="1" alpha="0.25"/>

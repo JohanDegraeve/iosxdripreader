@@ -298,7 +298,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 					if (newSound.length > 0) {
 						soundNames.push(newSound);
 						if (newSound.toUpperCase() == soundName.toUpperCase())
-							selectedSound = cntr;
+							selectedSound = cntr + 1;
 					}
 				}
 
