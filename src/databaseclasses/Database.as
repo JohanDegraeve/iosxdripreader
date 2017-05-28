@@ -1996,7 +1996,7 @@ package databaseclasses
 								o.calibrationFlag == "1" ? true:false,
 								o.calculatedValue,
 								o.filteredCalculatedValue,
-								o.calculatedValeSlopoe,
+								o.calculatedValeuSlope,
 								o.a,
 								o.b,
 								o.c,

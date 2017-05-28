@@ -220,17 +220,18 @@ package services
 				_missedReadingAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
 				myTrace("in missedReadingSnoozePicker_closedHandler planning a new notification of the same type with delay in minues " + _missedReadingAlertSnoozePeriodInMinutes);
 				
-				fireAlert(
-					latestAlertTypeUsedInMissedReadingNotification, 
-					NotificationService.ID_FOR_MISSED_READING_ALERT, 
-					ModelLocator.resourceManagerInstance.getString("alarmservice","missed_reading_alert_notification_alert"), 
-					ModelLocator.resourceManagerInstance.getString("alarmservice","missed_reading_alert_notification_alert"),
-					alertType.enableVibration,
-					alertType.enableLights,
-					NotificationService.ID_FOR_ALERT_MISSED_READING_CATEGORY,
-					_missedReadingAlertSnoozePeriodInMinutes * 60
-				); 
-
+				if (latestAlertTypeUsedInMissedReadingNotification != null) {
+					fireAlert(
+						latestAlertTypeUsedInMissedReadingNotification, 
+						NotificationService.ID_FOR_MISSED_READING_ALERT, 
+						ModelLocator.resourceManagerInstance.getString("alarmservice","missed_reading_alert_notification_alert"), 
+						ModelLocator.resourceManagerInstance.getString("alarmservice","missed_reading_alert_notification_alert"),
+						alertType.enableVibration,
+						alertType.enableLights,
+						NotificationService.ID_FOR_ALERT_MISSED_READING_CATEGORY,
+						_missedReadingAlertSnoozePeriodInMinutes * 60
+					); 
+				}
 			}
 			
 			function lowSnoozePicker_closedHandler(event:DialogViewEvent): void {
