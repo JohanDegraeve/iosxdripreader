@@ -95,7 +95,11 @@ package databaseclasses
 		 */
 		public static const LOCAL_SETTING_G5_ALWAYS_UNBOUND:int = 11;
 		public static const LOCAL_SETTING_FromtimeAndValueListView_INFO_SHOWN:int = 12;
-
+		/**
+		 * if user starts editing missed reading alerts, a warning will be shown that this only works guaranteed if Internet is on 
+		 */
+		public static const LOCAL_SETTING_MISSED_READING_WARNING_GIVEN:int = 13;
+		
 		private static var localSettings:Array = [
 			"false",//LOCAL_SETTING_DETAILED_TRACING_ENABLED
 			"",//LOCAL_SETTING_TRACE_FILE_NAME
@@ -109,7 +113,8 @@ package databaseclasses
 			"false",//LOCAL_SETTING_NSLOG
 			"false",//LOCAL_SETTING_G5_ALWAYS_AUTHENTICATE
 			"false",//LOCAL_SETTING_G5_ALWAYS_UNBOUND
-			"false"//LOCAL_SETTING_FromtimeAndValueListView_INFO_SHOWN
+			"false",//LOCAL_SETTING_FromtimeAndValueListView_INFO_SHOWN
+			"false"//LOCAL_SETTING_MISSED_READING_WARNING_GIVEN
 		];
 		
 		public function LocalSettings() {

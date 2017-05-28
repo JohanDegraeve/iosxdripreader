@@ -386,6 +386,17 @@
 				dataToSend.additionalTopText = ModelLocator.resourceManagerInstance.getString('settingsview','explain_missed_reading_alert');
 				
 				navigator.pushView(FromtimeAndValueListView,dataToSend);
+				if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_MISSED_READING_WARNING_GIVEN) == "false") {
+					var alert:DialogView = Dialog.service.create(
+						new AlertBuilder()
+						.setTitle(ModelLocator.resourceManagerInstance.getString('settingsview',"warning"))
+						.setMessage(ModelLocator.resourceManagerInstance.getString('settingsview',"warng_missed_reading_needs_internet"))
+						.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
+						.build()
+					);
+					DialogService.addDialog(alert);
+					LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_MISSED_READING_WARNING_GIVEN,"true");
+				}
 			}
 			
 			private function alertTypes_clickHandler(event:MouseEvent):void {
