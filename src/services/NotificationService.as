@@ -46,7 +46,6 @@ package services
 	import events.BlueToothServiceEvent;
 	import events.CalibrationServiceEvent;
 	import events.NotificationServiceEvent;
-	import events.TimerServiceEvent;
 	import events.TransmitterServiceEvent;
 	
 	import model.ModelLocator;
@@ -228,7 +227,6 @@ package services
 				Notifications.service.addEventListener(NotificationEvent.NOTIFICATION_SELECTED, notificationHandler);
 				Notifications.service.addEventListener(NotificationEvent.NOTIFICATION, notificationHandler);
 				Notifications.service.addEventListener(NotificationEvent.ACTION, notificationHandler);
-				TimerService.instance.addEventListener(TimerServiceEvent.BG_READING_NOT_RECEIVED_ON_TIME, bgReadingNotReceivedOnTime);
 				CalibrationService.instance.addEventListener(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT, updateAllNotifications);
 				TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, bgReadingEventReceived);
 				if (Application.isSupported) {
@@ -256,12 +254,6 @@ package services
 			}
 			
 			function bgReadingEventReceived(event:TransmitterServiceEvent):void {
-				if (Calibration.allForSensor().length >= 2) {
-					updateAllNotifications(null);
-				}
-			}
-			
-			function bgReadingNotReceivedOnTime(event:TimerServiceEvent):void {
 				if (Calibration.allForSensor().length >= 2) {
 					updateAllNotifications(null);
 				}

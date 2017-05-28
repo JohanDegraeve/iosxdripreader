@@ -49,7 +49,6 @@ package model
 	import services.CalibrationService;
 	import services.NightScoutService;
 	import services.NotificationService;
-	import services.TimerService;
 	import services.TransmitterService;
 	
 	import views.HomeView;
@@ -212,7 +211,6 @@ package model
 							AlarmService.init();
 							
 							CalibrationService.init();
-							TimerService.init();
 							NetworkInfo.init(DistriqtKey.distriqtKey);
 							BackGroundFetchService.init();
 							

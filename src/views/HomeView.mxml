@@ -70,7 +70,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			import events.DialogServiceEvent;
 			import events.NotificationServiceEvent;
 			import events.SettingsServiceEvent;
-			import events.TimerServiceEvent;
 			import events.TransmitterServiceEvent;
 			
 			import model.ModelLocator;
@@ -79,7 +78,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			import services.CalibrationService;
 			import services.DialogService;
 			import services.NotificationService;
-			import services.TimerService;
 			import services.TransmitterService;
 			
 			[ResourceBundle('homeview')]
@@ -103,6 +101,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			private static const ACTION_SHEET_INDEX_FOR_CANCEL:int = 6;
 			
 			private static const UPDATE_DISPLAY_INFO_EVERY_X_SECONDS:int = 15;
+			
+			/**
+			 * Bg reading is expected every 5 minutes<br>
+			 * xbridge holds data for 1 minute, so it could be that bgreading arrives 6 minutes before previous one<br>
+			 * adding 10 seconds<br>
+			 * This will only start once the first bgreading is received. So it can not be used as long as the xdrip is not scanned and a first reading is received<br>
+			 *  
+			 */
+			public static const DELAY_FOR_CHECKING_BGREADING_IN_SECONDS:int = (5 + 1) * 60 + 10;
 			
 			//local time, ie if it's here and now 12:20 the 2nd of April 2017, then Hours = 12, ...
 			private static var sensorStartSeconds:int = 0;
@@ -150,7 +157,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 					Database.instance.addEventListener(DatabaseEvent.ERROR_EVENT,onInitError);
 					//need to know when modellocator is populated, then we can also update display
 					Database.instance.addEventListener(DatabaseEvent.BGREADING_RETRIEVAL_EVENT, bgReadingReceivedFromDatabase);
-					TimerService.instance.addEventListener(TimerServiceEvent.BG_READING_NOT_RECEIVED_ON_TIME, bgReadingNotReceivedOnTime);
 					Database.init();
 					initialStart = false;
 					CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, settingChanged);
@@ -187,17 +193,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 						} else {
 							showG4InfoScreen();
 							bluetoothStateChangedHandler(null);
-						}
-					}
-				}
-				
-				function bgReadingNotReceivedOnTime(event:TimerServiceEvent):void {
-					displayCurrentInfoFromReading();
-					NotificationService.updateAllNotifications(null);
-					if (!_peripheralConnected) {
-						if ((new Date().valueOf() - peripheralConnectionStatusChangeTimestamp) > TimerService.DELAY_FOR_CHECKING_BGREADING_IN_SECONDS) {
-							if (!BluetoothService.isDexcomG5)
-								currentState = "bluetoothred";
 						}
 					}
 				}
@@ -367,7 +362,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 				}
 				
 				if (!BluetoothService.isDexcomG5) {
-					if ((BluetoothLE.service.centralManager.state == BluetoothLEState.STATE_ON) && BlueToothDevice.known() && ((new Date().valueOf() - peripheralConnectionStatusChangeTimestamp) < TimerService.DELAY_FOR_CHECKING_BGREADING_IN_SECONDS)) {
+					if ((BluetoothLE.service.centralManager.state == BluetoothLEState.STATE_ON) && BlueToothDevice.known() && ((new Date().valueOf() - peripheralConnectionStatusChangeTimestamp) < DELAY_FOR_CHECKING_BGREADING_IN_SECONDS)) {
 						currentState = "bluetoothorange";
 					} else {
 						currentState = "bluetoothred";
@@ -386,7 +381,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 							//peripheral is known in bluetoothservice and it is connected
 							currentState = "bluetoothgreen";
 						} else {
-							if ((new Date().valueOf() - peripheralConnectionStatusChangeTimestamp) > TimerService.DELAY_FOR_CHECKING_BGREADING_IN_SECONDS) {
+							if ((new Date().valueOf() - peripheralConnectionStatusChangeTimestamp) > DELAY_FOR_CHECKING_BGREADING_IN_SECONDS) {
 								//peripheral is known, but not active, and inactive since more than max time
 								currentState = "bluetoothred";
 							} else {
@@ -395,7 +390,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 							}
 						}
 					} else {//bluetoothperipheral not known in bluetoothservice, but maybe a device name is known in bluetoothdevice
-						if (BlueToothDevice.known() && ((new Date().valueOf() - peripheralConnectionStatusChangeTimestamp) < TimerService.DELAY_FOR_CHECKING_BGREADING_IN_SECONDS)) {
+						if (BlueToothDevice.known() && ((new Date().valueOf() - peripheralConnectionStatusChangeTimestamp) < DELAY_FOR_CHECKING_BGREADING_IN_SECONDS)) {
 							//we know a device, we just didn't scan it yet, good for orange
 							currentState = "bluetoothorange";
 						} else {
