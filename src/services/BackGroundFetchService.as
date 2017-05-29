@@ -51,7 +51,7 @@ package services
 		private static var _QBSessionBusy:Boolean = false;
 		private static var QBSessionBusySetToTrueTimestamp:Number = 0;
 		private static var callCompletionHandlerTimer:Timer;
-		private static var completionHandlerResult:String;
+		//private static var completionHandlerResult:String;
 		private static function get QBSessionBusy():Boolean
 		{
 			if ((new Date()).valueOf() - QBSessionBusySetToTrueTimestamp > 15 * 1000) {//if one qbsession has finished within 15 seconds and a second is starting, then this second one will be ignored
@@ -111,18 +111,22 @@ package services
 		}
 		
 		public static function callCompletionHandler(result:String):void {
-			myTrace("in callCompletionhandler with result " + result + " setting timer to call completionhandler");
+			myTrace("callCompletionhandler with result " + result);
+			BackgroundFetch.callCompletionHandler(result);
+/*
+			myTrace("in callCompletionhandler with result " + result + " setting timer to call completionhandler in 2 seconds, this gives time to AlarmService to complete it's task");
 			
 			//waiting some time before actually calling the completionhandler, this gives other services time to finish some tasks, eg alarmservice
 			callCompletionHandlerTimer = new Timer(2 * 1000, 1);
 			callCompletionHandlerTimer.addEventListener(TimerEvent.TIMER, finallyCallCompletionHandler);
 			callCompletionHandlerTimer.start();
-			completionHandlerResult = result
+			completionHandlerResult = result*/
 		}
 		
-		private static function finallyCallCompletionHandler(event:Event = null):void {
+/*		private static function finallyCallCompletionHandler(event:Event = null):void {
+			myTrace("in finallyCallCompletionHandler");
 			BackgroundFetch.callCompletionHandler(completionHandlerResult);
-		}
+		}*/
 		
 		private static function performFetch(event:BackgroundFetchEvent):void {
 			if (event.type == BackgroundFetchEvent.PERFORMREMOTEFETCH) {

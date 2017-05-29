@@ -372,7 +372,7 @@ package services
 							delay = delay - diffInSeconds;
 							if (delay <= 0)
 								delay = 0;
-							myTrace("in checkAlarms, was triggered by performFetch, reducing delay with time since last bgreading, new delay value = " + delay);
+							myTrace("in checkAlarms, was triggered by performFetch, reducing delay with time since last bgreading, new delay value in minutes = " + delay/60);
 						}
 						if (Database.getAlertType(listOfAlerts.getAlarmName(Number.NaN, "", dateOfFire)).enabled) {
 							myTrace("in checkAlarms, missed reading planned with delay in minutes = " + delay/60);
