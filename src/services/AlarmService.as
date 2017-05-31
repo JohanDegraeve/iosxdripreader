@@ -61,6 +61,10 @@ package services
 		 * timestamp of latest notification 
 		 */
 		private static var _highAlertLatestNotificationTime:Number = Number.NaN;
+		/**
+		 * if lastbgreading is older than MAX_AGE_OF_READING_IN_MINUTES minutes, then no low or high alert will be generated  
+		 */
+		public static const MAX_AGE_OF_READING_IN_MINUTES:int = 15
 		
 		//missed reading
 		//high alert
@@ -147,8 +151,8 @@ package services
 						snoozePeriodPicker.addEventListener( DialogViewEvent.CLOSED, lowSnoozePicker_closedHandler );
 						snoozePeriodPicker.show();
 					} else if (notificationEvent.identifier == NotificationService.ID_FOR_LOW_ALERT_SNOOZE_IDENTIFIER) {
-						myTrace("in notificationReceived with id = ID_FOR_LOW_ALERT, snoozing the notification for " + _lowAlertSnoozePeriodInMinutes + "minutes");
 						_lowAlertSnoozePeriodInMinutes = alertType.defaultSnoozePeriodInMinutes;
+						myTrace("in notificationReceived with id = ID_FOR_LOW_ALERT, snoozing the notification for " + _lowAlertSnoozePeriodInMinutes + "minutes");
 						_lowAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
 					}
 				} else if (notificationEvent.id == NotificationService.ID_FOR_HIGH_ALERT) {
@@ -177,8 +181,8 @@ package services
 						snoozePeriodPicker.addEventListener( DialogViewEvent.CLOSED, highSnoozePicker_closedHandler );
 						snoozePeriodPicker.show();
 					} else if (notificationEvent.identifier == NotificationService.ID_FOR_HIGH_ALERT_SNOOZE_IDENTIFIER) {
-						myTrace("in notificationReceived with id = ID_FOR_HIGH_ALERT, snoozing the notification for " + _highAlertSnoozePeriodInMinutes + " minutes");
 						_highAlertSnoozePeriodInMinutes = alertType.defaultSnoozePeriodInMinutes;
+						myTrace("in notificationReceived with id = ID_FOR_HIGH_ALERT, snoozing the notification for " + _highAlertSnoozePeriodInMinutes + " minutes");
 						_highAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
 					}
 				} else if (notificationEvent.id == NotificationService.ID_FOR_MISSED_READING_ALERT) {
@@ -207,8 +211,8 @@ package services
 						snoozePeriodPicker.addEventListener( DialogViewEvent.CLOSED, missedReadingSnoozePicker_closedHandler );
 						snoozePeriodPicker.show();
 					} else if (notificationEvent.identifier == NotificationService.ID_FOR_MISSED_READING_ALERT_SNOOZE_IDENTIFIER) {
-						myTrace("in notificationReceived with id = ID_FOR_MISSED_READING_ALERT, snoozing the notification for " + _missedReadingAlertSnoozePeriodInMinutes);
 						_missedReadingAlertSnoozePeriodInMinutes = alertType.defaultSnoozePeriodInMinutes;
+						myTrace("in notificationReceived with id = ID_FOR_MISSED_READING_ALERT, snoozing the notification for " + _missedReadingAlertSnoozePeriodInMinutes);
 						_missedReadingAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
 					}
 				}
@@ -262,91 +266,97 @@ package services
 			myTrace("in checkAlarms");
 			var now:Date = new Date();
 			lastAlarmCheckTimeStamp = now.valueOf();
+			var listOfAlerts:FromtimeAndValueArrayCollection;
+			var alertValue:Number;
+			var alertName:String;
+			var alertType:AlertType;
 			
 			var lastbgreading:BgReading = BgReading.lastNoSensor();
 			if (lastbgreading != null) {
-				//low alert
-				var listOfAlerts:FromtimeAndValueArrayCollection = FromtimeAndValueArrayCollection.createList(
-					CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_LOW_ALERT));
-				var alertValue:Number = listOfAlerts.getValue(Number.NaN, "", now);
-				var alertName:String = listOfAlerts.getAlarmName(Number.NaN, "", now);
-				var alertType:AlertType = Database.getAlertType(alertName);
-				if (alertType.enabled) {
-					//first check if snoozeperiod is passed, checking first for value would generate multiple alarms in case the sensor is unstable
-					if ((now.valueOf() - _lowAlertLatestSnoozeTimeInMs) > _lowAlertSnoozePeriodInMinutes * 60 * 1000
-						||
-						isNaN(_lowAlertLatestSnoozeTimeInMs)) {
-						myTrace("in checkAlarms, low alert not snoozed (anymore)");
-						//not snoozed
-						
-						if (alertValue > BgReading.lastNoSensor().calculatedValue) {
-							myTrace("in checkAlarms, reading is too low");
-							fireAlert(
-								alertType, 
-								NotificationService.ID_FOR_LOW_ALERT, 
-								ModelLocator.resourceManagerInstance.getString("alarmservice","low_alert_notification_alert_text"), 
-								ModelLocator.resourceManagerInstance.getString("alarmservice","low_alert_notification_alert_text"),
-								alertType.enableVibration,
-								alertType.enableLights,
-								NotificationService.ID_FOR_ALERT_LOW_CATEGORY
-							); 
-							_lowAlertLatestSnoozeTimeInMs = Number.NaN;
-							_lowAlertSnoozePeriodInMinutes = 0;
+				if (now.valueOf() - lastbgreading.timestamp < MAX_AGE_OF_READING_IN_MINUTES * 60 * 1000) {
+					//low alert
+					listOfAlerts = FromtimeAndValueArrayCollection.createList(
+						CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_LOW_ALERT));
+					alertValue = listOfAlerts.getValue(Number.NaN, "", now);
+					alertName = listOfAlerts.getAlarmName(Number.NaN, "", now);
+					alertType = Database.getAlertType(alertName);
+					if (alertType.enabled) {
+						//first check if snoozeperiod is passed, checking first for value would generate multiple alarms in case the sensor is unstable
+						if ((now.valueOf() - _lowAlertLatestSnoozeTimeInMs) > _lowAlertSnoozePeriodInMinutes * 60 * 1000
+							||
+							isNaN(_lowAlertLatestSnoozeTimeInMs)) {
+							myTrace("in checkAlarms, low alert not snoozed (anymore)");
+							//not snoozed
+							
+							if (alertValue > BgReading.lastNoSensor().calculatedValue) {
+								myTrace("in checkAlarms, reading is too low");
+								fireAlert(
+									alertType, 
+									NotificationService.ID_FOR_LOW_ALERT, 
+									ModelLocator.resourceManagerInstance.getString("alarmservice","low_alert_notification_alert_text"), 
+									ModelLocator.resourceManagerInstance.getString("alarmservice","low_alert_notification_alert_text"),
+									alertType.enableVibration,
+									alertType.enableLights,
+									NotificationService.ID_FOR_ALERT_LOW_CATEGORY
+								); 
+								_lowAlertLatestSnoozeTimeInMs = Number.NaN;
+								_lowAlertSnoozePeriodInMinutes = 0;
+							} else {
+								Notifications.service.cancel(NotificationService.ID_FOR_LOW_ALERT);
+							}
 						} else {
-							Notifications.service.cancel(NotificationService.ID_FOR_LOW_ALERT);
+							//snoozed no need to do anything
+							myTrace("in checkAlarms, alarm snoozed, _lowAlertLatestSnoozeTimeInMs = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date(_lowAlertLatestSnoozeTimeInMs)) + ", _lowAlertSnoozePeriodInMinutes = " + _lowAlertSnoozePeriodInMinutes + ", actual time = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date()));
 						}
 					} else {
-						//snoozed no need to do anything
-						myTrace("in checkAlarms, alarm snoozed, _lowAlertLatestSnoozeTimeInMs = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date(_lowAlertLatestSnoozeTimeInMs)) + ", _lowAlertSnoozePeriodInMinutes = " + _lowAlertSnoozePeriodInMinutes + ", actual time = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date()));
+						//remove low notification, even if there isn't any
+						Notifications.service.cancel(NotificationService.ID_FOR_LOW_ALERT);
+						_lowAlertLatestSnoozeTimeInMs = Number.NaN;
+						_lowAlertLatestNotificationTime = Number.NaN;
+						_lowAlertSnoozePeriodInMinutes = 0;
 					}
-				} else {
-					//remove low notification, even if there isn't any
-					Notifications.service.cancel(NotificationService.ID_FOR_LOW_ALERT);
-					_lowAlertLatestSnoozeTimeInMs = Number.NaN;
-					_lowAlertLatestNotificationTime = Number.NaN;
-					_lowAlertSnoozePeriodInMinutes = 0;
-				}
-				
-				//high alert
-				listOfAlerts = FromtimeAndValueArrayCollection.createList(
-					CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_HIGH_ALERT));
-				alertValue = listOfAlerts.getValue(Number.NaN, "", now);
-				alertName = listOfAlerts.getAlarmName(Number.NaN, "", now);
-				alertType = Database.getAlertType(alertName);
-				if (alertType.enabled) {
-					//first check if snoozeperiod is passed, checking first for value would generate multiple alarms in case the sensor is unstable
-					if (((now).valueOf() - _highAlertLatestSnoozeTimeInMs) > _highAlertSnoozePeriodInMinutes * 60 * 1000
-						||
-						isNaN(_highAlertLatestSnoozeTimeInMs)) {
-						myTrace("in checkAlarms, high alert not snoozed (anymore)");
-						//not snoozed
-						
-						if (alertValue < BgReading.lastNoSensor().calculatedValue) {
-							myTrace("in checkAlarms, reading is too high");
-							fireAlert(
-								alertType, 
-								NotificationService.ID_FOR_HIGH_ALERT, 
-								ModelLocator.resourceManagerInstance.getString("alarmservice","high_alert_notification_alert_text"), 
-								ModelLocator.resourceManagerInstance.getString("alarmservice","high_alert_notification_alert_text"),
-								alertType.enableVibration,
-								alertType.enableLights,
-								NotificationService.ID_FOR_ALERT_HIGH_CATEGORY
-							); 
-							_highAlertLatestSnoozeTimeInMs = Number.NaN;
-							_highAlertSnoozePeriodInMinutes = 0;
+					
+					//high alert
+					listOfAlerts = FromtimeAndValueArrayCollection.createList(
+						CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_HIGH_ALERT));
+					alertValue = listOfAlerts.getValue(Number.NaN, "", now);
+					alertName = listOfAlerts.getAlarmName(Number.NaN, "", now);
+					alertType = Database.getAlertType(alertName);
+					if (alertType.enabled) {
+						//first check if snoozeperiod is passed, checking first for value would generate multiple alarms in case the sensor is unstable
+						if (((now).valueOf() - _highAlertLatestSnoozeTimeInMs) > _highAlertSnoozePeriodInMinutes * 60 * 1000
+							||
+							isNaN(_highAlertLatestSnoozeTimeInMs)) {
+							myTrace("in checkAlarms, high alert not snoozed (anymore)");
+							//not snoozed
+							
+							if (alertValue < BgReading.lastNoSensor().calculatedValue) {
+								myTrace("in checkAlarms, reading is too high");
+								fireAlert(
+									alertType, 
+									NotificationService.ID_FOR_HIGH_ALERT, 
+									ModelLocator.resourceManagerInstance.getString("alarmservice","high_alert_notification_alert_text"), 
+									ModelLocator.resourceManagerInstance.getString("alarmservice","high_alert_notification_alert_text"),
+									alertType.enableVibration,
+									alertType.enableLights,
+									NotificationService.ID_FOR_ALERT_HIGH_CATEGORY
+								); 
+								_highAlertLatestSnoozeTimeInMs = Number.NaN;
+								_highAlertSnoozePeriodInMinutes = 0;
+							} else {
+								Notifications.service.cancel(NotificationService.ID_FOR_HIGH_ALERT);
+							}
 						} else {
-							Notifications.service.cancel(NotificationService.ID_FOR_HIGH_ALERT);
+							//snoozed no need to do anything
+							myTrace("in checkAlarms, alarm snoozed, _highAlertLatestSnoozeTimeInMs = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date(_highAlertLatestSnoozeTimeInMs)) + ", _highAlertSnoozePeriodInMinutes = " + _highAlertSnoozePeriodInMinutes + ", actual time = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date()));
 						}
 					} else {
-						//snoozed no need to do anything
-						myTrace("in checkAlarms, alarm snoozed, _highAlertLatestSnoozeTimeInMs = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date(_highAlertLatestSnoozeTimeInMs)) + ", _highAlertSnoozePeriodInMinutes = " + _highAlertSnoozePeriodInMinutes + ", actual time = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date()));
+						//remove notification, even if there isn't any
+						Notifications.service.cancel(NotificationService.ID_FOR_HIGH_ALERT);
+						_highAlertLatestSnoozeTimeInMs = Number.NaN;
+						_highAlertLatestNotificationTime = Number.NaN;
+						_highAlertSnoozePeriodInMinutes = 0;
 					}
-				} else {
-					//remove notification, even if there isn't any
-					Notifications.service.cancel(NotificationService.ID_FOR_HIGH_ALERT);
-					_highAlertLatestSnoozeTimeInMs = Number.NaN;
-					_highAlertLatestNotificationTime = Number.NaN;
-					_highAlertSnoozePeriodInMinutes = 0;
 				}
 				
 				//missed reading alert
