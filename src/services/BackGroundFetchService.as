@@ -7,7 +7,6 @@ package services
 	import flash.events.Event;
 	import flash.events.EventDispatcher;
 	import flash.events.IOErrorEvent;
-	import flash.events.TimerEvent;
 	import flash.net.URLLoader;
 	import flash.net.URLRequest;
 	import flash.net.URLRequestHeader;
@@ -22,6 +21,7 @@ package services
 	import databaseclasses.LocalSettings;
 	
 	import events.BackGroundFetchServiceEvent;
+	import events.TransmitterServiceEvent;
 	
 	import model.ModelLocator;
 	
@@ -107,28 +107,34 @@ package services
 			BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.PERFORMLOCALFETCH, performFetch);
 			BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.PERFORMREMOTEFETCH, performFetch);
 			BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.DEVICE_TOKEN_RECEIVED, deviceTokenReceived);
+			BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.PHONE_MUTED, phoneMuted);
+			BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.PHONE_NOT_MUTED, phoneNotMuted);
 			BackgroundFetch.minimumBackgroundFetchInterval = BackgroundFetch.BACKGROUND_FETCH_INTERVAL_NEVER;
+			
+			//goal is to regularly check if phone is  musted
+			TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, bgReadingReceived);
+		}
+		
+		private static function bgReadingReceived(be:TransmitterServiceEvent):void {
+			BackgroundFetch.checkMuted();
+		}
+		
+		private static function phoneMuted(event:BackgroundFetchEvent):void {
+			myTrace("in phoneMuted")
+		}
+		
+		private static function phoneNotMuted(event:BackgroundFetchEvent):void {
+			myTrace("in phoneNotMuted")
 		}
 		
 		public static function callCompletionHandler(result:String):void {
 			myTrace("callCompletionhandler with result " + result);
 			BackgroundFetch.callCompletionHandler(result);
-/*
-			myTrace("in callCompletionhandler with result " + result + " setting timer to call completionhandler in 2 seconds, this gives time to AlarmService to complete it's task");
-			
-			//waiting some time before actually calling the completionhandler, this gives other services time to finish some tasks, eg alarmservice
-			callCompletionHandlerTimer = new Timer(2 * 1000, 1);
-			callCompletionHandlerTimer.addEventListener(TimerEvent.TIMER, finallyCallCompletionHandler);
-			callCompletionHandlerTimer.start();
-			completionHandlerResult = result*/
 		}
 		
-/*		private static function finallyCallCompletionHandler(event:Event = null):void {
-			myTrace("in finallyCallCompletionHandler");
-			BackgroundFetch.callCompletionHandler(completionHandlerResult);
-		}*/
-		
 		private static function performFetch(event:BackgroundFetchEvent):void {
+			BackgroundFetch.checkMuted();
+
 			if (event.type == BackgroundFetchEvent.PERFORMREMOTEFETCH) {
 				myTrace("performRemoteFetch");
 				BluetoothService.startRescan(null);
@@ -163,6 +169,7 @@ package services
 				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_SUBSCRIBED_TO_PUSH_NOTIFICATIONS, "false");
 			}
 			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_DEVICE_TOKEN_ID, token);
+			
 		}
 		
 		private static function loadRequestSuccess(event:BackgroundFetchEvent):void {
