@@ -721,6 +721,10 @@ package services
 		private static function peripheral_characteristic_updatedHandler(event:CharacteristicEvent):void {
 			myTrace("peripheral_characteristic_updatedHandler characteristic uuid = " + HM10Attributes.getCharacteristicName(event.characteristic.uuid) +
 				" with byte 0 = " + event.characteristic.value[0] + " decimal.");
+			
+			var blueToothServiceEvent:BlueToothServiceEvent = new BlueToothServiceEvent(BlueToothServiceEvent.CHARACTERISTIC_UPDATE);
+			_instance.dispatchEvent(blueToothServiceEvent);
+
 			//now start reading the values
 			var value:ByteArray = event.characteristic.value;
 			var packetlength:int = value.readUnsignedByte();

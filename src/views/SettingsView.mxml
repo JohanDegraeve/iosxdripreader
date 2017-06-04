@@ -390,12 +390,42 @@
 					var alert:DialogView = Dialog.service.create(
 						new AlertBuilder()
 						.setTitle(ModelLocator.resourceManagerInstance.getString('settingsview',"warning"))
-						.setMessage(ModelLocator.resourceManagerInstance.getString('settingsview',"warng_missed_reading_needs_internet"))
+						.setMessage(ModelLocator.resourceManagerInstance.getString('settingsview',"warn_missed_reading_needs_internet"))
 						.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
 						.build()
 					);
 					DialogService.addDialog(alert);
 					LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_MISSED_READING_WARNING_GIVEN,"true");
+				}
+			}
+			
+			private function phoneMutedAlert_clickHandler(event:MouseEvent):void {
+				rect37.color = uint("0xD3D3D3");
+				rect38.color = uint("0xD3D3D3");
+				
+				setResetColorTimer();
+				var dataToSend:Object = new Object();
+				dataToSend.title = ModelLocator.resourceManagerInstance.getString("settingsview","phone_muted_alert");
+				dataToSend.topText = ModelLocator.resourceManagerInstance.getString("settingsview","alert_top_text");
+				dataToSend.settingid = CommonSettings.COMMON_SETTING_PHONE_MUTED_ALERT;
+				dataToSend.titleforFromtimeAndValueElementView = "";
+				dataToSend.topTextforFromtimeAndValueElementView = ModelLocator.resourceManagerInstance.getString('settingsview','edit_phone_muted_alert');
+				dataToSend.isBgValue = false;
+				dataToSend.unit = "";
+				dataToSend.additionalTopText = ModelLocator.resourceManagerInstance.getString('settingsview','explain_phone_muted_alert');
+				dataToSend.hideValue = true;
+				
+				navigator.pushView(FromtimeAndValueListView,dataToSend);
+				if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_PHONE_MUTED_WARNING_GIVEN) == "false") {
+					var alert:DialogView = Dialog.service.create(
+						new AlertBuilder()
+						.setTitle(ModelLocator.resourceManagerInstance.getString('settingsview',"warning"))
+						.setMessage(ModelLocator.resourceManagerInstance.getString('settingsview',"warn_and_info_phone_muted"))
+						.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
+						.build()
+					);
+					DialogService.addDialog(alert);
+					LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_PHONE_MUTED_WARNING_GIVEN,"true");
 				}
 			}
 			
@@ -529,6 +559,8 @@
 					rect34.color = uint("0x212121");//high alert
 					rect35.color = uint("0x212121");//missed reading alert
 					rect36.color = uint("0x212121");//missed reading alert
+					rect37.color = uint("0x212121");//phone muted alert
+					rect38.color = uint("0x212121");//phone muted alert
 				}
 			}
 			
@@ -808,6 +840,29 @@
 					<s:Rect height="100%" width="5" >
 						<s:fill>
 							<s:SolidColor color="#212121" id="rect36"/>
+						</s:fill>
+					</s:Rect>
+				</s:HGroup>
+				<s:Line width="100%">
+					<s:stroke>
+						<s:SolidColorStroke color="0xFFFFFF" weight="1" alpha="0.25"/>
+					</s:stroke>
+				</s:Line>	
+			</s:VGroup>
+
+			<!-- Chapter Alerts Subsection Phone Muted -->
+			<s:VGroup click="phoneMutedAlert_clickHandler(event)" width="100%">
+				<s:HGroup width="100%">
+					<s:Rect height="100%" width="5" >
+						<s:fill>
+							<s:SolidColor color="#212121" id="rect37"/>
+						</s:fill>
+					</s:Rect>
+					<s:Label text = "{ModelLocator.resourceManagerInstance.getString('settingsview','phone_muted_alert')}"
+							 width="100%" paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
+					<s:Rect height="100%" width="5" >
+						<s:fill>
+							<s:SolidColor color="#212121" id="rect38"/>
 						</s:fill>
 					</s:Rect>
 				</s:HGroup>

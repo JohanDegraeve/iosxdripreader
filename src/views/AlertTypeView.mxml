@@ -88,6 +88,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 				}
 				
 				soundName = alertType.sound;
+				if (soundName == "no_sound")
+					soundName = ModelLocator.resourceManagerInstance.getString("alerttypeview","no_sound");
+				if (soundName == "default") {
+					var sounds:String = ModelLocator.resourceManagerInstance.getString("alerttypeview","sound_names_as_displayed_can_be_translated_must_match_above_list");
+					var soundsSplitted:Array = sounds.split(',');
+					soundName = soundsSplitted[0];
+				}
 				if (alarmEnabled) {
 					soundgroup.alpha = 1;
 				} else {

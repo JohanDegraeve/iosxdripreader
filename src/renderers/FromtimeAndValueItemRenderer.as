@@ -154,7 +154,7 @@ package renderers
 				valueInCorrectUnit = valueInCorrectUnit * BgReading.MGDL_TO_MMOLL;
 			}
 			
-			if (Database.getAlertType(theDataAsFromToAndValue.alarmName).enabled) {
+			if (Database.getAlertType(theDataAsFromToAndValue.alarmName).enabled && valueInCorrectUnit > 0) {
 				label = 
 					theDataAsFromToAndValue.fromAsString() 
 					+ " "

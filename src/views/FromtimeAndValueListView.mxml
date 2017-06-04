@@ -44,6 +44,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			
 			import databaseclasses.CommonSettings;
 			import databaseclasses.LocalSettings;
+			
 			import model.ModelLocator;
 			
 			import renderers.FromtimeAndValueItemRenderer;
@@ -60,6 +61,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			private var addClicked:Boolean;
 			private var thisView:View;
 			private static var isBgValue:Boolean = false;
+			private static var showValue:Boolean = true;
 			private static var unit:String = null;
 			[Bindable]
 			private static var additionalTopText:String;
@@ -127,6 +129,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 					additionalTopTextVisible = false;
 					additionalTopText = "";
 				}
+				if (data.hideValue)
+						showValue = !data.hideValue;
+				else
+					showValue = true;
+				
 				list.addEventListener(FromtimeAndValueItemRenderer.DELETE_CLICKED,deleteTheSelectedItem);
 				list.addEventListener(FromtimeAndValueItemRenderer.EDIT_CLICKED,editTheSelectedItem);
 				list.addEventListener(FromtimeAndValueItemRenderer.ADD_CLICKED,addANewItem);
@@ -167,6 +174,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 				dataToSend.title = data.titleforFromtimeAndValueElementView;
 				dataToSend.topText = data.topTextforFromtimeAndValueElementView;
 				dataToSend.isBgValue = isBgValue;
+				dataToSend.hideValue = !showValue;
 				if (unit != null)
 					dataToSend.unit = unit;
 				if (deleteClicked) {
@@ -230,7 +238,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 						okClicked();
 					}
 				}
-				
 			}
 			
 		]]>

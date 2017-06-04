@@ -89,10 +89,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			
 			private function deleteTheSelectedItem(event:Event):void {
 				deleteClicked = true;
+				if (event.currentTarget.selectedIndices.length > 0) {
+					var indexChangeEvent:IndexChangeEvent = new IndexChangeEvent("",false,false,-1,event.currentTarget.selectedIndices[0]);
+					list_changeHandler(indexChangeEvent);
+				}
 			}
 			
 			private function editTheSelectedItem(event:Event):void {
 				editClicked = true;
+				if (event.currentTarget.selectedIndices.length > 0) {
+					var indexChangeEvent:IndexChangeEvent = new IndexChangeEvent("",false,false,-1,event.currentTarget.selectedIndices[0]);
+					list_changeHandler(indexChangeEvent);
+				}
 			}
 			
 			protected function back_clickHandler(event:MouseEvent):void {
@@ -101,6 +109,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			
 			protected function list_changeHandler(event:IndexChangeEvent):void {
 				if (deleteClicked) {
+					deleteClicked = false;
 					var alarmNameOfItemToDelete:String = (listOfElements.getItemAt(event.newIndex) as AlertType).alarmName;
 					for (var cntr2:int = CommonSettings.COMMON_SETTING_LOW_ALERT; cntr2 < CommonSettings.COMMON_SETTING_MISSED_READING_ALERT + 1;cntr2++) {
 						var setting:String = CommonSettings.getCommonSetting(cntr2);
@@ -122,8 +131,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 					}
 					Database.deleteAlertTypeSynchronous(listOfElements.getItemAt(event.newIndex) as AlertType);
 					listOfElements.removeItemAt(event.newIndex);
-					deleteClicked = false;
 				} else if (editClicked) {
+					editClicked = false;
 					var dataToSend:Object = new Object;
 					dataToSend.alertType = listOfElements.getItemAt(event.newIndex) as AlertType;
 					navigator.pushView(AlertTypeView, dataToSend);

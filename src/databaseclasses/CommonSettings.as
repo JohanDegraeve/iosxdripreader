@@ -117,9 +117,13 @@
 		  */
 		 public static const COMMON_SETTING_HIGH_ALERT:int = 22;
 		 /**
-		  * the string that has all the intervals with high alert types 
+		  * the string that has all the intervals with missed reading alert types 
 		  */
 		 public static const COMMON_SETTING_MISSED_READING_ALERT:int = 23;
+		 /**
+		  * the string that has all the intervals with phone muted alert types
+		  */
+		 public static const COMMON_SETTING_PHONE_MUTED_ALERT:int = 24;
 		 
 		 private static var commonSettings:Array = [
 			 "0",//COMMON_SETTING_CURRENT_SENSOR
@@ -145,7 +149,8 @@
 			 "0",//COMMON_SETTING_TIME_SINCE_LAST_QUICK_BLOX_SUBSCRIPTION
 			 "00:00>70>DefaultNoAlertToBeReplaced",//COMMON_SETTING_LOW_ALERT
 			 "00:00>170>DefaultNoAlertToBeReplaced",//COMMON_SETTING_HIGH_ALERT
-			 "00:00>30>DefaultNoAlertToBeReplaced"//COMMON_SETTING_MISSED_READING_ALERT
+			 "00:00>30>DefaultNoAlertToBeReplaced",//COMMON_SETTING_MISSED_READING_ALERT
+			 "00:00>0>DefaultNoAlertToBeReplaced-21:00>0>SilentToBeReplaced"//COMMON_SETTING_MISSED_READING_ALERT
 		 ];
 		 
 		 public function CommonSettings()
@@ -156,28 +161,56 @@
 		 }
 		 
 		 public static function getCommonSetting(commonSettingId:int):String {
+			 var noAlert:String;
+			 var newString:String;
 			 if (commonSettingId == COMMON_SETTING_LOW_ALERT) {
 				 if ((commonSettings[COMMON_SETTING_LOW_ALERT] as String).indexOf('DefaultNoAlertToBeReplaced') > -1) {
-					 var noAlert:String = ModelLocator.resourceManagerInstance.getString("settingsview","no_alert")
-					 var newString:String = (commonSettings[COMMON_SETTING_LOW_ALERT] as String)
+					 noAlert = ModelLocator.resourceManagerInstance.getString("settingsview","no_alert")
+					 newString = (commonSettings[COMMON_SETTING_LOW_ALERT] as String)
 						 .replace('DefaultNoAlertToBeReplaced', noAlert);
-					 commonSettings[COMMON_SETTING_LOW_ALERT] = newString;
+					 setCommonSetting(COMMON_SETTING_LOW_ALERT, newString);
+					 //commonSettings[COMMON_SETTING_LOW_ALERT] = newString;
 				 }
 			 }
 			 if (commonSettingId == COMMON_SETTING_HIGH_ALERT) {
 				 if ((commonSettings[COMMON_SETTING_HIGH_ALERT] as String).indexOf('DefaultNoAlertToBeReplaced') > -1) {
-					 var noAlert:String = ModelLocator.resourceManagerInstance.getString("settingsview","no_alert")
-					 var newString:String = (commonSettings[COMMON_SETTING_HIGH_ALERT] as String)
+					 noAlert = ModelLocator.resourceManagerInstance.getString("settingsview","no_alert")
+					 newString = (commonSettings[COMMON_SETTING_HIGH_ALERT] as String)
 						 .replace('DefaultNoAlertToBeReplaced', noAlert);
-					 commonSettings[COMMON_SETTING_HIGH_ALERT] = newString;
+					 setCommonSetting(COMMON_SETTING_HIGH_ALERT, newString);
+					 //commonSettings[COMMON_SETTING_HIGH_ALERT] = newString;
 				 }
 			 }
 			 if (commonSettingId == COMMON_SETTING_MISSED_READING_ALERT) {
 				 if ((commonSettings[COMMON_SETTING_MISSED_READING_ALERT] as String).indexOf('DefaultNoAlertToBeReplaced') > -1) {
-					 var noAlert:String = ModelLocator.resourceManagerInstance.getString("settingsview","no_alert")
-					 var newString:String = (commonSettings[COMMON_SETTING_MISSED_READING_ALERT] as String)
+					 noAlert = ModelLocator.resourceManagerInstance.getString("settingsview","no_alert")
+					 newString = (commonSettings[COMMON_SETTING_MISSED_READING_ALERT] as String)
 						 .replace('DefaultNoAlertToBeReplaced', noAlert);
-					 commonSettings[COMMON_SETTING_MISSED_READING_ALERT] = newString;
+					 setCommonSetting(COMMON_SETTING_MISSED_READING_ALERT, newString);
+					 //commonSettings[COMMON_SETTING_MISSED_READING_ALERT] = newString;
+				 }
+			 }
+			 if (commonSettingId == COMMON_SETTING_PHONE_MUTED_ALERT) {
+				 if ((commonSettings[COMMON_SETTING_PHONE_MUTED_ALERT] as String).indexOf('DefaultNoAlertToBeReplaced') > -1) {
+					 noAlert = ModelLocator.resourceManagerInstance.getString("settingsview","no_alert")
+					 newString = (commonSettings[COMMON_SETTING_PHONE_MUTED_ALERT] as String)
+						 .replace('DefaultNoAlertToBeReplaced', noAlert);
+					 setCommonSetting(COMMON_SETTING_PHONE_MUTED_ALERT, newString);
+					 //commonSettings[COMMON_SETTING_PHONE_MUTED_ALERT] = newString;
+				 }
+				 if ((commonSettings[COMMON_SETTING_PHONE_MUTED_ALERT] as String).indexOf('SilentToBeReplaced') > -1) {
+					 noAlert = ModelLocator.resourceManagerInstance.getString("settingsview","silent_alert")
+					 newString = (commonSettings[COMMON_SETTING_PHONE_MUTED_ALERT] as String)
+						 .replace('SilentToBeReplaced', noAlert);
+					 setCommonSetting(COMMON_SETTING_PHONE_MUTED_ALERT, newString);
+					 //commonSettings[COMMON_SETTING_PHONE_MUTED_ALERT] = newString;
+				 }
+				 if ((commonSettings[COMMON_SETTING_PHONE_MUTED_ALERT] as String).indexOf('SilentPhoneMutedToBeReplaced') > -1) {
+					 noAlert = ModelLocator.resourceManagerInstance.getString("settingsview","silent_alert")
+					 newString = (commonSettings[COMMON_SETTING_PHONE_MUTED_ALERT] as String)
+						 .replace('SilentPhoneMutedToBeReplaced', noAlert);
+					 setCommonSetting(COMMON_SETTING_PHONE_MUTED_ALERT, newString);
+					 //commonSettings[COMMON_SETTING_PHONE_MUTED_ALERT] = newString;
 				 }
 			 }
 			 return commonSettings[commonSettingId];

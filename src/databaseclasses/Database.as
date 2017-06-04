@@ -605,8 +605,13 @@ package databaseclasses
 				sqlStatement.removeEventListener(SQLErrorEvent.ERROR,tableCreationError);
 				var noAlertName:String = ModelLocator.resourceManagerInstance.getString("settingsview","no_alert")
 				if (getAlertType(noAlertName) == null) {
-					var noAlert:AlertType = new AlertType(null, Number.NaN, noAlertName, false, false, false, false, false, "", 10, 0);
+					var noAlert:AlertType = new AlertType(null, Number.NaN, noAlertName, false, false, false, false, false, "no_sound", 10, 0);
 					insertAlertTypeSychronous(noAlert);
+				}
+				var silentAlertName:String = ModelLocator.resourceManagerInstance.getString("settingsview","silent_alert");
+				if (getAlertType(silentAlertName) == null) {
+					var silentAlert:AlertType = new AlertType(null, Number.NaN, silentAlertName, false, false, true, true, false, "no_sound", 30, 0);
+					insertAlertTypeSychronous(silentAlert);
 				}
 				finishedCreatingTables();
 			}

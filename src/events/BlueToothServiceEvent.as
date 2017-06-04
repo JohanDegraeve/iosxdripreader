@@ -25,6 +25,7 @@ package events
 	[Event(name="BluetoothServiceInitiated",type="events.BlueToothServiceEvent")]
 	[Event(name="StoppedScanning",type="events.BlueToothServiceEvent")]
 	[Event(name="DeviceNotPaired",type="events.BlueToothServiceEvent")]
+	[Event(name="CharacteristicUpdate",type="events.BlueToothServiceEvent")]
 
 	/**
 	 * used by bluetoothservice to notify on all kinds of events : information messages like bluetooth state change, bluetooth state change,
@@ -53,7 +54,8 @@ package events
 		/**
 		 * to inform that g5 transmitter is not paired 
 		 */
-		public static const DEVICE_NOT_PAIRED:String = "DeviceNotPaired"
+		public static const DEVICE_NOT_PAIRED:String = "DeviceNotPaired";
+		public static const CHARACTERISTIC_UPDATE:String = "CharacteristicUpdate";
 		
 		/**
 		 * To pass transmitter data<br>

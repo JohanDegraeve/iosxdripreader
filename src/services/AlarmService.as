@@ -11,6 +11,7 @@ package services
 	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
 	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetchEvent;
 	
+	import flash.events.Event;
 	import flash.events.EventDispatcher;
 	
 	import Utilities.DateTimeUtilities;
@@ -21,7 +22,9 @@ package services
 	import databaseclasses.BgReading;
 	import databaseclasses.CommonSettings;
 	import databaseclasses.Database;
+	import databaseclasses.LocalSettings;
 	
+	import events.BlueToothServiceEvent;
 	import events.NotificationServiceEvent;
 	import events.TransmitterServiceEvent;
 	
@@ -67,7 +70,6 @@ package services
 		public static const MAX_AGE_OF_READING_IN_MINUTES:int = 15
 		
 		//missed reading
-		//high alert
 		/**
 		 * 0 is not snoozed, if > 0 this is snooze value chosen by user
 		 */
@@ -81,6 +83,19 @@ package services
 		 */
 		private static var _missedReadingAlertLatestNotificationTime:Number = Number.NaN;
 		
+		//phone muted
+		/**
+		 * 0 is not snoozed, if > 0 this is snooze value chosen by user
+		 */
+		private static var _phoneMutedAlertSnoozePeriodInMinutes:int = 0;
+		/**
+		 * timestamp when alert was snoozed, ms 
+		 */
+		private static var _phoneMutedAlertLatestSnoozeTimeInMs:Number = Number.NaN;
+		/**
+		 * timestamp of latest notification 
+		 */
+		private static var _phoneMutedAlertLatestNotificationTime:Number = Number.NaN;
 		
 		private static var snoozeValueMinutes:Array = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 75, 90, 120, 150, 180, 240, 300, 360, 420, 480, 540, 600];
 		private static var snoozeValueStrings:Array = ["5 minutes", "10 minutes", "15 minutes", "20 minutes", "25 minutes", "30 minutes", "35 minutes",
@@ -88,6 +103,7 @@ package services
 			"5 hours", "6 hours", "7 hours", "8 hours", "9 hours", "10 hours"];
 		
 		private static var lastAlarmCheckTimeStamp:Number;
+		private static var lastPhoneMuteAlarmCheckTimeStamp:Number;
 		private static var latestAlertTypeUsedInMissedReadingNotification:AlertType;
 		
 		public static function get instance():AlarmService {
@@ -105,16 +121,28 @@ package services
 				return;
 			else
 				initialStart = false;
+			
+			lastPhoneMuteAlarmCheckTimeStamp = new Number(0);
 			TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, checkAlarms);
 			NotificationService.instance.addEventListener(NotificationServiceEvent.NOTIFICATION_EVENT, notificationReceived);
 			BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.PERFORMREMOTEFETCH, checkAlarmsAfterPerformFetch);
+			BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.PHONE_MUTED, phoneMuted);
+			BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.PHONE_NOT_MUTED, phoneNotMuted);
+			BluetoothService.instance.addEventListener(BlueToothServiceEvent.CHARACTERISTIC_UPDATE, characteristicUpdate);
 
+			
 			for (var cntr:int = 0;cntr < snoozeValueMinutes.length;cntr++) {
 				snoozeValueStrings[cntr] = (snoozeValueStrings[cntr] as String).replace("minutes", ModelLocator.resourceManagerInstance.getString("alarmservice","minutes"));
 				snoozeValueStrings[cntr] = (snoozeValueStrings[cntr] as String).replace("hour", ModelLocator.resourceManagerInstance.getString("alarmservice","hour"));
 				snoozeValueStrings[cntr] = (snoozeValueStrings[cntr] as String).replace("hours", ModelLocator.resourceManagerInstance.getString("alarmservice","hours"));
 			}
 		}
+		
+		private static function characteristicUpdate(event:Event):void {
+			if (!BluetoothService.isDexcomG5)
+				BackgroundFetch.checkMuted();
+		}
+
 		
 		private static function notificationReceived(event:NotificationServiceEvent):void {
 			if (event != null) {
@@ -457,9 +485,63 @@ package services
 						//snoozed no need to do anything
 						myTrace("in checkAlarms, missed reading snoozed, _missedReadingAlertLatestSnoozeTimeInMs = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date(_missedReadingAlertLatestSnoozeTimeInMs)) + ", _missedReadingAlertSnoozePeriodInMinutes = " + _missedReadingAlertSnoozePeriodInMinutes + ", actual time = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date()));
 					}
-					
 				}
 			}
+		}
+		
+		private static function phoneMuted(event:BackgroundFetchEvent):void {
+			myTrace("in phoneMuted");
+			var now:Date = new Date(); 
+			if (now.valueOf() - lastPhoneMuteAlarmCheckTimeStamp > (4 * 60 + 45) * 1000) {
+				lastPhoneMuteAlarmCheckTimeStamp = now.valueOf();
+				myTrace("in phoneMuted, checking phoneMute Alarm because it's been more than 4 minutes 45 seconds");
+				var listOfAlerts:FromtimeAndValueArrayCollection = FromtimeAndValueArrayCollection.createList(
+					CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PHONE_MUTED_ALERT));
+				var alertValue:Number = listOfAlerts.getValue(Number.NaN, "", now);
+				var alertName:String = listOfAlerts.getAlarmName(Number.NaN, "", now);
+				var alertType:AlertType = Database.getAlertType(alertName);
+				if (alertType.enabled) {
+					//first check if snoozeperiod is passed, checking first for value would generate multiple alarms in case the sensor is unstable
+					if (((now).valueOf() - _phoneMutedAlertLatestSnoozeTimeInMs) > _phoneMutedAlertSnoozePeriodInMinutes * 60 * 1000
+						||
+						isNaN(_phoneMutedAlertLatestSnoozeTimeInMs)) {
+						myTrace("in phoneMuted, phoneMuted alert not snoozed (anymore)");
+						fireAlert(
+							alertType, 
+							NotificationService.ID_FOR_PHONEMUTED_ALERT, 
+							ModelLocator.resourceManagerInstance.getString("alarmservice","phonemuted_alert_notification_alert_text"), 
+							ModelLocator.resourceManagerInstance.getString("alarmservice","phonemuted_alert_notification_alert_text"),
+							alertType.enableVibration,
+							alertType.enableLights,
+							NotificationService.ID_FOR_PHONE_MUTED_CATEGORY
+						); 
+						_phoneMutedAlertLatestSnoozeTimeInMs = Number.NaN;
+						_phoneMutedAlertSnoozePeriodInMinutes = 0;
+					} else {
+						//snoozed no need to do anything
+						myTrace("in phoneMuted, alarm snoozed, _phoneMutedAlertLatestSnoozeTimeInMs = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date(_phoneMutedAlertLatestSnoozeTimeInMs)) + ", _phoneMutedAlertSnoozePeriodInMinutes = " + _phoneMutedAlertSnoozePeriodInMinutes + ", actual time = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date()));
+					}
+				} else {
+					//remove notification, even if there isn't any
+					Notifications.service.cancel(NotificationService.ID_FOR_PHONEMUTED_ALERT);
+					_phoneMutedAlertLatestSnoozeTimeInMs = Number.NaN;
+					_phoneMutedAlertLatestNotificationTime = Number.NaN;
+					_phoneMutedAlertSnoozePeriodInMinutes = 0;
+				}
+				
+			} else {
+				myTrace("less than 4 minutes 45 seconds since last check, not checking phoneMuted alert now");
+				return;
+			}
+		}
+		
+		private static function phoneNotMuted(event:BackgroundFetchEvent):void {
+			myTrace("in phoneNotMuted");
+			//remove notification, even if there isn't any
+			Notifications.service.cancel(NotificationService.ID_FOR_PHONEMUTED_ALERT);
+			_phoneMutedAlertLatestSnoozeTimeInMs = Number.NaN;
+			_phoneMutedAlertLatestNotificationTime = Number.NaN;
+			_phoneMutedAlertSnoozePeriodInMinutes = 0;
 		}
 		
 		private static function fireAlert(alertType:AlertType, notificationId:int, alertText:String, titleText:String, enableVibration:Boolean, enableLights:Boolean, categoryId:String, delay:int = 0):void {
@@ -483,8 +565,10 @@ package services
 			if (delay != 0) {
 				notificationBuilder.setDelay(delay);
 			}
-			if (alertType.sound == ModelLocator.resourceManagerInstance.getString("alerttypeview","no_sound")) {
+			if (alertType.sound == ModelLocator.resourceManagerInstance.getString("alerttypeview","no_sound") && enableVibration) {
 				notificationBuilder.setSound("../assets/silence-1sec.aif");
+			} else 	if (alertType.sound == ModelLocator.resourceManagerInstance.getString("alerttypeview","no_sound") && !enableVibration) {
+				notificationBuilder.setSound("");
 			} else {
 				for (var cntr:int = 0;cntr < soundsAsDisplayedSplitted.length;cntr++) {
 					newSound = soundsAsDisplayedSplitted[cntr];

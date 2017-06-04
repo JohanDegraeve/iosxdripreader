@@ -208,11 +208,11 @@ package model
 
 							NotificationService.instance.addEventListener(NotificationServiceEvent.NOTIFICATION_SERVICE_INITIATED_EVENT, HomeView.notificationServiceInitiated);
 							NotificationService.init();
-							AlarmService.init();
 							
 							CalibrationService.init();
 							NetworkInfo.init(DistriqtKey.distriqtKey);
 							BackGroundFetchService.init();
+							AlarmService.init();
 							
 							NightScoutService.init();
 							NightScoutService.sync(null);

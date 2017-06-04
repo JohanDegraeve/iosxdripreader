@@ -1,5 +1,7 @@
 package services
 {
+	import com.distriqt.extension.bluetoothle.BluetoothLE;
+	import com.distriqt.extension.bluetoothle.events.PeripheralEvent;
 	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
 	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetchEvent;
 	import com.hurlant.util.Hex;
@@ -21,6 +23,7 @@ package services
 	import databaseclasses.LocalSettings;
 	
 	import events.BackGroundFetchServiceEvent;
+	import events.BlueToothServiceEvent;
 	import events.TransmitterServiceEvent;
 	
 	import model.ModelLocator;
@@ -107,24 +110,16 @@ package services
 			BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.PERFORMLOCALFETCH, performFetch);
 			BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.PERFORMREMOTEFETCH, performFetch);
 			BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.DEVICE_TOKEN_RECEIVED, deviceTokenReceived);
-			BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.PHONE_MUTED, phoneMuted);
-			BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.PHONE_NOT_MUTED, phoneNotMuted);
 			BackgroundFetch.minimumBackgroundFetchInterval = BackgroundFetch.BACKGROUND_FETCH_INTERVAL_NEVER;
 			
 			//goal is to regularly check if phone is  musted
-			TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, bgReadingReceived);
+			BluetoothLE.service.centralManager.addEventListener(PeripheralEvent.DISCOVERED, central_peripheralDiscoveredHandler);
+			//BluetoothService.instance.addEventListener(BlueToothServiceEvent.TRANSMITTER_DATA, transmitterDataReceived);
 		}
 		
-		private static function bgReadingReceived(be:TransmitterServiceEvent):void {
-			BackgroundFetch.checkMuted();
-		}
-		
-		private static function phoneMuted(event:BackgroundFetchEvent):void {
-			myTrace("in phoneMuted")
-		}
-		
-		private static function phoneNotMuted(event:BackgroundFetchEvent):void {
-			myTrace("in phoneNotMuted")
+		private static function central_peripheralDiscoveredHandler(be:PeripheralEvent):void {
+			if (BluetoothService.isDexcomG5)
+				BackgroundFetch.checkMuted();
 		}
 		
 		public static function callCompletionHandler(result:String):void {
@@ -133,7 +128,7 @@ package services
 		}
 		
 		private static function performFetch(event:BackgroundFetchEvent):void {
-			BackgroundFetch.checkMuted();
+			//BackgroundFetch.checkMuted();
 
 			if (event.type == BackgroundFetchEvent.PERFORMREMOTEFETCH) {
 				myTrace("performRemoteFetch");

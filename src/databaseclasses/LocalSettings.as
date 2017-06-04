@@ -99,6 +99,9 @@ package databaseclasses
 		 * if user starts editing missed reading alerts, a warning will be shown that this only works guaranteed if Internet is on 
 		 */
 		public static const LOCAL_SETTING_MISSED_READING_WARNING_GIVEN:int = 13;
+		public static const LOCAL_SETTING_PHONE_MUTED_WARNING_GIVEN:int = 14;
+		public static const LOCAL_SETTING_TRACE_FILE_PATH_NAME:int = 15;
+		public static const LOCAL_SETTING_FROM_TIME_AND_VALUE_ELEMENT_VIEW_VALUE_INFO_GIVEN:int = 16;
 		
 		private static var localSettings:Array = [
 			"false",//LOCAL_SETTING_DETAILED_TRACING_ENABLED
@@ -114,7 +117,10 @@ package databaseclasses
 			"false",//LOCAL_SETTING_G5_ALWAYS_AUTHENTICATE
 			"false",//LOCAL_SETTING_G5_ALWAYS_UNBOUND
 			"false",//LOCAL_SETTING_FromtimeAndValueListView_INFO_SHOWN
-			"false"//LOCAL_SETTING_MISSED_READING_WARNING_GIVEN
+			"false",//LOCAL_SETTING_MISSED_READING_WARNING_GIVEN
+			"false",//LOCAL_SETTING_PHONE_MUTED_WARNING_GIVEN
+			"",//LOCAL_SETTING_TRACE_FILE_PATH_NAME
+			"false"//LOCAL_SETTING_FROM_TIME_AND_VALUE_ELEMENT_VIEW_VALUE_INFO_GIVEN
 		];
 		
 		public function LocalSettings() {

@@ -242,6 +242,7 @@
 					<string>bluetooth-central</string>
 					<string>fetch</string>
 					<string>remote-notification</string>
+					<string>audio</string>
 				</array>
 				<key>NSAppTransportSecurity</key>
       				<dict>
