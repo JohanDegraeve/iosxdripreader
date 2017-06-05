@@ -724,7 +724,7 @@ package services
 			
 			var blueToothServiceEvent:BlueToothServiceEvent = new BlueToothServiceEvent(BlueToothServiceEvent.CHARACTERISTIC_UPDATE);
 			_instance.dispatchEvent(blueToothServiceEvent);
-
+			
 			//now start reading the values
 			var value:ByteArray = event.characteristic.value;
 			var packetlength:int = value.readUnsignedByte();
@@ -916,9 +916,19 @@ package services
 		
 		public static function setStoredBatteryBytesG5(data:ByteArray):Boolean {
 			myTrace("Store: BatteryRX dbg: " + UniqueId.bytesToHex((data)));
-			if (data.length < 10) return false;
-			myTrace("Saving battery data: " + (new BatteryInfoRxMessage(data)).toString());
+			if (data.length < 10) {
+				myTrace("Store: BatteryRX dbg, data.length < 10, no further processing");
+				return false;
+			}
+			var batteryInfoRxMessage:BatteryInfoRxMessage = new BatteryInfoRxMessage(data);
+			myTrace("Saving battery data: " + batteryInfoRxMessage.toString());
 			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_G5_BATTERY_MARKER, UniqueId.bytesToHex(data));
+			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_G5_RESIST, new Number(batteryInfoRxMessage.resist).toString());
+			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_G5_RUNTIME, new Number(batteryInfoRxMessage.runtime).toString());
+			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_G5_STATUS, new Number(batteryInfoRxMessage.status).toString());
+			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_G5_TEMPERATURE, new Number(batteryInfoRxMessage.temperature).toString());
+			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_G5_VOLTAGEA, new Number(batteryInfoRxMessage.voltagea).toString());
+			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_G5_VOLTAGEB, new Number(batteryInfoRxMessage.voltageb).toString());
 			return true;
 		}
 		

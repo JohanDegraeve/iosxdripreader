@@ -54,6 +54,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			
 			import spark.formatters.DateTimeFormatter;
 			
+			import G5Model.TransmitterStatus;
+			
 			import Utilities.BgGraphBuilder;
 			import Utilities.Trace;
 			
@@ -601,12 +603,35 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 						message += " " + ModelLocator.resourceManagerInstance.getString('homeview','status_info_no_device_known');
 					}
 					message += "\n\n";
-					message += ModelLocator.resourceManagerInstance.getString('homeview','status_info_transmitter_battery_level');
-					var batteryLevel:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_BATTERY_VOLTAGE);
-					if (batteryLevel == "0") {
-						batteryLevel = ModelLocator.resourceManagerInstance.getString('homeview','status_info_transmitter_battery_level_unknown');
-					} 
-					message += " " + batteryLevel;
+					if (BluetoothService.isDexcomG5) {
+						message += ModelLocator.resourceManagerInstance.getString('homeview','home_view_transmitter_status_info_G5_title') + '\n';
+						message += ModelLocator.resourceManagerInstance.getString('homeview','home_view_transmitter_status_info_G5_STATUS') + " " + 
+							CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_STATUS) + 
+							" (" + TransmitterStatus.getBatteryLevel(new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_STATUS))) + 
+							")" + '\n'; 
+						message += ModelLocator.resourceManagerInstance.getString('homeview','home_view_transmitter_status_info_G5_VOLTAGEA') + " " + 
+							CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_VOLTAGEA)  + 
+							" (" + (new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_VOLTAGEA)) < TransmitterStatus.LOW_BATTERY_WARNING_LEVEL_VOLTAGEA ? "BAD":"NORMAL") + 
+							")" + '\n';
+						message += ModelLocator.resourceManagerInstance.getString('homeview','home_view_transmitter_status_info_G5_VOLTAGEB') + " " + 
+							CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_VOLTAGEB)  + 
+							" (" + (new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_VOLTAGEB)) < TransmitterStatus.LOW_BATTERY_WARNING_LEVEL_VOLTAGEB ? "BAD":"NORMAL") + 
+							")" + '\n';
+						message += ModelLocator.resourceManagerInstance.getString('homeview','home_view_transmitter_status_info_G5_RESIST') + " " + 
+							CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_RESIST) +
+							" (" + (new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_RESIST)) > TransmitterStatus.RESIST_BAD ? "BAD":(new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_RESIST)) > TransmitterStatus.RESIST_NOTICE ? "NOTICE":(new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_RESIST)) > TransmitterStatus.RESIST_NORMAL ? "NORMAL":"GOOD"))) + 
+							")";
+						/*message += ModelLocator.resourceManagerInstance.getString('homeview','home_view_transmitter_status_info_G5_TEMPERATURE') + " " + 
+							CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_TEMPERATURE)*/
+						//message += ModelLocator.resourceManagerInstance.getString('homeview','home_view_transmitter_status_info_G5_RUNTIME') + " " + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_RUNTIME);
+					} else {
+						message += ModelLocator.resourceManagerInstance.getString('homeview','status_info_transmitter_battery_level');
+						var batteryLevel:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G4_TRANSMITTER_BATTERY_VOLTAGE);
+						if (batteryLevel == "0") {
+							batteryLevel = ModelLocator.resourceManagerInstance.getString('homeview','status_info_transmitter_battery_level_unknown');
+						} 
+						message += " " + batteryLevel;
+					}
 					
 					var alert:DialogView = Dialog.service.create(
 						new AlertBuilder()

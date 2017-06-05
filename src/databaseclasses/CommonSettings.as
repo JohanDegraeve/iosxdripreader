@@ -53,7 +53,7 @@
 		  * transmitter battery level (ie 215, 214,...)<br>
 		  * 0 means level not known
 		  */
-		 public static const COMMON_SETTING_TRANSMITTER_BATTERY_VOLTAGE:int = 1;
+		 public static const COMMON_SETTING_G4_TRANSMITTER_BATTERY_VOLTAGE:int = 1;
 		 /**
 		  * bridge battery level<br>
 		  * 0 means level not known
@@ -124,6 +124,30 @@
 		  * the string that has all the intervals with phone muted alert types
 		  */
 		 public static const COMMON_SETTING_PHONE_MUTED_ALERT:int = 24;
+		 /**
+		 * data read from g5 transmitter, default value 'unknown'
+		  */
+		 public static const COMMON_SETTING_G5_STATUS:int = 25;
+		 /**
+		  * data read from g5 transmitter, default value 'unknown'
+		  */
+		 public static const COMMON_SETTING_G5_VOLTAGEA:int = 26;
+		 /**
+		  * data read from g5 transmitter, default value 'unknown'
+		  */
+		 public static const COMMON_SETTING_G5_VOLTAGEB:int = 27;
+		 /**
+		  * data read from g5 transmitter, default value 'unknown'
+		  */
+		 public static const COMMON_SETTING_G5_RESIST:int = 28;
+		 /**
+		  * data read from g5 transmitter, default value 'unknown'
+		  */
+		 public static const COMMON_SETTING_G5_TEMPERATURE:int = 29;
+		 /**
+		  * data read from g5 transmitter, default value 'unknown'
+		  */
+		 public static const COMMON_SETTING_G5_RUNTIME:int = 30;
 		 
 		 private static var commonSettings:Array = [
 			 "0",//COMMON_SETTING_CURRENT_SENSOR
@@ -150,7 +174,13 @@
 			 "00:00>70>DefaultNoAlertToBeReplaced",//COMMON_SETTING_LOW_ALERT
 			 "00:00>170>DefaultNoAlertToBeReplaced",//COMMON_SETTING_HIGH_ALERT
 			 "00:00>30>DefaultNoAlertToBeReplaced",//COMMON_SETTING_MISSED_READING_ALERT
-			 "00:00>0>DefaultNoAlertToBeReplaced-21:00>0>SilentToBeReplaced"//COMMON_SETTING_MISSED_READING_ALERT
+			 "00:00>0>DefaultNoAlertToBeReplaced-21:00>0>SilentToBeReplaced",//COMMON_SETTING_PHONE_MUTED_ALERT
+			 "unknown",//COMMON_SETTING_G5_STATUS
+			 "unknown",//COMMON_SETTING_G5_VOLTAGEA
+			 "unknown",//COMMON_SETTING_G5_VOLTAGEB
+			 "unknown",//COMMON_SETTING_G5_RESIST
+			 "unknown",//COMMON_SETTING_G5_TEMPERATURE
+			 "unkonwn"//COMMON_SETTING_G5_RUNTIME
 		 ];
 		 
 		 public function CommonSettings()

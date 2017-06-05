@@ -175,7 +175,7 @@ package services
 							BluetoothService.ackCharacteristicUpdate(value);
 						}						
 						//store the transmitter battery level in the common settings (to be synchronized)
-						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_BATTERY_VOLTAGE,transmitterDataXBridgeDataPacket.transmitterBatteryVoltage.toString());
+						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_G4_TRANSMITTER_BATTERY_VOLTAGE,transmitterDataXBridgeDataPacket.transmitterBatteryVoltage.toString());
 						
 						//store the bridge battery level in the common settings (to be synchronized)
 						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_BRIDGE_BATTERY_PERCENTAGE,transmitterDataXBridgeDataPacket.bridgeBatteryPercentage.toString());
@@ -205,7 +205,7 @@ package services
 						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_BRIDGE_BATTERY_PERCENTAGE, "0");
 						
 						//store the transmitter battery level in the common settings (to be synchronized)
-						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_BATTERY_VOLTAGE, transmitterDataXdripDataPacket.transmitterBatteryVoltage.toString());
+						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_G4_TRANSMITTER_BATTERY_VOLTAGE, transmitterDataXdripDataPacket.transmitterBatteryVoltage.toString());
 						Sensor.getActiveSensor().latestBatteryLevel = transmitterDataXdripDataPacket.transmitterBatteryVoltage;
 						//create and save bgreading
 						BgReading.
@@ -221,7 +221,7 @@ package services
 					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_BRIDGE_BATTERY_PERCENTAGE, "0");
 					
 					//store the transmitter battery level in the common settings (to be synchronized)
-					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_BATTERY_VOLTAGE, transmitterDataG5Packet.transmitterBatteryVoltage.toString());
+					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_G4_TRANSMITTER_BATTERY_VOLTAGE, transmitterDataG5Packet.transmitterBatteryVoltage.toString());
 					Sensor.getActiveSensor().latestBatteryLevel = transmitterDataG5Packet.transmitterBatteryVoltage;
 					//create and save bgreading
 					BgReading.
