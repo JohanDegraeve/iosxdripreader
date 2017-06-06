@@ -55,6 +55,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			import spark.formatters.DateTimeFormatter;
 			
 			import G5Model.TransmitterStatus;
+			import G4Model.TransmitterStatus;
 			
 			import Utilities.BgGraphBuilder;
 			import Utilities.Trace;
@@ -607,20 +608,20 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 						message += ModelLocator.resourceManagerInstance.getString('homeview','home_view_transmitter_status_info_G5_title') + '\n';
 						message += ModelLocator.resourceManagerInstance.getString('homeview','home_view_transmitter_status_info_G5_STATUS') + " " + 
 							CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_STATUS) + 
-							" (" + TransmitterStatus.getBatteryLevel(new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_STATUS))) + 
+							" (" + G5Model.TransmitterStatus.getBatteryLevel(new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_STATUS))) + 
 							")" + '\n'; 
 						message += ModelLocator.resourceManagerInstance.getString('homeview','home_view_transmitter_status_info_G5_VOLTAGEA') + " " + 
 							CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_VOLTAGEA)  + 
-							" (" + (new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_VOLTAGEA)) < TransmitterStatus.LOW_BATTERY_WARNING_LEVEL_VOLTAGEA ? "BAD":"NORMAL") + 
+							" (" + (new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_VOLTAGEA)) < G5Model.TransmitterStatus.LOW_BATTERY_WARNING_LEVEL_VOLTAGEA ? "BAD":"NORMAL") + 
 							")" + '\n';
 						message += ModelLocator.resourceManagerInstance.getString('homeview','home_view_transmitter_status_info_G5_VOLTAGEB') + " " + 
 							CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_VOLTAGEB)  + 
-							" (" + (new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_VOLTAGEB)) < TransmitterStatus.LOW_BATTERY_WARNING_LEVEL_VOLTAGEB ? "BAD":"NORMAL") + 
+							" (" + (new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_VOLTAGEB)) < G5Model.TransmitterStatus.LOW_BATTERY_WARNING_LEVEL_VOLTAGEB ? "BAD":"NORMAL") + 
 							")" + '\n';
 						message += ModelLocator.resourceManagerInstance.getString('homeview','home_view_transmitter_status_info_G5_RESIST') + " " + 
 							CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_RESIST) +
-							" (" + (new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_RESIST)) > TransmitterStatus.RESIST_BAD ? "BAD":(new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_RESIST)) > TransmitterStatus.RESIST_NOTICE ? "NOTICE":(new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_RESIST)) > TransmitterStatus.RESIST_NORMAL ? "NORMAL":"GOOD"))) + 
-							")";
+							" (" + (new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_RESIST)) > G5Model.TransmitterStatus.RESIST_BAD ? "BAD":(new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_RESIST)) > G5Model.TransmitterStatus.RESIST_NOTICE ? "NOTICE":(new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_RESIST)) > G5Model.TransmitterStatus.RESIST_NORMAL ? "NORMAL":"GOOD"))) + 
+							")" + '\n';
 						/*message += ModelLocator.resourceManagerInstance.getString('homeview','home_view_transmitter_status_info_G5_TEMPERATURE') + " " + 
 							CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_TEMPERATURE)*/
 						//message += ModelLocator.resourceManagerInstance.getString('homeview','home_view_transmitter_status_info_G5_RUNTIME') + " " + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_RUNTIME);
@@ -629,8 +630,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 						var batteryLevel:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G4_TRANSMITTER_BATTERY_VOLTAGE);
 						if (batteryLevel == "0") {
 							batteryLevel = ModelLocator.resourceManagerInstance.getString('homeview','status_info_transmitter_battery_level_unknown');
-						} 
-						message += " " + batteryLevel;
+						} else {
+							message += " " + batteryLevel;
+							message += " (" + G4Model.TransmitterStatus.getBatteryLevel(new Number(batteryLevel)) + ")";
+						}
 					}
 					
 					var alert:DialogView = Dialog.service.create(

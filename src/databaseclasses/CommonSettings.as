@@ -149,6 +149,11 @@
 		  */
 		 public static const COMMON_SETTING_G5_RUNTIME:int = 30;
 		 
+		 /**
+		  * the string that has all the intervals with battery low alert types
+		  */
+		 public static const COMMON_SETTING_BATTERY_ALERT:int = 31;
+
 		 private static var commonSettings:Array = [
 			 "0",//COMMON_SETTING_CURRENT_SENSOR
 			 "0",//COMMON_SETTING_TRANSMITTER_BATTERY_VOLTAGE
@@ -180,7 +185,8 @@
 			 "unknown",//COMMON_SETTING_G5_VOLTAGEB
 			 "unknown",//COMMON_SETTING_G5_RESIST
 			 "unknown",//COMMON_SETTING_G5_TEMPERATURE
-			 "unkonwn"//COMMON_SETTING_G5_RUNTIME
+			 "unkonwn",//COMMON_SETTING_G5_RUNTIME
+			 "00:00>0>DefaultNoAlertToBeReplaced-08:00>0>SilentToBeReplaced"//COMMON_SETTING_BATTERY_ALERT
 		 ];
 		 
 		 public function CommonSettings()
@@ -241,6 +247,26 @@
 						 .replace('SilentPhoneMutedToBeReplaced', noAlert);
 					 setCommonSetting(COMMON_SETTING_PHONE_MUTED_ALERT, newString);
 					 //commonSettings[COMMON_SETTING_PHONE_MUTED_ALERT] = newString;
+				 }
+			 }
+			 if (commonSettingId == COMMON_SETTING_BATTERY_ALERT) {
+				 if ((commonSettings[COMMON_SETTING_BATTERY_ALERT] as String).indexOf('DefaultNoAlertToBeReplaced') > -1) {
+					 noAlert = ModelLocator.resourceManagerInstance.getString("settingsview","no_alert")
+					 newString = (commonSettings[COMMON_SETTING_BATTERY_ALERT] as String)
+						 .replace('DefaultNoAlertToBeReplaced', noAlert);
+					 setCommonSetting(COMMON_SETTING_BATTERY_ALERT, newString);
+				 }
+				 if ((commonSettings[COMMON_SETTING_BATTERY_ALERT] as String).indexOf('SilentToBeReplaced') > -1) {
+					 noAlert = ModelLocator.resourceManagerInstance.getString("settingsview","silent_alert")
+					 newString = (commonSettings[COMMON_SETTING_BATTERY_ALERT] as String)
+						 .replace('SilentToBeReplaced', noAlert);
+					 setCommonSetting(COMMON_SETTING_BATTERY_ALERT, newString);
+				 }
+				 if ((commonSettings[COMMON_SETTING_BATTERY_ALERT] as String).indexOf('SilentPhoneMutedToBeReplaced') > -1) {
+					 noAlert = ModelLocator.resourceManagerInstance.getString("settingsview","silent_alert")
+					 newString = (commonSettings[COMMON_SETTING_BATTERY_ALERT] as String)
+						 .replace('SilentPhoneMutedToBeReplaced', noAlert);
+					 setCommonSetting(COMMON_SETTING_BATTERY_ALERT, newString);
 				 }
 			 }
 			 return commonSettings[commonSettingId];
