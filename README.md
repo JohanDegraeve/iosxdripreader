@@ -22,6 +22,7 @@ Possible alerts are
  * High
  * Low
  * Missed Reading
+ * Phone Muted (warns you if your phone is muted)
  * Additional Calibration Request
 
 Each Alert requires an Alert Type.
