@@ -7,7 +7,7 @@ package G5Model
 		public static const OK:String = "OK";
 		public static const UNKNOWN:String = "UNKNOWN";
 		public static const LOW_BATTERY_WARNING_LEVEL_VOLTAGEA:int = 300;
-		public static const LOW_BATTERY_WARNING_LEVEL_VOLTAGEB:int = 300;
+		public static const LOW_BATTERY_WARNING_LEVEL_VOLTAGEB:int = 290;
 		public static const RESIST_BAD:int = 1400;
 		public static const RESIST_NOTICE:int = 1000;
 		public static const RESIST_NORMAL:int = 750

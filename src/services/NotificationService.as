@@ -104,16 +104,19 @@ package services
 		public static const ID_FOR_HIGH_ALERT:int = 7;
 		public static const ID_FOR_MISSED_READING_ALERT:int = 8;
 		public static const ID_FOR_PHONEMUTED_ALERT:int = 9;
+		public static const ID_FOR_BATTERY_ALERT:int = 10;
 		
 		public static const ID_FOR_ALERT_LOW_CATEGORY:String = "LOW_ALERT_CATEGORY";
 		public static const ID_FOR_ALERT_HIGH_CATEGORY:String = "HIGH_ALERT_CATEGORY";
 		public static const ID_FOR_ALERT_MISSED_READING_CATEGORY:String = "MISSED_READING_CATEGORY";
 		public static const ID_FOR_PHONE_MUTED_CATEGORY:String = "PHONE_MUTED_CATEGORY";
+		public static const ID_FOR_ALERT_BATTERY_CATEGORY:String = "BATTERY_LEVEL_CATEGORY"
 
 		public static const ID_FOR_LOW_ALERT_SNOOZE_IDENTIFIER:String = "LOW_ALERT_SNOOZE_IDENTIFIER";
 		public static const ID_FOR_HIGH_ALERT_SNOOZE_IDENTIFIER:String = "HIGH_ALERT_SNOOZE_IDENTIFIER";
 		public static const ID_FOR_MISSED_READING_ALERT_SNOOZE_IDENTIFIER:String = "HIGH_ALERT_SNOOZE_IDENTIFIER";
 		public static const ID_FOR_PHONE_MUTED_SNOOZE_IDENTIFIER:String = "PHONE_MUTED_SNOOZE_IDENTIFIER";
+		public static const ID_FOR_BATTERY_LEVEL_ALERT_SNOOZE_IDENTIFIER:String = "BATTERY_LEVEL_SNOOZE_IDENTIFIER";
 		
 		public function NotificationService()
 		{
@@ -193,7 +196,18 @@ package services
 				.addAction( 
 					new ActionBuilder()
 					.setTitle(ModelLocator.resourceManagerInstance.getString("notificationservice","snooze_for_snoozin_alarm_in_notification_screen"))
-					.setIdentifier(ID_FOR_MISSED_READING_ALERT_SNOOZE_IDENTIFIER)
+					.setIdentifier(ID_FOR_PHONE_MUTED_SNOOZE_IDENTIFIER)
+					.build()
+				)
+				.build()
+			);
+			service.categories.push( 
+				new CategoryBuilder()
+				.setIdentifier(ID_FOR_ALERT_BATTERY_CATEGORY)
+				.addAction( 
+					new ActionBuilder()
+					.setTitle(ModelLocator.resourceManagerInstance.getString("notificationservice","snooze_for_snoozin_alarm_in_notification_screen"))
+					.setIdentifier(ID_FOR_BATTERY_LEVEL_ALERT_SNOOZE_IDENTIFIER)
 					.build()
 				)
 				.build()

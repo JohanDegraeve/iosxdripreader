@@ -1,5 +1,5 @@
 /**
- Copyright (C) 2016  Johan Degraeve
+ Copyright (C) 2017  Johan Degraeve
  
  This program is free software: you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -17,6 +17,8 @@
  */package databaseclasses
  {
  	import flash.events.EventDispatcher;
+ 	
+ 	import G4Model.TransmitterStatus;
  	
  	import events.SettingsServiceEvent;
  	
@@ -156,7 +158,7 @@
 
 		 private static var commonSettings:Array = [
 			 "0",//COMMON_SETTING_CURRENT_SENSOR
-			 "0",//COMMON_SETTING_TRANSMITTER_BATTERY_VOLTAGE
+			 "0",//COMMON_SETTING_G4_TRANSMITTER_BATTERY_VOLTAGE
 			 "0",//COMMON_SETTING_BRIDGE_BATTERY_PERCENTAGE
 			 "false",//COMMON_SETTING_G4_INFO_SCREEN_SHOWN
 			 DEFAULT_SITE_NAME,//COMMON_SETTING_AZURE_WEBSITE_NAME
@@ -185,8 +187,8 @@
 			 "unknown",//COMMON_SETTING_G5_VOLTAGEB
 			 "unknown",//COMMON_SETTING_G5_RESIST
 			 "unknown",//COMMON_SETTING_G5_TEMPERATURE
-			 "unkonwn",//COMMON_SETTING_G5_RUNTIME
-			 "00:00>0>DefaultNoAlertToBeReplaced-08:00>0>SilentToBeReplaced"//COMMON_SETTING_BATTERY_ALERT
+			 "unknown",//COMMON_SETTING_G5_RUNTIME
+			 "00:00>DefaultValue>DefaultNoAlertToBeReplaced-08:00>0>SilentToBeReplaced"//COMMON_SETTING_BATTERY_ALERT
 		 ];
 		 
 		 public function CommonSettings()
@@ -199,13 +201,19 @@
 		 public static function getCommonSetting(commonSettingId:int):String {
 			 var noAlert:String;
 			 var newString:String;
+			 if (commonSettingId == COMMON_SETTING_BATTERY_ALERT) {
+				 if ((commonSettings[COMMON_SETTING_BATTERY_ALERT] as String).indexOf('DefaultValue') > -1) {
+					 newString = (commonSettings[COMMON_SETTING_BATTERY_ALERT] as String)
+						 .replace('DefaultValue', TransmitterStatus.TRANSMITTER_BATTERY_LOW);
+					 setCommonSetting(COMMON_SETTING_BATTERY_ALERT, newString);
+				 }
+			 }
 			 if (commonSettingId == COMMON_SETTING_LOW_ALERT) {
 				 if ((commonSettings[COMMON_SETTING_LOW_ALERT] as String).indexOf('DefaultNoAlertToBeReplaced') > -1) {
 					 noAlert = ModelLocator.resourceManagerInstance.getString("settingsview","no_alert")
 					 newString = (commonSettings[COMMON_SETTING_LOW_ALERT] as String)
 						 .replace('DefaultNoAlertToBeReplaced', noAlert);
 					 setCommonSetting(COMMON_SETTING_LOW_ALERT, newString);
-					 //commonSettings[COMMON_SETTING_LOW_ALERT] = newString;
 				 }
 			 }
 			 if (commonSettingId == COMMON_SETTING_HIGH_ALERT) {
@@ -214,7 +222,6 @@
 					 newString = (commonSettings[COMMON_SETTING_HIGH_ALERT] as String)
 						 .replace('DefaultNoAlertToBeReplaced', noAlert);
 					 setCommonSetting(COMMON_SETTING_HIGH_ALERT, newString);
-					 //commonSettings[COMMON_SETTING_HIGH_ALERT] = newString;
 				 }
 			 }
 			 if (commonSettingId == COMMON_SETTING_MISSED_READING_ALERT) {
@@ -223,7 +230,6 @@
 					 newString = (commonSettings[COMMON_SETTING_MISSED_READING_ALERT] as String)
 						 .replace('DefaultNoAlertToBeReplaced', noAlert);
 					 setCommonSetting(COMMON_SETTING_MISSED_READING_ALERT, newString);
-					 //commonSettings[COMMON_SETTING_MISSED_READING_ALERT] = newString;
 				 }
 			 }
 			 if (commonSettingId == COMMON_SETTING_PHONE_MUTED_ALERT) {
@@ -232,21 +238,18 @@
 					 newString = (commonSettings[COMMON_SETTING_PHONE_MUTED_ALERT] as String)
 						 .replace('DefaultNoAlertToBeReplaced', noAlert);
 					 setCommonSetting(COMMON_SETTING_PHONE_MUTED_ALERT, newString);
-					 //commonSettings[COMMON_SETTING_PHONE_MUTED_ALERT] = newString;
 				 }
 				 if ((commonSettings[COMMON_SETTING_PHONE_MUTED_ALERT] as String).indexOf('SilentToBeReplaced') > -1) {
 					 noAlert = ModelLocator.resourceManagerInstance.getString("settingsview","silent_alert")
 					 newString = (commonSettings[COMMON_SETTING_PHONE_MUTED_ALERT] as String)
 						 .replace('SilentToBeReplaced', noAlert);
 					 setCommonSetting(COMMON_SETTING_PHONE_MUTED_ALERT, newString);
-					 //commonSettings[COMMON_SETTING_PHONE_MUTED_ALERT] = newString;
 				 }
 				 if ((commonSettings[COMMON_SETTING_PHONE_MUTED_ALERT] as String).indexOf('SilentPhoneMutedToBeReplaced') > -1) {
 					 noAlert = ModelLocator.resourceManagerInstance.getString("settingsview","silent_alert")
 					 newString = (commonSettings[COMMON_SETTING_PHONE_MUTED_ALERT] as String)
 						 .replace('SilentPhoneMutedToBeReplaced', noAlert);
 					 setCommonSetting(COMMON_SETTING_PHONE_MUTED_ALERT, newString);
-					 //commonSettings[COMMON_SETTING_PHONE_MUTED_ALERT] = newString;
 				 }
 			 }
 			 if (commonSettingId == COMMON_SETTING_BATTERY_ALERT) {

@@ -14,6 +14,10 @@ package services
 	import flash.events.Event;
 	import flash.events.EventDispatcher;
 	
+	import G4Model.TransmitterStatus;
+	
+	import G5Model.TransmitterStatus;
+	
 	import Utilities.DateTimeUtilities;
 	import Utilities.FromtimeAndValueArrayCollection;
 	import Utilities.Trace;
@@ -22,7 +26,6 @@ package services
 	import databaseclasses.BgReading;
 	import databaseclasses.CommonSettings;
 	import databaseclasses.Database;
-	import databaseclasses.LocalSettings;
 	
 	import events.BlueToothServiceEvent;
 	import events.NotificationServiceEvent;
@@ -69,6 +72,20 @@ package services
 		 */
 		public static const MAX_AGE_OF_READING_IN_MINUTES:int = 15
 		
+		//batteryLevel alert
+		/**
+		 * 0 is not snoozed, if > 0 this is snooze value chosen by user
+		 */
+		private static var _batteryLevelAlertSnoozePeriodInMinutes:int = 0;
+		/**
+		 * timestamp when alert was snoozed, ms 
+		 */
+		private static var _batteryLevelAlertLatestSnoozeTimeInMs:Number = Number.NaN;
+		/**
+		 * timestamp of latest notification 
+		 */
+		private static var _batteryLevelAlertLatestNotificationTime:Number = Number.NaN;
+			
 		//missed reading
 		/**
 		 * 0 is not snoozed, if > 0 this is snooze value chosen by user
@@ -96,11 +113,11 @@ package services
 		 * timestamp of latest notification 
 		 */
 		private static var _phoneMutedAlertLatestNotificationTime:Number = Number.NaN;
-		
-		private static var snoozeValueMinutes:Array = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 75, 90, 120, 150, 180, 240, 300, 360, 420, 480, 540, 600];
+				
+		private static var snoozeValueMinutes:Array = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 75, 90, 120, 150, 180, 240, 300, 360, 420, 480, 540, 600, 1440, 10080];
 		private static var snoozeValueStrings:Array = ["5 minutes", "10 minutes", "15 minutes", "20 minutes", "25 minutes", "30 minutes", "35 minutes",
 			"40 minutes", "45 minutes", "50 minutes", "55 minutes", "1 hour", "1 hour 15 minutes", "1,5 hours", "2 hours", "2,5 hours", "3 hours", "4 hours",
-			"5 hours", "6 hours", "7 hours", "8 hours", "9 hours", "10 hours"];
+			"5 hours", "6 hours", "7 hours", "8 hours", "9 hours", "10 hours", "1 day", "1 week"];
 		
 		private static var lastAlarmCheckTimeStamp:Number;
 		private static var lastPhoneMuteAlarmCheckTimeStamp:Number;
@@ -129,12 +146,13 @@ package services
 			BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.PHONE_MUTED, phoneMuted);
 			BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.PHONE_NOT_MUTED, phoneNotMuted);
 			BluetoothService.instance.addEventListener(BlueToothServiceEvent.CHARACTERISTIC_UPDATE, characteristicUpdate);
-
 			
 			for (var cntr:int = 0;cntr < snoozeValueMinutes.length;cntr++) {
 				snoozeValueStrings[cntr] = (snoozeValueStrings[cntr] as String).replace("minutes", ModelLocator.resourceManagerInstance.getString("alarmservice","minutes"));
 				snoozeValueStrings[cntr] = (snoozeValueStrings[cntr] as String).replace("hour", ModelLocator.resourceManagerInstance.getString("alarmservice","hour"));
 				snoozeValueStrings[cntr] = (snoozeValueStrings[cntr] as String).replace("hours", ModelLocator.resourceManagerInstance.getString("alarmservice","hours"));
+				snoozeValueStrings[cntr] = (snoozeValueStrings[cntr] as String).replace("day", ModelLocator.resourceManagerInstance.getString("alarmservice","day"));
+				snoozeValueStrings[cntr] = (snoozeValueStrings[cntr] as String).replace("week", ModelLocator.resourceManagerInstance.getString("alarmservice","week"));
 			}
 		}
 		
@@ -243,7 +261,79 @@ package services
 						myTrace("in notificationReceived with id = ID_FOR_MISSED_READING_ALERT, snoozing the notification for " + _missedReadingAlertSnoozePeriodInMinutes);
 						_missedReadingAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
 					}
+				} else if (notificationEvent.id == NotificationService.ID_FOR_PHONEMUTED_ALERT) {
+					listOfAlerts = FromtimeAndValueArrayCollection.createList(
+						CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PHONE_MUTED_ALERT));
+					alertName = listOfAlerts.getAlarmName(Number.NaN, "", new Date());
+					alertType = Database.getAlertType(alertName);
+					myTrace("in notificationReceived with id = ID_FOR_PHONEMUTED_ALERT, cancelling notification");
+					Notifications.service.cancel(NotificationService.ID_FOR_PHONEMUTED_ALERT);
+					index = 0;
+					for (var cntr:int = 0;cntr < snoozeValueMinutes.length;cntr++) {
+						if ((snoozeValueMinutes[cntr]) >= alertType.defaultSnoozePeriodInMinutes) {
+							index = cntr;
+							break;
+						}
+					}
+					if (notificationEvent.identifier == null) {
+						snoozePeriodPicker = Dialog.service.create(
+							new PickerDialogBuilder()
+							.setTitle(ModelLocator.resourceManagerInstance.getString('alarmservice', 'snooze_picker_title'))
+							.setCancelLabel(ModelLocator.resourceManagerInstance.getString("general","cancel"))
+							.setAcceptLabel("Ok")
+							.addColumn( snoozeValueStrings, index )
+							.build()
+						);
+						snoozePeriodPicker.addEventListener( DialogViewEvent.CLOSED, phoneMutedSnoozePicker_closedHandler );
+						snoozePeriodPicker.show();
+					} else if (notificationEvent.identifier == NotificationService.ID_FOR_PHONE_MUTED_SNOOZE_IDENTIFIER) {
+						_phoneMutedAlertSnoozePeriodInMinutes = alertType.defaultSnoozePeriodInMinutes;
+						myTrace("in notificationReceived with id = ID_FOR_PHONEMUTED_ALERT, snoozing the notification for " + _phoneMutedAlertSnoozePeriodInMinutes);
+						_phoneMutedAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
+					}
+				} else if (notificationEvent.id == NotificationService.ID_FOR_BATTERY_ALERT) {
+					listOfAlerts = FromtimeAndValueArrayCollection.createList(
+						CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BATTERY_ALERT));
+					alertName = listOfAlerts.getAlarmName(Number.NaN, "", new Date());
+					alertType = Database.getAlertType(alertName);
+					myTrace("in notificationReceived with id = ID_FOR_BATTERY_ALERT, cancelling notification");
+					Notifications.service.cancel(NotificationService.ID_FOR_BATTERY_ALERT);
+					index = 0;
+					for (var cntr:int = 0;cntr < snoozeValueMinutes.length;cntr++) {
+						if ((snoozeValueMinutes[cntr]) >= alertType.defaultSnoozePeriodInMinutes) {
+							index = cntr;
+							break;
+						}
+					}
+					if (notificationEvent.identifier == null) {
+						snoozePeriodPicker = Dialog.service.create(
+							new PickerDialogBuilder()
+							.setTitle(ModelLocator.resourceManagerInstance.getString('alarmservice', 'snooze_picker_title'))
+							.setCancelLabel(ModelLocator.resourceManagerInstance.getString("general","cancel"))
+							.setAcceptLabel("Ok")
+							.addColumn( snoozeValueStrings, index )
+							.build()
+						);
+						snoozePeriodPicker.addEventListener( DialogViewEvent.CLOSED, batteryLevelSnoozePicker_closedHandler );
+						snoozePeriodPicker.show();
+					} else if (notificationEvent.identifier == NotificationService.ID_FOR_BATTERY_LEVEL_ALERT_SNOOZE_IDENTIFIER) {
+						_batteryLevelAlertSnoozePeriodInMinutes = alertType.defaultSnoozePeriodInMinutes;
+						myTrace("in notificationReceived with id = ID_FOR_BATTERY_ALERT, snoozing the notification for " + _batteryLevelAlertSnoozePeriodInMinutes);
+						_batteryLevelAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
+					}
 				}
+			}
+			
+			function batteryLevelSnoozePicker_closedHandler(event:DialogViewEvent): void {
+				myTrace("in batteryLevelSnoozePicker_closedHandler snoozing the notification for " + snoozeValueStrings[event.indexes[0]]);
+				_batteryLevelAlertSnoozePeriodInMinutes = snoozeValueMinutes[event.indexes[0]];
+				_batteryLevelAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
+			}
+			
+			function phoneMutedSnoozePicker_closedHandler(event:DialogViewEvent): void {
+				myTrace("in phoneMutedSnoozePicker_closedHandler snoozing the notification for " + snoozeValueStrings[event.indexes[0]]);
+				_phoneMutedAlertSnoozePeriodInMinutes = snoozeValueMinutes[event.indexes[0]];
+				_phoneMutedAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
 			}
 			
 			function missedReadingSnoozePicker_closedHandler(event:DialogViewEvent): void {
@@ -385,6 +475,50 @@ package services
 						_highAlertLatestNotificationTime = Number.NaN;
 						_highAlertSnoozePeriodInMinutes = 0;
 					}
+					
+					//low battery alert
+					listOfAlerts = FromtimeAndValueArrayCollection.createList(
+						CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BATTERY_ALERT));
+					alertValue = listOfAlerts.getValue(Number.NaN, "", now);
+					alertName = listOfAlerts.getAlarmName(Number.NaN, "", now);
+					alertType = Database.getAlertType(alertName);
+					if (alertType.enabled) {
+						//first check if snoozeperiod is passed, checking first for value would generate multiple alarms in case the sensor is unstable
+						if (((now).valueOf() - _batteryLevelAlertLatestSnoozeTimeInMs) > _batteryLevelAlertSnoozePeriodInMinutes * 60 * 1000
+							||
+							isNaN(_batteryLevelAlertLatestSnoozeTimeInMs)) {
+							myTrace("in checkAlarms, batteryLevel alert not snoozed (anymore)");
+							//not snoozed
+							
+							if ((!BluetoothService.isDexcomG5 && (new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G4_TRANSMITTER_BATTERY_VOLTAGE)) < alertValue))
+								||
+								(BluetoothService.isDexcomG5 && (new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_VOLTAGEA)) < alertValue))) {
+								myTrace("in checkAlarms, battery level is too low");
+								fireAlert(
+									alertType, 
+									NotificationService.ID_FOR_BATTERY_ALERT, 
+									ModelLocator.resourceManagerInstance.getString("alarmservice","batteryLevel_alert_notification_alert_text"), 
+									ModelLocator.resourceManagerInstance.getString("alarmservice","batteryLevel_alert_notification_alert_text"),
+									alertType.enableVibration,
+									alertType.enableLights,
+									NotificationService.ID_FOR_ALERT_BATTERY_CATEGORY
+								); 
+								_batteryLevelAlertLatestSnoozeTimeInMs = Number.NaN;
+								_batteryLevelAlertSnoozePeriodInMinutes = 0;
+							} else {
+								Notifications.service.cancel(NotificationService.ID_FOR_BATTERY_ALERT);
+							}
+						} else {
+							//snoozed no need to do anything
+							myTrace("in checkAlarms, alarm snoozed, _batteryLevelAlertLatestSnoozeTimeInMs = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date(_batteryLevelAlertLatestSnoozeTimeInMs)) + ", _batteryLevelAlertSnoozePeriodInMinutes = " + _batteryLevelAlertSnoozePeriodInMinutes + ", actual time = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date()));
+						}
+					} else {
+						//remove notification, even if there isn't any
+						Notifications.service.cancel(NotificationService.ID_FOR_BATTERY_ALERT);
+						_batteryLevelAlertLatestSnoozeTimeInMs = Number.NaN;
+						_batteryLevelAlertLatestNotificationTime = Number.NaN;
+						_batteryLevelAlertSnoozePeriodInMinutes = 0;
+					}
 				}
 				
 				//missed reading alert
@@ -497,7 +631,7 @@ package services
 				myTrace("in phoneMuted, checking phoneMute Alarm because it's been more than 4 minutes 45 seconds");
 				var listOfAlerts:FromtimeAndValueArrayCollection = FromtimeAndValueArrayCollection.createList(
 					CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PHONE_MUTED_ALERT));
-				var alertValue:Number = listOfAlerts.getValue(Number.NaN, "", now);
+				//var alertValue:Number = listOfAlerts.getValue(Number.NaN, "", now);
 				var alertName:String = listOfAlerts.getAlarmName(Number.NaN, "", now);
 				var alertType:AlertType = Database.getAlertType(alertName);
 				if (alertType.enabled) {
@@ -523,6 +657,7 @@ package services
 					}
 				} else {
 					//remove notification, even if there isn't any
+					myTrace("in phoneMuted, alerttype not enabled");
 					Notifications.service.cancel(NotificationService.ID_FOR_PHONEMUTED_ALERT);
 					_phoneMutedAlertLatestSnoozeTimeInMs = Number.NaN;
 					_phoneMutedAlertLatestNotificationTime = Number.NaN;

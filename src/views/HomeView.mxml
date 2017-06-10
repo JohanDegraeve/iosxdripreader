@@ -607,24 +607,25 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 					if (BluetoothService.isDexcomG5) {
 						message += ModelLocator.resourceManagerInstance.getString('homeview','home_view_transmitter_status_info_G5_title') + '\n';
 						message += ModelLocator.resourceManagerInstance.getString('homeview','home_view_transmitter_status_info_G5_STATUS') + " " + 
-							CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_STATUS) + 
-							" (" + G5Model.TransmitterStatus.getBatteryLevel(new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_STATUS))) + 
+							CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_STATUS);
+						if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_STATUS) != "unknown")
+							message += " (" + G5Model.TransmitterStatus.getBatteryLevel(new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_STATUS))) + 
 							")" + '\n'; 
 						message += ModelLocator.resourceManagerInstance.getString('homeview','home_view_transmitter_status_info_G5_VOLTAGEA') + " " + 
-							CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_VOLTAGEA)  + 
-							" (" + (new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_VOLTAGEA)) < G5Model.TransmitterStatus.LOW_BATTERY_WARNING_LEVEL_VOLTAGEA ? "BAD":"NORMAL") + 
+							CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_VOLTAGEA);
+						if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_VOLTAGEA) != "unknown")
+							message += " (" + (new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_VOLTAGEA)) < G5Model.TransmitterStatus.LOW_BATTERY_WARNING_LEVEL_VOLTAGEA ? "BAD":"NORMAL") + 
 							")" + '\n';
 						message += ModelLocator.resourceManagerInstance.getString('homeview','home_view_transmitter_status_info_G5_VOLTAGEB') + " " + 
-							CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_VOLTAGEB)  + 
-							" (" + (new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_VOLTAGEB)) < G5Model.TransmitterStatus.LOW_BATTERY_WARNING_LEVEL_VOLTAGEB ? "BAD":"NORMAL") + 
+							CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_VOLTAGEB);
+						if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_VOLTAGEB) != "unknown")
+							message += " (" + (new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_VOLTAGEB)) < G5Model.TransmitterStatus.LOW_BATTERY_WARNING_LEVEL_VOLTAGEB ? "BAD":"NORMAL") + 
 							")" + '\n';
 						message += ModelLocator.resourceManagerInstance.getString('homeview','home_view_transmitter_status_info_G5_RESIST') + " " + 
-							CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_RESIST) +
-							" (" + (new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_RESIST)) > G5Model.TransmitterStatus.RESIST_BAD ? "BAD":(new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_RESIST)) > G5Model.TransmitterStatus.RESIST_NOTICE ? "NOTICE":(new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_RESIST)) > G5Model.TransmitterStatus.RESIST_NORMAL ? "NORMAL":"GOOD"))) + 
+							CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_RESIST);
+						if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_RESIST) != "unknown")
+							message += " (" + (new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_RESIST)) > G5Model.TransmitterStatus.RESIST_BAD ? "BAD":(new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_RESIST)) > G5Model.TransmitterStatus.RESIST_NOTICE ? "NOTICE":(new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_RESIST)) > G5Model.TransmitterStatus.RESIST_NORMAL ? "NORMAL":"GOOD"))) + 
 							")" + '\n';
-						/*message += ModelLocator.resourceManagerInstance.getString('homeview','home_view_transmitter_status_info_G5_TEMPERATURE') + " " + 
-							CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_TEMPERATURE)*/
-						//message += ModelLocator.resourceManagerInstance.getString('homeview','home_view_transmitter_status_info_G5_RUNTIME') + " " + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_RUNTIME);
 					} else {
 						message += ModelLocator.resourceManagerInstance.getString('homeview','status_info_transmitter_battery_level');
 						var batteryLevel:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G4_TRANSMITTER_BATTERY_VOLTAGE);

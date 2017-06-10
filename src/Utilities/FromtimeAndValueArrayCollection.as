@@ -360,6 +360,17 @@ package Utilities
 			 return returnValue;
 		 }
 		 
+		 public static function replaceAllValues(alarmString:String, newValue:Number):String {
+			 var oldList:FromtimeAndValueArrayCollection = createList(alarmString);
+			 var newList:FromtimeAndValueArrayCollection = new FromtimeAndValueArrayCollection();
+			 for (var cntr:int = 0;cntr < oldList.length; cntr++) {
+				 var fromTimeAndValue:FromtimeAndValue = oldList.getItemAt(cntr) as FromtimeAndValue;
+				 var newFromTimeAndValue:FromtimeAndValue = new FromtimeAndValue(fromTimeAndValue.from, newValue, fromTimeAndValue.alarmName, fromTimeAndValue.editable, fromTimeAndValue.deletable);
+					newList.addItem(newFromTimeAndValue);			 
+			 }
+			 return newList.createAlarmString();
+		 }
+		 
 		 private static function myTrace(log:String):void {
 			 Trace.myTrace("FromtimeAndValueArrayCollection.as", log);
 		 }
