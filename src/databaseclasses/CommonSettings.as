@@ -188,7 +188,7 @@
 			 "unknown",//COMMON_SETTING_G5_RESIST
 			 "unknown",//COMMON_SETTING_G5_TEMPERATURE
 			 "unknown",//COMMON_SETTING_G5_RUNTIME
-			 "00:00>DefaultValue>DefaultNoAlertToBeReplaced-08:00>0>SilentToBeReplaced"//COMMON_SETTING_BATTERY_ALERT
+			 "00:00>DefaultValue>DefaultNoAlertToBeReplaced-08:00>DefaultValue>SilentToBeReplaced"//COMMON_SETTING_BATTERY_ALERT
 		 ];
 		 
 		 public function CommonSettings()

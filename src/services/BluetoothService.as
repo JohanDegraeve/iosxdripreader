@@ -56,7 +56,6 @@ package services
 	import databaseclasses.BgReading;
 	import databaseclasses.BlueToothDevice;
 	import databaseclasses.CommonSettings;
-	import databaseclasses.LocalSettings;
 	
 	import distriqtkey.DistriqtKey;
 	
@@ -126,7 +125,7 @@ package services
 		private static var lastOnReadCode:int = 0xff;
 		private static var isBondedOrBonding:Boolean = false;
 		private static var discoveryTimeStamp:Number;
-		private static const waitTimeBeforeRescanAfterG5DisconnectInSeconds:int = 10;
+		private static const waitTimeBeforeRescanAfterDisconnectInSeconds:int = 10;
 		
 		public static const BATTERY_READ_PERIOD_MS:Number = 1000 * 60 * 60 * 12; // how often to poll battery data (12 hours)
 		
@@ -525,12 +524,12 @@ package services
 			//if (isDexcomG5) {
 			forgetBlueToothDevice();
 			var timeDifSinceDiscovery:Number = (new Date()).valueOf() - discoveryTimeStamp;
-			if (timeDifSinceDiscovery > waitTimeBeforeRescanAfterG5DisconnectInSeconds * 1000 || !isDexcomG5) {
-				myTrace("restarting scan immediately");
+			if (timeDifSinceDiscovery > waitTimeBeforeRescanAfterDisconnectInSeconds * 1000) {
+				myTrace("restarting scan immediately now");
 				startRescan(null);
 			}  else {
-				var waitTimeInSeconds:Number = waitTimeBeforeRescanAfterG5DisconnectInSeconds - timeDifSinceDiscovery/1000;
-				myTrace("it's a G5, not restarting scan immediately, starting timer in " + waitTimeInSeconds + " seconds");
+				var waitTimeInSeconds:Number = waitTimeBeforeRescanAfterDisconnectInSeconds - timeDifSinceDiscovery/1000;
+				myTrace("not restarting scan immediately, starting timer in " + waitTimeInSeconds + " seconds");
 				BackgroundFetch.startTimer1(waitTimeInSeconds);
 			}
 			return;
@@ -736,18 +735,10 @@ package services
 			} else {
 				value.position = 0;
 				value.endian = Endian.LITTLE_ENDIAN;
-				var packetLength:int = value.readUnsignedByte();
+				//var packetLength:int = value.readUnsignedByte();
 				//position = 1
-				var packetType:int = value.readUnsignedByte();//0 = data packet, 1 =  TXID packet, 0xF1 (241 if read as unsigned int) = Beacon packet
-				var rawData:Number = Number.NaN;
-				if (packetType == 0) {
-					rawData = value.readInt();
-				}
-				
-				var traceMessage2:String = 
-					"data packet received from transmitter with" +
-					" byte 0 = " + packetlength + " and byte 1 = " + packetType + " and rawData = " + rawData;
-				myTrace(traceMessage2);
+				//var packetType:int = value.readUnsignedByte();//0 = data packet, 1 =  TXID packet, 0xF1 (241 if read as unsigned int) = Beacon packet
+				myTrace("data packet received from transmitter : " + Utilities.UniqueId.bytesToHex(value));
 				
 				value.position = 0;
 				if (isDexcomG5) {
