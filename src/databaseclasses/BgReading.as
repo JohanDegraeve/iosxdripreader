@@ -299,22 +299,6 @@ package databaseclasses
 			return mmoll * MMOLL_TO_MGDL;
 		}
 		
-		public function displayValue():String {
-			var unit:String = "mgdl";//TO DO take it from the settings
-			
-			if (_calculatedValue >= 400) {
-				return "HIGH";
-			} else if (_calculatedValue >= 40) {
-				if(unit == "mgdl") {
-					return Math.round(_calculatedValue).toString();
-				} else {
-					return "";//round to 1 digit after decimal
-				}
-			} else {
-				return "LOW";
-			}
-		}
-		
 		public static function activeSlope():Number {
 			var bgReading:BgReading = lastNoSensor();
 			if (bgReading != null) {

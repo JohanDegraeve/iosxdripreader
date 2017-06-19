@@ -780,6 +780,8 @@ package services
 		
 		private static function peripheral_characteristic_subscribeErrorHandler(event:CharacteristicEvent):void {
 			myTrace("peripheral_characteristic_subscribeErrorHandler: " + HM10Attributes.getCharacteristicName(event.characteristic.uuid));
+			myTrace("event.error = " + event.error);
+			myTrace("event.errorcode  = " + event.errorCode);
 		}
 		
 		private static function peripheral_characteristic_unsubscribeHandler(event:CharacteristicEvent):void {
