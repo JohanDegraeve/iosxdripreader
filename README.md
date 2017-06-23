@@ -5,13 +5,10 @@
 xdrip/xbridge/G5 reader for iOS devices - 
 
 * Initial and subsequent Calibration
-* Additional calibration request alerts but not the 12-hour calibration request alert
+* Calibration request alerts
 * View latest calculated value on Home screen with "minutes ago" and diff with previous reading
 * Always on notification (not really always but almost always) that allows to see the current value by just lifting up the phone (iOS 10).
-* Upload to Nightscout
-  * When the app is in the foreground, upload will always happen immediately after receiving a new value, also at app start, 
-  * When the app is in the background, then the trigger to upload is a remote notification.
-    * The app will subscribe (anonymously) to a service (QuickBlox) as soon as you launch it. As soon as the first bloodglucose reading is received, the app will receive a remote notification the minute after it's supposed to receive a new reading. This remote notification opens the app in the background, and allows it to do an upload to NightScout. The upload may have a delay of maximum 1,5 minute. The trigger is actually being sent by another app on a spare iphone on my desk which is always on. There's no guarantee that this app is always alive. ___There's no guarantee that upload to NightScout is successful.___
+* Upload to Nightscout (works now always for G5, for xDrip not recently tested since I don't use G4 anymore, there may be some delay in upload).
 * set transmitter id
   * for xDrip/xBridge, if the device already has a transmitter id programmed, then there's no need anymore (but allowed) to configured it in the Settings, the app will automatically read and store the transmitter id
 
@@ -23,7 +20,8 @@ Possible alerts are
  * Low
  * Missed Reading
  * Phone Muted (warns you if your phone is muted)
- * Additional Calibration Request
+ * Calibration Request
+ * Battery Low
 
 Each Alert requires an Alert Type.
 
