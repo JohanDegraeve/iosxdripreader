@@ -103,6 +103,7 @@ package databaseclasses
 		public static const LOCAL_SETTING_TRACE_FILE_PATH_NAME:int = 15;
 		public static const LOCAL_SETTING_FROM_TIME_AND_VALUE_ELEMENT_VIEW_VALUE_INFO_GIVEN:int = 16;
 		public static const LOCAL_SETTING_LOW_BATTERY_WARNING_GIVEN:int = 17;
+		public static const LOCAL_SETTING_CALIBRATION_REQUEST_ALERT_WARNING_GIVEN:int = 18;
 		
 		private static var localSettings:Array = [
 			"false",//LOCAL_SETTING_DETAILED_TRACING_ENABLED
@@ -122,7 +123,8 @@ package databaseclasses
 			"false",//LOCAL_SETTING_PHONE_MUTED_WARNING_GIVEN
 			"",//LOCAL_SETTING_TRACE_FILE_PATH_NAME
 			"false",//LOCAL_SETTING_FROM_TIME_AND_VALUE_ELEMENT_VIEW_VALUE_INFO_GIVEN
-			"false"//LOCAL_SETTING_LOW_BATTERY_WARNING_GIVEN
+			"false",//LOCAL_SETTING_LOW_BATTERY_WARNING_GIVEN
+			"false"//LOCAL_SETTING_CALIBRATION_REQUEST_ALERT_WARNING_GIVEN
 		];
 		
 		public function LocalSettings() {

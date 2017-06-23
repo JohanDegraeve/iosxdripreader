@@ -155,6 +155,7 @@
 		  * the string that has all the intervals with battery low alert types
 		  */
 		 public static const COMMON_SETTING_BATTERY_ALERT:int = 31;
+		 public static const COMMON_SETTING_CALIBRATION_REQUEST_ALERT:int = 32;
 
 		 private static var commonSettings:Array = [
 			 "0",//COMMON_SETTING_CURRENT_SENSOR
@@ -188,7 +189,8 @@
 			 "unknown",//COMMON_SETTING_G5_RESIST
 			 "unknown",//COMMON_SETTING_G5_TEMPERATURE
 			 "unknown",//COMMON_SETTING_G5_RUNTIME
-			 "00:00>DefaultValue>DefaultNoAlertToBeReplaced-08:00>DefaultValue>SilentToBeReplaced"//COMMON_SETTING_BATTERY_ALERT
+			 "00:00>DefaultValue>DefaultNoAlertToBeReplaced-08:00>DefaultValue>SilentToBeReplaced",//COMMON_SETTING_BATTERY_ALERT
+			 "00:00>12>DefaultNoAlertToBeReplaced-08:00>12>SilentToBeReplaced-23:00>12>DefaultNoAlertToBeReplaced"//COMMON_SETTING_CALIBRATION_REQUEST_ALERT
 		 ];
 		 
 		 public function CommonSettings()
@@ -270,6 +272,20 @@
 					 newString = (commonSettings[COMMON_SETTING_BATTERY_ALERT] as String)
 						 .replace('SilentPhoneMutedToBeReplaced', noAlert);
 					 setCommonSetting(COMMON_SETTING_BATTERY_ALERT, newString);
+				 }
+			 }
+			 if (commonSettingId == COMMON_SETTING_CALIBRATION_REQUEST_ALERT) {
+				 if ((commonSettings[COMMON_SETTING_CALIBRATION_REQUEST_ALERT] as String).indexOf('DefaultNoAlertToBeReplaced') > -1) {
+					 noAlert = ModelLocator.resourceManagerInstance.getString("settingsview","no_alert")
+					 newString = (commonSettings[COMMON_SETTING_CALIBRATION_REQUEST_ALERT] as String)
+						 .replace('DefaultNoAlertToBeReplaced', noAlert);
+					 setCommonSetting(COMMON_SETTING_CALIBRATION_REQUEST_ALERT, newString);
+				 }
+				 if ((commonSettings[COMMON_SETTING_CALIBRATION_REQUEST_ALERT] as String).indexOf('SilentToBeReplaced') > -1) {
+					 noAlert = ModelLocator.resourceManagerInstance.getString("settingsview","silent_alert")
+					 newString = (commonSettings[COMMON_SETTING_CALIBRATION_REQUEST_ALERT] as String)
+						 .replace('SilentToBeReplaced', noAlert);
+					 setCommonSetting(COMMON_SETTING_CALIBRATION_REQUEST_ALERT, newString);
 				 }
 			 }
 			 return commonSettings[commonSettingId];

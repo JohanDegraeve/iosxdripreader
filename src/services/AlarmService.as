@@ -24,6 +24,7 @@ package services
 	
 	import databaseclasses.AlertType;
 	import databaseclasses.BgReading;
+	import databaseclasses.Calibration;
 	import databaseclasses.CommonSettings;
 	import databaseclasses.Database;
 	
@@ -114,6 +115,20 @@ package services
 		 */
 		private static var _phoneMutedAlertLatestNotificationTime:Number = Number.NaN;
 				
+		//calibration request
+		/**
+		 * 0 is not snoozed, if > 0 this is snooze value chosen by user
+		 */
+		private static var _calibrationRequestSnoozePeriodInMinutes:int = 0;
+		/**
+		 * timestamp when alert was snoozed, ms 
+		 */
+		private static var _calibrationRequestLatestSnoozeTimeInMs:Number = Number.NaN;
+		/**
+		 * timestamp of latest notification 
+		 */
+		private static var _calibrationRequestLatestNotificationTime:Number = Number.NaN;
+		
 		private static var snoozeValueMinutes:Array = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 75, 90, 120, 150, 180, 240, 300, 360, 420, 480, 540, 600, 1440, 10080];
 		private static var snoozeValueStrings:Array = ["5 minutes", "10 minutes", "15 minutes", "20 minutes", "25 minutes", "30 minutes", "35 minutes",
 			"40 minutes", "45 minutes", "50 minutes", "55 minutes", "1 hour", "1 hour 15 minutes", "1,5 hours", "2 hours", "2,5 hours", "3 hours", "4 hours",
@@ -321,7 +336,43 @@ package services
 						myTrace("in notificationReceived with id = ID_FOR_BATTERY_ALERT, snoozing the notification for " + _batteryLevelAlertSnoozePeriodInMinutes);
 						_batteryLevelAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
 					}
+				} else if (notificationEvent.id == NotificationService.ID_FOR_CALIBRATION_REQUEST_ALERT) {
+					listOfAlerts = FromtimeAndValueArrayCollection.createList(
+						CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CALIBRATION_REQUEST_ALERT));
+					alertName = listOfAlerts.getAlarmName(Number.NaN, "", new Date());
+					alertType = Database.getAlertType(alertName);
+					myTrace("in notificationReceived with id = ID_FOR_CALIBRATION_REQUEST_ALERT, cancelling notification");
+					Notifications.service.cancel(NotificationService.ID_FOR_CALIBRATION_REQUEST_ALERT);
+					index = 0;
+					for (var cntr:int = 0;cntr < snoozeValueMinutes.length;cntr++) {
+						if ((snoozeValueMinutes[cntr]) >= alertType.defaultSnoozePeriodInMinutes) {
+							index = cntr;
+							break;
+						}
+					}
+					if (notificationEvent.identifier == null) {
+						snoozePeriodPicker = Dialog.service.create(
+							new PickerDialogBuilder()
+							.setTitle(ModelLocator.resourceManagerInstance.getString('alarmservice', 'snooze_picker_title'))
+							.setCancelLabel(ModelLocator.resourceManagerInstance.getString("general","cancel"))
+							.setAcceptLabel("Ok")
+							.addColumn( snoozeValueStrings, index )
+							.build()
+						);
+						snoozePeriodPicker.addEventListener( DialogViewEvent.CLOSED, calibrationRequestSnoozePicker_closedHandler );
+						snoozePeriodPicker.show();
+					} else if (notificationEvent.identifier == NotificationService.ID_FOR_CALIBRATION_REQUEST_ALERT_SNOOZE_IDENTIFIER) {
+						_calibrationRequestSnoozePeriodInMinutes = alertType.defaultSnoozePeriodInMinutes;
+						myTrace("in notificationReceived with id = ID_FOR_CALIBRATION_REQUEST_ALERT, snoozing the notification for " + _calibrationRequestSnoozePeriodInMinutes);
+						_calibrationRequestLatestSnoozeTimeInMs = (new Date()).valueOf();
+					}
 				}
+			}
+			
+			function calibrationRequestSnoozePicker_closedHandler(event:DialogViewEvent): void {
+				myTrace("in calibrationRequestSnoozePicker_closedHandler snoozing the notification for " + snoozeValueStrings[event.indexes[0]]);
+				_calibrationRequestSnoozePeriodInMinutes = snoozeValueMinutes[event.indexes[0]];
+				_calibrationRequestLatestSnoozeTimeInMs = (new Date()).valueOf();
 			}
 			
 			function batteryLevelSnoozePicker_closedHandler(event:DialogViewEvent): void {
@@ -620,6 +671,49 @@ package services
 						myTrace("in checkAlarms, missed reading snoozed, _missedReadingAlertLatestSnoozeTimeInMs = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date(_missedReadingAlertLatestSnoozeTimeInMs)) + ", _missedReadingAlertSnoozePeriodInMinutes = " + _missedReadingAlertSnoozePeriodInMinutes + ", actual time = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date()));
 					}
 				}
+				
+				//calibration request alert
+				listOfAlerts = FromtimeAndValueArrayCollection.createList(
+					CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CALIBRATION_REQUEST_ALERT));
+				alertValue = listOfAlerts.getValue(Number.NaN, "", now);
+				alertName = listOfAlerts.getAlarmName(Number.NaN, "", now);
+				alertType = Database.getAlertType(alertName);
+				if (alertType.enabled) {
+					if ((now.valueOf() - _calibrationRequestLatestSnoozeTimeInMs) > _calibrationRequestSnoozePeriodInMinutes * 60 * 1000
+						||
+						isNaN(_calibrationRequestLatestSnoozeTimeInMs)) {
+						myTrace("in checkAlarms, calibration request alert not snoozed (anymore)");
+						if (Calibration.last() != null && BgReading.last30Minutes().length >= 2) {
+							if (alertValue < ((now.valueOf() - Calibration.last().timestamp) / 1000 / 60 / 60)) {
+								myTrace("in checkAlarms, calibration is necessary");
+								fireAlert(
+									alertType, 
+									NotificationService.ID_FOR_CALIBRATION_REQUEST_ALERT, 
+									ModelLocator.resourceManagerInstance.getString("alarmservice","calibration_request_alert_notification_alert_text"), 
+									ModelLocator.resourceManagerInstance.getString("alarmservice","calibration_request_alert_notification_alert_title"),
+									alertType.enableVibration,
+									alertType.enableLights,
+									NotificationService.ID_FOR_ALERT_CALIBRATION_REQUEST_CATEGORY
+								); 
+								_calibrationRequestLatestSnoozeTimeInMs = Number.NaN;
+								_calibrationRequestSnoozePeriodInMinutes = 0;
+							} else {
+								Notifications.service.cancel(NotificationService.ID_FOR_CALIBRATION_REQUEST_ALERT);
+							}
+						} else {
+							Notifications.service.cancel(NotificationService.ID_FOR_CALIBRATION_REQUEST_ALERT);
+						}
+					} else {
+						//snoozed no need to do anything
+						myTrace("in checkAlarms, alarm snoozed, _calibrationRequestLatestSnoozeTimeInMs = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date(_calibrationRequestLatestSnoozeTimeInMs)) + ", _calibrationRequestSnoozePeriodInMinutes = " + _calibrationRequestSnoozePeriodInMinutes + ", actual time = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date()));
+					}
+				} else {
+					//remove calibration request notification, even if there isn't any						
+					Notifications.service.cancel(NotificationService.ID_FOR_CALIBRATION_REQUEST_ALERT);
+					_calibrationRequestLatestSnoozeTimeInMs = Number.NaN;
+					_calibrationRequestLatestNotificationTime = Number.NaN;
+					_lowAlertSnoozePeriodInMinutes = 0;
+				}
 			}
 		}
 		
@@ -700,9 +794,9 @@ package services
 			if (delay != 0) {
 				notificationBuilder.setDelay(delay);
 			}
-			if (alertType.sound == ModelLocator.resourceManagerInstance.getString("alerttypeview","no_sound") && enableVibration) {
+			if (alertType.sound == "no_sound" && enableVibration) {
 				notificationBuilder.setSound("../assets/silence-1sec.aif");
-			} else 	if (alertType.sound == ModelLocator.resourceManagerInstance.getString("alerttypeview","no_sound") && !enableVibration) {
+			} else 	if (alertType.sound == "no_sound" && !enableVibration) {
 				notificationBuilder.setSound("");
 			} else {
 				for (var cntr:int = 0;cntr < soundsAsDisplayedSplitted.length;cntr++) {

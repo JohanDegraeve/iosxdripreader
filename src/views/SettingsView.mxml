@@ -357,6 +357,25 @@
 				navigator.pushView(FromtimeAndValueListView,dataToSend);
 			}
 			
+			private function calibrationRequestAlert_clickHandler(event:MouseEvent):void {
+				rect41.color = uint("0xD3D3D3");
+				rect42.color = uint("0xD3D3D3");
+				
+				setResetColorTimer();
+				var dataToSend:Object = new Object();
+				dataToSend.title = ModelLocator.resourceManagerInstance.getString("settingsview","calibration_request_alert");
+				dataToSend.topText = ModelLocator.resourceManagerInstance.getString("settingsview","alert_top_text");
+				dataToSend.settingid = CommonSettings.COMMON_SETTING_CALIBRATION_REQUEST_ALERT;
+				dataToSend.titleforFromtimeAndValueElementView = "";
+				dataToSend.topTextforFromtimeAndValueElementView = ModelLocator.resourceManagerInstance.getString('settingsview','edit_calibration_request_alert');
+				dataToSend.isBgValue = false;
+				dataToSend.unit = ModelLocator.resourceManagerInstance.getString('alarmservice','hours');
+				dataToSend.additionalTopText = ModelLocator.resourceManagerInstance.getString('settingsview','explain_calibration_request_alert');
+				
+				navigator.pushView(FromtimeAndValueListView,dataToSend);
+			}
+			
+			
 			private function highAlert_clickHandler(event:MouseEvent):void {
 				rect33.color = uint("0xD3D3D3");
 				rect34.color = uint("0xD3D3D3");
@@ -602,6 +621,8 @@
 					rect38.color = uint("0x212121");//phone muted alert
 					rect39.color = uint("0x212121");//battery low alert
 					rect40.color = uint("0x212121");//battery low alert
+					rect41.color = uint("0x212121");//calibration request alert
+					rect42.color = uint("0x212121");//calibration request alert
 				}
 			}
 			
@@ -793,7 +814,7 @@
 				</s:HGroup>
 				<s:Line width="100%">
 					<s:stroke>
-						<s:SolidColorStroke color="#FFFFFF" weight="1" alpha="0.25"/>
+						<s:SolidColorStroke color="#FFFFFF" weight="1"/>
 					</s:stroke>
 				</s:Line>	
 			</s:VGroup>
@@ -822,6 +843,30 @@
 					</s:stroke>
 				</s:Line>	
 			</s:VGroup>
+			
+			<!-- Chapter Alerts Subsection Calibration Request-->
+			<s:VGroup click="calibrationRequestAlert_clickHandler(event)" width="100%">
+				<s:HGroup width="100%">
+					<s:Rect height="100%" width="5" >
+						<s:fill>
+							<s:SolidColor color="#212121" id="rect41"/>
+						</s:fill>
+					</s:Rect>
+					<s:Label text = "{ModelLocator.resourceManagerInstance.getString('settingsview','calibration_request_alert')}"
+							 width="100%" paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
+					<s:Rect height="100%" width="5" >
+						<s:fill>
+							<s:SolidColor color="#212121" id="rect42"/>
+						</s:fill>
+					</s:Rect>
+				</s:HGroup>
+				<s:Line width="100%">
+					<s:stroke>
+						<s:SolidColorStroke color="0xFFFFFF" weight="1" alpha="0.25"/>
+					</s:stroke>
+				</s:Line>	
+			</s:VGroup>
+			
 			<!-- Chapter Alerts Subsection Low -->
 			<s:VGroup click="lowAlert_clickHandler(event)" width="100%">
 				<s:HGroup width="100%">

@@ -129,8 +129,6 @@ package services
 		}
 		
 		private static function performFetch(event:BackgroundFetchEvent):void {
-			//BackgroundFetch.checkMuted();
-
 			if (event.type == BackgroundFetchEvent.PERFORMREMOTEFETCH) {
 				myTrace("performRemoteFetch");
 				BluetoothService.startRescan(null);
