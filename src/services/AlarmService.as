@@ -689,7 +689,7 @@ package services
 								fireAlert(
 									alertType, 
 									NotificationService.ID_FOR_CALIBRATION_REQUEST_ALERT, 
-									ModelLocator.resourceManagerInstance.getString("alarmservice","calibration_request_alert_notification_alert_text"), 
+									ModelLocator.resourceManagerInstance.getString("alarmservice","calibration_request_alert_notification_alert_title"), 
 									ModelLocator.resourceManagerInstance.getString("alarmservice","calibration_request_alert_notification_alert_title"),
 									alertType.enableVibration,
 									alertType.enableLights,
