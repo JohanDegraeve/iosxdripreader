@@ -86,7 +86,7 @@ package services
 		 * timestamp of latest notification 
 		 */
 		private static var _batteryLevelAlertLatestNotificationTime:Number = Number.NaN;
-			
+		
 		//missed reading
 		/**
 		 * 0 is not snoozed, if > 0 this is snooze value chosen by user
@@ -114,7 +114,7 @@ package services
 		 * timestamp of latest notification 
 		 */
 		private static var _phoneMutedAlertLatestNotificationTime:Number = Number.NaN;
-				
+		
 		//calibration request
 		/**
 		 * 0 is not snoozed, if > 0 this is snooze value chosen by user
@@ -175,7 +175,7 @@ package services
 			if (!BluetoothService.isDexcomG5)
 				BackgroundFetch.checkMuted();
 		}
-
+		
 		
 		private static function notificationReceived(event:NotificationServiceEvent):void {
 			if (event != null) {
@@ -435,286 +435,18 @@ package services
 			myTrace("in checkAlarms");
 			var now:Date = new Date();
 			lastAlarmCheckTimeStamp = now.valueOf();
-			var listOfAlerts:FromtimeAndValueArrayCollection;
-			var alertValue:Number;
-			var alertName:String;
-			var alertType:AlertType;
 			
 			var lastbgreading:BgReading = BgReading.lastNoSensor();
 			if (lastbgreading != null) {
 				if (now.valueOf() - lastbgreading.timestamp < MAX_AGE_OF_READING_IN_MINUTES * 60 * 1000) {
-					//low alert
-					listOfAlerts = FromtimeAndValueArrayCollection.createList(
-						CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_LOW_ALERT));
-					alertValue = listOfAlerts.getValue(Number.NaN, "", now);
-					alertName = listOfAlerts.getAlarmName(Number.NaN, "", now);
-					alertType = Database.getAlertType(alertName);
-					if (alertType.enabled) {
-						//first check if snoozeperiod is passed, checking first for value would generate multiple alarms in case the sensor is unstable
-						if ((now.valueOf() - _lowAlertLatestSnoozeTimeInMs) > _lowAlertSnoozePeriodInMinutes * 60 * 1000
-							||
-							isNaN(_lowAlertLatestSnoozeTimeInMs)) {
-							myTrace("in checkAlarms, low alert not snoozed (anymore)");
-							//not snoozed
-							
-							if (alertValue > BgReading.lastNoSensor().calculatedValue) {
-								myTrace("in checkAlarms, reading is too low");
-								fireAlert(
-									alertType, 
-									NotificationService.ID_FOR_LOW_ALERT, 
-									ModelLocator.resourceManagerInstance.getString("alarmservice","low_alert_notification_alert_text"), 
-									ModelLocator.resourceManagerInstance.getString("alarmservice","low_alert_notification_alert_text"),
-									alertType.enableVibration,
-									alertType.enableLights,
-									NotificationService.ID_FOR_ALERT_LOW_CATEGORY
-								); 
-								_lowAlertLatestSnoozeTimeInMs = Number.NaN;
-								_lowAlertSnoozePeriodInMinutes = 0;
-							} else {
-								Notifications.service.cancel(NotificationService.ID_FOR_LOW_ALERT);
-							}
-						} else {
-							//snoozed no need to do anything
-							myTrace("in checkAlarms, alarm snoozed, _lowAlertLatestSnoozeTimeInMs = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date(_lowAlertLatestSnoozeTimeInMs)) + ", _lowAlertSnoozePeriodInMinutes = " + _lowAlertSnoozePeriodInMinutes + ", actual time = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date()));
-						}
-					} else {
-						//remove low notification, even if there isn't any
-						Notifications.service.cancel(NotificationService.ID_FOR_LOW_ALERT);
-						_lowAlertLatestSnoozeTimeInMs = Number.NaN;
-						_lowAlertLatestNotificationTime = Number.NaN;
-						_lowAlertSnoozePeriodInMinutes = 0;
-					}
-					
-					//high alert
-					listOfAlerts = FromtimeAndValueArrayCollection.createList(
-						CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_HIGH_ALERT));
-					alertValue = listOfAlerts.getValue(Number.NaN, "", now);
-					alertName = listOfAlerts.getAlarmName(Number.NaN, "", now);
-					alertType = Database.getAlertType(alertName);
-					if (alertType.enabled) {
-						//first check if snoozeperiod is passed, checking first for value would generate multiple alarms in case the sensor is unstable
-						if (((now).valueOf() - _highAlertLatestSnoozeTimeInMs) > _highAlertSnoozePeriodInMinutes * 60 * 1000
-							||
-							isNaN(_highAlertLatestSnoozeTimeInMs)) {
-							myTrace("in checkAlarms, high alert not snoozed (anymore)");
-							//not snoozed
-							
-							if (alertValue < BgReading.lastNoSensor().calculatedValue) {
-								myTrace("in checkAlarms, reading is too high");
-								fireAlert(
-									alertType, 
-									NotificationService.ID_FOR_HIGH_ALERT, 
-									ModelLocator.resourceManagerInstance.getString("alarmservice","high_alert_notification_alert_text"), 
-									ModelLocator.resourceManagerInstance.getString("alarmservice","high_alert_notification_alert_text"),
-									alertType.enableVibration,
-									alertType.enableLights,
-									NotificationService.ID_FOR_ALERT_HIGH_CATEGORY
-								); 
-								_highAlertLatestSnoozeTimeInMs = Number.NaN;
-								_highAlertSnoozePeriodInMinutes = 0;
-							} else {
-								Notifications.service.cancel(NotificationService.ID_FOR_HIGH_ALERT);
-							}
-						} else {
-							//snoozed no need to do anything
-							myTrace("in checkAlarms, alarm snoozed, _highAlertLatestSnoozeTimeInMs = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date(_highAlertLatestSnoozeTimeInMs)) + ", _highAlertSnoozePeriodInMinutes = " + _highAlertSnoozePeriodInMinutes + ", actual time = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date()));
-						}
-					} else {
-						//remove notification, even if there isn't any
-						Notifications.service.cancel(NotificationService.ID_FOR_HIGH_ALERT);
-						_highAlertLatestSnoozeTimeInMs = Number.NaN;
-						_highAlertLatestNotificationTime = Number.NaN;
-						_highAlertSnoozePeriodInMinutes = 0;
-					}
-					
-					//low battery alert
-					listOfAlerts = FromtimeAndValueArrayCollection.createList(
-						CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BATTERY_ALERT));
-					alertValue = listOfAlerts.getValue(Number.NaN, "", now);
-					alertName = listOfAlerts.getAlarmName(Number.NaN, "", now);
-					alertType = Database.getAlertType(alertName);
-					if (alertType.enabled) {
-						//first check if snoozeperiod is passed, checking first for value would generate multiple alarms in case the sensor is unstable
-						if (((now).valueOf() - _batteryLevelAlertLatestSnoozeTimeInMs) > _batteryLevelAlertSnoozePeriodInMinutes * 60 * 1000
-							||
-							isNaN(_batteryLevelAlertLatestSnoozeTimeInMs)) {
-							myTrace("in checkAlarms, batteryLevel alert not snoozed (anymore)");
-							//not snoozed
-							
-							if ((!BluetoothService.isDexcomG5 && (new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G4_TRANSMITTER_BATTERY_VOLTAGE)) < alertValue))
-								||
-								(BluetoothService.isDexcomG5 && (new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_VOLTAGEA)) < alertValue))) {
-								myTrace("in checkAlarms, battery level is too low");
-								fireAlert(
-									alertType, 
-									NotificationService.ID_FOR_BATTERY_ALERT, 
-									ModelLocator.resourceManagerInstance.getString("alarmservice","batteryLevel_alert_notification_alert_text"), 
-									ModelLocator.resourceManagerInstance.getString("alarmservice","batteryLevel_alert_notification_alert_text"),
-									alertType.enableVibration,
-									alertType.enableLights,
-									NotificationService.ID_FOR_ALERT_BATTERY_CATEGORY
-								); 
-								_batteryLevelAlertLatestSnoozeTimeInMs = Number.NaN;
-								_batteryLevelAlertSnoozePeriodInMinutes = 0;
-							} else {
-								Notifications.service.cancel(NotificationService.ID_FOR_BATTERY_ALERT);
-							}
-						} else {
-							//snoozed no need to do anything
-							myTrace("in checkAlarms, alarm snoozed, _batteryLevelAlertLatestSnoozeTimeInMs = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date(_batteryLevelAlertLatestSnoozeTimeInMs)) + ", _batteryLevelAlertSnoozePeriodInMinutes = " + _batteryLevelAlertSnoozePeriodInMinutes + ", actual time = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date()));
-						}
-					} else {
-						//remove notification, even if there isn't any
-						Notifications.service.cancel(NotificationService.ID_FOR_BATTERY_ALERT);
-						_batteryLevelAlertLatestSnoozeTimeInMs = Number.NaN;
-						_batteryLevelAlertLatestNotificationTime = Number.NaN;
-						_batteryLevelAlertSnoozePeriodInMinutes = 0;
+					if (!checkLowAlert(now)) {
+						checkHighAlert(now);
 					}
 				}
-				
-				//missed reading alert
-				listOfAlerts = FromtimeAndValueArrayCollection.createList(
-					CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_MISSED_READING_ALERT));
-				alertValue = listOfAlerts.getValue(Number.NaN, "", now);
-				alertName = listOfAlerts.getAlarmName(Number.NaN, "", now);
-				alertType = Database.getAlertType(alertName);
-				if (alertType.enabled) {
-					if (((now).valueOf() - _missedReadingAlertLatestSnoozeTimeInMs) > _missedReadingAlertSnoozePeriodInMinutes * 60 * 1000
-						||
-						isNaN(_missedReadingAlertLatestSnoozeTimeInMs)) {
-						myTrace("in checkAlarms, missed reading alert not snoozed (anymore), canceling any planned missed reading alert");
-						//not snoozed
-						//cance any planned alert because it's not snoozed and we actually received a reading
-						Notifications.service.cancel(NotificationService.ID_FOR_MISSED_READING_ALERT);
-						//check if missed reading alert is still enabled at the time it's supposed to fire
-						var dateOfFire:Date = new Date(now.valueOf() + alertValue * 60 * 1000);
-						var delay:int = alertValue * 60;
-						myTrace("in checkAlarms, calculated delay in minutes = " + delay/60);
-						if (be == null) {
-							var diffInSeconds:Number = (now.valueOf() - lastbgreading.timestamp)/1000;
-							delay = delay - diffInSeconds;
-							if (delay <= 0)
-								delay = 0;
-							myTrace("in checkAlarms, was triggered by performFetch, reducing delay with time since last bgreading, new delay value in minutes = " + delay/60);
-						}
-						if (Database.getAlertType(listOfAlerts.getAlarmName(Number.NaN, "", dateOfFire)).enabled) {
-							myTrace("in checkAlarms, missed reading planned with delay in minutes = " + delay/60);
-							latestAlertTypeUsedInMissedReadingNotification = alertType;
-							fireAlert(
-								alertType, 
-								NotificationService.ID_FOR_MISSED_READING_ALERT, 
-								ModelLocator.resourceManagerInstance.getString("alarmservice","missed_reading_alert_notification_alert"), 
-								ModelLocator.resourceManagerInstance.getString("alarmservice","missed_reading_alert_notification_alert"),
-								alertType.enableVibration,
-								alertType.enableLights,
-								NotificationService.ID_FOR_ALERT_MISSED_READING_CATEGORY,
-								delay
-							); 
-							_missedReadingAlertLatestSnoozeTimeInMs = Number.NaN;
-							_missedReadingAlertSnoozePeriodInMinutes = 0;
-						} else {
-							myTrace("in checkAlarms, current missed reading alert is enabled, but the time it's supposed to expire it is not enabled so not setting it");
-						}
-						
-					} else {
-						//snoozed no need to do anything
-						myTrace("in checkAlarms, missed reading snoozed, _missedReadingAlertLatestSnoozeTimeInMs = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date(_missedReadingAlertLatestSnoozeTimeInMs)) + ", _missedReadingAlertSnoozePeriodInMinutes = " + _missedReadingAlertSnoozePeriodInMinutes + ", actual time = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date()));
-					}
-				} else {// missed reading alert according to current time not enabled, but check if next period has the alert enabled
-					if (((now).valueOf() - _missedReadingAlertLatestSnoozeTimeInMs) > _missedReadingAlertSnoozePeriodInMinutes * 60 * 1000
-						||
-						isNaN(_missedReadingAlertLatestSnoozeTimeInMs)) {
-						myTrace("in checkAlarms, missed reading, current alert not enabled and also not snoozed, checking next alert");
-						//get the next alertname
-						alertName = listOfAlerts.getNextAlarmName(Number.NaN, "", now);
-						alertValue = listOfAlerts.getNextValue(Number.NaN, "", now);
-						alertType = Database.getAlertType(alertName);
-						if (alertType.enabled) {
-							myTrace("in checkAlarms, next alert is enabled");
-							var currentHourLocal:int = now.hours;
-							var currentMinuteLocal:int = now.minutes;
-							var currentSecondsLocal:int = now.seconds;
-							var currentTimeInSeconds:int = 3600 * currentHourLocal + 60 * currentMinuteLocal + currentSecondsLocal;
-							var fromTimeNextAlertInSeconds:int = listOfAlerts.getNextFromTime(Number.NaN, "", now);
-							var delay:int;
-							if (fromTimeNextAlertInSeconds > currentTimeInSeconds)
-								delay = fromTimeNextAlertInSeconds - currentTimeInSeconds;
-							else 
-								delay = 24 * 3600  - (currentTimeInSeconds - fromTimeNextAlertInSeconds);
-							if (delay < alertValue * 60)
-								delay = alertValue * 60;
-							myTrace("in checkAlarms, missed reading planned with delay in minutes = " + delay/60);
-							latestAlertTypeUsedInMissedReadingNotification = alertType;
-							fireAlert(
-								alertType, 
-								NotificationService.ID_FOR_MISSED_READING_ALERT, 
-								ModelLocator.resourceManagerInstance.getString("alarmservice","missed_reading_alert_notification_alert"), 
-								ModelLocator.resourceManagerInstance.getString("alarmservice","missed_reading_alert_notification_alert"),
-								alertType.enableVibration,
-								alertType.enableLights,
-								NotificationService.ID_FOR_ALERT_MISSED_READING_CATEGORY,
-								delay
-							); 
-							_missedReadingAlertLatestSnoozeTimeInMs = Number.NaN;
-							_missedReadingAlertSnoozePeriodInMinutes = 0;
-						} else {
-							//no need to set the notification, on the contrary just cancel any existing notification
-							myTrace("in checkAlarms, missed reading, snoozed, and current alert not enabled anymore, so canceling alert and resetting snooze");
-							Notifications.service.cancel(NotificationService.ID_FOR_MISSED_READING_ALERT);
-							_missedReadingAlertLatestSnoozeTimeInMs = Number.NaN;
-							_missedReadingAlertLatestNotificationTime = Number.NaN;
-							_missedReadingAlertSnoozePeriodInMinutes = 0;
-						}
-						
-					} else {
-						//snoozed no need to do anything
-						myTrace("in checkAlarms, missed reading snoozed, _missedReadingAlertLatestSnoozeTimeInMs = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date(_missedReadingAlertLatestSnoozeTimeInMs)) + ", _missedReadingAlertSnoozePeriodInMinutes = " + _missedReadingAlertSnoozePeriodInMinutes + ", actual time = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date()));
-					}
-				}
-				
-				//calibration request alert
-				listOfAlerts = FromtimeAndValueArrayCollection.createList(
-					CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CALIBRATION_REQUEST_ALERT));
-				alertValue = listOfAlerts.getValue(Number.NaN, "", now);
-				alertName = listOfAlerts.getAlarmName(Number.NaN, "", now);
-				alertType = Database.getAlertType(alertName);
-				if (alertType.enabled) {
-					if ((now.valueOf() - _calibrationRequestLatestSnoozeTimeInMs) > _calibrationRequestSnoozePeriodInMinutes * 60 * 1000
-						||
-						isNaN(_calibrationRequestLatestSnoozeTimeInMs)) {
-						myTrace("in checkAlarms, calibration request alert not snoozed (anymore)");
-						if (Calibration.last() != null && BgReading.last30Minutes().length >= 2) {
-							if (alertValue < ((now.valueOf() - Calibration.last().timestamp) / 1000 / 60 / 60)) {
-								myTrace("in checkAlarms, calibration is necessary");
-								fireAlert(
-									alertType, 
-									NotificationService.ID_FOR_CALIBRATION_REQUEST_ALERT, 
-									ModelLocator.resourceManagerInstance.getString("alarmservice","calibration_request_alert_notification_alert_title"), 
-									ModelLocator.resourceManagerInstance.getString("alarmservice","calibration_request_alert_notification_alert_title"),
-									alertType.enableVibration,
-									alertType.enableLights,
-									NotificationService.ID_FOR_ALERT_CALIBRATION_REQUEST_CATEGORY
-								); 
-								_calibrationRequestLatestSnoozeTimeInMs = Number.NaN;
-								_calibrationRequestSnoozePeriodInMinutes = 0;
-							} else {
-								Notifications.service.cancel(NotificationService.ID_FOR_CALIBRATION_REQUEST_ALERT);
-							}
-						} else {
-							Notifications.service.cancel(NotificationService.ID_FOR_CALIBRATION_REQUEST_ALERT);
-						}
-					} else {
-						//snoozed no need to do anything
-						myTrace("in checkAlarms, alarm snoozed, _calibrationRequestLatestSnoozeTimeInMs = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date(_calibrationRequestLatestSnoozeTimeInMs)) + ", _calibrationRequestSnoozePeriodInMinutes = " + _calibrationRequestSnoozePeriodInMinutes + ", actual time = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date()));
-					}
-				} else {
-					//remove calibration request notification, even if there isn't any						
-					Notifications.service.cancel(NotificationService.ID_FOR_CALIBRATION_REQUEST_ALERT);
-					_calibrationRequestLatestSnoozeTimeInMs = Number.NaN;
-					_calibrationRequestLatestNotificationTime = Number.NaN;
-					_lowAlertSnoozePeriodInMinutes = 0;
-				}
+				checkMissedReadingAlert(now, be == null, lastbgreading);
+				checkCalibrationRequestAlert(now);
 			}
+			checkBatteryLowAlert(now);
 		}
 		
 		private static function phoneMuted(event:BackgroundFetchEvent):void {
@@ -813,6 +545,322 @@ package services
 			}
 			Notifications.service.notify(notificationBuilder.build());
 		}
+		
+		private static function checkMissedReadingAlert(now:Date, triggeredByPerformFetch:Boolean, lastbgreading:BgReading):void {
+			var listOfAlerts:FromtimeAndValueArrayCollection;
+			var alertValue:Number;
+			var alertName:String;
+			var alertType:AlertType;
+			var delay:int;
+			
+			listOfAlerts = FromtimeAndValueArrayCollection.createList(
+				CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_MISSED_READING_ALERT));
+			alertValue = listOfAlerts.getValue(Number.NaN, "", now);
+			alertName = listOfAlerts.getAlarmName(Number.NaN, "", now);
+			alertType = Database.getAlertType(alertName);
+			if (alertType.enabled) {
+				if (((now).valueOf() - _missedReadingAlertLatestSnoozeTimeInMs) > _missedReadingAlertSnoozePeriodInMinutes * 60 * 1000
+					||
+					isNaN(_missedReadingAlertLatestSnoozeTimeInMs)) {
+					myTrace("in checkAlarms, missed reading alert not snoozed (anymore), canceling any planned missed reading alert");
+					//not snoozed
+					//cance any planned alert because it's not snoozed and we actually received a reading
+					Notifications.service.cancel(NotificationService.ID_FOR_MISSED_READING_ALERT);
+					//check if missed reading alert is still enabled at the time it's supposed to fire
+					var dateOfFire:Date = new Date(now.valueOf() + alertValue * 60 * 1000);
+					delay = alertValue * 60;
+					myTrace("in checkAlarms, calculated delay in minutes = " + delay/60);
+					if (triggeredByPerformFetch) {
+						var diffInSeconds:Number = (now.valueOf() - lastbgreading.timestamp)/1000;
+						delay = delay - diffInSeconds;
+						if (delay <= 0)
+							delay = 0;
+						myTrace("in checkAlarms, was triggered by performFetch, reducing delay with time since last bgreading, new delay value in minutes = " + delay/60);
+					}
+					if (Database.getAlertType(listOfAlerts.getAlarmName(Number.NaN, "", dateOfFire)).enabled) {
+						myTrace("in checkAlarms, missed reading planned with delay in minutes = " + delay/60);
+						latestAlertTypeUsedInMissedReadingNotification = alertType;
+						fireAlert(
+							alertType, 
+							NotificationService.ID_FOR_MISSED_READING_ALERT, 
+							ModelLocator.resourceManagerInstance.getString("alarmservice","missed_reading_alert_notification_alert"), 
+							ModelLocator.resourceManagerInstance.getString("alarmservice","missed_reading_alert_notification_alert"),
+							alertType.enableVibration,
+							alertType.enableLights,
+							NotificationService.ID_FOR_ALERT_MISSED_READING_CATEGORY,
+							delay
+						); 
+						_missedReadingAlertLatestSnoozeTimeInMs = Number.NaN;
+						_missedReadingAlertSnoozePeriodInMinutes = 0;
+					} else {
+						myTrace("in checkAlarms, current missed reading alert is enabled, but the time it's supposed to expire it is not enabled so not setting it");
+					}
+					
+				} else {
+					//snoozed no need to do anything
+					myTrace("in checkAlarms, missed reading snoozed, _missedReadingAlertLatestSnoozeTimeInMs = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date(_missedReadingAlertLatestSnoozeTimeInMs)) + ", _missedReadingAlertSnoozePeriodInMinutes = " + _missedReadingAlertSnoozePeriodInMinutes + ", actual time = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date()));
+				}
+			} else {// missed reading alert according to current time not enabled, but check if next period has the alert enabled
+				if (((now).valueOf() - _missedReadingAlertLatestSnoozeTimeInMs) > _missedReadingAlertSnoozePeriodInMinutes * 60 * 1000
+					||
+					isNaN(_missedReadingAlertLatestSnoozeTimeInMs)) {
+					myTrace("in checkAlarms, missed reading, current alert not enabled and also not snoozed, checking next alert");
+					//get the next alertname
+					alertName = listOfAlerts.getNextAlarmName(Number.NaN, "", now);
+					alertValue = listOfAlerts.getNextValue(Number.NaN, "", now);
+					alertType = Database.getAlertType(alertName);
+					if (alertType.enabled) {
+						myTrace("in checkAlarms, next alert is enabled");
+						var currentHourLocal:int = now.hours;
+						var currentMinuteLocal:int = now.minutes;
+						var currentSecondsLocal:int = now.seconds;
+						var currentTimeInSeconds:int = 3600 * currentHourLocal + 60 * currentMinuteLocal + currentSecondsLocal;
+						var fromTimeNextAlertInSeconds:int = listOfAlerts.getNextFromTime(Number.NaN, "", now);
+						if (fromTimeNextAlertInSeconds > currentTimeInSeconds)
+							delay = fromTimeNextAlertInSeconds - currentTimeInSeconds;
+						else 
+							delay = 24 * 3600  - (currentTimeInSeconds - fromTimeNextAlertInSeconds);
+						if (delay < alertValue * 60)
+							delay = alertValue * 60;
+						myTrace("in checkAlarms, missed reading planned with delay in minutes = " + delay/60);
+						latestAlertTypeUsedInMissedReadingNotification = alertType;
+						fireAlert(
+							alertType, 
+							NotificationService.ID_FOR_MISSED_READING_ALERT, 
+							ModelLocator.resourceManagerInstance.getString("alarmservice","missed_reading_alert_notification_alert"), 
+							ModelLocator.resourceManagerInstance.getString("alarmservice","missed_reading_alert_notification_alert"),
+							alertType.enableVibration,
+							alertType.enableLights,
+							NotificationService.ID_FOR_ALERT_MISSED_READING_CATEGORY,
+							delay
+						); 
+						_missedReadingAlertLatestSnoozeTimeInMs = Number.NaN;
+						_missedReadingAlertSnoozePeriodInMinutes = 0;
+					} else {
+						//no need to set the notification, on the contrary just cancel any existing notification
+						myTrace("in checkAlarms, missed reading, snoozed, and current alert not enabled anymore, so canceling alert and resetting snooze");
+						Notifications.service.cancel(NotificationService.ID_FOR_MISSED_READING_ALERT);
+						_missedReadingAlertLatestSnoozeTimeInMs = Number.NaN;
+						_missedReadingAlertLatestNotificationTime = Number.NaN;
+						_missedReadingAlertSnoozePeriodInMinutes = 0;
+					}
+					
+				} else {
+					//snoozed no need to do anything
+					myTrace("in checkAlarms, missed reading snoozed, _missedReadingAlertLatestSnoozeTimeInMs = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date(_missedReadingAlertLatestSnoozeTimeInMs)) + ", _missedReadingAlertSnoozePeriodInMinutes = " + _missedReadingAlertSnoozePeriodInMinutes + ", actual time = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date()));
+				}
+			}
+		}
+		
+		private static function checkCalibrationRequestAlert(now:Date):void {
+			var listOfAlerts:FromtimeAndValueArrayCollection;
+			var alertValue:Number;
+			var alertName:String;
+			var alertType:AlertType;
+			
+			listOfAlerts = FromtimeAndValueArrayCollection.createList(
+				CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CALIBRATION_REQUEST_ALERT));
+			alertValue = listOfAlerts.getValue(Number.NaN, "", now);
+			alertName = listOfAlerts.getAlarmName(Number.NaN, "", now);
+			alertType = Database.getAlertType(alertName);
+			if (alertType.enabled) {
+				if ((now.valueOf() - _calibrationRequestLatestSnoozeTimeInMs) > _calibrationRequestSnoozePeriodInMinutes * 60 * 1000
+					||
+					isNaN(_calibrationRequestLatestSnoozeTimeInMs)) {
+					myTrace("in checkAlarms, calibration request alert not snoozed (anymore)");
+					if (Calibration.last() != null && BgReading.last30Minutes().length >= 2) {
+						if (alertValue < ((now.valueOf() - Calibration.last().timestamp) / 1000 / 60 / 60)) {
+							myTrace("in checkAlarms, calibration is necessary");
+							fireAlert(
+								alertType, 
+								NotificationService.ID_FOR_CALIBRATION_REQUEST_ALERT, 
+								ModelLocator.resourceManagerInstance.getString("alarmservice","calibration_request_alert_notification_alert_title"), 
+								ModelLocator.resourceManagerInstance.getString("alarmservice","calibration_request_alert_notification_alert_title"),
+								alertType.enableVibration,
+								alertType.enableLights,
+								NotificationService.ID_FOR_ALERT_CALIBRATION_REQUEST_CATEGORY
+							); 
+							_calibrationRequestLatestSnoozeTimeInMs = Number.NaN;
+							_calibrationRequestSnoozePeriodInMinutes = 0;
+						} else {
+							Notifications.service.cancel(NotificationService.ID_FOR_CALIBRATION_REQUEST_ALERT);
+						}
+					} else {
+						Notifications.service.cancel(NotificationService.ID_FOR_CALIBRATION_REQUEST_ALERT);
+					}
+				} else {
+					//snoozed no need to do anything
+					myTrace("in checkAlarms, alarm snoozed, _calibrationRequestLatestSnoozeTimeInMs = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date(_calibrationRequestLatestSnoozeTimeInMs)) + ", _calibrationRequestSnoozePeriodInMinutes = " + _calibrationRequestSnoozePeriodInMinutes + ", actual time = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date()));
+				}
+			} else {
+				//remove calibration request notification, even if there isn't any						
+				Notifications.service.cancel(NotificationService.ID_FOR_CALIBRATION_REQUEST_ALERT);
+				_calibrationRequestLatestSnoozeTimeInMs = Number.NaN;
+				_calibrationRequestLatestNotificationTime = Number.NaN;
+				_lowAlertSnoozePeriodInMinutes = 0;
+			}
+		}
+		
+		/**
+		 * returns true of alarm fired
+		 */private static function checkBatteryLowAlert(now:Date):Boolean {
+			 var listOfAlerts:FromtimeAndValueArrayCollection;
+			 var alertValue:Number;
+			 var alertName:String;
+			 var alertType:AlertType;
+			 var returnValue:Boolean = false;
+			 
+			 listOfAlerts = FromtimeAndValueArrayCollection.createList(
+				 CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BATTERY_ALERT));
+			 alertValue = listOfAlerts.getValue(Number.NaN, "", now);
+			 alertName = listOfAlerts.getAlarmName(Number.NaN, "", now);
+			 alertType = Database.getAlertType(alertName);
+			 if (alertType.enabled) {
+				 //first check if snoozeperiod is passed, checking first for value would generate multiple alarms in case the sensor is unstable
+				 if (((now).valueOf() - _batteryLevelAlertLatestSnoozeTimeInMs) > _batteryLevelAlertSnoozePeriodInMinutes * 60 * 1000
+					 ||
+					 isNaN(_batteryLevelAlertLatestSnoozeTimeInMs)) {
+					 myTrace("in checkAlarms, batteryLevel alert not snoozed (anymore)");
+					 //not snoozed
+					 
+					 if ((!BluetoothService.isDexcomG5 && (new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G4_TRANSMITTER_BATTERY_VOLTAGE)) < alertValue))
+						 ||
+						 (BluetoothService.isDexcomG5 && (new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_VOLTAGEA)) < alertValue))) {
+						 myTrace("in checkAlarms, battery level is too low");
+						 fireAlert(
+							 alertType, 
+							 NotificationService.ID_FOR_BATTERY_ALERT, 
+							 ModelLocator.resourceManagerInstance.getString("alarmservice","batteryLevel_alert_notification_alert_text"), 
+							 ModelLocator.resourceManagerInstance.getString("alarmservice","batteryLevel_alert_notification_alert_text"),
+							 alertType.enableVibration,
+							 alertType.enableLights,
+							 NotificationService.ID_FOR_ALERT_BATTERY_CATEGORY
+						 ); 
+						 _batteryLevelAlertLatestSnoozeTimeInMs = Number.NaN;
+						 _batteryLevelAlertSnoozePeriodInMinutes = 0;
+						 returnValue = true;
+					 } else {
+						 Notifications.service.cancel(NotificationService.ID_FOR_BATTERY_ALERT);
+					 }
+				 } else {
+					 //snoozed no need to do anything
+					 myTrace("in checkAlarms, alarm snoozed, _batteryLevelAlertLatestSnoozeTimeInMs = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date(_batteryLevelAlertLatestSnoozeTimeInMs)) + ", _batteryLevelAlertSnoozePeriodInMinutes = " + _batteryLevelAlertSnoozePeriodInMinutes + ", actual time = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date()));
+				 }
+			 } else {
+				 //remove notification, even if there isn't any
+				 Notifications.service.cancel(NotificationService.ID_FOR_BATTERY_ALERT);
+				 _batteryLevelAlertLatestSnoozeTimeInMs = Number.NaN;
+				 _batteryLevelAlertLatestNotificationTime = Number.NaN;
+				 _batteryLevelAlertSnoozePeriodInMinutes = 0;
+			 }
+			 return returnValue;
+		 }
+		
+		/**
+		 * returns true of alarm fired
+		 */private static function checkHighAlert(now:Date):Boolean {
+			 var listOfAlerts:FromtimeAndValueArrayCollection;
+			 var alertValue:Number;
+			 var alertName:String;
+			 var alertType:AlertType;
+			 var returnValue:Boolean = false;
+			 
+			 listOfAlerts = FromtimeAndValueArrayCollection.createList(
+				 CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_HIGH_ALERT));
+			 alertValue = listOfAlerts.getValue(Number.NaN, "", now);
+			 alertName = listOfAlerts.getAlarmName(Number.NaN, "", now);
+			 alertType = Database.getAlertType(alertName);
+			 if (alertType.enabled) {
+				 //first check if snoozeperiod is passed, checking first for value would generate multiple alarms in case the sensor is unstable
+				 if (((now).valueOf() - _highAlertLatestSnoozeTimeInMs) > _highAlertSnoozePeriodInMinutes * 60 * 1000
+					 ||
+					 isNaN(_highAlertLatestSnoozeTimeInMs)) {
+					 myTrace("in checkAlarms, high alert not snoozed (anymore)");
+					 //not snoozed
+					 
+					 if (alertValue < BgReading.lastNoSensor().calculatedValue) {
+						 myTrace("in checkAlarms, reading is too high");
+						 fireAlert(
+							 alertType, 
+							 NotificationService.ID_FOR_HIGH_ALERT, 
+							 ModelLocator.resourceManagerInstance.getString("alarmservice","high_alert_notification_alert_text"), 
+							 ModelLocator.resourceManagerInstance.getString("alarmservice","high_alert_notification_alert_text"),
+							 alertType.enableVibration,
+							 alertType.enableLights,
+							 NotificationService.ID_FOR_ALERT_HIGH_CATEGORY
+						 ); 
+						 _highAlertLatestSnoozeTimeInMs = Number.NaN;
+						 _highAlertSnoozePeriodInMinutes = 0;
+						 returnValue = true;
+					 } else {
+						 Notifications.service.cancel(NotificationService.ID_FOR_HIGH_ALERT);
+					 }
+				 } else {
+					 //snoozed no need to do anything
+					 myTrace("in checkAlarms, alarm snoozed, _highAlertLatestSnoozeTimeInMs = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date(_highAlertLatestSnoozeTimeInMs)) + ", _highAlertSnoozePeriodInMinutes = " + _highAlertSnoozePeriodInMinutes + ", actual time = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date()));
+				 }
+			 } else {
+				 //remove notification, even if there isn't any
+				 Notifications.service.cancel(NotificationService.ID_FOR_HIGH_ALERT);
+				 _highAlertLatestSnoozeTimeInMs = Number.NaN;
+				 _highAlertLatestNotificationTime = Number.NaN;
+				 _highAlertSnoozePeriodInMinutes = 0;
+			 }
+			 return returnValue;
+		 }
+		
+		/**
+		 * returns true of alarm fired
+		 */private static function checkLowAlert(now:Date):Boolean {
+			 var listOfAlerts:FromtimeAndValueArrayCollection;
+			 var alertValue:Number;
+			 var alertName:String;
+			 var alertType:AlertType;
+			 var returnValue:Boolean = false;
+			 
+			 listOfAlerts = FromtimeAndValueArrayCollection.createList(
+				 CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_LOW_ALERT));
+			 alertValue = listOfAlerts.getValue(Number.NaN, "", now);
+			 alertName = listOfAlerts.getAlarmName(Number.NaN, "", now);
+			 alertType = Database.getAlertType(alertName);
+			 if (alertType.enabled) {
+				 //first check if snoozeperiod is passed, checking first for value would generate multiple alarms in case the sensor is unstable
+				 if ((now.valueOf() - _lowAlertLatestSnoozeTimeInMs) > _lowAlertSnoozePeriodInMinutes * 60 * 1000
+					 ||
+					 isNaN(_lowAlertLatestSnoozeTimeInMs)) {
+					 myTrace("in checkAlarms, low alert not snoozed (anymore)");
+					 //not snoozed
+					 
+					 if (alertValue > BgReading.lastNoSensor().calculatedValue) {
+						 myTrace("in checkAlarms, reading is too low");
+						 fireAlert(
+							 alertType, 
+							 NotificationService.ID_FOR_LOW_ALERT, 
+							 ModelLocator.resourceManagerInstance.getString("alarmservice","low_alert_notification_alert_text"), 
+							 ModelLocator.resourceManagerInstance.getString("alarmservice","low_alert_notification_alert_text"),
+							 alertType.enableVibration,
+							 alertType.enableLights,
+							 NotificationService.ID_FOR_ALERT_LOW_CATEGORY
+						 ); 
+						 _lowAlertLatestSnoozeTimeInMs = Number.NaN;
+						 _lowAlertSnoozePeriodInMinutes = 0;
+						 returnValue = true;
+					 } else {
+						 Notifications.service.cancel(NotificationService.ID_FOR_LOW_ALERT);
+					 }
+				 } else {
+					 //snoozed no need to do anything
+					 myTrace("in checkAlarms, alarm snoozed, _lowAlertLatestSnoozeTimeInMs = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date(_lowAlertLatestSnoozeTimeInMs)) + ", _lowAlertSnoozePeriodInMinutes = " + _lowAlertSnoozePeriodInMinutes + ", actual time = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date()));
+				 }
+			 } else {
+				 //remove low notification, even if there isn't any
+				 Notifications.service.cancel(NotificationService.ID_FOR_LOW_ALERT);
+				 _lowAlertLatestSnoozeTimeInMs = Number.NaN;
+				 _lowAlertLatestNotificationTime = Number.NaN;
+				 _lowAlertSnoozePeriodInMinutes = 0;
+			 }
+			 return returnValue;
+		 }
 		
 		private static function myTrace(log:String):void {
 			Trace.myTrace("AlarmService.as", log);
