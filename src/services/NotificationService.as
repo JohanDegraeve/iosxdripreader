@@ -32,6 +32,8 @@ package services
 	import flash.events.Event;
 	import flash.events.EventDispatcher;
 	
+	import spark.components.TabbedViewNavigator;
+	
 	import Utilities.BgGraphBuilder;
 	import Utilities.Trace;
 	
@@ -288,6 +290,8 @@ package services
 					case ApplicationStateEvent.CODE_HOME:
 						myTrace("NotificationService.as, setting ModelLocator.isInForeground = false");
 						ModelLocator.isInForeground = false;
+						myTrace("NotificationService.as, setting active window to Home screen");
+						(ModelLocator.navigator.parentNavigator as TabbedViewNavigator).selectedIndex = 0;
 					break;
 				}
 			}

@@ -104,6 +104,10 @@ package databaseclasses
 		public static const LOCAL_SETTING_FROM_TIME_AND_VALUE_ELEMENT_VIEW_VALUE_INFO_GIVEN:int = 16;
 		public static const LOCAL_SETTING_LOW_BATTERY_WARNING_GIVEN:int = 17;
 		public static const LOCAL_SETTING_CALIBRATION_REQUEST_ALERT_WARNING_GIVEN:int = 18;
+		/**
+		 * latest application version. First time introduced is version 0.0.46, that's why it's the default value
+		 */
+		public static const LOCAL_SETTING_APPLICATION_VERSION:int = 19;
 		
 		private static var localSettings:Array = [
 			"false",//LOCAL_SETTING_DETAILED_TRACING_ENABLED
@@ -124,7 +128,8 @@ package databaseclasses
 			"",//LOCAL_SETTING_TRACE_FILE_PATH_NAME
 			"false",//LOCAL_SETTING_FROM_TIME_AND_VALUE_ELEMENT_VIEW_VALUE_INFO_GIVEN
 			"false",//LOCAL_SETTING_LOW_BATTERY_WARNING_GIVEN
-			"false"//LOCAL_SETTING_CALIBRATION_REQUEST_ALERT_WARNING_GIVEN
+			"false",//LOCAL_SETTING_CALIBRATION_REQUEST_ALERT_WARNING_GIVEN
+			"0.0.46"//LOCAL_SETTING_APPLICATION_VERSION
 		];
 		
 		public function LocalSettings() {

@@ -95,6 +95,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			
 			protected function view1_creationCompleteHandler(event:FlexEvent):void
 			{
+				//ModelLocator.navigator = navigator;
 				thisView = this;
 				back_label = resourceManager.getString('general','back');
 				if (data.title)

@@ -14,9 +14,9 @@ package services
 	import flash.events.Event;
 	import flash.events.EventDispatcher;
 	
-	import G4Model.TransmitterStatus;
-	
-	import G5Model.TransmitterStatus;
+	import spark.components.TabbedViewNavigator;
+	import spark.components.ViewNavigator;
+	import spark.transitions.FlipViewTransition;
 	
 	import Utilities.DateTimeUtilities;
 	import Utilities.FromtimeAndValueArrayCollection;
@@ -33,6 +33,8 @@ package services
 	import events.TransmitterServiceEvent;
 	
 	import model.ModelLocator;
+	
+	import views.PickerView;
 	
 	public class AlarmService extends EventDispatcher
 	{
@@ -178,14 +180,20 @@ package services
 		
 		
 		private static function notificationReceived(event:NotificationServiceEvent):void {
+			myTrace("in notificationReceived");
 			if (event != null) {
 				var listOfAlerts:FromtimeAndValueArrayCollection;
 				var alertName:String ;
 				var alertType:AlertType;
 				var index:int;
-				var snoozePeriodPicker:DialogView;
-				
+				var flipTrans:FlipViewTransition = new FlipViewTransition(); 
+				flipTrans.duration = 0;
+	
+				(ModelLocator.navigator.parentNavigator as TabbedViewNavigator).selectedIndex = 0;
+				//((ModelLocator.navigator.parentNavigator as TabbedViewNavigator).navigators[0] as ViewNavigator).popToFirstView();
+
 				var notificationEvent:NotificationEvent = event.data as NotificationEvent;
+				myTrace("in notificationReceived, event != null, id = " + notificationEvent.id);
 				if (notificationEvent.id == NotificationService.ID_FOR_LOW_ALERT) {
 					listOfAlerts = FromtimeAndValueArrayCollection.createList(
 						CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_LOW_ALERT));
@@ -201,19 +209,24 @@ package services
 						}
 					}
 					if (notificationEvent.identifier == null) {
-						snoozePeriodPicker = Dialog.service.create(
+						var snoozePeriodPicker1:DialogView;
+						snoozePeriodPicker1 = Dialog.service.create(
 							new PickerDialogBuilder()
-							.setTitle(ModelLocator.resourceManagerInstance.getString('alarmservice', 'snooze_picker_title'))
+							.setTitle("")
 							.setCancelLabel(ModelLocator.resourceManagerInstance.getString("general","cancel"))
 							.setAcceptLabel("Ok")
 							.addColumn( snoozeValueStrings, index )
 							.build()
 						);
-						snoozePeriodPicker.addEventListener( DialogViewEvent.CLOSED, lowSnoozePicker_closedHandler );
-						snoozePeriodPicker.show();
+						snoozePeriodPicker1.addEventListener( DialogViewEvent.CLOSED, lowSnoozePicker_closedHandler );
+						var dataToSend:Object = new Object();
+						dataToSend.picker = snoozePeriodPicker1;
+						dataToSend.pickertext = ModelLocator.resourceManagerInstance.getString("alarmservice","snooze_text_low_alert");
+						myTrace("adding PickerView");
+						ModelLocator.navigator.pushView(PickerView, dataToSend, null, flipTrans);
 					} else if (notificationEvent.identifier == NotificationService.ID_FOR_LOW_ALERT_SNOOZE_IDENTIFIER) {
 						_lowAlertSnoozePeriodInMinutes = alertType.defaultSnoozePeriodInMinutes;
-						myTrace("in notificationReceived with id = ID_FOR_LOW_ALERT, snoozing the notification for " + _lowAlertSnoozePeriodInMinutes + "minutes");
+						myTrace("in notificationReceived with id = ID_FOR_LOW_ALERT, snoozing the notification for " + _lowAlertSnoozePeriodInMinutes + " minutes");
 						_lowAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
 					}
 				} else if (notificationEvent.id == NotificationService.ID_FOR_HIGH_ALERT) {
@@ -231,16 +244,20 @@ package services
 						}
 					}
 					if (notificationEvent.identifier == null) {
-						snoozePeriodPicker = Dialog.service.create(
+						var snoozePeriodPicker2:DialogView;
+						snoozePeriodPicker2 = Dialog.service.create(
 							new PickerDialogBuilder()
-							.setTitle(ModelLocator.resourceManagerInstance.getString('alarmservice', 'snooze_picker_title'))
+							.setTitle("")
 							.setCancelLabel(ModelLocator.resourceManagerInstance.getString("general","cancel"))
 							.setAcceptLabel("Ok")
 							.addColumn( snoozeValueStrings, index )
 							.build()
 						);
-						snoozePeriodPicker.addEventListener( DialogViewEvent.CLOSED, highSnoozePicker_closedHandler );
-						snoozePeriodPicker.show();
+						snoozePeriodPicker2.addEventListener( DialogViewEvent.CLOSED, highSnoozePicker_closedHandler );
+						var dataToSend:Object = new Object();
+						dataToSend.picker = snoozePeriodPicker2;
+						dataToSend.pickertext = ModelLocator.resourceManagerInstance.getString("alarmservice","snooze_text_high_alert");
+						ModelLocator.navigator.pushView(PickerView, dataToSend, null, flipTrans);
 					} else if (notificationEvent.identifier == NotificationService.ID_FOR_HIGH_ALERT_SNOOZE_IDENTIFIER) {
 						_highAlertSnoozePeriodInMinutes = alertType.defaultSnoozePeriodInMinutes;
 						myTrace("in notificationReceived with id = ID_FOR_HIGH_ALERT, snoozing the notification for " + _highAlertSnoozePeriodInMinutes + " minutes");
@@ -261,19 +278,23 @@ package services
 						}
 					}
 					if (notificationEvent.identifier == null) {
-						snoozePeriodPicker = Dialog.service.create(
+						var snoozePeriodPicker3:DialogView;
+						snoozePeriodPicker3 = Dialog.service.create(
 							new PickerDialogBuilder()
-							.setTitle(ModelLocator.resourceManagerInstance.getString('alarmservice', 'snooze_picker_title'))
+							.setTitle("")
 							.setCancelLabel(ModelLocator.resourceManagerInstance.getString("general","cancel"))
 							.setAcceptLabel("Ok")
 							.addColumn( snoozeValueStrings, index )
 							.build()
 						);
-						snoozePeriodPicker.addEventListener( DialogViewEvent.CLOSED, missedReadingSnoozePicker_closedHandler );
-						snoozePeriodPicker.show();
+						snoozePeriodPicker3.addEventListener( DialogViewEvent.CLOSED, missedReadingSnoozePicker_closedHandler );
+						var dataToSend:Object = new Object();
+						dataToSend.picker = snoozePeriodPicker3;
+						dataToSend.pickertext = ModelLocator.resourceManagerInstance.getString("alarmservice","snooze_text_missed_reading_alert");
+						ModelLocator.navigator.pushView(PickerView, dataToSend, null, flipTrans);
 					} else if (notificationEvent.identifier == NotificationService.ID_FOR_MISSED_READING_ALERT_SNOOZE_IDENTIFIER) {
 						_missedReadingAlertSnoozePeriodInMinutes = alertType.defaultSnoozePeriodInMinutes;
-						myTrace("in notificationReceived with id = ID_FOR_MISSED_READING_ALERT, snoozing the notification for " + _missedReadingAlertSnoozePeriodInMinutes);
+						myTrace("in notificationReceived with id = ID_FOR_MISSED_READING_ALERT, snoozing the notification for " + _missedReadingAlertSnoozePeriodInMinutes + " minutes");
 						_missedReadingAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
 					}
 				} else if (notificationEvent.id == NotificationService.ID_FOR_PHONEMUTED_ALERT) {
@@ -291,19 +312,23 @@ package services
 						}
 					}
 					if (notificationEvent.identifier == null) {
-						snoozePeriodPicker = Dialog.service.create(
+						var snoozePeriodPicker4:DialogView;
+						snoozePeriodPicker4 = Dialog.service.create(
 							new PickerDialogBuilder()
-							.setTitle(ModelLocator.resourceManagerInstance.getString('alarmservice', 'snooze_picker_title'))
+							.setTitle("")
 							.setCancelLabel(ModelLocator.resourceManagerInstance.getString("general","cancel"))
 							.setAcceptLabel("Ok")
 							.addColumn( snoozeValueStrings, index )
 							.build()
 						);
-						snoozePeriodPicker.addEventListener( DialogViewEvent.CLOSED, phoneMutedSnoozePicker_closedHandler );
-						snoozePeriodPicker.show();
+						snoozePeriodPicker4.addEventListener( DialogViewEvent.CLOSED, phoneMutedSnoozePicker_closedHandler );
+						var dataToSend:Object = new Object();
+						dataToSend.picker = snoozePeriodPicker4;
+						dataToSend.pickertext = ModelLocator.resourceManagerInstance.getString("alarmservice","snooze_text_phone_muted_alert");
+						ModelLocator.navigator.pushView(PickerView, dataToSend, null, flipTrans);
 					} else if (notificationEvent.identifier == NotificationService.ID_FOR_PHONE_MUTED_SNOOZE_IDENTIFIER) {
 						_phoneMutedAlertSnoozePeriodInMinutes = alertType.defaultSnoozePeriodInMinutes;
-						myTrace("in notificationReceived with id = ID_FOR_PHONEMUTED_ALERT, snoozing the notification for " + _phoneMutedAlertSnoozePeriodInMinutes);
+						myTrace("in notificationReceived with id = ID_FOR_PHONEMUTED_ALERT, snoozing the notification for " + _phoneMutedAlertSnoozePeriodInMinutes + " minutes");
 						_phoneMutedAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
 					}
 				} else if (notificationEvent.id == NotificationService.ID_FOR_BATTERY_ALERT) {
@@ -321,19 +346,23 @@ package services
 						}
 					}
 					if (notificationEvent.identifier == null) {
-						snoozePeriodPicker = Dialog.service.create(
+						var snoozePeriodPicker4:DialogView;
+						snoozePeriodPicker4 = Dialog.service.create(
 							new PickerDialogBuilder()
-							.setTitle(ModelLocator.resourceManagerInstance.getString('alarmservice', 'snooze_picker_title'))
+							.setTitle("")
 							.setCancelLabel(ModelLocator.resourceManagerInstance.getString("general","cancel"))
 							.setAcceptLabel("Ok")
 							.addColumn( snoozeValueStrings, index )
 							.build()
 						);
-						snoozePeriodPicker.addEventListener( DialogViewEvent.CLOSED, batteryLevelSnoozePicker_closedHandler );
-						snoozePeriodPicker.show();
+						snoozePeriodPicker4.addEventListener( DialogViewEvent.CLOSED, batteryLevelSnoozePicker_closedHandler );
+						var dataToSend:Object = new Object();
+						dataToSend.picker = snoozePeriodPicker4;
+						dataToSend.pickertext = ModelLocator.resourceManagerInstance.getString("alarmservice","snooze_text_battery_alert");
+						ModelLocator.navigator.pushView(PickerView, dataToSend, null, flipTrans);
 					} else if (notificationEvent.identifier == NotificationService.ID_FOR_BATTERY_LEVEL_ALERT_SNOOZE_IDENTIFIER) {
 						_batteryLevelAlertSnoozePeriodInMinutes = alertType.defaultSnoozePeriodInMinutes;
-						myTrace("in notificationReceived with id = ID_FOR_BATTERY_ALERT, snoozing the notification for " + _batteryLevelAlertSnoozePeriodInMinutes);
+						myTrace("in notificationReceived with id = ID_FOR_BATTERY_ALERT, snoozing the notification for " + _batteryLevelAlertSnoozePeriodInMinutes + " minutes");
 						_batteryLevelAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
 					}
 				} else if (notificationEvent.id == NotificationService.ID_FOR_CALIBRATION_REQUEST_ALERT) {
@@ -351,44 +380,48 @@ package services
 						}
 					}
 					if (notificationEvent.identifier == null) {
-						snoozePeriodPicker = Dialog.service.create(
+						var snoozePeriodPicker5:DialogView;
+						snoozePeriodPicker5 = Dialog.service.create(
 							new PickerDialogBuilder()
-							.setTitle(ModelLocator.resourceManagerInstance.getString('alarmservice', 'snooze_picker_title'))
+							.setTitle("")
 							.setCancelLabel(ModelLocator.resourceManagerInstance.getString("general","cancel"))
 							.setAcceptLabel("Ok")
 							.addColumn( snoozeValueStrings, index )
 							.build()
 						);
-						snoozePeriodPicker.addEventListener( DialogViewEvent.CLOSED, calibrationRequestSnoozePicker_closedHandler );
-						snoozePeriodPicker.show();
+						snoozePeriodPicker5.addEventListener( DialogViewEvent.CLOSED, calibrationRequestSnoozePicker_closedHandler );
+						var dataToSend:Object = new Object();
+						dataToSend.picker = snoozePeriodPicker5;
+						dataToSend.pickertext = ModelLocator.resourceManagerInstance.getString("alarmservice","snooze_text_calibration_alert");
+						ModelLocator.navigator.pushView(PickerView, dataToSend, null, flipTrans);
 					} else if (notificationEvent.identifier == NotificationService.ID_FOR_CALIBRATION_REQUEST_ALERT_SNOOZE_IDENTIFIER) {
 						_calibrationRequestSnoozePeriodInMinutes = alertType.defaultSnoozePeriodInMinutes;
-						myTrace("in notificationReceived with id = ID_FOR_CALIBRATION_REQUEST_ALERT, snoozing the notification for " + _calibrationRequestSnoozePeriodInMinutes);
+						myTrace("in notificationReceived with id = ID_FOR_CALIBRATION_REQUEST_ALERT, snoozing the notification for " + _calibrationRequestSnoozePeriodInMinutes + " minutes");
 						_calibrationRequestLatestSnoozeTimeInMs = (new Date()).valueOf();
 					}
 				}
 			}
 			
 			function calibrationRequestSnoozePicker_closedHandler(event:DialogViewEvent): void {
-				myTrace("in calibrationRequestSnoozePicker_closedHandler snoozing the notification for " + snoozeValueStrings[event.indexes[0]]);
+				myTrace("in calibrationRequestSnoozePicker_closedHandler snoozing the notification for " + snoozeValueStrings[event.indexes[0]] + " minutes");
 				_calibrationRequestSnoozePeriodInMinutes = snoozeValueMinutes[event.indexes[0]];
 				_calibrationRequestLatestSnoozeTimeInMs = (new Date()).valueOf();
 			}
 			
 			function batteryLevelSnoozePicker_closedHandler(event:DialogViewEvent): void {
-				myTrace("in batteryLevelSnoozePicker_closedHandler snoozing the notification for " + snoozeValueStrings[event.indexes[0]]);
+				myTrace("in batteryLevelSnoozePicker_closedHandler snoozing the notification for " + snoozeValueStrings[event.indexes[0]] + " minutes");
 				_batteryLevelAlertSnoozePeriodInMinutes = snoozeValueMinutes[event.indexes[0]];
 				_batteryLevelAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
 			}
 			
 			function phoneMutedSnoozePicker_closedHandler(event:DialogViewEvent): void {
-				myTrace("in phoneMutedSnoozePicker_closedHandler snoozing the notification for " + snoozeValueStrings[event.indexes[0]]);
+				myTrace("in phoneMutedSnoozePicker_closedHandler snoozing the notification for " + snoozeValueStrings[event.indexes[0]] + " minutes");
 				_phoneMutedAlertSnoozePeriodInMinutes = snoozeValueMinutes[event.indexes[0]];
 				_phoneMutedAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
 			}
 			
 			function missedReadingSnoozePicker_closedHandler(event:DialogViewEvent): void {
-				myTrace("in missedReadingSnoozePicker_closedHandler snoozing the notification for " + snoozeValueStrings[event.indexes[0]]);
+				myTrace("in missedReadingSnoozePicker_closedHandler snoozing the notification for " + snoozeValueStrings[event.indexes[0]] + " minutes");
 				_missedReadingAlertSnoozePeriodInMinutes = snoozeValueMinutes[event.indexes[0]];
 				_missedReadingAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
 				myTrace("in missedReadingSnoozePicker_closedHandler planning a new notification of the same type with delay in minues " + _missedReadingAlertSnoozePeriodInMinutes);
