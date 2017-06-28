@@ -112,6 +112,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			 * 
 			 */
 			protected function view1_creationCompleteHandler(event:FlexEvent):void {
+				//ModelLocator.navigator = navigator;
 				back_label = ModelLocator.resourceManagerInstance.getString('general','back');
 				valueGroupLabelIdforValue.text = ModelLocator.resourceManagerInstance.getString('fromtimeandvalueelementview','value');
 				alarmNameGroupLabelIdforAlarmName.text = ModelLocator.resourceManagerInstance.getString('fromtimeandvalueelementview','alarmname');

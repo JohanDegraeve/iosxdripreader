@@ -3,6 +3,7 @@
 		actionBarVisible="true"
 		initialize="onInitialize()"
 		destructionPolicy="never"
+		creationComplete="view1_creationCompleteHandler(event)"
 		xmlns:s="library://ns.adobe.com/flex/spark" >
 	<fx:Script>
 		<![CDATA[
@@ -13,6 +14,8 @@
 			import com.distriqt.extension.dialog.objects.DialogAction;
 			import com.hurlant.crypto.hash.SHA1;
 			import com.hurlant.util.Hex;
+			
+			import mx.events.FlexEvent;
 			
 			import spark.primitives.Rect;
 			
@@ -624,6 +627,11 @@
 					rect41.color = uint("0x212121");//calibration request alert
 					rect42.color = uint("0x212121");//calibration request alert
 				}
+			}
+			
+			protected function view1_creationCompleteHandler(event:FlexEvent):void
+			{
+				//ModelLocator.navigator = navigator;
 			}
 			
 		]]>

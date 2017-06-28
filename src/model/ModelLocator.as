@@ -31,6 +31,7 @@ package model
 	import spark.collections.Sort;
 	import spark.collections.SortField;
 	import spark.components.Image;
+	import spark.components.ViewNavigator;
 	import spark.core.ContentCache;
 	
 	import databaseclasses.BgReading;
@@ -129,6 +130,8 @@ package model
 		{
 			return _appStartTimestamp;
 		}
+		
+		public static var navigator:ViewNavigator;
 		
 		public function ModelLocator()
 		{

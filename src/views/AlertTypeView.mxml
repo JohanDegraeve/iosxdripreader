@@ -72,6 +72,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			
 			protected function view1_creationCompleteHandler(event:FlexEvent):void
 			{
+				//ModelLocator.navigator = navigator;
 				back_label = ModelLocator.resourceManagerInstance.getString('general','back');
 				topText = ModelLocator.resourceManagerInstance.getString('alerttypeview','edit_alert_type');
 				alertType = data.alertType;
