@@ -52,7 +52,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			import mx.collections.ArrayCollection;
 			import mx.events.FlexEvent;
 			
-			import spark.events.ElementExistenceEvent;
 			import spark.formatters.DateTimeFormatter;
 			
 			import G4Model.TransmitterStatus;
@@ -67,6 +66,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			import databaseclasses.Calibration;
 			import databaseclasses.CommonSettings;
 			import databaseclasses.Database;
+			import databaseclasses.LocalSettings;
 			import databaseclasses.Sensor;
 			
 			import events.BlueToothServiceEvent;
@@ -247,6 +247,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 					dialogServiceInitiated(null);
 				} else {
 					DialogService.instance.addEventListener(DialogServiceEvent.DIALOG_SERVICE_INITIATED_EVENT, dialogServiceInitiated);
+					DialogService.instance.addEventListener(DialogServiceEvent.DIALOG_SERVICE_INITIATED_EVENT, checkApplicationVersion);
 				}
 			}
 			
@@ -789,6 +790,24 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 						.build()
 					);
 					DialogService.addDialog(alert, 30);			
+				}
+			}
+			
+			private static function checkApplicationVersion(event:Event = null):void {
+				var newVersion:String = ModelLocator.resourceManagerInstance.getString('general',"version");
+				var currentVersion:String = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_APPLICATION_VERSION);
+				if (currentVersion < newVersion) {
+					if (currentVersion == '0.0.46') {
+						var alert:DialogView = Dialog.service.create(
+							new AlertBuilder()
+							.setTitle(ModelLocator.resourceManagerInstance.getString('homeview',"info"))
+							.setMessage(ModelLocator.resourceManagerInstance.getString('homeview',"info_additional_calibration_request_alert"))//info about buttons top right corner
+							.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
+							.build()
+						);
+						DialogService.addDialog(alert);
+					}
+					LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_APPLICATION_VERSION, newVersion); 
 				}
 			}
 			

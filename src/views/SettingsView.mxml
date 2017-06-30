@@ -42,8 +42,6 @@
 			[Bindable]
 			private static var detailedTracingOnOrOffText:String = "";
 			[Bindable]
-			private static var additionalCalibrationRequestOnOrOffText:String = "";
-			[Bindable]
 			private static var nsLogOnOffText:String = "";
 			[Bindable]
 			private static var alwaysOnNotificationTextOnOrOff:String = "";
@@ -90,12 +88,6 @@
 				} else {
 					lowValueText = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_LOW_MARK);
 					highValueText = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_HIGH_MARK);
-				}
-				
-				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_ADDITIONAL_CALIBRATION_REQUEST_ALERT) == "true") {
-					additionalCalibrationRequestOnOrOffText = ModelLocator.resourceManagerInstance.getString('settingsview','on');
-				} else {
-					additionalCalibrationRequestOnOrOffText = ModelLocator.resourceManagerInstance.getString('settingsview','off');
 				}
 				
 				if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_NSLOG) == "true") {
@@ -312,20 +304,6 @@
 						asNumber.toString() 
 						: ((Math.round(BgReading.mmolToMgdl(asNumber)) * 10) / 10).toString());
 					highValueText = asNumber.toString();
-				}
-			}
-			
-			private function additionalCalibrationRequestAlert_clickHandler(event:MouseEvent):void {
-				rect11.color = uint("0xD3D3D3");
-				rect12.color = uint("0xD3D3D3");
-				setResetColorTimer();
-				
-				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_ADDITIONAL_CALIBRATION_REQUEST_ALERT) == "true") {
-					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_ADDITIONAL_CALIBRATION_REQUEST_ALERT, "false");
-					additionalCalibrationRequestOnOrOffText = ModelLocator.resourceManagerInstance.getString('settingsview','off');
-				} else {
-					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_ADDITIONAL_CALIBRATION_REQUEST_ALERT, "true");
-					additionalCalibrationRequestOnOrOffText = ModelLocator.resourceManagerInstance.getString('settingsview','on');
 				}
 			}
 			
@@ -594,8 +572,6 @@
 					rect8.color = uint("0x212121");
 					rect9.color = uint("0x212121");
 					rect10.color = uint("0x212121");
-					rect11.color = uint("0x212121");
-					rect12.color = uint("0x212121");
 					rect13.color = uint("0x212121");
 					rect14.color = uint("0x212121");
 					rect15.color = uint("0x212121");
@@ -827,31 +803,6 @@
 				</s:Line>	
 			</s:VGroup>
 
-			<!-- Chapter Alerts Subsection Additional Calibration Request Alert -->
-			<s:VGroup click="additionalCalibrationRequestAlert_clickHandler(event)" width="100%">
-				<s:HGroup width="100%">
-					<s:Rect height="100%" width="5" >
-						<s:fill>
-							<s:SolidColor color="#212121" id="rect11"/>
-						</s:fill>
-					</s:Rect>
-					<s:Label text = "{ModelLocator.resourceManagerInstance.getString('settingsview','additional_calibration_request')}"
-							 width="100%" paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
-					<s:Label text = "{additionalCalibrationRequestOnOrOffText}"  
-							 paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
-					<s:Rect height="100%" width="5" >
-						<s:fill>
-							<s:SolidColor color="#212121" id="rect12"/>
-						</s:fill>
-					</s:Rect>
-				</s:HGroup>
-				<s:Line width="100%">
-					<s:stroke>
-						<s:SolidColorStroke color="0xFFFFFF" weight="1" alpha="0.25"/>
-					</s:stroke>
-				</s:Line>	
-			</s:VGroup>
-			
 			<!-- Chapter Alerts Subsection Calibration Request-->
 			<s:VGroup click="calibrationRequestAlert_clickHandler(event)" width="100%">
 				<s:HGroup width="100%">
