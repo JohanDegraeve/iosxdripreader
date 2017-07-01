@@ -15,7 +15,6 @@ package services
 	import flash.events.EventDispatcher;
 	
 	import spark.components.TabbedViewNavigator;
-
 	import spark.transitions.FlipViewTransition;
 	
 	import Utilities.DateTimeUtilities;
@@ -188,10 +187,10 @@ package services
 				var index:int;
 				var flipTrans:FlipViewTransition = new FlipViewTransition(); 
 				flipTrans.duration = 0;
-	
+				
 				(ModelLocator.navigator.parentNavigator as TabbedViewNavigator).selectedIndex = 0;
 				//((ModelLocator.navigator.parentNavigator as TabbedViewNavigator).navigators[0] as ViewNavigator).popToFirstView();
-
+				
 				var notificationEvent:NotificationEvent = event.data as NotificationEvent;
 				myTrace("in notificationReceived, event != null, id = " + notificationEvent.id);
 				if (notificationEvent.id == NotificationService.ID_FOR_LOW_ALERT) {
@@ -380,20 +379,6 @@ package services
 						}
 					}
 					if (notificationEvent.identifier == null) {
-						var snoozePeriodPicker5:DialogView;
-						snoozePeriodPicker5 = Dialog.service.create(
-							new PickerDialogBuilder()
-							.setTitle("")
-							.setCancelLabel(ModelLocator.resourceManagerInstance.getString("general","cancel"))
-							.setAcceptLabel("Ok")
-							.addColumn( snoozeValueStrings, index )
-							.build()
-						);
-						snoozePeriodPicker5.addEventListener( DialogViewEvent.CLOSED, calibrationRequestSnoozePicker_closedHandler );
-						var dataToSend:Object = new Object();
-						dataToSend.picker = snoozePeriodPicker5;
-						dataToSend.pickertext = ModelLocator.resourceManagerInstance.getString("alarmservice","snooze_text_calibration_alert");
-						ModelLocator.navigator.pushView(PickerView, dataToSend, null, flipTrans);
 						CalibrationService.calibrationOnRequest(false, false, true, snoozeCalibrationRequest);
 					} else if (notificationEvent.identifier == NotificationService.ID_FOR_CALIBRATION_REQUEST_ALERT_SNOOZE_IDENTIFIER) {
 						_calibrationRequestSnoozePeriodInMinutes = alertType.defaultSnoozePeriodInMinutes;
