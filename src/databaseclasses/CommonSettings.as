@@ -156,6 +156,8 @@
 		  */
 		 public static const COMMON_SETTING_BATTERY_ALERT:int = 31;
 		 public static const COMMON_SETTING_CALIBRATION_REQUEST_ALERT:int = 32;
+		 public static const COMMON_SETTING_VERY_LOW_ALERT:int = 33;
+		 public static const COMMON_SETTING_VERY_HIGH_ALERT:int = 34;
 
 		 private static var commonSettings:Array = [
 			 "0",//COMMON_SETTING_CURRENT_SENSOR
@@ -190,7 +192,9 @@
 			 "unknown",//COMMON_SETTING_G5_TEMPERATURE
 			 "unknown",//COMMON_SETTING_G5_RUNTIME
 			 "00:00>DefaultValue>DefaultNoAlertToBeReplaced-08:00>DefaultValue>SilentToBeReplaced",//COMMON_SETTING_BATTERY_ALERT
-			 "00:00>12>DefaultNoAlertToBeReplaced-08:00>12>SilentToBeReplaced-23:00>12>DefaultNoAlertToBeReplaced"//COMMON_SETTING_CALIBRATION_REQUEST_ALERT
+			 "00:00>12>DefaultNoAlertToBeReplaced-08:00>12>SilentToBeReplaced-23:00>12>DefaultNoAlertToBeReplaced",//COMMON_SETTING_CALIBRATION_REQUEST_ALERT
+			 "00:00>50>DefaultNoAlertToBeReplaced",//COMMON_SETTING_VERY_LOW_ALERT
+			 "00:00>300>DefaultNoAlertToBeReplaced"//COMMON_SETTING_VERY_HIGH_ALERT
 		 ];
 		 
 		 public function CommonSettings()
@@ -216,6 +220,22 @@
 					 newString = (commonSettings[COMMON_SETTING_LOW_ALERT] as String)
 						 .replace('DefaultNoAlertToBeReplaced', noAlert);
 					 setCommonSetting(COMMON_SETTING_LOW_ALERT, newString);
+				 }
+			 }
+			 if (commonSettingId == COMMON_SETTING_VERY_LOW_ALERT) {
+				 if ((commonSettings[COMMON_SETTING_VERY_LOW_ALERT] as String).indexOf('DefaultNoAlertToBeReplaced') > -1) {
+					 noAlert = ModelLocator.resourceManagerInstance.getString("settingsview","no_alert")
+					 newString = (commonSettings[COMMON_SETTING_VERY_LOW_ALERT] as String)
+						 .replace('DefaultNoAlertToBeReplaced', noAlert);
+					 setCommonSetting(COMMON_SETTING_VERY_LOW_ALERT, newString);
+				 }
+			 }
+			 if (commonSettingId == COMMON_SETTING_VERY_HIGH_ALERT) {
+				 if ((commonSettings[COMMON_SETTING_VERY_HIGH_ALERT] as String).indexOf('DefaultNoAlertToBeReplaced') > -1) {
+					 noAlert = ModelLocator.resourceManagerInstance.getString("settingsview","no_alert")
+					 newString = (commonSettings[COMMON_SETTING_VERY_HIGH_ALERT] as String)
+						 .replace('DefaultNoAlertToBeReplaced', noAlert);
+					 setCommonSetting(COMMON_SETTING_VERY_HIGH_ALERT, newString);
 				 }
 			 }
 			 if (commonSettingId == COMMON_SETTING_HIGH_ALERT) {

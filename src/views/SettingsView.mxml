@@ -338,6 +338,40 @@
 				navigator.pushView(FromtimeAndValueListView,dataToSend);
 			}
 			
+			private function veryLowAlert_clickHandler(event:MouseEvent):void {
+				rect43.color = uint("0xD3D3D3");
+				rect44.color = uint("0xD3D3D3");
+				
+				setResetColorTimer();
+				var dataToSend:Object = new Object();
+				dataToSend.title = ModelLocator.resourceManagerInstance.getString("settingsview","very_low_alert");
+				dataToSend.topText = ModelLocator.resourceManagerInstance.getString("settingsview","alert_top_text");
+				dataToSend.settingid = CommonSettings.COMMON_SETTING_VERY_LOW_ALERT;
+				dataToSend.titleforFromtimeAndValueElementView = "";
+				dataToSend.topTextforFromtimeAndValueElementView = ModelLocator.resourceManagerInstance.getString('settingsview','edit_very_low_alert');
+				dataToSend.isBgValue = true;
+				dataToSend.additionalTopText = ModelLocator.resourceManagerInstance.getString('settingsview','explain_very_low_alert_list');
+				
+				navigator.pushView(FromtimeAndValueListView,dataToSend);
+			}
+			
+			private function veryHighAlert_clickHandler(event:MouseEvent):void {
+				rect45.color = uint("0xD3D3D3");
+				rect46.color = uint("0xD3D3D3");
+				
+				setResetColorTimer();
+				var dataToSend:Object = new Object();
+				dataToSend.title = ModelLocator.resourceManagerInstance.getString("settingsview","very_high_alert");
+				dataToSend.topText = ModelLocator.resourceManagerInstance.getString("settingsview","alert_top_text");
+				dataToSend.settingid = CommonSettings.COMMON_SETTING_VERY_HIGH_ALERT;
+				dataToSend.titleforFromtimeAndValueElementView = "";
+				dataToSend.topTextforFromtimeAndValueElementView = ModelLocator.resourceManagerInstance.getString('settingsview','edit_very_high_alert');
+				dataToSend.isBgValue = true;
+				dataToSend.additionalTopText = ModelLocator.resourceManagerInstance.getString('settingsview','explain_very_high_alert_list');
+				
+				navigator.pushView(FromtimeAndValueListView,dataToSend);
+			}
+			
 			private function calibrationRequestAlert_clickHandler(event:MouseEvent):void {
 				rect41.color = uint("0xD3D3D3");
 				rect42.color = uint("0xD3D3D3");
@@ -602,6 +636,10 @@
 					rect40.color = uint("0x212121");//battery low alert
 					rect41.color = uint("0x212121");//calibration request alert
 					rect42.color = uint("0x212121");//calibration request alert
+					rect43.color = uint("0x212121");//very low
+					rect44.color = uint("0x212121");//very low
+					rect45.color = uint("0x212121");//very high
+					rect46.color = uint("0x212121");//very high
 				}
 			}
 			
@@ -849,6 +887,29 @@
 				</s:Line>	
 			</s:VGroup>
 			
+			<!-- Chapter Alerts Subsection Very Low -->
+			<s:VGroup click="veryLowAlert_clickHandler(event)" width="100%">
+				<s:HGroup width="100%">
+					<s:Rect height="100%" width="5" >
+						<s:fill>
+							<s:SolidColor color="#212121" id="rect43"/>
+						</s:fill>
+					</s:Rect>
+					<s:Label text = "{ModelLocator.resourceManagerInstance.getString('settingsview','very_low_alert')}"
+							 width="100%" paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
+					<s:Rect height="100%" width="5" >
+						<s:fill>
+							<s:SolidColor color="#212121" id="rect44"/>
+						</s:fill>
+					</s:Rect>
+				</s:HGroup>
+				<s:Line width="100%">
+					<s:stroke>
+						<s:SolidColorStroke color="0xFFFFFF" weight="1" alpha="0.25"/>
+					</s:stroke>
+				</s:Line>	
+			</s:VGroup>
+			
 			<!-- Chapter Alerts Subsection High -->
 			<s:VGroup click="highAlert_clickHandler(event)" width="100%">
 				<s:HGroup width="100%">
@@ -862,6 +923,29 @@
 					<s:Rect height="100%" width="5" >
 						<s:fill>
 							<s:SolidColor color="#212121" id="rect34"/>
+						</s:fill>
+					</s:Rect>
+				</s:HGroup>
+				<s:Line width="100%">
+					<s:stroke>
+						<s:SolidColorStroke color="0xFFFFFF" weight="1" alpha="0.25"/>
+					</s:stroke>
+				</s:Line>	
+			</s:VGroup>
+			
+			<!-- Chapter Alerts Subsection Very High -->
+			<s:VGroup click="veryHighAlert_clickHandler(event)" width="100%">
+				<s:HGroup width="100%">
+					<s:Rect height="100%" width="5" >
+						<s:fill>
+							<s:SolidColor color="#212121" id="rect45"/>
+						</s:fill>
+					</s:Rect>
+					<s:Label text = "{ModelLocator.resourceManagerInstance.getString('settingsview','very_high_alert')}"
+							 width="100%" paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
+					<s:Rect height="100%" width="5" >
+						<s:fill>
+							<s:SolidColor color="#212121" id="rect46"/>
 						</s:fill>
 					</s:Rect>
 				</s:HGroup>

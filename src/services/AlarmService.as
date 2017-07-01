@@ -56,6 +56,20 @@ package services
 		 */
 		private static var _lowAlertLatestNotificationTime:Number = Number.NaN;
 		
+		//verylow alert
+		/**
+		 * 0 is not snoozed, if > 0 this is snooze value chosen by user
+		 */
+		private static var _veryLowAlertSnoozePeriodInMinutes:int = 0;
+		/**
+		 * timestamp when alert was snoozed, ms 
+		 */
+		private static var _veryLowAlertLatestSnoozeTimeInMs:Number = Number.NaN;
+		/**
+		 * timestamp of latest notification 
+		 */
+		private static var _veryLowAlertLatestNotificationTime:Number = Number.NaN;
+		
 		//high alert
 		/**
 		 * 0 is not snoozed, if > 0 this is snooze value chosen by user
@@ -69,6 +83,21 @@ package services
 		 * timestamp of latest notification 
 		 */
 		private static var _highAlertLatestNotificationTime:Number = Number.NaN;
+		
+		//very high alert
+		/**
+		 * 0 is not snoozed, if > 0 this is snooze value chosen by user
+		 */
+		private static var _veryHighAlertSnoozePeriodInMinutes:int = 0;
+		/**
+		 * timestamp when alert was snoozed, ms 
+		 */
+		private static var _veryHighAlertLatestSnoozeTimeInMs:Number = Number.NaN;
+		/**
+		 * timestamp of latest notification 
+		 */
+		private static var _veryHighAlertLatestNotificationTime:Number = Number.NaN;
+		
 		/**
 		 * if lastbgreading is older than MAX_AGE_OF_READING_IN_MINUTES minutes, then no low or high alert will be generated  
 		 */
@@ -261,6 +290,75 @@ package services
 						_highAlertSnoozePeriodInMinutes = alertType.defaultSnoozePeriodInMinutes;
 						myTrace("in notificationReceived with id = ID_FOR_HIGH_ALERT, snoozing the notification for " + _highAlertSnoozePeriodInMinutes + " minutes");
 						_highAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
+					}
+				} else if (notificationEvent.id == NotificationService.ID_FOR_VERY_LOW_ALERT) {
+					listOfAlerts = FromtimeAndValueArrayCollection.createList(
+						CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_VERY_LOW_ALERT));
+					alertName = listOfAlerts.getAlarmName(Number.NaN, "", new Date());
+					alertType = Database.getAlertType(alertName);
+					myTrace("in notificationReceived with id = ID_FOR_VERY_LOW_ALERT, cancelling notification");
+					Notifications.service.cancel(NotificationService.ID_FOR_VERY_LOW_ALERT);
+					index = 0;
+					for (var cntr:int = 0;cntr < snoozeValueMinutes.length;cntr++) {
+						if ((snoozeValueMinutes[cntr]) >= alertType.defaultSnoozePeriodInMinutes) {
+							index = cntr;
+							break;
+						}
+					}
+					if (notificationEvent.identifier == null) {
+						var snoozePeriodPicker7:DialogView;
+						snoozePeriodPicker7 = Dialog.service.create(
+							new PickerDialogBuilder()
+							.setTitle("")
+							.setCancelLabel(ModelLocator.resourceManagerInstance.getString("general","cancel"))
+							.setAcceptLabel("Ok")
+							.addColumn( snoozeValueStrings, index )
+							.build()
+						);
+						snoozePeriodPicker7.addEventListener( DialogViewEvent.CLOSED, veryLowSnoozePicker_closedHandler );
+						var dataToSend:Object = new Object();
+						dataToSend.picker = snoozePeriodPicker7;
+						dataToSend.pickertext = ModelLocator.resourceManagerInstance.getString("alarmservice","snooze_text_very_low_alert");
+						myTrace("adding PickerView");
+						ModelLocator.navigator.pushView(PickerView, dataToSend, null, flipTrans);
+					} else if (notificationEvent.identifier == NotificationService.ID_FOR_VERY_LOW_ALERT_SNOOZE_IDENTIFIER) {
+						_veryLowAlertSnoozePeriodInMinutes = alertType.defaultSnoozePeriodInMinutes;
+						myTrace("in notificationReceived with id = ID_FOR_VERY_LOW_ALERT, snoozing the notification for " + _veryLowAlertSnoozePeriodInMinutes + " minutes");
+						_veryLowAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
+					}
+				} else if (notificationEvent.id == NotificationService.ID_FOR_VERY_HIGH_ALERT) {
+					listOfAlerts = FromtimeAndValueArrayCollection.createList(
+						CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_VERY_HIGH_ALERT));
+					alertName = listOfAlerts.getAlarmName(Number.NaN, "", new Date());
+					alertType = Database.getAlertType(alertName);
+					myTrace("in notificationReceived with id = ID_FOR_VERY_HIGH_ALERT, cancelling notification");
+					Notifications.service.cancel(NotificationService.ID_FOR_VERY_HIGH_ALERT);
+					index = 0;
+					for (var cntr:int = 0;cntr < snoozeValueMinutes.length;cntr++) {
+						if ((snoozeValueMinutes[cntr]) >= alertType.defaultSnoozePeriodInMinutes) {
+							index = cntr;
+							break;
+						}
+					}
+					if (notificationEvent.identifier == null) {
+						var snoozePeriodPicker8:DialogView;
+						snoozePeriodPicker8 = Dialog.service.create(
+							new PickerDialogBuilder()
+							.setTitle("")
+							.setCancelLabel(ModelLocator.resourceManagerInstance.getString("general","cancel"))
+							.setAcceptLabel("Ok")
+							.addColumn( snoozeValueStrings, index )
+							.build()
+						);
+						snoozePeriodPicker8.addEventListener( DialogViewEvent.CLOSED, veryHighSnoozePicker_closedHandler );
+						var dataToSend:Object = new Object();
+						dataToSend.picker = snoozePeriodPicker8;
+						dataToSend.pickertext = ModelLocator.resourceManagerInstance.getString("alarmservice","snooze_text_very_high_alert");
+						ModelLocator.navigator.pushView(PickerView, dataToSend, null, flipTrans);
+					} else if (notificationEvent.identifier == NotificationService.ID_FOR_VERY_HIGH_ALERT_SNOOZE_IDENTIFIER) {
+						_veryHighAlertSnoozePeriodInMinutes = alertType.defaultSnoozePeriodInMinutes;
+						myTrace("in notificationReceived with id = ID_FOR_VERY_HIGH_ALERT, snoozing the notification for " + _veryHighAlertSnoozePeriodInMinutes + " minutes");
+						_veryHighAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
 					}
 				} else if (notificationEvent.id == NotificationService.ID_FOR_MISSED_READING_ALERT) {
 					listOfAlerts = FromtimeAndValueArrayCollection.createList(
@@ -455,6 +553,18 @@ package services
 				_highAlertSnoozePeriodInMinutes = snoozeValueMinutes[event.indexes[0]];
 				_highAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
 			}
+			
+			function veryHighSnoozePicker_closedHandler(event:DialogViewEvent): void {
+				myTrace("in veryHighSnoozePicker_closedHandler snoozing the notification for " + snoozeValueStrings[event.indexes[0]]);
+				_veryHighAlertSnoozePeriodInMinutes = snoozeValueMinutes[event.indexes[0]];
+				_veryHighAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
+			}
+
+			function veryLowSnoozePicker_closedHandler(event:DialogViewEvent): void {
+				myTrace("in veryLowSnoozePicker_closedHandler snoozing the notification for " + snoozeValueStrings[event.indexes[0]]);
+				_veryLowAlertSnoozePeriodInMinutes = snoozeValueMinutes[event.indexes[0]];
+				_veryLowAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
+			}
 		}
 		
 		private static function checkAlarmsAfterPerformFetch(event:BackgroundFetchEvent):void {
@@ -476,8 +586,21 @@ package services
 			var lastbgreading:BgReading = BgReading.lastNoSensor();
 			if (lastbgreading != null) {
 				if (now.valueOf() - lastbgreading.timestamp < MAX_AGE_OF_READING_IN_MINUTES * 60 * 1000) {
-					if (!checkLowAlert(now)) {
-						checkHighAlert(now);
+					if(!checkVeryLowAlert(now)) {
+						if (!checkLowAlert(now)) {
+							if (!checkVeryHighAlert(now)) {
+								checkHighAlert(now);
+							} else {
+								resetHighAlert();
+							}
+						} else {
+							resetHighAlert();
+							resetVeryHighAlert();
+						}
+					} else {
+						resetHighAlert();
+						resetVeryHighAlert();
+						resetLowAlert();
 					}
 				}
 				checkMissedReadingAlert(now, be == null, lastbgreading);
@@ -838,14 +961,62 @@ package services
 				 }
 			 } else {
 				 //remove notification, even if there isn't any
-				 Notifications.service.cancel(NotificationService.ID_FOR_HIGH_ALERT);
-				 _highAlertLatestSnoozeTimeInMs = Number.NaN;
-				 _highAlertLatestNotificationTime = Number.NaN;
-				 _highAlertSnoozePeriodInMinutes = 0;
+				 resetHighAlert();
 			 }
 			 return returnValue;
 		 }
 		
+		/**
+		 * returns true of alarm fired or if alert is snoozed
+		 */private static function checkVeryHighAlert(now:Date):Boolean {
+			 var listOfAlerts:FromtimeAndValueArrayCollection;
+			 var alertValue:Number;
+			 var alertName:String;
+			 var alertType:AlertType;
+			 var returnValue:Boolean = false;
+			 
+			 listOfAlerts = FromtimeAndValueArrayCollection.createList(
+				 CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_VERY_HIGH_ALERT));
+			 alertValue = listOfAlerts.getValue(Number.NaN, "", now);
+			 alertName = listOfAlerts.getAlarmName(Number.NaN, "", now);
+			 alertType = Database.getAlertType(alertName);
+			 if (alertType.enabled) {
+				 //first check if snoozeperiod is passed, checking first for value would generate multiple alarms in case the sensor is unstable
+				 if (((now).valueOf() - _veryHighAlertLatestSnoozeTimeInMs) > _veryHighAlertSnoozePeriodInMinutes * 60 * 1000
+					 ||
+					 isNaN(_veryHighAlertLatestSnoozeTimeInMs)) {
+					 myTrace("in checkAlarms, veryHigh alert not snoozed (anymore)");
+					 //not snoozed
+					 
+					 if (alertValue < BgReading.lastNoSensor().calculatedValue) {
+						 myTrace("in checkAlarms, reading is too veryHigh");
+						 fireAlert(
+							 alertType, 
+							 NotificationService.ID_FOR_VERY_HIGH_ALERT, 
+							 ModelLocator.resourceManagerInstance.getString("alarmservice","veryhigh_alert_notification_alert_text"), 
+							 ModelLocator.resourceManagerInstance.getString("alarmservice","veryhigh_alert_notification_alert_text"),
+							 alertType.enableVibration,
+							 alertType.enableLights,
+							 NotificationService.ID_FOR_ALERT_VERY_HIGH_CATEGORY
+						 ); 
+						 _veryHighAlertLatestSnoozeTimeInMs = Number.NaN;
+						 _veryHighAlertSnoozePeriodInMinutes = 0;
+						 returnValue = true;
+					 } else {
+						 Notifications.service.cancel(NotificationService.ID_FOR_VERY_HIGH_ALERT);
+					 }
+				 } else {
+					 //snoozed no need to do anything,returnvalue = true because there's no need to check for high alert
+					 returnValue = true;
+					 myTrace("in checkAlarms, alarm snoozed, _veryHighAlertLatestSnoozeTimeInMs = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date(_veryHighAlertLatestSnoozeTimeInMs)) + ", _veryHighAlertSnoozePeriodInMinutes = " + _veryHighAlertSnoozePeriodInMinutes + ", actual time = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date()));
+				 }
+			 } else {
+				 //remove notification, even if there isn't any
+				 resetVeryHighAlert();
+			 }
+			 return returnValue;
+		 }
+
 		/**
 		 * returns true of alarm fired
 		 */private static function checkLowAlert(now:Date):Boolean {
@@ -891,13 +1062,89 @@ package services
 				 }
 			 } else {
 				 //remove low notification, even if there isn't any
-				 Notifications.service.cancel(NotificationService.ID_FOR_LOW_ALERT);
-				 _lowAlertLatestSnoozeTimeInMs = Number.NaN;
-				 _lowAlertLatestNotificationTime = Number.NaN;
-				 _lowAlertSnoozePeriodInMinutes = 0;
+				 resetLowAlert();
 			 }
 			 return returnValue;
 		 }
+		
+		/**
+		 * returns true of alarm fired or if snoozed
+		 */private static function checkVeryLowAlert(now:Date):Boolean {
+			 var listOfAlerts:FromtimeAndValueArrayCollection;
+			 var alertValue:Number;
+			 var alertName:String;
+			 var alertType:AlertType;
+			 var returnValue:Boolean = false;
+			 
+			 listOfAlerts = FromtimeAndValueArrayCollection.createList(
+				 CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_VERY_LOW_ALERT));
+			 alertValue = listOfAlerts.getValue(Number.NaN, "", now);
+			 alertName = listOfAlerts.getAlarmName(Number.NaN, "", now);
+			 alertType = Database.getAlertType(alertName);
+			 if (alertType.enabled) {
+				 //first check if snoozeperiod is passed, checking first for value would generate multiple alarms in case the sensor is unstable
+				 if ((now.valueOf() - _veryLowAlertLatestSnoozeTimeInMs) > _veryLowAlertSnoozePeriodInMinutes * 60 * 1000
+					 ||
+					 isNaN(_veryLowAlertLatestSnoozeTimeInMs)) {
+					 myTrace("in checkAlarms, veryLow alert not snoozed (anymore)");
+					 //not snoozed
+					 
+					 if (alertValue > BgReading.lastNoSensor().calculatedValue) {
+						 myTrace("in checkAlarms, reading is too veryLow");
+						 fireAlert(
+							 alertType, 
+							 NotificationService.ID_FOR_VERY_LOW_ALERT, 
+							 ModelLocator.resourceManagerInstance.getString("alarmservice","verylow_alert_notification_alert_text"), 
+							 ModelLocator.resourceManagerInstance.getString("alarmservice","verylow_alert_notification_alert_text"),
+							 alertType.enableVibration,
+							 alertType.enableLights,
+							 NotificationService.ID_FOR_ALERT_VERY_LOW_CATEGORY
+						 ); 
+						 _veryLowAlertLatestSnoozeTimeInMs = Number.NaN;
+						 _veryLowAlertSnoozePeriodInMinutes = 0;
+						 returnValue = true;
+					 } else {
+						 Notifications.service.cancel(NotificationService.ID_FOR_VERY_LOW_ALERT);
+					 }
+				 } else {
+					 //snoozed no need to do anything, set returnvalue to true because there's no need to further check
+					 returnValue = true;
+					 myTrace("in checkAlarms, alarm snoozed, _veryLowAlertLatestSnoozeTimeInMs = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date(_veryLowAlertLatestSnoozeTimeInMs)) + ", _veryLowAlertSnoozePeriodInMinutes = " + _veryLowAlertSnoozePeriodInMinutes + ", actual time = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date()));
+				 }
+			 } else {
+				 //remove veryLow notification, even if there isn't any
+				 resetVeryLowAlert();
+			 }
+			 return returnValue;
+		 }
+		
+		private static function resetVeryHighAlert():void {
+			Notifications.service.cancel(NotificationService.ID_FOR_VERY_HIGH_ALERT);
+			_veryHighAlertLatestSnoozeTimeInMs = Number.NaN;
+			_veryHighAlertLatestNotificationTime = Number.NaN;
+			_veryHighAlertSnoozePeriodInMinutes = 0;
+		}
+		
+		private static function resetVeryLowAlert():void {
+			Notifications.service.cancel(NotificationService.ID_FOR_VERY_LOW_ALERT);
+			_veryLowAlertLatestSnoozeTimeInMs = Number.NaN;
+			_veryLowAlertLatestNotificationTime = Number.NaN;
+			_veryLowAlertSnoozePeriodInMinutes = 0;
+		}
+		
+		private static function resetHighAlert():void {
+			Notifications.service.cancel(NotificationService.ID_FOR_HIGH_ALERT);
+			_highAlertLatestSnoozeTimeInMs = Number.NaN;
+			_highAlertLatestNotificationTime = Number.NaN;
+			_highAlertSnoozePeriodInMinutes = 0;
+		}
+		
+		private static function resetLowAlert():void {
+			Notifications.service.cancel(NotificationService.ID_FOR_LOW_ALERT);
+			_lowAlertLatestSnoozeTimeInMs = Number.NaN;
+			_lowAlertLatestNotificationTime = Number.NaN;
+			_lowAlertSnoozePeriodInMinutes = 0;
+		}
 		
 		private static function myTrace(log:String):void {
 			Trace.myTrace("AlarmService.as", log);
