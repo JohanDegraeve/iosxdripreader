@@ -15,7 +15,6 @@ package services
 	import flash.events.EventDispatcher;
 	
 	import spark.components.TabbedViewNavigator;
-	import spark.components.ViewNavigator;
 	import spark.transitions.FlipViewTransition;
 	
 	import Utilities.DateTimeUtilities;
@@ -380,26 +379,31 @@ package services
 						}
 					}
 					if (notificationEvent.identifier == null) {
-						var snoozePeriodPicker5:DialogView;
-						snoozePeriodPicker5 = Dialog.service.create(
-							new PickerDialogBuilder()
-							.setTitle("")
-							.setCancelLabel(ModelLocator.resourceManagerInstance.getString("general","cancel"))
-							.setAcceptLabel("Ok")
-							.addColumn( snoozeValueStrings, index )
-							.build()
-						);
-						snoozePeriodPicker5.addEventListener( DialogViewEvent.CLOSED, calibrationRequestSnoozePicker_closedHandler );
-						var dataToSend:Object = new Object();
-						dataToSend.picker = snoozePeriodPicker5;
-						dataToSend.pickertext = ModelLocator.resourceManagerInstance.getString("alarmservice","snooze_text_calibration_alert");
-						ModelLocator.navigator.pushView(PickerView, dataToSend, null, flipTrans);
+						CalibrationService.calibrationOnRequest(false, false, true, snoozeCalibrationRequest);
 					} else if (notificationEvent.identifier == NotificationService.ID_FOR_CALIBRATION_REQUEST_ALERT_SNOOZE_IDENTIFIER) {
 						_calibrationRequestSnoozePeriodInMinutes = alertType.defaultSnoozePeriodInMinutes;
 						myTrace("in notificationReceived with id = ID_FOR_CALIBRATION_REQUEST_ALERT, snoozing the notification for " + _calibrationRequestSnoozePeriodInMinutes + " minutes");
 						_calibrationRequestLatestSnoozeTimeInMs = (new Date()).valueOf();
 					}
 				}
+			}
+			
+			function snoozeCalibrationRequest():void {
+				myTrace("in snoozeCalibrationRequest");
+				var snoozePeriodPicker5:DialogView;
+				snoozePeriodPicker5 = Dialog.service.create(
+					new PickerDialogBuilder()
+					.setTitle("")
+					.setCancelLabel(ModelLocator.resourceManagerInstance.getString("general","cancel"))
+					.setAcceptLabel("Ok")
+					.addColumn( snoozeValueStrings, index )
+					.build()
+				);
+				snoozePeriodPicker5.addEventListener( DialogViewEvent.CLOSED, calibrationRequestSnoozePicker_closedHandler );
+				var dataToSend:Object = new Object();
+				dataToSend.picker = snoozePeriodPicker5;
+				dataToSend.pickertext = ModelLocator.resourceManagerInstance.getString("alarmservice","snooze_text_calibration_alert");
+				ModelLocator.navigator.pushView(PickerView, dataToSend, null, flipTrans);
 			}
 			
 			function calibrationRequestSnoozePicker_closedHandler(event:DialogViewEvent): void {
