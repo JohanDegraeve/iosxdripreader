@@ -246,6 +246,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 				NotificationService.updateAllNotifications(null);
 				if (DialogService.isInitiated) {
 					dialogServiceInitiated(null);
+					checkApplicationVersion(null);
 				} else {
 					DialogService.instance.addEventListener(DialogServiceEvent.DIALOG_SERVICE_INITIATED_EVENT, dialogServiceInitiated);
 					DialogService.instance.addEventListener(DialogServiceEvent.DIALOG_SERVICE_INITIATED_EVENT, checkApplicationVersion);
