@@ -617,7 +617,7 @@
 	
 			<!-- Chapter general settings -->
 			<s:Label text = "{ModelLocator.resourceManagerInstance.getString('settingsview','general_settings')}" textAlign="center"  color="#3B6999" 
-					 width="100%" paddingLeft="3" paddingRight="0" fontSize="20" fontWeight="bold" paddingTop="3"/>
+					 width="100%" paddingLeft="3" paddingRight="0" fontSize="20" fontWeight="bold" paddingTop="10" paddingBottom ="10"/>
 			<s:Line width="100%">
 				<s:stroke>
 					<s:SolidColorStroke color="#3B6999"  weight="3"/>
@@ -773,7 +773,7 @@
 			
 			<!-- Chapter Alerts-->
 			<s:Label text = "{ModelLocator.resourceManagerInstance.getString('settingsview','alerts')}" textAlign="center"  color="#3B6999" 
-					 width="100%" paddingLeft="3" paddingRight="0" fontSize="20" fontWeight="bold" paddingTop="3"/>
+					 width="100%" paddingLeft="3" paddingRight="0" fontSize="20" fontWeight="bold" paddingTop="10" paddingBottom ="10"/>
 			<s:Line width="100%">
 				<s:stroke>
 					<s:SolidColorStroke color="#3B6999"  weight="3"/>
@@ -943,7 +943,7 @@
 			
 			<!-- Chapter NightScout -->
 			<s:Label text = "{ModelLocator.resourceManagerInstance.getString('settingsview','show_nightscout_title')}" textAlign="center" color="#3B6999" 
-					 width="100%" paddingLeft="3" paddingRight="0" fontSize="20" fontWeight="bold"/>
+					 width="100%" paddingLeft="3" paddingRight="0" fontSize="20" fontWeight="bold" paddingTop="10" paddingBottom ="10"/>
 			<s:Line width="100%">
 				<s:stroke>
 					<s:SolidColorStroke  color="#3B6999"  weight="3"/>
@@ -1000,7 +1000,7 @@
 			
 			<!-- Chapter Version info --> 
 			<s:Label text = "{ModelLocator.resourceManagerInstance.getString('settingsview','versioninfo')}" textAlign="center"  color="#3B6999" 
-					 width="100%" paddingLeft="3" paddingRight="0" fontSize="20" fontWeight="bold" paddingTop="3"/>
+					 width="100%" paddingLeft="3" paddingRight="0" fontSize="20" fontWeight="bold" paddingTop="10" paddingBottom ="10"/>
 			<s:Line width="100%">
 				<s:stroke>
 					<s:SolidColorStroke color="#3B6999"  weight="3"/>
@@ -1035,7 +1035,7 @@
 			
 			<!-- Chapter Logging and Tracing-->
 			<s:Label text = "{ModelLocator.resourceManagerInstance.getString('settingsview','logging_and_tracing')}" textAlign="center"  color="#3B6999" 
-					 width="100%" paddingLeft="3" paddingRight="0" fontSize="20" fontWeight="bold" paddingTop="3"/>
+					 width="100%" paddingLeft="3" paddingRight="0" fontSize="20" fontWeight="bold" paddingTop="10" paddingBottom ="10"/>
 			<s:Line width="100%">
 				<s:stroke>
 					<s:SolidColorStroke color="#3B6999"  weight="3"/>

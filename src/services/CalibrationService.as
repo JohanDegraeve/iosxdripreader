@@ -13,7 +13,6 @@ package services
 	import flash.events.TimerEvent;
 	import flash.utils.Timer;
 	
-	
 	import Utilities.Trace;
 	
 	import databaseclasses.BgReading;
@@ -242,21 +241,19 @@ package services
 		}
 		
 		/**
-		 * To be used when user clicks the calibrate button<br>
-		 * Or when user calibrates as a reaction on a additional calibration request<br>
-		 * In the case of calibration request, there's not going to be an override, for that the parameter override<br>
-		 * <br>
 		 * if override = true, then a check will be done if there was a calibration in the last 60 minutes and if so the last calibration will be overriden<br>
 		 * if override = false, then there's no calibration override, no matter the timing of the last calibration<br>
 		 * <br>
 		 * if checklast30minutes = true, then it will be checked if there were readings in the last 30 minutes<br>
 		 * if checklast30minutes = false, then it will not be checked if there were readings in the last 30 minutes<br>
 		 * <br>
-		 * For calibration requests, override should 
+		 * if addSnoozeOption = true, then an action will be added to the dialog which allows snoozing, the snoozeFunction should be non null and is called when the user choses that action
 		 */
-		public static function calibrationOnRequest(override:Boolean = true, checklast30minutes:Boolean = true):void {
+		public static function calibrationOnRequest(override:Boolean = true, checklast30minutes:Boolean = true, addSnoozeOption:Boolean = false, snoozeFunction:Function = null):void {
+			myTrace(" in calibrationOnRequest");
 			//check if there's 2 readings the last 30 minutes
 			if (BgReading.last30Minutes().length < 2) {
+				myTrace(" in calibrationOnRequest, BgReading.last30Minutes().length < 2");
 				var alert:DialogView = Dialog.service.create(
 					new AlertBuilder()
 					.setTitle(ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_calibration_title"))
@@ -271,12 +268,12 @@ package services
 						new AlertBuilder()
 						.setTitle(ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_calibration_title_with_override"))
 						.setMessage(ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_bg_value_with_override"))
-						.addTextField("", ModelLocator.resourceManagerInstance.getString("calibrationservice",ModelLocator.resourceManagerInstance.getString("calibrationservice","blood_glucose_calibration_value")))
+						.addTextField("", ModelLocator.resourceManagerInstance.getString("calibrationservice", "blood_glucose_calibration_value"))
 						.addOption(ModelLocator.resourceManagerInstance.getString("general","cancel"), DialogAction.STYLE_CANCEL, 1)
 						.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
 						.build()
 					);
-					alert.addEventListener(DialogViewEvent.CLOSED, bgValueOverride);
+					alert.addEventListener(DialogViewEvent.CLOSED, calibrationDialogClosedWithOverride);
 					alert.addEventListener(DialogViewEvent.CANCELLED, cancellation);
 					
 					DialogService.addDialog(alert);
@@ -284,10 +281,10 @@ package services
 					function cancellation(event:DialogViewEvent):void {
 					}
 					
-					function bgValueOverride(event:DialogViewEvent):void {
+					function calibrationDialogClosedWithOverride(event:DialogViewEvent):void {
 						if (event.index == 1) {
 							//it's a cancel
-						} else {
+						} else if (event.index == 0) {
 							var asNumber:Number = new Number(event.values[0] as String);
 							if (isNaN(asNumber)) {
 								var alert:DialogView = Dialog.service.create(
@@ -313,16 +310,20 @@ package services
 						}
 					}
 				} else {
-					var alert:DialogView = Dialog.service.create(
+					var alertBuilder:AlertBuilder = 
 						new AlertBuilder()
 						.setTitle(ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_calibration_title"))
 						.setMessage(ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_bg_value_without_override"))
 						.addTextField("",ModelLocator.resourceManagerInstance.getString("calibrationservice","blood_glucose_calibration_value"))
 						.addOption(ModelLocator.resourceManagerInstance.getString("general","cancel"), DialogAction.STYLE_CANCEL, 1)
-						.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
-						.build()
+						.addOption("Ok", DialogAction.STYLE_POSITIVE, 2);
+					if (addSnoozeOption) {
+						alertBuilder.addOption(ModelLocator.resourceManagerInstance.getString("notificationservice","snooze_for_snoozin_alarm_in_notification_screen"), DialogAction.STYLE_POSITIVE, 0);
+					}
+					var alert:DialogView = Dialog.service.create(
+						alertBuilder.build()
 					);
-					alert.addEventListener(DialogViewEvent.CLOSED, bgValueWithoutOverride);
+					alert.addEventListener(DialogViewEvent.CLOSED, calibrationDialogClosedWithoutOverride);
 					alert.addEventListener(DialogViewEvent.CANCELLED, cancellation2);
 					
 					DialogService.addDialog(alert);
@@ -330,29 +331,33 @@ package services
 					function cancellation2(event:DialogViewEvent):void {
 					}
 					
-					function bgValueWithoutOverride(event:DialogViewEvent):void {
+					function calibrationDialogClosedWithoutOverride(event:DialogViewEvent):void {
 						if (event.index == 1) {
 							return;
-						}
-						var asNumber:Number = new Number(event.values[0] as String);
-						if (isNaN(asNumber)) {
-							var alert:DialogView = Dialog.service.create(
-								new AlertBuilder()
-								.setTitle(ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_calibration_title"))
-								.setMessage(ModelLocator.resourceManagerInstance.getString("calibrationservice","value_should_be_numeric"))
-								.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
-								.build()
-							);
-							DialogService.addDialog(alert);
-							//and ask again a value
-							calibrationOnRequest(override);
-						} else {
-							if(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) != "true") {
-								asNumber = asNumber * BgReading.MMOLL_TO_MGDL; 	
+						} else if (event.index == 2) {
+							var asNumber:Number = new Number(event.values[0] as String);
+							if (isNaN(asNumber)) {
+								var alert:DialogView = Dialog.service.create(
+									new AlertBuilder()
+									.setTitle(ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_calibration_title"))
+									.setMessage(ModelLocator.resourceManagerInstance.getString("calibrationservice","value_should_be_numeric"))
+									.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
+									.build()
+								);
+								DialogService.addDialog(alert);
+								//and ask again a value
+								calibrationOnRequest(override);
+							} else {
+								if(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) != "true") {
+									asNumber = asNumber * BgReading.MMOLL_TO_MGDL; 	
+								}
+								var newcalibration:Calibration = Calibration.create(asNumber).saveToDatabaseSynchronous();
+								_instance.dispatchEvent(new CalibrationServiceEvent(CalibrationServiceEvent.NEW_CALIBRATION_EVENT));
+								myTrace("Calibration created : " + newcalibration.print("   "));
 							}
-							var newcalibration:Calibration = Calibration.create(asNumber).saveToDatabaseSynchronous();
-							_instance.dispatchEvent(new CalibrationServiceEvent(CalibrationServiceEvent.NEW_CALIBRATION_EVENT));
-							myTrace("Calibration created : " + newcalibration.print("   "));
+						} else if (event.index == 0) {
+							myTrace("in calibrationOnRequest, subfunction calibrationDialogClosed");
+							snoozeFunction.call();
 						}
 					}
 				}

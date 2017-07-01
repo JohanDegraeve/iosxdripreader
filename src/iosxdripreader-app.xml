@@ -8,7 +8,7 @@
 	See the GNU General Public License for more details. You should have received 
 	a copy of the GNU General Public License along with this program. If not, 
 	see <http://www.gnu.org/licenses/gpl.txt>. -->
-<application xmlns="http://ns.adobe.com/air/application/23.0">
+<application xmlns="http://ns.adobe.com/air/application/25.0">
 
 	<!-- Adobe AIR Application Descriptor File Template. Specifies parameters 
 		for identifying, installing, and launching AIR applications. xmlns - The 
@@ -35,7 +35,11 @@
 		An updated version of application must have a versionNumber value higher 
 		than the previous version. Required for namespace >= 2.5 . For iOS Apps, 
 		this represents build number. -->
+<<<<<<< HEAD
 	<versionNumber>0.0.47</versionNumber>
+=======
+	<versionNumber>0.0.46</versionNumber>
+>>>>>>> tempbranch
 
 	<!-- A string value (such as "v1", "2.5", or "Alpha 1") that represents 
 		the version of the application, as it should be shown to users. For iOS Apps, 
