@@ -244,6 +244,17 @@ package services
 				)
 				.build()
 			);
+			service.categories.push( 
+				new CategoryBuilder()
+				.setIdentifier(ID_FOR_ALERT_VERY_HIGH_CATEGORY)
+				.addAction( 
+					new ActionBuilder()
+					.setTitle(ModelLocator.resourceManagerInstance.getString("notificationservice","snooze_for_snoozin_alarm_in_notification_screen"))
+					.setIdentifier(ID_FOR_VERY_HIGH_ALERT_SNOOZE_IDENTIFIER)
+					.build()
+				)
+				.build()
+			);
 			
 			Notifications.service.setup(service);
 			
