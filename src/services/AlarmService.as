@@ -691,15 +691,15 @@ package services
 			} else 	if (alertType.sound == "no_sound" && !enableVibration) {
 				notificationBuilder.setSound("");
 			} else {
-				for (var cntr:int = 0;cntr < soundsAsDisplayedSplitted.length;cntr++) {
-					newSound = soundsAsDisplayedSplitted[cntr];
-					if (newSound == alertType.sound) {
-						if (cntr == 0) {
-							//it's the default sound, nothing to do
-						} else {
+				if (alertType.sound == "default") {
+					//it's the default sound, nothing to do
+				} else {
+					for (var cntr:int = 0;cntr < soundsAsDisplayedSplitted.length;cntr++) {
+						newSound = soundsAsDisplayedSplitted[cntr];
+						if (newSound == alertType.sound) {
 							notificationBuilder.setSound(soundsAsStoredInAssetsSplitted[cntr]);
+							break;
 						}
-						break;
 					}
 				}
 			}

@@ -388,6 +388,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			private function okClicked(e:MouseEvent = null):void {
 				var alertTypeInDatabase:AlertType = Database.getAlertType(alertType.alarmName);
 				var neworExistingAlertType:AlertType; 
+				if (soundName == ModelLocator.resourceManagerInstance.getString("alerttypeview","no_sound"))
+					soundName = "no_sound";
+				if (soundName == ModelLocator.resourceManagerInstance.getString("alerttypeview","default_sound_as_displayed"))
+					soundName = "default";
 				if (alertTypeInDatabase != null) {
 					neworExistingAlertType = new AlertType(
 						alertTypeInDatabase.uniqueId, 
