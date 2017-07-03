@@ -799,7 +799,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 				var newVersion:String = ModelLocator.resourceManagerInstance.getString('general',"version");
 				var currentVersion:String = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_APPLICATION_VERSION);
 				if (currentVersion < newVersion) {
-					if (currentVersion == '0.0.46') {
+					if (currentVersion <= '0.0.46') {
 						var alert:DialogView = Dialog.service.create(
 							new AlertBuilder()
 							.setTitle(ModelLocator.resourceManagerInstance.getString('homeview',"info"))
