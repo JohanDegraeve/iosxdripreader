@@ -14,8 +14,6 @@
 			
 			import Utilities.Trace;
 			
-			import model.ModelLocator;
-			
 			[Bindable]
 			private var pickertext:String = "";
 			private var pickerCloseTimer:Timer;

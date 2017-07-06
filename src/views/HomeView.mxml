@@ -23,7 +23,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 		xmlns:chartClasses="mx.charts.chartClasses.*" 
 		title=""
 		initialize="initializeHandler(event)"
-		destructionPolicy="never"
 		creationComplete="onCreationComplete(event)" xmlns:mx="library://ns.adobe.com/flex/mx">
 	
 	<s:states>
@@ -49,10 +48,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			import com.distriqt.extension.dialog.events.DialogViewEvent;
 			import com.distriqt.extension.dialog.objects.DialogAction;
 			
+			import mx.charts.chartClasses.IAxis;
 			import mx.collections.ArrayCollection;
 			import mx.events.FlexEvent;
 			
-			import spark.events.ElementExistenceEvent;
 			import spark.formatters.DateTimeFormatter;
 			
 			import G4Model.TransmitterStatus;
@@ -128,7 +127,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			
 			private static var currentInfoUpdateTimer:Timer;
 			
-			
 			public static var _peripheralConnected:Boolean = false;
 			/**
 			 * timestamp that has changed connection status<br> 
@@ -142,9 +140,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			private static var currentBgLabelColor:int = 0xFFFFFF;
 			
 			[Bindable]
-			private var chartValues:ArrayCollection;
+			private static var chartValues:ArrayCollection;
 			
-			protected var webView:StageWebView = new StageWebView();
+			private static var hoursToShowInChart:Number = 6;
+			private static var hourOffFirstElementInChart:Number = 0;
 			
 			/**
 			 * connected or not. Should be replaced by if (BluetoothService.getActiveBluetoothPeripheral().state == PeripheralState.CONNECTED)<br>
@@ -161,6 +160,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 				//navigator.addEventListener(ElementExistenceEvent.ELEMENT_ADD )
 				if (initialStart) {
 					Trace.init();
+					chartValues = new ArrayCollection();
 					Database.instance.addEventListener(DatabaseEvent.DATABASE_INIT_FINISHED_EVENT,onInitResult);
 					Database.instance.addEventListener(DatabaseEvent.ERROR_EVENT,onInitError);
 					//need to know when modellocator is populated, then we can also update display
@@ -211,6 +211,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 							if (de.data as String == Database.END_OF_RESULT) {
 								displayCurrentInfoFromReading();
 								restartCurrentInfoUpdateTimer();
+								completeChartValues();
+							}
+						} else {
+							if ((de.data as BgReading).timestamp > ((new Date()).valueOf() - hoursToShowInChart * 60 * 60 * 1000)) {
+								addToChartValues(de.data as BgReading);
 							}
 						}
 				} 
@@ -252,7 +257,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 					DialogService.instance.addEventListener(DialogServiceEvent.DIALOG_SERVICE_INITIATED_EVENT, checkApplicationVersion);
 				}
 			}
-			
+						
 			private static function peripheralTypeSelected(event:DialogViewEvent):void {
 				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_INITIAL_SELECTION_G4_OR_G5_DONE, "true");
 				if (event.index== 1) {
@@ -426,6 +431,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			
 			private function transmitterServiceBGReadingEventReceived(be:TransmitterServiceEvent):void {
 				displayCurrentInfoFromReading();
+				addToChartValues(BgReading.lastNoSensor());
+				completeChartValues();
 			}
 			
 			private function restartCurrentInfoUpdateTimer():void {
@@ -617,22 +624,22 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 							CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_STATUS);
 						if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_STATUS) != "unknown")
 							message += " (" + G5Model.TransmitterStatus.getBatteryLevel(new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_STATUS))) + 
-							")" + '\n'; 
+								")" + '\n'; 
 						message += ModelLocator.resourceManagerInstance.getString('homeview','home_view_transmitter_status_info_G5_VOLTAGEA') + " " + 
 							CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_VOLTAGEA);
 						if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_VOLTAGEA) != "unknown")
 							message += " (" + (new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_VOLTAGEA)) < G5Model.TransmitterStatus.LOW_BATTERY_WARNING_LEVEL_VOLTAGEA ? "BAD":"NORMAL") + 
-							")" + '\n';
+								")" + '\n';
 						message += ModelLocator.resourceManagerInstance.getString('homeview','home_view_transmitter_status_info_G5_VOLTAGEB') + " " + 
 							CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_VOLTAGEB);
 						if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_VOLTAGEB) != "unknown")
 							message += " (" + (new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_VOLTAGEB)) < G5Model.TransmitterStatus.LOW_BATTERY_WARNING_LEVEL_VOLTAGEB ? "BAD":"NORMAL") + 
-							")" + '\n';
+								")" + '\n';
 						message += ModelLocator.resourceManagerInstance.getString('homeview','home_view_transmitter_status_info_G5_RESIST') + " " + 
 							CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_RESIST);
 						if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_RESIST) != "unknown")
 							message += " (" + (new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_RESIST)) > G5Model.TransmitterStatus.RESIST_BAD ? "BAD":(new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_RESIST)) > G5Model.TransmitterStatus.RESIST_NOTICE ? "NOTICE":(new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_RESIST)) > G5Model.TransmitterStatus.RESIST_NORMAL ? "NORMAL":"GOOD"))) + 
-							")" + '\n';
+								")" + '\n';
 					} else {
 						message += ModelLocator.resourceManagerInstance.getString('homeview','status_info_transmitter_battery_level');
 						var batteryLevel:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G4_TRANSMITTER_BATTERY_VOLTAGE);
@@ -813,7 +820,81 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 				}
 			}
 			
+			private static function addToChartValues(bgReading:BgReading):void {
+				if (bgReading == null)
+					return;
+				if (chartValues == null)
+					chartValues = new ArrayCollection();
+				if (chartValues.length == 0) {
+					chartValues.addItem(bgReading);
+				} else {
+					//first if length is already > amount expected, remove those
+					//this can be more than 1 because we're adding some in call to completeChartValues
+					while (chartValues.length > hoursToShowInChart * 12) {
+						chartValues.removeItemAt(0);
+					}
+					//fill up gaps if any
+					var timeStampPreviousReading:Number = (chartValues.getItemAt(chartValues.length - 1)).timestamp;
+					var timeStampOfBgReading:Number = bgReading.timestamp;
+					while (timeStampOfBgReading - timeStampPreviousReading > (5 + 2) * 60 * 1000) {
+						timeStampPreviousReading += 5 * 60 * 1000;
+						var newItem:Object = new Object();
+						newItem.timestamp = timeStampPreviousReading;
+						newItem.calculatedValue = Number.NaN;
+						chartValues.addItem(newItem);
+					}
+					//now add the reading
+					chartValues.addItem(bgReading);
+				}
+			}
 			
+			/**
+			 * will add dummy values in front of the list so that the first element has a timestamp close to an hour (less than 2.5 minutes) 
+			 */
+			private function completeChartValues():void {
+				//if list is empty then no need to fill up
+				if (chartValues == null)
+					return;
+				if (chartValues.length == 0)
+					return;
+				//first check that first element is deviation less than 2,5 minutes from an hour
+				var diffFromHourInSeconds:Number;
+				var firstElementCloseToAnHour:Boolean = false;
+				while (!firstElementCloseToAnHour) { 
+					var dateFirstElement:Date = new Date(chartValues.getItemAt(0).timestamp);
+					var secondsFirstElement:Number = dateFirstElement.minutes * 60 + dateFirstElement.seconds;
+					if (secondsFirstElement > 2.5 * 60 && secondsFirstElement < 57.5 * 60) {
+						var newItem:Object = new Object();
+						newItem.timestamp = (new Date(dateFirstElement.valueOf() - 5 * 60 * 1000)).valueOf();
+						newItem.calculatedValue = Number.NaN;
+						chartValues.addItemAt(newItem, 0);
+					} else {
+						firstElementCloseToAnHour = true;
+						hourOffFirstElementInChart = dateFirstElement.hours;
+						if (secondsFirstElement > 57.5 * 60)
+							hourOffFirstElementInChart++;
+					}
+				}
+			}
+			
+			private static function linearAxis_labelFunction(item:Object, prevValue:Object, axis:IAxis):String {
+				if (chartValues == null)
+					return "";
+				if (item >= chartValues.length)
+					return "";
+				var returnValue:String = "";
+				var hour:Number = hourOffFirstElementInChart + (item as Number)/12;
+				while (hour > 23)
+					hour -= 24;
+				returnValue = hour.toString();
+				if (returnValue.length == 1)
+					returnValue = "0" + returnValue;
+				return returnValue;
+			}
+			
+			private static function myTrace(log:String):void {
+				Trace.myTrace("HomeView.mxml", log);
+			}
 		]]>
 	</fx:Script>
 	<s:actionContent>
@@ -847,13 +928,27 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			</s:Group>
 			<s:Label id = "currentBgLabel" text="{currentBgLabelText}" fontSize="60" lineThrough="{currentBgLabellinethrough}" color="{currentBgLabelColor}"/>
 		</s:Group>
-		<charts:LineChart id="chart" height="100%" width="100%" showDataTips="false"
-						  paddingRight="5" paddingLeft="5" 
-						  dataProvider="{chartValues}" >
-			<charts:series>
-				<series:LineSeries>
-				</series:LineSeries>
-			</charts:series>
-		</charts:LineChart> 
+		<mx:LineChart id="myChart" height="100%" width="{topGroup.width}"
+					  dataProvider="{chartValues}" 
+					  showDataTips="false">
+
+			<!-- flex adds by default a DropShadowFilter which looks good at first sight. To remove that filter, uncomment following -->
+			<!--mx:seriesFilters>
+				<fx:Array/>
+			</mx:seriesFilters-->
+			
+			<mx:horizontalAxis>
+				<mx:LinearAxis id="horizontalaxis" labelFunction="linearAxis_labelFunction" interval="12" />
+			</mx:horizontalAxis>
+			
+			<mx:verticalAxis>
+				<mx:LinearAxis id="verticalaxis" baseAtZero="false" minimum="40" maximum = "300" interval="50"
+							   >
+				</mx:LinearAxis>
+			</mx:verticalAxis>
+			<mx:series>
+				<mx:LineSeries yField="calculatedValue"/>
+			</mx:series>
+		</mx:LineChart>	
 	</s:Group>
 </s:View>
