@@ -59,6 +59,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			import G5Model.TransmitterStatus;
 			
 			import Utilities.BgGraphBuilder;
+			import Utilities.FromtimeAndValueArrayCollection;
 			import Utilities.Trace;
 			
 			import databaseclasses.BgReading;
@@ -268,6 +269,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 						}
 					}
 					showG5InfoScreen();
+					//default battery alert level is 210, assuming xdrip with G4, when user selects G5, that needs to be changed
+					var newSetting:String = FromtimeAndValueArrayCollection.replaceAllValues(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BATTERY_ALERT), new Number(G5Model.TransmitterStatus.LOW_BATTERY_WARNING_LEVEL_VOLTAGEA))
+					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_BATTERY_ALERT, newSetting);
 				} else if (event.index == 2) {
 					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE, "G4");
 					showG4InfoScreen();
