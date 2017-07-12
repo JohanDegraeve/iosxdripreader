@@ -54,6 +54,8 @@ package services
 		private static var _QBSessionBusy:Boolean = false;
 		private static var QBSessionBusySetToTrueTimestamp:Number = 0;
 		private static var callCompletionHandlerTimer:Timer;
+		private static var timeStampOfLastDeviceDiscovery:Number = 0;
+		
 		//private static var completionHandlerResult:String;
 		private static function get QBSessionBusy():Boolean
 		{
@@ -119,8 +121,15 @@ package services
 		}
 		
 		private static function central_peripheralDiscoveredHandler(be:PeripheralEvent):void {
-			if (BluetoothService.isDexcomG5)
-				BackgroundFetch.checkMuted();
+			if (BluetoothService.isDexcomG5) {
+				if ((new Date()).valueOf() - timeStampOfLastDeviceDiscovery < 60 * 1000) {
+					
+				} else {
+					timeStampOfLastDeviceDiscovery = (new Date()).valueOf();
+					BackgroundFetch.checkMuted();
+				}
+			}
+				
 		}
 		
 		public static function callCompletionHandler(result:String):void {

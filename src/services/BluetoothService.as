@@ -130,6 +130,7 @@ package services
 		public static const BATTERY_READ_PERIOD_MS:Number = 1000 * 60 * 60 * 12; // how often to poll battery data (12 hours)
 		
 		public static var isDexcomG5:Boolean;
+		private static var timeStampOfLastDeviceDiscovery:Number = 0;
 		
 		private static function set activeBluetoothPeripheral(value:Peripheral):void
 		{
@@ -370,12 +371,27 @@ package services
 		}
 		
 		private static function central_peripheralDiscoveredHandler(event:PeripheralEvent):void {//LimiTix
+			//stop scanning
+			myTrace("in central_peripheralDiscoveredHandler, stop scanning");
+			BluetoothLE.service.centralManager.stopScan();
+
 			discoveryTimeStamp = (new Date()).valueOf();
 			if (awaitingConnect && !(isDexcomG5)) {
 				myTrace("passing in central_peripheralDiscoveredHandler but already awaiting connect, ignoring this one. peripheral name = " + event.peripheral.name);
+				myTrace("restart scan");
+				startRescan(null);
 				return;
 			} else {
 				myTrace("passing in central_peripheralDiscoveredHandler. Peripheral name = " + event.peripheral.name);
+			}
+			
+			if (isDexcomG5) {
+				if ((new Date()).valueOf() - timeStampOfLastDeviceDiscovery < 60 * 1000) {
+					myTrace("G5 but last reading was less than 1 minute ago, ignoring this peripheral discovery");
+					myTrace("restart scan");
+					startRescan(null);
+					return;
+				}
 			}
 			
 			// event.peripheral will contain a Peripheral object with information about the Peripheral
@@ -403,6 +419,7 @@ package services
 				var message:String =  
 					"Found peripheral with name" + " = " + event.peripheral.name;
 				myTrace(message);
+				timeStampOfLastDeviceDiscovery = (new Date()).valueOf();
 				
 				if (BlueToothDevice.address != "") {
 					if (BlueToothDevice.address != event.peripheral.uuid) {
@@ -419,9 +436,6 @@ package services
 					myTrace("Device details will be stored in database. Future attempts will only use this device to connect to.");
 				}
 				
-				//we want to connect to this device, so stop scanning
-				myTrace("Stop scanning and try to connect");
-				BluetoothLE.service.centralManager.stopScan();
 				//BackgroundFetch.cancelTimer3();
 				//reScanIfFailed = false;
 				
@@ -430,6 +444,9 @@ package services
 				//BackgroundFetch.startTimer4(reconnectAttemptPeriodInSeconds - 2);
 				BluetoothLE.service.centralManager.connect(event.peripheral);
 				
+			} else {
+				myTrace("doesn't seem to be a device we are interested in, either it's not an xdrip/bridge, .. or it's a G5 but not with the right name - restart scan");
+				startRescan(null);
 			}
 		}
 		
@@ -523,16 +540,7 @@ package services
 			
 			//if (isDexcomG5) {
 			forgetBlueToothDevice();
-			var timeDifSinceDiscovery:Number = (new Date()).valueOf() - discoveryTimeStamp;
-			if (timeDifSinceDiscovery > waitTimeBeforeRescanAfterDisconnectInSeconds * 1000) {
-				myTrace("restarting scan immediately now");
-				startRescan(null);
-			}  else {
-				var waitTimeInSeconds:Number = waitTimeBeforeRescanAfterDisconnectInSeconds - timeDifSinceDiscovery/1000;
-				myTrace("not restarting scan immediately, starting timer in " + waitTimeInSeconds + " seconds");
-				BackgroundFetch.startTimer1(waitTimeInSeconds);
-			}
-			return;
+			startRescan(null);
 		}
 		
 		public static function tryReconnect(event:Event = null):void {
@@ -1081,24 +1089,12 @@ package services
 				return;
 			}
 			
-			var latestBgReadingMoreThan5Minutes:Boolean = false;
-			var latestBgReadingList:ArrayCollection = BgReading.latest(1);
-			if (latestBgReadingList.length > 0) {
-				var latestBgReading:BgReading = latestBgReadingList.getItemAt(0) as BgReading;
-				latestBgReadingMoreThan5Minutes = ((new Date()).valueOf() - latestBgReading.timestamp > 5 * 60 * 1000);
-			} else {
-				latestBgReadingMoreThan5Minutes = true;
-			}
-			if (!BluetoothLE.service.centralManager.isScanning 
-				|| 
-				latestBgReadingMoreThan5Minutes) {
-				if (BluetoothLE.service.centralManager.isScanning) {
-					BluetoothLE.service.centralManager.stopScan();
-				}
+			if (!BluetoothLE.service.centralManager.isScanning) {
 				myTrace("in startRescan calling bluetoothStatusIsOn");
 				bluetoothStatusIsOn();
 			} else {
-				myTrace("in startRescan but already scanning or time since last reading < 5 minutes");
+				myTrace("in startRescan but already scanning, so returning");
+				return;
 			}
 		}
 	}
