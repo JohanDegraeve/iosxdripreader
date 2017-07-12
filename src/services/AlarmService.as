@@ -26,9 +26,11 @@ package services
 	import databaseclasses.Calibration;
 	import databaseclasses.CommonSettings;
 	import databaseclasses.Database;
+	import databaseclasses.Sensor;
 	
 	import events.BlueToothServiceEvent;
 	import events.NotificationServiceEvent;
+	import events.SettingsServiceEvent;
 	import events.TransmitterServiceEvent;
 	
 	import model.ModelLocator;
@@ -191,6 +193,7 @@ package services
 			BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.PHONE_MUTED, phoneMuted);
 			BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.PHONE_NOT_MUTED, phoneNotMuted);
 			BluetoothService.instance.addEventListener(BlueToothServiceEvent.CHARACTERISTIC_UPDATE, characteristicUpdate);
+			CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, settingChanged);
 			lastAlarmCheckTimeStamp = 0;
 			
 			for (var cntr:int = 0;cntr < snoozeValueMinutes.length;cntr++) {
@@ -200,6 +203,9 @@ package services
 				snoozeValueStrings[cntr] = (snoozeValueStrings[cntr] as String).replace("day", ModelLocator.resourceManagerInstance.getString("alarmservice","day"));
 				snoozeValueStrings[cntr] = (snoozeValueStrings[cntr] as String).replace("week", ModelLocator.resourceManagerInstance.getString("alarmservice","week"));
 			}
+			
+			//immediately check missedreading alerts
+			checkMissedReadingAlert(new Date(), true);
 		}
 		
 		private static function characteristicUpdate(event:Event):void {
@@ -537,7 +543,7 @@ package services
 						ModelLocator.resourceManagerInstance.getString("alarmservice","missed_reading_alert_notification_alert"),
 						alertType.enableVibration,
 						alertType.enableLights,
-						NotificationService.ID_FOR_ALERT_MISSED_READING_CATEGORY,
+						null,
 						_missedReadingAlertSnoozePeriodInMinutes * 60
 					); 
 				}
@@ -604,7 +610,7 @@ package services
 						resetLowAlert();
 					}
 				}
-				checkMissedReadingAlert(now, be == null, lastbgreading);
+				checkMissedReadingAlert(now, be == null);
 				checkCalibrationRequestAlert(now);
 			}
 			checkBatteryLowAlert(now);
@@ -680,8 +686,9 @@ package services
 				.setTitle(titleText)
 				.setBody(" ")
 				.enableVibration(enableVibration)
-				.enableLights(enableLights)
-				.setCategory(categoryId);
+				.enableLights(enableLights);
+			if (categoryId != null)
+				notificationBuilder.setCategory(categoryId);
 			if (alertType.repeatInMinutes > 0)
 				notificationBuilder.setRepeatInterval(NotificationRepeatInterval.REPEAT_MINUTE);
 			if (delay != 0) {
@@ -707,12 +714,24 @@ package services
 			Notifications.service.notify(notificationBuilder.build());
 		}
 		
-		private static function checkMissedReadingAlert(now:Date, triggeredByPerformFetch:Boolean, lastbgreading:BgReading):void {
+		private static function checkMissedReadingAlert(now:Date, notTriggeredByNewReading:Boolean):void {
 			var listOfAlerts:FromtimeAndValueArrayCollection;
 			var alertValue:Number;
 			var alertName:String;
 			var alertType:AlertType;
 			var delay:int;
+			
+			if (Sensor.getActiveSensor() == null) {
+				myTrace("in checkMissedReadingAlert, but sensor is not active, not planning a missed reading alert now, and cancelling any missed reading alert that maybe still exists");
+				Notifications.service.cancel(NotificationService.ID_FOR_MISSED_READING_ALERT);
+				return;
+			}
+			var lastBgReading:BgReading = BgReading.lastNoSensor();
+			if (lastBgReading == null) {
+				myTrace("in checkMissedReadingAlert, but no readings exist yet, not planning a missed reading alert now, and cancelling any missed reading alert that maybe still exists");
+				Notifications.service.cancel(NotificationService.ID_FOR_MISSED_READING_ALERT);
+				return;
+			} 
 			
 			listOfAlerts = FromtimeAndValueArrayCollection.createList(
 				CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_MISSED_READING_ALERT));
@@ -731,12 +750,12 @@ package services
 					var dateOfFire:Date = new Date(now.valueOf() + alertValue * 60 * 1000);
 					delay = alertValue * 60;
 					myTrace("in checkAlarms, calculated delay in minutes = " + delay/60);
-					if (triggeredByPerformFetch) {
-						var diffInSeconds:Number = (now.valueOf() - lastbgreading.timestamp)/1000;
+					if (notTriggeredByNewReading) {
+						var diffInSeconds:Number = (now.valueOf() - lastBgReading.timestamp)/1000;
 						delay = delay - diffInSeconds;
-						if (delay <= 0)
+						if (delay < 0)
 							delay = 0;
-						myTrace("in checkAlarms, was triggered by performFetch, reducing delay with time since last bgreading, new delay value in minutes = " + delay/60);
+						myTrace("in checkAlarms, was not triggered by new reading, reducing delay with time since last bgreading, minimum value is 5 minutes, new delay value in minutes = " + delay/60);
 					}
 					if (Database.getAlertType(listOfAlerts.getAlarmName(Number.NaN, "", dateOfFire)).enabled) {
 						myTrace("in checkAlarms, missed reading planned with delay in minutes = " + delay/60);
@@ -748,7 +767,7 @@ package services
 							ModelLocator.resourceManagerInstance.getString("alarmservice","missed_reading_alert_notification_alert"),
 							alertType.enableVibration,
 							alertType.enableLights,
-							NotificationService.ID_FOR_ALERT_MISSED_READING_CATEGORY,
+							null,
 							delay
 						); 
 						_missedReadingAlertLatestSnoozeTimeInMs = Number.NaN;
@@ -792,7 +811,7 @@ package services
 							ModelLocator.resourceManagerInstance.getString("alarmservice","missed_reading_alert_notification_alert"),
 							alertType.enableVibration,
 							alertType.enableLights,
-							NotificationService.ID_FOR_ALERT_MISSED_READING_CATEGORY,
+							null,
 							delay
 						); 
 						_missedReadingAlertLatestSnoozeTimeInMs = Number.NaN;
@@ -1145,6 +1164,16 @@ package services
 			_lowAlertLatestSnoozeTimeInMs = Number.NaN;
 			_lowAlertLatestNotificationTime = Number.NaN;
 			_lowAlertSnoozePeriodInMinutes = 0;
+		}
+		
+		private static function settingChanged(event:SettingsServiceEvent):void {
+			//need to plan missed reading alert
+			//- in case the user has changed missed reading settings
+			//- or user has started, stopped a sensor
+			//    if It was a sensor stop, then the setting COMMON_SETTING_CURRENT_SENSOR has value "0", and in checkMissedReadingAlert, the alert will be canceled and not replanned
+			if (event.data == CommonSettings.COMMON_SETTING_MISSED_READING_ALERT || event.data == CommonSettings.COMMON_SETTING_CURRENT_SENSOR) {
+				checkMissedReadingAlert(new Date(), true);
+			}
 		}
 		
 		private static function myTrace(log:String):void {

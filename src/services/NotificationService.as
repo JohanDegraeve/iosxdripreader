@@ -112,7 +112,6 @@ package services
 		
 		public static const ID_FOR_ALERT_LOW_CATEGORY:String = "LOW_ALERT_CATEGORY";
 		public static const ID_FOR_ALERT_HIGH_CATEGORY:String = "HIGH_ALERT_CATEGORY";
-		public static const ID_FOR_ALERT_MISSED_READING_CATEGORY:String = "MISSED_READING_CATEGORY";
 		public static const ID_FOR_PHONE_MUTED_CATEGORY:String = "PHONE_MUTED_CATEGORY";
 		public static const ID_FOR_ALERT_BATTERY_CATEGORY:String = "BATTERY_LEVEL_CATEGORY";
 		public static const ID_FOR_ALERT_CALIBRATION_REQUEST_CATEGORY:String = "CALIBRATION_REQUEST_CATEGORY";
@@ -185,17 +184,6 @@ package services
 					new ActionBuilder()
 					.setTitle(ModelLocator.resourceManagerInstance.getString("notificationservice","snooze_for_snoozin_alarm_in_notification_screen"))
 					.setIdentifier(ID_FOR_HIGH_ALERT_SNOOZE_IDENTIFIER)
-					.build()
-				)
-				.build()
-			);
-			service.categories.push( 
-				new CategoryBuilder()
-				.setIdentifier(ID_FOR_ALERT_MISSED_READING_CATEGORY)
-				.addAction( 
-					new ActionBuilder()
-					.setTitle(ModelLocator.resourceManagerInstance.getString("notificationservice","snooze_for_snoozin_alarm_in_notification_screen"))
-					.setIdentifier(ID_FOR_MISSED_READING_ALERT_SNOOZE_IDENTIFIER)
 					.build()
 				)
 				.build()
