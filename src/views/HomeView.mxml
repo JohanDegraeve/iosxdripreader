@@ -145,6 +145,45 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			
 			private static var hoursToShowInChart:Number = 6;
 			private static var hourOffFirstElementInChart:Number = 0;
+			[Bindable]
+			private static var chartMinimumValue:Number;
+			[Bindable]
+			private static var chartMaximumValue:Number;
+			[Bindable]
+			private static var chartInterval:Number;
+			/**
+			 * default lowest value to show in chart mgdl
+			 */
+			private static const CHART_MINIMUM_VALUE_MGDL:Number = 40;
+			/**
+			 * default highest value to show in chart mgdl, if there's values higher than this, then CHART_MAXIMUM_VALUE_2_MMOL will be used
+			 */
+			private static const CHART_MAXIMUM_VALUE_1_MGDL:Number = 300;
+			/**
+			 * default second highest value to show in chart mgdl
+			 */
+			private static const CHART_MAXIMUM_VALUE_2_MGDL:Number = 400;
+			/**
+			 * default chart interval mgdl 
+			 */
+			private static const CHART_INTERVAL_MGDL:Number = 50;
+			/**
+			 * default lowest value to show in chart mmol
+			 */
+			private static const CHART_MINIMUM_VALUE_MMOL:Number = 2.22;
+			/**
+			 * default highest value to show in chart mmol, if there's values higher than this, then CHART_MAXIMUM_VALUE_2_MMOL will be used
+			 */
+			private static const CHART_MAXIMUM_VALUE_1_MMOL:Number = 16.66;
+			/**
+			 * default second highest value to show in chart mmol
+			 */
+			private static const CHART_MAXIMUM_VALUE_2_MMOL:Number = 22.22;
+			/**
+			 * default chart interval mmol 
+			 */
+			private static const CHART_INTERVAL_MMOL:Number = 4;
+			private static var timeStampOfLatestReadingWithValueHigherThanFirstMax:Number = 0;
 			
 			/**
 			 * connected or not. Should be replaced by if (BluetoothService.getActiveBluetoothPeripheral().state == PeripheralState.CONNECTED)<br>
@@ -161,7 +200,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 				//navigator.addEventListener(ElementExistenceEvent.ELEMENT_ADD )
 				if (initialStart) {
 					Trace.init();
-					chartValues = new ArrayCollection();
 					Database.instance.addEventListener(DatabaseEvent.DATABASE_INIT_FINISHED_EVENT,onInitResult);
 					Database.instance.addEventListener(DatabaseEvent.ERROR_EVENT,onInitError);
 					//need to know when modellocator is populated, then we can also update display
@@ -204,6 +242,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 							bluetoothStateChangedHandler(null);
 						}
 					}
+					
+					if (event.data == CommonSettings.COMMON_SETTING_DO_MGDL)
+						resetChartValues();
 				}
 				
 				function bgReadingReceivedFromDatabase(de:DatabaseEvent):void {
@@ -212,12 +253,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 							if (de.data as String == Database.END_OF_RESULT) {
 								displayCurrentInfoFromReading();
 								restartCurrentInfoUpdateTimer();
-								completeChartValues();
 							}
 						} else {
-							if ((de.data as BgReading).timestamp > ((new Date()).valueOf() - hoursToShowInChart * 60 * 60 * 1000)) {
-								addToChartValues(de.data as BgReading);
-							}
 						}
 				} 
 				
@@ -431,6 +468,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 				//bluetooth service is initiated
 				//force now a check if the icon needs tobe changed by calling bluetoothStateChangedHandler, even though it may not have changed
 				bluetoothStateChangedHandler(null);
+				
+				resetChartValues();
 			}
 			
 			private function transmitterServiceBGReadingEventReceived(be:TransmitterServiceEvent):void {
@@ -837,25 +876,67 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 					while (chartValues.length > hoursToShowInChart * 12) {
 						chartValues.removeItemAt(0);
 					}
+					
+					if ((new Date()).valueOf() - timeStampOfLatestReadingWithValueHigherThanFirstMax > hoursToShowInChart * 60 * 60 * 1000) {
+						timeStampOfLatestReadingWithValueHigherThanFirstMax = 0;
+						if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true") {
+							if (chartMaximumValue == CHART_MAXIMUM_VALUE_2_MGDL)
+								chartMaximumValue = CHART_MAXIMUM_VALUE_1_MGDL;
+						} else {
+							if (chartMaximumValue == CHART_MAXIMUM_VALUE_2_MMOL)
+								chartMaximumValue = CHART_MAXIMUM_VALUE_1_MMOL;
+						}
+					}
+					
 					//fill up gaps if any
 					var timeStampPreviousReading:Number = (chartValues.getItemAt(chartValues.length - 1)).timestamp;
 					var timeStampOfBgReading:Number = bgReading.timestamp;
+					var newItem:Object
 					while (timeStampOfBgReading - timeStampPreviousReading > (5 + 2) * 60 * 1000) {
 						timeStampPreviousReading += 5 * 60 * 1000;
-						var newItem:Object = new Object();
+						newItem = new Object();
 						newItem.timestamp = timeStampPreviousReading;
 						newItem.calculatedValue = Number.NaN;
 						chartValues.addItem(newItem);
 					}
+					
 					//now add the reading
-					chartValues.addItem(bgReading);
+					newItem = new Object();
+					newItem.timestamp = bgReading.timestamp;
+					newItem.calculatedValue = bgReading.calculatedValue;
+					
+					if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true") {
+						if (bgReading.calculatedValue > CHART_MAXIMUM_VALUE_1_MGDL) {
+							chartMaximumValue = CHART_MAXIMUM_VALUE_2_MGDL;
+							timeStampOfLatestReadingWithValueHigherThanFirstMax = bgReading.timestamp;
+						}
+						if (bgReading.calculatedValue > CHART_MAXIMUM_VALUE_2_MGDL) {
+							newItem.calculatedValue = CHART_MAXIMUM_VALUE_2_MGDL;
+						}
+						if (bgReading.calculatedValue < CHART_MINIMUM_VALUE_MGDL) {
+							newItem.calculatedValue = CHART_MINIMUM_VALUE_MGDL;
+						}
+					} else {
+						newItem.calculatedValue = BgReading.mgdlToMmol(newItem.calculatedValue as Number);
+						if (newItem.calculatedValue > CHART_MAXIMUM_VALUE_1_MMOL) {
+							chartMaximumValue = CHART_MAXIMUM_VALUE_2_MMOL;
+							timeStampOfLatestReadingWithValueHigherThanFirstMax = bgReading.timestamp;
+						}
+						if (newItem.calculatedValue > CHART_MAXIMUM_VALUE_2_MMOL) {
+							newItem.calculatedValue = CHART_MAXIMUM_VALUE_2_MMOL;
+						}
+						if (newItem.calculatedValue < CHART_MINIMUM_VALUE_MMOL) {
+								newItem.calculatedValue = CHART_MINIMUM_VALUE_MMOL;
+						}
+					}
+					chartValues.addItem(newItem);
 				}
 			}
 			
 			/**
 			 * will add dummy values in front of the list so that the first element has a timestamp close to an hour (less than 2.5 minutes) 
 			 */
-			private function completeChartValues():void {
+			private static function completeChartValues():void {
 				//if list is empty then no need to fill up
 				if (chartValues == null)
 					return;
@@ -894,6 +975,31 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 				if (returnValue.length == 1)
 					returnValue = "0" + returnValue;
 				return returnValue;
+			}
+			
+			private static function resetChartValues():void {
+				//init chart
+				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) != "true") {
+					chartMinimumValue = CHART_MINIMUM_VALUE_MMOL;
+					chartMaximumValue = CHART_MAXIMUM_VALUE_1_MMOL;
+					chartInterval = CHART_INTERVAL_MMOL;
+				} else {
+					chartMinimumValue = CHART_MINIMUM_VALUE_MGDL;
+					chartMaximumValue = CHART_MAXIMUM_VALUE_1_MGDL;
+					chartInterval = CHART_INTERVAL_MGDL;
+				}
+				timeStampOfLatestReadingWithValueHigherThanFirstMax = 0;
+
+				chartValues = new ArrayCollection();
+				if (ModelLocator.bgReadings.length == 0)
+					return;
+				for (var cntr:int = 0; cntr < ModelLocator.bgReadings.length; cntr++) {
+					var reading:BgReading = ModelLocator.bgReadings.getItemAt(cntr) as BgReading;
+					if (reading.timestamp >= ((new Date()).valueOf() - hoursToShowInChart * 60 * 60 * 1000)) {
+						addToChartValues(reading);
+					}
+				}
+				completeChartValues();
 			}
 			
 			private static function myTrace(log:String):void {
@@ -946,7 +1052,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			</mx:horizontalAxis>
 			
 			<mx:verticalAxis>
-				<mx:LinearAxis id="verticalaxis" baseAtZero="false" minimum="40" maximum = "300" interval="50"
+				<mx:LinearAxis id="verticalaxis" baseAtZero="false" minimum="{chartMinimumValue}" maximum = "{chartMaximumValue}" interval="{chartInterval}"
 							   >
 				</mx:LinearAxis>
 			</mx:verticalAxis>
