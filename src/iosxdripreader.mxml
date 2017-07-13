@@ -26,10 +26,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 	<fx:Style source="assets/style.css"/>
 	<fx:Script>
 		<![CDATA[
+			import spark.components.TabbedViewNavigatorApplication;
+			
 			import Utilities.Trace;
 			
 			import databaseclasses.CommonSettings;
 			import databaseclasses.LocalSettings;
+			
+			import events.IosXdripReaderEvent;
 			
 			import model.ModelLocator;
 			
@@ -40,9 +44,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			public static var deviceScreenWidth:Number;
 			public static var deviceScreenHeight:Number;
 			
+			private static var _instance:TabbedViewNavigatorApplication;
+
+			public static function get instance():TabbedViewNavigatorApplication
+			{
+				return _instance;
+			}
+			
 			private function initApplication():void {
 				this.addEventListener(Event.ADDED_TO_STAGE, addedToStageHandler);
 				NativeApplication.nativeApplication.executeInBackground = true;
+				_instance = this;
 			}
 			
 			private function addedToStageHandler(event:Event):void {
@@ -59,14 +71,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			protected function activateHandler(event:Event):void
 			{
 				ModelLocator.isInForeground = true;
-				myTrace("setting ModelLocator.isInForeground = true");
-				myTrace("calling NightScoutService.sync");
-				NightScoutService.sync();
-				myTrace("BackGroundFetchService.registerPushNotification");
-				if (((new Date()).valueOf() - new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TIME_SINCE_LAST_QUICK_BLOX_SUBSCRIPTION))) > 24 * 60 * 60 * 1000) {
-					BackGroundFetchService.registerPushNotification(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_WISHED_QBLOX_SUBSCRIPTION_TAG));
-					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_TIME_SINCE_LAST_QUICK_BLOX_SUBSCRIPTION, (new Date()).valueOf().toString());
-				}
+				myTrace("setting ModelLocator.isInForeground = true and dispatching event IosXdripReaderEvent.APP_IN_FOREGROUND");
+				dispatchEvent(new IosXdripReaderEvent(IosXdripReaderEvent.APP_IN_FOREGROUND));
 			}
 			
 			private static function myTrace(log:String):void {

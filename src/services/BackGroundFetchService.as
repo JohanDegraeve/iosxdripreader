@@ -20,10 +20,12 @@ package services
 	import Utilities.Trace;
 	import Utilities.UniqueId;
 	
+	import databaseclasses.CommonSettings;
 	import databaseclasses.LocalSettings;
 	
 	import events.BackGroundFetchServiceEvent;
 	import events.BlueToothServiceEvent;
+	import events.IosXdripReaderEvent;
 	import events.TransmitterServiceEvent;
 	
 	import model.ModelLocator;
@@ -114,10 +116,20 @@ package services
 			BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.DEVICE_TOKEN_RECEIVED, deviceTokenReceived);
 			BackgroundFetch.minimumBackgroundFetchInterval = BackgroundFetch.BACKGROUND_FETCH_INTERVAL_NEVER;
 			BackgroundFetch.setMaxFetchTimeInSeconds(3);
+			iosxdripreader.instance.addEventListener(IosXdripReaderEvent.APP_IN_FOREGROUND, retryRegisterPushNotificationIfNeeded);
 			
 			//goal is to regularly check if phone is  musted
 			BluetoothLE.service.centralManager.addEventListener(PeripheralEvent.DISCOVERED, central_peripheralDiscoveredHandler);
 			//BluetoothService.instance.addEventListener(BlueToothServiceEvent.TRANSMITTER_DATA, transmitterDataReceived);
+		}
+		
+		private static function retryRegisterPushNotificationIfNeeded(event:Event = null):void {
+			myTrace("in registerPushNotification");
+			if (((new Date()).valueOf() - new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TIME_SINCE_LAST_QUICK_BLOX_SUBSCRIPTION))) > 24 * 60 * 60 * 1000) {
+				myTrace("BackGroundFetchService.retryRegisterPushNotificationIfNeeded");
+				BackGroundFetchService.registerPushNotification(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_WISHED_QBLOX_SUBSCRIPTION_TAG));
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_TIME_SINCE_LAST_QUICK_BLOX_SUBSCRIPTION, (new Date()).valueOf().toString());
+			}
 		}
 		
 		private static function central_peripheralDiscoveredHandler(be:PeripheralEvent):void {

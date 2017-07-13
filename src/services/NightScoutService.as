@@ -31,6 +31,7 @@ package services
 	
 	import events.BackGroundFetchServiceEvent;
 	import events.CalibrationServiceEvent;
+	import events.IosXdripReaderEvent;
 	import events.NightScoutServiceEvent;
 	import events.SettingsServiceEvent;
 	import events.TransmitterServiceEvent;
@@ -116,6 +117,7 @@ package services
 			BackGroundFetchService.instance.addEventListener(BackGroundFetchServiceEvent.LOAD_REQUEST_ERROR, defaultErrorFunction);
 			BackGroundFetchService.instance.addEventListener(BackGroundFetchServiceEvent.LOAD_REQUEST_RESULT, defaultSuccessFunction);
 			BackGroundFetchService.instance.addEventListener(BackGroundFetchServiceEvent.PERFORM_FETCH, performFetch);
+			iosxdripreader.instance.addEventListener(IosXdripReaderEvent.APP_IN_FOREGROUND, sync);
 
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME) != CommonSettings.DEFAULT_SITE_NAME
 				&&
@@ -306,6 +308,8 @@ package services
 		}
 		
 		public static function sync(event:Event = null):void {
+			myTrace("calling NightScoutService.sync");
+
 			//myTrace("LOCAL_SETTING_DEVICE_TOKEN_ID = " + LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_DEVICE_TOKEN_ID));
 			//myTrace("LOCAL_SETTING_SUBSCRIBED_TO_PUSH_NOTIFICATIONS = " + LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_SUBSCRIBED_TO_PUSH_NOTIFICATIONS));
 			//myTrace("LOCAL_SETTING_WISHED_QBLOX_SUBSCRIPTION_TAG = " + LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_WISHED_QBLOX_SUBSCRIPTION_TAG));
