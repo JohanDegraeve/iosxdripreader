@@ -4,20 +4,20 @@
 
 xdrip/xbridge/G5 reader for iOS devices - 
 
-* Initial and subsequent Calibration
-* Calibration request alerts
-* View latest calculated value on Home screen with "minutes ago" and diff with previous reading
+* Alerts
+* Chart
 * Always on notification (not really always but almost always) that allows to see the current value by just lifting up the phone (iOS 10).
-* Upload to Nightscout (works now always for G5, for xDrip not recently tested since I don't use G4 anymore, there may be some delay in upload).
-* set transmitter id
-  * for xDrip/xBridge, if the device already has a transmitter id programmed, then there's no need anymore (but allowed) to configured it in the Settings, the app will automatically read and store the transmitter id
+* Upload to Nightscout (works always for G5, for xDrip not recently tested since I don't use G4 anymore, there may be some delay in upload).
+
 
 # Alerts
 
 Alerts are configured in the Settings. 
 Possible alerts are
  * High
+ * Very High
  * Low
+ * Very Low
  * Missed Reading
  * Phone Muted (warns you if your phone is muted)
  * Calibration Request
