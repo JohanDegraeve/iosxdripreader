@@ -14,6 +14,10 @@
 			
 			import Utilities.Trace;
 			
+			import model.ModelLocator;
+			
+			[ResourceBundle('pickerview')]
+			
 			[Bindable]
 			private var pickertext:String = "";
 			private var pickerCloseTimer:Timer;
@@ -34,7 +38,7 @@
 				if (data.picker) {
 					myTrace("in view1_creationCompleteHandler, data.picker exists, opening picker");
 					picker = data.picker as DialogView;
-					pickertext = data.pickertext;
+					pickertext = data.pickertext + "\n\n" + ModelLocator.resourceManagerInstance.getString("pickerview","click_to_close");
 					picker.addEventListener(DialogViewEvent.CLOSED, snoozePicker_closedHandler);
 					picker.addEventListener(DialogViewEvent.CANCELLED, snoozePicker_closedHandler);
 					picker.show();
@@ -69,10 +73,19 @@
 			private static function myTrace(log:String):void {
 				Trace.myTrace("PickerView.mxml", log);
 			}
+			
+			protected function vgroup1_clickHandler(event:MouseEvent):void
+			{
+				if (picker != null)
+					if (picker.dispose());
+				if (navigator != null)
+					navigator.popView(flipTrans);
+			}
+			
 		]]>
 	</fx:Script>
 	
-	<s:VGroup width="100%"  paddingTop="50">
+	<s:VGroup width="100%"  paddingTop="50" click="vgroup1_clickHandler(event)">
 		<s:HGroup width="100%" verticalAlign="bottom">
 			<s:Rect height="100%" width="5" >
 				<s:fill>
