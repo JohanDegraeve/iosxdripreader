@@ -1,5 +1,7 @@
 package services
 {
+	import com.distriqt.extension.application.Application;
+	import com.distriqt.extension.application.events.ApplicationStateEvent;
 	import com.distriqt.extension.dialog.Dialog;
 	import com.distriqt.extension.dialog.DialogView;
 	import com.distriqt.extension.dialog.builders.PickerDialogBuilder;
@@ -13,6 +15,8 @@ package services
 	
 	import flash.events.Event;
 	import flash.events.EventDispatcher;
+	import flash.events.TimerEvent;
+	import flash.utils.Timer;
 	
 	import spark.components.TabbedViewNavigator;
 	import spark.transitions.FlipViewTransition;
@@ -29,6 +33,7 @@ package services
 	import databaseclasses.Sensor;
 	
 	import events.BlueToothServiceEvent;
+	import events.IosXdripReaderEvent;
 	import events.NotificationServiceEvent;
 	import events.SettingsServiceEvent;
 	import events.TransmitterServiceEvent;
@@ -161,6 +166,10 @@ package services
 		 */
 		private static var _calibrationRequestLatestNotificationTime:Number = Number.NaN;
 		
+		private static var checkMissedReadingAlertTimer:Timer;
+		
+		private static var missedReadingSnoozePickerOpen:Boolean;
+		
 		private static var snoozeValueMinutes:Array = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 75, 90, 120, 150, 180, 240, 300, 360, 420, 480, 540, 600, 1440, 10080];
 		private static var snoozeValueStrings:Array = ["5 minutes", "10 minutes", "15 minutes", "20 minutes", "25 minutes", "30 minutes", "35 minutes",
 			"40 minutes", "45 minutes", "50 minutes", "55 minutes", "1 hour", "1 hour 15 minutes", "1,5 hours", "2 hours", "2,5 hours", "3 hours", "4 hours",
@@ -194,6 +203,11 @@ package services
 			BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.PHONE_NOT_MUTED, phoneNotMuted);
 			BluetoothService.instance.addEventListener(BlueToothServiceEvent.CHARACTERISTIC_UPDATE, characteristicUpdate);
 			CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, settingChanged);
+			if (Application.isSupported) {
+				Application.service.addEventListener(ApplicationStateEvent.DEACTIVATE, application_deactivateHandler);
+			}
+			iosxdripreader.instance.addEventListener(IosXdripReaderEvent.APP_IN_FOREGROUND, appInForeGround);
+			
 			lastAlarmCheckTimeStamp = 0;
 			
 			for (var cntr:int = 0;cntr < snoozeValueMinutes.length;cntr++) {
@@ -206,6 +220,39 @@ package services
 			
 			//immediately check missedreading alerts
 			checkMissedReadingAlert(new Date(), true);
+			myTrace("in init, calling appInForeGround");
+			appInForeGround();
+		}
+		
+		public static function appInForeGround(event:Event = null):void {
+			myTrace("in appInForeGround, calling checkMissedReadingAlert");
+			checkMissedReadingAlert(new Date(), true);
+			myTrace("starting checkMissedReadingAlertTimer with delay = 6 minutes, indefinitely");
+			checkMissedReadingAlertTimer = new Timer(6 * 60 * 1000, 0);
+			checkMissedReadingAlertTimer.addEventListener(TimerEvent.TIMER, checkMissedReadingAlertTimerExpiry);
+			checkMissedReadingAlertTimer.start();
+		}
+		
+		private static function checkMissedReadingAlertTimerExpiry(event:Event = null):void {
+			myTrace("in checkMissedReadingAlertTimerExpiry, calling checkMissedReadingAlert");
+			checkMissedReadingAlert(new Date(), true);
+		}
+		
+		private static function application_deactivateHandler(event:ApplicationStateEvent):void {
+			myTrace("in application_deactivateHandler, event.code = " + event.code);
+			switch (event.code) 
+			{
+				case ApplicationStateEvent.CODE_LOCK:
+				case ApplicationStateEvent.CODE_HOME:
+					if (checkMissedReadingAlertTimer != null) {
+						if (checkMissedReadingAlertTimer.running) {
+							myTrace("stopping checkMissedReadingAlertTimer because it will not expire when app is in brackground");
+							checkMissedReadingAlertTimer.stop();
+						}
+						checkMissedReadingAlertTimer = null;
+					}
+					break;
+			}
 		}
 		
 		private static function characteristicUpdate(event:Event):void {
@@ -381,7 +428,7 @@ package services
 							break;
 						}
 					}
-					if (notificationEvent.identifier == null) {
+					if (notificationEvent.identifier == null && !missedReadingSnoozePickerOpen) {
 						var snoozePeriodPicker3:DialogView;
 						snoozePeriodPicker3 = Dialog.service.create(
 							new PickerDialogBuilder()
@@ -392,14 +439,13 @@ package services
 							.build()
 						);
 						snoozePeriodPicker3.addEventListener( DialogViewEvent.CLOSED, missedReadingSnoozePicker_closedHandler );
+						//also interested when user cancels the snooze picker because in that case the missed reading alert needs to be replanned
+						snoozePeriodPicker3.addEventListener( DialogViewEvent.CANCELLED, missedReadingSnoozePicker_canceledHandler );
 						var dataToSend:Object = new Object();
 						dataToSend.picker = snoozePeriodPicker3;
 						dataToSend.pickertext = ModelLocator.resourceManagerInstance.getString("alarmservice","snooze_text_missed_reading_alert");
 						ModelLocator.navigator.pushView(PickerView, dataToSend, null, flipTrans);
-					} else if (notificationEvent.identifier == NotificationService.ID_FOR_MISSED_READING_ALERT_SNOOZE_IDENTIFIER) {
-						_missedReadingAlertSnoozePeriodInMinutes = alertType.defaultSnoozePeriodInMinutes;
-						myTrace("in notificationReceived with id = ID_FOR_MISSED_READING_ALERT, snoozing the notification for " + _missedReadingAlertSnoozePeriodInMinutes + " minutes");
-						_missedReadingAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
+						missedReadingSnoozePickerOpen = true;
 					}
 				} else if (notificationEvent.id == NotificationService.ID_FOR_PHONEMUTED_ALERT) {
 					listOfAlerts = FromtimeAndValueArrayCollection.createList(
@@ -529,8 +575,34 @@ package services
 				_phoneMutedAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
 			}
 			
+			function missedReadingSnoozePicker_canceledHandler(event:DialogViewEvent):void {
+				missedReadingSnoozePickerOpen = false;
+				myTrace("in missedReadingSnoozePicker_canceledHandler snoozing the notification for 5 minutes ");
+				//first cancelling any existing because it may already have been set while app came in foreground
+				Notifications.service.cancel(NotificationService.ID_FOR_MISSED_READING_ALERT);
+				_missedReadingAlertSnoozePeriodInMinutes = 5;
+				_missedReadingAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
+				myTrace("in missedReadingSnoozePicker_canceledHandler planning a new notification of the same type with delay in minues 5");
+				
+				if (latestAlertTypeUsedInMissedReadingNotification != null) {
+					fireAlert(
+						latestAlertTypeUsedInMissedReadingNotification, 
+						NotificationService.ID_FOR_MISSED_READING_ALERT, 
+						ModelLocator.resourceManagerInstance.getString("alarmservice","missed_reading_alert_notification_alert"), 
+						ModelLocator.resourceManagerInstance.getString("alarmservice","missed_reading_alert_notification_alert"),
+						alertType.enableVibration,
+						alertType.enableLights,
+						null,
+						_missedReadingAlertSnoozePeriodInMinutes * 60
+					);
+				}
+			}
+			
 			function missedReadingSnoozePicker_closedHandler(event:DialogViewEvent): void {
+				missedReadingSnoozePickerOpen = false;
 				myTrace("in missedReadingSnoozePicker_closedHandler snoozing the notification for " + snoozeValueStrings[event.indexes[0]] + " minutes");
+				//first cancelling any existing because it may already have been set while app came in foreground
+				Notifications.service.cancel(NotificationService.ID_FOR_MISSED_READING_ALERT);
 				_missedReadingAlertSnoozePeriodInMinutes = snoozeValueMinutes[event.indexes[0]];
 				_missedReadingAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
 				myTrace("in missedReadingSnoozePicker_closedHandler planning a new notification of the same type with delay in minues " + _missedReadingAlertSnoozePeriodInMinutes);
@@ -566,7 +638,7 @@ package services
 				_veryHighAlertSnoozePeriodInMinutes = snoozeValueMinutes[event.indexes[0]];
 				_veryHighAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
 			}
-
+			
 			function veryLowSnoozePicker_closedHandler(event:DialogViewEvent): void {
 				myTrace("in veryLowSnoozePicker_closedHandler snoozing the notification for " + snoozeValueStrings[event.indexes[0]]);
 				_veryLowAlertSnoozePeriodInMinutes = snoozeValueMinutes[event.indexes[0]];
@@ -755,7 +827,7 @@ package services
 						delay = delay - diffInSeconds;
 						if (delay < 0)
 							delay = 0;
-						myTrace("in checkAlarms, was not triggered by new reading, reducing delay with time since last bgreading, minimum value is 5 minutes, new delay value in minutes = " + delay/60);
+						myTrace("in checkAlarms, was not triggered by new reading, reducing delay with time since last bgreading, new delay value in minutes = " + delay/60);
 					}
 					if (Database.getAlertType(listOfAlerts.getAlarmName(Number.NaN, "", dateOfFire)).enabled) {
 						myTrace("in checkAlarms, missed reading planned with delay in minutes = " + delay/60);
@@ -1036,7 +1108,7 @@ package services
 			 }
 			 return returnValue;
 		 }
-
+		
 		/**
 		 * returns true of alarm fired
 		 */private static function checkLowAlert(now:Date):Boolean {
