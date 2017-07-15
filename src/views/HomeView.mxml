@@ -595,7 +595,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 						BluetoothService.instance.addEventListener(BlueToothServiceEvent.STOPPED_SCANNING, scanningStopped);
 						BluetoothLE.service.centralManager.addEventListener(PeripheralEvent.CONNECT, userInitiatedScanningSucceeded);
 						scanningWasUserInitiated = true;
-						BluetoothService.startScanning();
+						BluetoothService.startScanning(true);
 						var alert:DialogView = Dialog.service.create(
 							new AlertBuilder()
 							.setTitle(ModelLocator.resourceManagerInstance.getString('homeview',"scan_for_device"))
