@@ -82,10 +82,6 @@ package services
 		
 		//Notification ID's
 		/**
-		 * To request extra calibration 
-		 */
-		public static const ID_FOR_EXTRA_CALIBRATION_REQUEST:int = 1;
-		/**
 		 * for the notification with currently measured bg value<br>
 		 * this is the always on notification
 		 */
@@ -339,7 +335,6 @@ package services
 		 */
 		public static function clearAllNotifications():void {
 			Notifications.service.cancel(ID_FOR_BG_VALUE);
-			Notifications.service.cancel(ID_FOR_EXTRA_CALIBRATION_REQUEST);
 			Notifications.service.cancel(ID_FOR_REQUEST_CALIBRATION);
 		}
 		

@@ -302,21 +302,6 @@ package databaseclasses
 		}
 		
 		/**
-		 * with database update of the cleared calibrations
-		 */
-		public static function clearAllExistingCalibrations():void {
-			myTrace("clearAllExistingCalibrations");
-			Database.deleteAllCalibrationRequestsSynchronous();
-			var pastCalibrations:ArrayCollection = allForSensor();
-			for (var i:int = 0; i < pastCalibrations.length; i++) {
-				var calibration:Calibration = pastCalibrations.getItemAt(i) as Calibration;
-				calibration.slopeConfidence = 0;
-				calibration.sensorConfidence = 0;
-				calibration.updateInDatabaseSynchronous();
-			}
-		}
-		
-		/**
 		 * returns all calibrations for the ative sensor<br>
 		 * if no sensor active then the return value is an empty arraycollection (size = 0)<br> 
 		 * the calibrations will be order in descending order by timestamp
@@ -358,9 +343,7 @@ package databaseclasses
 				bg1 = bg1 * BgReading.MMOLL_TO_MGDL;
 				bg2 = bg2 * BgReading.MMOLL_TO_MGDL;
 			}
-			
-			clearAllExistingCalibrations();
-			
+
 			var sensorId:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CURRENT_SENSOR);
 			var sensor:Sensor = Database.getSensor(sensorId);
 			var bgReadings:ArrayCollection = BgReading.latestBySize(2);
@@ -455,7 +438,6 @@ package databaseclasses
 			latest3Calibrations.addItem(calibration1);
 			
 			adjustRecentBgReadings(5, latest3Calibrations);
-			CalibrationRequest.createOffset(Math.min(bg1,bg2), 35);
 			//myTrace("after adjustbgreadings");
 			//myTrace("End of initialCalibration bgReading1 = " + bgReading1.print("   "));
 			//myTrace("End of initialCalibration bgReading2 = " + bgReading2.print("   "));
@@ -474,7 +456,6 @@ package databaseclasses
 				bg = bg * BgReading.MMOLL_TO_MGDL;
 			}
 			
-			CalibrationRequest.clearAllSynchronous();
 			var sensor:Sensor = Sensor.getActiveSensor();
 			if (sensor != null) {
 				var bgReading:BgReading = (BgReading.latest(1))[0]  as BgReading;
@@ -579,7 +560,6 @@ package databaseclasses
 					//myTrace("intercept checkpoint 1 = " + calibration.intercept);
 					calibration.intercept = calibration.bg - (calibration.rawValue * calibration.slope);
 					//myTrace("intercept checkpoint 2 = " + calibration.intercept);
-					CalibrationRequest.createOffset(calibration.bg, 25);
 				} else {
 					//myTrace("calculatewls : length > 1");
 					for (calibcntr = 0; calibcntr< calibrations.length; calibcntr++) {
@@ -639,7 +619,6 @@ package databaseclasses
 						//myTrace("intercept checkpoint 5 = " + calibration.intercept);
 						calibration.intercept = calibration.bg - (calibration.estimateRawAtTimeOfCalibration * calibration.slope);
 						//myTrace("intercept checkpoint 6 = " + calibration.intercept);
-						CalibrationRequest.createOffset(calibration.bg, 25);
 						//myTrace("2 intercept = "+  calibration.intercept + ", slope = " + calibration.slope);
 					}
 					if ((calibrations.length == 2 && calibration.slope > sParams.HIGH_SLOPE_1) || (calibration.slope > sParams.HIGH_SLOPE_2)) {
@@ -648,7 +627,6 @@ package databaseclasses
 						//myTrace("intercept checkpoint 7 = " + calibration.intercept);
 						calibration.intercept = calibration.bg - (calibration.estimateRawAtTimeOfCalibration * calibration.slope);
 						//myTrace("intercept checkpoint 8 = " + calibration.intercept);
-						CalibrationRequest.createOffset(calibration.bg, 25);
 						//myTrace("3 intercept = "+  calibration.intercept + ", slope = " + calibration.slope);
 					}
 				}
@@ -836,16 +814,6 @@ package databaseclasses
 			(bgReadings.getItemAt(0) as BgReading).findNewRawCurve();
 			(bgReadings.getItemAt(0) as BgReading).findNewCurve();
 			(bgReadings.getItemAt(0) as BgReading).updateInDatabaseSynchronous();		
-		}
-		
-		public static function requestCalibrationIfRangeTooNarrow():void {
-			var max:Number = Calibration.recent(true);
-			var min:Number = Calibration.recent(false);
-			if ((max - min) < 55) {
-				var avg:Number = ((min + max) / 2);
-				var dist:Number = max - avg;
-				CalibrationRequest.createOffset(avg, dist + 20);
-			}
 		}
 		
 		/**

@@ -74,13 +74,6 @@ package databaseclasses
 			"logtimestamp TIMESTAMP NOT NULL, " +
 			"lastmodifiedtimestamp TIMESTAMP NOT NULL)";
 		
-		private static const CREATE_TABLE_CALIBRATION_REQUEST:String = "CREATE TABLE IF NOT EXISTS calibrationrequest (" +
-			"calibrationrequestid STRING PRIMARY KEY," +
-			"requestifabove REAL," +
-			"deleted BOOLEAN," +
-			"lastmodifiedtimestamp TIMESTAMP NOT NULL," +
-			"requestifbelow REAL)";
-		
 		private static const CREATE_TABLE_CALIBRATION:String = "CREATE TABLE IF NOT EXISTS calibration (" +
 			"calibrationid STRING PRIMARY KEY," +
 			"lastmodifiedtimestamp TIMESTAMP NOT NULL," +
@@ -237,28 +230,7 @@ package databaseclasses
 			if (debugMode) trace("Database.as : in method createtables");
 			sqlStatement = new SQLStatement();
 			sqlStatement.sqlConnection = aConn;
-			createCalibrationRequestTable();				
-		}
-		
-		private static function createCalibrationRequestTable():void {
-			sqlStatement.clearParameters();
-			sqlStatement.text = CREATE_TABLE_CALIBRATION_REQUEST;
-			sqlStatement.addEventListener(SQLEvent.RESULT,tableCreated);
-			sqlStatement.addEventListener(SQLErrorEvent.ERROR,tableCreationError);
-			sqlStatement.execute();
-			
-			function tableCreated(se:SQLEvent):void {
-				sqlStatement.removeEventListener(SQLEvent.RESULT,tableCreated);
-				sqlStatement.removeEventListener(SQLErrorEvent.ERROR,tableCreationError);
-				createSensorTable();
-			}
-			
-			function tableCreationError(see:SQLErrorEvent):void {
-				if (debugMode) trace("Database.as : Failed to create calibration request table. Database:0024");
-				sqlStatement.removeEventListener(SQLEvent.RESULT,tableCreated);
-				sqlStatement.removeEventListener(SQLErrorEvent.ERROR,tableCreationError);
-				dispatchInformation('failed_to_create_calibration_request_table', see != null ? see.error.message:null);
-			}
+			createSensorTable();				
 		}
 		
 		private static function createSensorTable():void {
@@ -809,38 +781,6 @@ package databaseclasses
 			}
 		}
 		
-		/**
-		 * inserts a calibrationrequest in the database<br>
-		 * dispatches info if anything goes wrong<br>
-		 * synchronous
-		 */
-		public static function insertCalibrationRequestSychronous(calibrationRequest:CalibrationRequest):void {
-			myTrace("creating calibrationrequest in db with requestifabove = " + calibrationRequest.requestIfAbove + ", requestifbelow = " + calibrationRequest.requestIfBelow);
-			var insertRequest:SQLStatement;
-			try {
-				var conn:SQLConnection = new SQLConnection();
-				conn.open(dbFile, SQLMode.UPDATE);
-				conn.begin();
-				insertRequest = new SQLStatement();
-				insertRequest.sqlConnection = conn;
-				insertRequest.text = "INSERT INTO calibrationrequest (calibrationrequestid, lastmodifiedtimestamp, requestifabove, requestifbelow, deleted) " +
-					"VALUES ('" + calibrationRequest.uniqueId + "', " +
-					calibrationRequest.lastModifiedTimestamp + 
-					", " +
-					calibrationRequest.requestIfAbove + ", " + calibrationRequest.requestIfBelow + ", " +
-					"0" + ")";
-				insertRequest.execute();
-				conn.commit();
-				conn.close();
-			} catch (error:SQLError) {
-				if (conn.connected) {
-					conn.rollback();
-					conn.close();
-				}			
-				dispatchInformation('error_while_inserting_calibration_request_in_db', error.message + " - " + error.details);
-			}
-		}
-		
 		public static function insertAlertTypeSychronous(alertType:AlertType):void {
 			var insertRequest:SQLStatement;
 			try {
@@ -884,30 +824,6 @@ package databaseclasses
 			}
 		}
 		
-		/**
-		 * deletes a calibrationrequest in the database<br>
-		 * dispatches info if anything goes wrong 
-		 */
-		public static function deleteCalibrationRequestSynchronous(calibrationRequest:CalibrationRequest):void {
-			try {
-				var conn:SQLConnection = new SQLConnection();
-				conn.open(dbFile, SQLMode.UPDATE);
-				conn.begin();
-				var deleteRequest:SQLStatement = new SQLStatement();
-				deleteRequest.sqlConnection = conn;
-				deleteRequest.text = "UPDATE calibrationrequest SET deleted = 1 where calibrationrequestid = " + "'" + calibrationRequest.uniqueId + "'";
-				deleteRequest.execute();
-				conn.commit();
-				conn.close();
-			} catch (error:SQLError) {
-				if (conn.connected) {
-					conn.rollback();
-					conn.close();
-				}			
-				dispatchInformation('error_while_deleting_calibration_request_in_db', error.message + " - " + error.details);
-			}
-		}
-		
 		public static function deleteAlertTypeSynchronous(alertType:AlertType):void {
 			try {
 				var conn:SQLConnection = new SQLConnection();
@@ -928,35 +844,6 @@ package databaseclasses
 			}
 		}
 		
-		/**
-		 * updates a calibrationrequest in the database<br>
-		 * dispatches info if anything goes wrong 
-		 */
-		public static function updateCalibrationRequestSynchronous(calibrationRequest:CalibrationRequest):void {
-			var insertRequest:SQLStatement;
-			try {
-				var conn:SQLConnection = new SQLConnection();
-				conn.open(dbFile, SQLMode.UPDATE);
-				conn.begin();
-				insertRequest = new SQLStatement();
-				insertRequest.sqlConnection = conn;
-				insertRequest.text = "UPDATE calibrationrequest SET " +
-					"lastmodifiedtimestamp = " + calibrationRequest.lastModifiedTimestamp.toString() + "," +
-					"requestifabove = " + calibrationRequest.requestIfAbove + ", " + 
-					"requestifbelow = " + calibrationRequest.requestIfBelow + 
-					" WHERE alerttypeid = " + "'" + calibrationRequest.uniqueId + "'"; 
-				insertRequest.execute();
-				conn.commit();
-				conn.close();
-			} catch (error:SQLError) {
-				if (conn.connected) {
-					conn.rollback();
-					conn.close();
-				}			
-				dispatchInformation('error_while_updating_calibration_request_in_db', error.message + " - " + error.details + "\ninsertRequest.txt = " + insertRequest.text);
-			}
-		}
-
 		public static function updateAlertTypeSynchronous(alertType:AlertType):void {
 			var insertRequest:SQLStatement;
 			try {
@@ -1096,68 +983,6 @@ package databaseclasses
 					conn.close();
 				}			
 				dispatchInformation('error_while_deleting_all_calibration_in_db', error.message + " - " + error.details);
-			}
-		}
-		
-		/**
-		 * deletes all calibrationrequests<br>
-		 * synchronous
-		 */
-		public static function deleteAllCalibrationRequestsSynchronous():void {
-			try {
-				var conn:SQLConnection = new SQLConnection();
-				conn.open(dbFile, SQLMode.UPDATE);
-				conn.begin();
-				var deleteRequest:SQLStatement = new SQLStatement();
-				deleteRequest.sqlConnection = conn;
-				deleteRequest.text = "UPDATE calibrationrequest SET deleted = 1";
-				deleteRequest.execute();
-				conn.commit();
-				conn.close();
-			} catch (error:SQLError) {
-				if (conn.connected) {
-					conn.rollback();
-					conn.close();
-				}			
-				dispatchInformation('error_while_deleting_all_calibrationrequests_in_db', error.message + " - " + error.details);
-			}
-		}
-		
-		/**
-		 * get calibrationRequests with requestIfAbove < value and requestIfBelow > value<br>
-		 * return value is not sorted<br>
-		 * synchronous<br>
-		 * 
-		 */
-		public static function getCalibrationRequestsForValue(value:Number):ArrayCollection {
-			var returnValue:ArrayCollection = new ArrayCollection();
-			try {
-				var conn:SQLConnection = new SQLConnection();
-				conn.open(dbFile, SQLMode.READ);
-				conn.begin();
-				var getRequest:SQLStatement = new SQLStatement();
-				getRequest.sqlConnection = conn;
-				getRequest.text = "SELECT * FROM calibrationrequest WHERE deleted = 0 AND  requestifabove < " + value + " AND requestifbelow > " + value;
-				getRequest.execute();
-				var result:SQLResult = getRequest.getResult();
-				conn.close();
-				if (result.data != null) {
-					var numResults:int = result.data.length;
-					for (var i:int = 0; i < numResults; i++) 
-					{ 
-						var row:Object = result.data[i]; 
-						returnValue.addItem(new CalibrationRequest(row.requestifabove, row.requestifbelow, row.calibrationrequestid, row.lastmodifiedtimestamp));
-					} 
-				}
-			} catch (error:SQLError) {
-				if (conn.connected) conn.close();
-				dispatchInformation('error_while_getting_calibration_requests_in_db', error.message + " - " + error.details);
-			} catch (other:Error) {
-				if (conn.connected) conn.close();
-				dispatchInformation('error_while_getting_calibration_requests_in_db',other.getStackTrace().toString());
-			} finally {
-				if (conn.connected) conn.close();
-				return returnValue;
 			}
 		}
 		

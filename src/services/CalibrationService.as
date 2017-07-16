@@ -17,7 +17,6 @@ package services
 	
 	import databaseclasses.BgReading;
 	import databaseclasses.Calibration;
-	import databaseclasses.CalibrationRequest;
 	import databaseclasses.CommonSettings;
 	import databaseclasses.Sensor;
 	
@@ -67,23 +66,8 @@ package services
 			myTrace("notificationReceived");
 			if (event != null) {//not sure why checking, this would mean NotificationService received a null object, shouldn't happen
 				var notificationEvent:NotificationEvent = event.data as NotificationEvent;
-				if (notificationEvent.id == NotificationService.ID_FOR_EXTRA_CALIBRATION_REQUEST) {
-					myTrace("ID_FOR_EXTRA_CALIBRATION_REQUEST");
-					//double check if it's still needed - in the Android version this double check is not done
-					if (!CalibrationRequest.shouldRequestCalibration(ModelLocator.bgReadings.getItemAt(ModelLocator.bgReadings.length - 1) as BgReading)) {
-						var alert:DialogView = Dialog.service.create(
-							new AlertBuilder()
-							.setTitle(ModelLocator.resourceManagerInstance.getString("calibrationservice","calibration_request_title"))
-							.setMessage(ModelLocator.resourceManagerInstance.getString("calibrationservice","extra_calibration_not_needed_anymore"))
-							.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
-							.build()
-						);
-						DialogService.addDialog(alert, 30);
-					} else {
-						calibrationOnRequest(false);
-					}
-				} else if (notificationEvent.id == NotificationService.ID_FOR_REQUEST_CALIBRATION) {
-					myTrace("ID_FOR_EXTRA_CALIBRATION_REQUEST");
+				if (notificationEvent.id == NotificationService.ID_FOR_REQUEST_CALIBRATION) {
+					myTrace("in notificationReceived with ID_FOR_REQUEST_CALIBRATION");
 					//we don't need to do anything with the bgreading, but we need to ask the user for a calibration
 					if (((new Date()).valueOf() - timeStampOfFirstBgLevel) > (7 * 60 * 1000 + 100)) { //previous measurement was more than 7 minutes ago , restart
 						myTrace("previous measurement was more than 7 minutes ago , restart");
@@ -381,7 +365,6 @@ package services
 				DialogService.addDialog(alert);
 				//and ask again a value
 				initialCalibrate();
-				Calibration.requestCalibrationIfRangeTooNarrow();
 			} else {
 				if(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) != "true") {
 					asNumber = asNumber * BgReading.MMOLL_TO_MGDL; 	
