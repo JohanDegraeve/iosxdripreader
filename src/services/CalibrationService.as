@@ -97,9 +97,13 @@ package services
 		}
 		
 		private static function bgReadingReceived(be:TransmitterServiceEvent):void {
-			myTrace("bgReadingReceived");
+			myTrace("in bgReadingReceived");
+
+			if (Sensor.getActiveSensor() == null) {
+				myTrace("bgReadingReceived, but sensor is null, returning");
+				return;
+			}
 			//if there's already more than two calibrations, then there's no need anymore to request initial calibration
-			//same if sensor not active, then length will be 0
 			if (Calibration.allForSensor().length < 2) {
 				myTrace("Calibration.allForSensor().length < 2");
 				if ((new Date()).valueOf() - Sensor.getActiveSensor().startedAt < 2 * 3600 * 1000) {

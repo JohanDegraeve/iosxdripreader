@@ -206,7 +206,8 @@ package services
 						
 						//store the transmitter battery level in the common settings (to be synchronized)
 						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_G4_TRANSMITTER_BATTERY_VOLTAGE, transmitterDataXdripDataPacket.transmitterBatteryVoltage.toString());
-						Sensor.getActiveSensor().latestBatteryLevel = transmitterDataXdripDataPacket.transmitterBatteryVoltage;
+						if (Sensor.getActiveSensor() != null)
+							Sensor.getActiveSensor().latestBatteryLevel = transmitterDataXdripDataPacket.transmitterBatteryVoltage;
 						//create and save bgreading
 						BgReading.
 							create(transmitterDataXdripDataPacket.rawData, transmitterDataXdripDataPacket.filteredData)
@@ -222,7 +223,8 @@ package services
 					
 					//store the transmitter battery level in the common settings (to be synchronized)
 					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_G4_TRANSMITTER_BATTERY_VOLTAGE, transmitterDataG5Packet.transmitterBatteryVoltage.toString());
-					Sensor.getActiveSensor().latestBatteryLevel = transmitterDataG5Packet.transmitterBatteryVoltage;
+					if (Sensor.getActiveSensor() != null)
+						Sensor.getActiveSensor().latestBatteryLevel = transmitterDataG5Packet.transmitterBatteryVoltage;
 					//create and save bgreading
 					BgReading.
 						create(transmitterDataG5Packet.rawData, transmitterDataG5Packet.filteredData)

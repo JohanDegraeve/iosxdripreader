@@ -1678,7 +1678,7 @@ package databaseclasses
 				text += "VALUES ('" + bgreading.uniqueId + "', ";
 				text += bgreading.lastModifiedTimestamp + ", ";
 				text += bgreading.timestamp + ", ";
-				text += "'" + bgreading.sensor.uniqueId +"',"; 
+				text += "'" + (bgreading.sensor != null ? bgreading.sensor.uniqueId:"") +"',"; 
 				text += "'" + calibrationIdAsString + "', ";
 				text += bgreading.rawData + ", "; 
 				text += bgreading.filteredData + ", "; 
