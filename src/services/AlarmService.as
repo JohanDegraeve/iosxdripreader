@@ -1239,12 +1239,14 @@ package services
 		}
 		
 		private static function settingChanged(event:SettingsServiceEvent):void {
-			//need to plan missed reading alert
-			//- in case the user has changed missed reading settings
-			//- or user has started, stopped a sensor
-			//    if It was a sensor stop, then the setting COMMON_SETTING_CURRENT_SENSOR has value "0", and in checkMissedReadingAlert, the alert will be canceled and not replanned
 			if (event.data == CommonSettings.COMMON_SETTING_MISSED_READING_ALERT || event.data == CommonSettings.COMMON_SETTING_CURRENT_SENSOR) {
 				checkMissedReadingAlert(new Date(), true);
+				//need to plan missed reading alert
+				//- in case the user has changed missed reading settings
+				//- or user has started, stopped a sensor
+				//    if It was a sensor stop, then the setting COMMON_SETTING_CURRENT_SENSOR has value "0", and in checkMissedReadingAlert, the alert will be canceled and not replanned
+			} else if (event.data == CommonSettings.COMMON_SETTING_CALIBRATION_REQUEST_ALERT) {
+				checkCalibrationRequestAlert(new Date());
 			}
 		}
 		
