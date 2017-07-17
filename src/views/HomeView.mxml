@@ -143,7 +143,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			[Bindable]
 			private static var chartValues:ArrayCollection;
 			
-			private static var hoursToShowInChart:Number = 6;
+			private static var hoursToShowInChart:Number = MINIMUM_HOURS_TO_SHOW_IN_CHART;
+			private static const MINIMUM_HOURS_TO_SHOW_IN_CHART:int = 6;
+			private static const MAXIMUM_HOURS_TO_SHOW_IN_CHART:int = 24;
 			private static var hourOffFirstElementInChart:Number = 0;
 			[Bindable]
 			private static var chartMinimumValue:Number;
@@ -253,6 +255,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 							if (de.data as String == Database.END_OF_RESULT) {
 								displayCurrentInfoFromReading();
 								restartCurrentInfoUpdateTimer();
+								showInfoAboutClickOnChart();
 							}
 						} else {
 						}
@@ -282,6 +285,24 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 				function onInitError(event:Event):void
 				{	
 					trace("HomeView : database init error");
+				}
+			}
+			
+			private static function showInfoAboutClickOnChart():void {
+				if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_CHART_RANGE_INFO_GIVEN) == "false") {
+					if (ModelLocator.bgReadings.length > 1) {
+						if ((ModelLocator.bgReadings.getItemAt(ModelLocator.bgReadings.length - 1) as BgReading).timestamp - (ModelLocator.bgReadings.getItemAt(0) as BgReading).timestamp > MINIMUM_HOURS_TO_SHOW_IN_CHART * 60 * 60 * 1000) {
+							var alert:DialogView = Dialog.service.create(
+								new AlertBuilder()
+								.setTitle(ModelLocator.resourceManagerInstance.getString('homeview',"info"))
+								.setMessage(ModelLocator.resourceManagerInstance.getString('homeview',"info_about_click_on_chart"))//info about buttons top right corner
+								.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
+								.build()
+							);
+							DialogService.addDialog(alert);
+							LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_CHART_RANGE_INFO_GIVEN,"true");
+						}
+					}
 				}
 			}
 			
@@ -475,6 +496,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			private function transmitterServiceBGReadingEventReceived(be:TransmitterServiceEvent):void {
 				displayCurrentInfoFromReading();
 				addToChartValues(BgReading.lastNoSensor());
+				showInfoAboutClickOnChart();
 				completeChartValues();
 			}
 			
@@ -1005,6 +1027,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			private static function myTrace(log:String):void {
 				Trace.myTrace("HomeView.mxml", log);
 			}
+			
+			protected function myChart_clickHandler(event:MouseEvent):void
+			{
+				if (hoursToShowInChart == MINIMUM_HOURS_TO_SHOW_IN_CHART) {
+					hoursToShowInChart = MAXIMUM_HOURS_TO_SHOW_IN_CHART;
+				} else {
+					hoursToShowInChart = MINIMUM_HOURS_TO_SHOW_IN_CHART;
+				}
+				resetChartValues();
+			}
+			
 		]]>
 	</fx:Script>
 	<s:actionContent>
@@ -1038,7 +1071,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			</s:Group>
 			<s:Label id = "currentBgLabel" text="{currentBgLabelText}" fontSize="60" lineThrough="{currentBgLabellinethrough}" color="{currentBgLabelColor}"/>
 		</s:Group>
-		<mx:LineChart id="myChart" height="100%" width="{topGroup.width}"
+		<mx:LineChart id="myChart" height="100%" width="{topGroup.width}" click="myChart_clickHandler(event)"
 					  dataProvider="{chartValues}" 
 					  showDataTips="false">
 

@@ -108,6 +108,7 @@ package databaseclasses
 		 * latest application version. First time introduced is version 0.0.46, that's why it's the default value
 		 */
 		public static const LOCAL_SETTING_APPLICATION_VERSION:int = 19;
+		public static const LOCAL_SETTING_CHART_RANGE_INFO_GIVEN:int = 20;
 		
 		private static var localSettings:Array = [
 			"false",//LOCAL_SETTING_DETAILED_TRACING_ENABLED
@@ -129,7 +130,8 @@ package databaseclasses
 			"false",//LOCAL_SETTING_FROM_TIME_AND_VALUE_ELEMENT_VIEW_VALUE_INFO_GIVEN
 			"false",//LOCAL_SETTING_LOW_BATTERY_WARNING_GIVEN
 			"false",//LOCAL_SETTING_CALIBRATION_REQUEST_ALERT_WARNING_GIVEN
-			"0.0.52"//LOCAL_SETTING_APPLICATION_VERSION
+			"0.0.52",//LOCAL_SETTING_APPLICATION_VERSION
+			"false"//LOCAL_SETTING_CHART_RANGE_INFO_GIVEN
 		];
 		
 		public function LocalSettings() {
