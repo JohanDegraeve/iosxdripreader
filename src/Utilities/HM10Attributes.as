@@ -24,10 +24,13 @@ package Utilities
 	{
 		public static const HM_10_SERVICE_G4:String = "0000ffe0-0000-1000-8000-00805f9b34fb"; 
 		public static const HM_10_SERVICE_G5:String = "F8083532-849E-531C-C594-30F1F86A4EA5"; 
+		public static const HM_10_SERVICE_BLUCON:String = "436A62C0-082E-4CE8-A08B-01D81F195B24"; 
 		public static const HM_RX_TX_G4:String = "0000ffe1-0000-1000-8000-00805f9b34fb";
 		public static const G5_Communication_Characteristic_UUID:String = "F8083533-849E-531C-C594-30F1F86A4EA5";
 		public static const G5_Control_Characteristic_UUID:String = "F8083534-849E-531C-C594-30F1F86A4EA5";
 		public static const G5_Authentication_Characteristic_UUID:String = "F8083535-849E-531C-C594-30F1F86A4EA5";
+		public static const BC_desiredTransmitCharacteristicUUID:String = "436AA6E9-082E-4CE8-A08B-01D81F195B24";
+		public static const BC_desiredReceiveCharacteristicUUID:String = "436A0C82-082E-4CE8-A08B-01D81F195B24";
 		/**
 		 * only to be used in tracing, to get the name of a UUID 
 		 */
@@ -48,7 +51,8 @@ package Utilities
 			UUIDMap[HM_RX_TX_G4] = "HM_RX_TX_G4";
 			UUIDMap[G5_Communication_Characteristic_UUID] = "G5_Communication_Characteristic_UUID";
 			UUIDMap[G5_Control_Characteristic_UUID] = "G5_Control_Characteristic_UUID";
-			UUIDMap[G5_Authentication_Characteristic_UUID] = "G5_Authentication_Characteristic_UUID";
+			UUIDMap[BC_desiredTransmitCharacteristicUUID] = "BC_desiredTransmitCharacteristicUUID";
+			UUIDMap[BC_desiredReceiveCharacteristicUUID] = "BC_desiredReceiveCharacteristicUUID";
 		}
 		
 		public static function getCharacteristicName(uuid:String):String {
@@ -58,6 +62,10 @@ package Utilities
 				return "G5_Authentication_Characteristic_UUID";
 			} else if (uuid.toUpperCase() == G5_Control_Characteristic_UUID) {
 				return "G5_Control_Characteristic_UUID";
+			} else if (uuid.toUpperCase() == BC_desiredTransmitCharacteristicUUID) {
+				return "BC_desiredTransmitCharacteristicUUID";
+			} else if (uuid.toUpperCase() == BC_desiredReceiveCharacteristicUUID) {
+				return "BC_desiredReceiveCharacteristicUUID";
 			} 
 			return "";
 		}
