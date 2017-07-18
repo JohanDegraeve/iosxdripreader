@@ -888,11 +888,20 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			private static function addToChartValues(bgReading:BgReading):void {
 				if (bgReading == null)
 					return;
+				if ((new Date()).valueOf() - bgReading.timestamp > hoursToShowInChart * 60 * 60 * 1000) {
+					return;
+				}
 				if (chartValues == null)
 					chartValues = new ArrayCollection();
 				if (chartValues.length == 0) {
 					chartValues.addItem(bgReading);
 				} else {
+					if (!(bgReading.timestamp > (chartValues.getItemAt(chartValues.length - 1)).timestamp)) {
+						//it's an old reading, this may happen eg when sensor has been stopped, lastNoSensor is called, but this returns the last reading with calculated value not 0
+						//If a sensor is stopped, the app keeps receiving readings, and hence this function is called, but bgreading is an older reading
+						return;
+					}
+
 					//first if length is already > amount expected, remove those
 					//this can be more than 1 because we're adding some in call to completeChartValues
 					while (chartValues.length > hoursToShowInChart * 12) {

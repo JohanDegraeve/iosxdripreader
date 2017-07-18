@@ -380,9 +380,11 @@ package databaseclasses
 				var itemsAdded:int = 0;
 				while (cntr > -1 && itemsAdded < number) {
 					var bgReading:BgReading = ModelLocator.bgReadings.getItemAt(cntr) as BgReading;
-					if (bgReading.sensor.uniqueId == currentSensorId && bgReading.rawData != 0) {
-						returnValue.addItem(bgReading);
-						itemsAdded++;
+					if (bgReading.sensor != null) {
+						if (bgReading.sensor.uniqueId == currentSensorId && bgReading.rawData != 0) {
+							returnValue.addItem(bgReading);
+							itemsAdded++;
+						}
 					}
 					cntr--;
 				}
