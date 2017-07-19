@@ -256,7 +256,7 @@ package services
 		}
 		
 		private static function characteristicUpdate(event:Event):void {
-			if (!BluetoothService.isDexcomG5)
+			if (!BluetoothService.isDexcomG5 && !BluetoothService.isBlucon)
 				BackgroundFetch.checkMuted();
 		}
 		
