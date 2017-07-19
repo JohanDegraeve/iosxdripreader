@@ -319,7 +319,7 @@ package services
 				connectionAttemptTimeStamp = (new Date()).valueOf();
 				BluetoothLE.service.centralManager.connect(activeBluetoothPeripheral);
 				myTrace("Trying to connect to known device.");
-			} else if (BlueToothDevice.known() || (isDexcomG5)) {
+			} else if (BlueToothDevice.known() || (isDexcomG5) || (isBlucon)) {
 				myTrace("call startScanning");
 				startScanning();
 			} else {
