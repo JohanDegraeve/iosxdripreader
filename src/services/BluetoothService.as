@@ -274,8 +274,11 @@ package services
 		private static function settingChanged(event:SettingsServiceEvent):void {
 			if (event.data == CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE) {
 				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE) == "G5") {
-					isDexcomG5 = true;					
+					isDexcomG5 = true;	
+					startScanning();
 				} else {
+					myTrace("in settingChanged, event.data = COMMON_SETTING_PERIPHERAL_TYPE, calling stopscanning");
+					stopScanning(null);
 					isDexcomG5 = false;
 				}
 			} else if (event.data == CommonSettings.COMMON_SETTING_TRANSMITTER_ID) {
@@ -742,7 +745,7 @@ package services
 				value.position = 0;
 				if (isDexcomG5 && !isBlucon) {
 					processG5TransmitterData(value, event.characteristic);
-				} if (isBlucon) {
+				} else if (isBlucon) {
 					myTrace("it's a BluCon no further processing for the moment");
 				} else {
 					processG4TransmitterData(value);
