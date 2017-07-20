@@ -405,7 +405,7 @@ package services
 					)
 				)
 				||
-				(isBlucon && !isDexcomG5 &&
+				(isBlucon &&
 					(
 						(event.peripheral.name as String).toUpperCase().indexOf(expectedBLUCON_name) > -1
 					)
