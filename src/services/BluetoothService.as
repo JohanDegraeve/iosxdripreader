@@ -329,7 +329,7 @@ package services
 		
 		public static function startScanning(initialG4Scan:Boolean = false):void {
 			if (!BluetoothLE.service.centralManager.isScanning) {
-				if (!BluetoothLE.service.centralManager.scanForPeripherals(isBlucon ? uuids_G5_Service : (isDexcomG5 ? uuids_G5_Advertisement:uuids_G4_Service)))
+				if (!BluetoothLE.service.centralManager.scanForPeripherals(isBlucon ? uuids_BLUCON_Service : (isDexcomG5 ? uuids_G5_Advertisement:uuids_G4_Service)))
 				{
 					myTrace("failed to start scanning for peripherals");
 					return;
