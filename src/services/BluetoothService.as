@@ -122,7 +122,7 @@ package services
 		private static var timeStampOfLastDeviceDiscovery:Number = 0;
 		private static var scanTimer:Timer;
 		
-		public static var isBlucon:Boolean = true;
+		public static var isBlucon:Boolean = false;
 		
 		private static function set activeBluetoothPeripheral(value:Peripheral):void
 		{

@@ -524,7 +524,7 @@
 					if (event.index == 1) {
 						return;
 					}
-					var idLength:Number = (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE)) == "G5" ? 5:5
+					var idLength:Number = (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE)) == "G5" ? 6:5
 					if ((event.values[0] as String).length != idLength) {
 						var alertMessage:String =
 							(ModelLocator.resourceManagerInstance.getString("transmitterservice","transmitter_id_should_be_five_chars")).replace("{max}", idLength.toString());
