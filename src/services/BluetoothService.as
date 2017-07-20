@@ -279,7 +279,7 @@ package services
 					isDexcomG5 = false;
 				}
 			} else if (event.data == CommonSettings.COMMON_SETTING_TRANSMITTER_ID) {
-				if (isDexcomG5) {
+				if (isDexcomG5  || isBlucon) {
 					myTrace("in settingChanged, event.data = COMMON_SETTING_TRANSMITTER_ID, calling forgetbluetoothdevice");
 					BlueToothDevice.forgetBlueToothDevice();
 				}
@@ -314,7 +314,7 @@ package services
 		}
 		
 		private static function bluetoothStatusIsOn():void {
-			if (activeBluetoothPeripheral != null && !(isDexcomG5)) {//do we ever pass here, activebluetoothperipheral is set to null after disconnect
+			if (activeBluetoothPeripheral != null && !(isDexcomG5) && !isBlucon) {//do we ever pass here, activebluetoothperipheral is set to null after disconnect
 				awaitingConnect = true;
 				connectionAttemptTimeStamp = (new Date()).valueOf();
 				BluetoothLE.service.centralManager.connect(activeBluetoothPeripheral);
@@ -370,7 +370,7 @@ package services
 				myTrace("passing in central_peripheralDiscoveredHandler. Peripheral name = " + event.peripheral.name);
 			}
 			
-			if (isDexcomG5) {
+			if (isDexcomG5 && !isBlucon) {
 				if ((new Date()).valueOf() - timeStampOfLastDeviceDiscovery < 60 * 1000) {
 					myTrace("G5 but last reading was less than 1 minute ago, ignoring this peripheral discovery");
 					myTrace("restart scan");
@@ -382,7 +382,7 @@ package services
 			// event.peripheral will contain a Peripheral object with information about the Peripheral
 			var expectedG5_name:String;
 			var expectedBLUCON_name:String;
-			if (isDexcomG5) {
+			if (isDexcomG5 && !isBlucon) {
 				expectedG5_name = "DEXCOM" + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID).substring(4,6);
 				myTrace("expected g5 device name = " + expectedG5_name);
 			} else if (isBlucon) {
@@ -399,13 +399,13 @@ package services
 					)
 				) 
 				||
-				(isDexcomG5 && 
+				(isDexcomG5 && !isBlucon &&
 					(
 						(event.peripheral.name as String).toUpperCase().indexOf(expectedG5_name) > -1
 					)
 				)
 				||
-				(isBlucon && 
+				(isBlucon && !isDexcomG5 &&
 					(
 						(event.peripheral.name as String).toUpperCase().indexOf(expectedBLUCON_name) > -1
 					)
@@ -559,7 +559,7 @@ package services
 				
 				//find the index of the service that has uuid = the one used by xdrip/xbridge or Dexcom
 				var index:int;
-				if (isDexcomG5) {
+				if (isDexcomG5 && !isBlucon) {
 					for each (var o:Object in activeBluetoothPeripheral.services) {
 						if (HM10Attributes.HM_10_SERVICE_G5.indexOf((o.uuid as String).toUpperCase()) > -1) {
 							break;
@@ -592,9 +592,9 @@ package services
 					myTrace("amountOfDiscoverServicesOrCharacteristicsAttempt == MAX_RETRY_DISCOVER_SERVICES_OR_CHARACTERISTICS"); 
 					myTrace("max_amount_of_discover_characteristics_attempt_reached");
 				}
-				if (activeBluetoothPeripheral.services.length == 0 && !(isDexcomG5)) {
+				if (activeBluetoothPeripheral.services.length == 0 && !(isDexcomG5) && !isBlucon) {
 					myTrace("activeBluetoothPeripheral.services.length == 0"); 
-				} else if (activeBluetoothPeripheral.services.length == 0 && (isDexcomG5)) {
+				} else if (activeBluetoothPeripheral.services.length == 0 && (isDexcomG5  || isBlucon)) {
 					myTrace("activeBluetoothPeripheral.services.length == 0 but it's a dexcomg5, not trying to reconnect");
 				}
 				tryReconnect();
@@ -625,7 +625,7 @@ package services
 			var BC_desiredTransmitCharacteristicIndex:int = 0;
 			
 			var o:Object;
-			if (isDexcomG5) {
+			if (isDexcomG5 && !isBlucon) {
 				for each (o in activeBluetoothPeripheral.services) {
 					if (HM10Attributes.HM_10_SERVICE_G5.indexOf((o.uuid as String).toUpperCase()) > -1) {
 						break;
@@ -740,7 +740,7 @@ package services
 				value.endian = Endian.LITTLE_ENDIAN;
 				myTrace("data packet received from transmitter : " + Utilities.UniqueId.bytesToHex(value));
 				value.position = 0;
-				if (isDexcomG5) {
+				if (isDexcomG5 && !isBlucon) {
 					processG5TransmitterData(value, event.characteristic);
 				} if (isBlucon) {
 					myTrace("it's a BluCon no further processing for the moment");
@@ -752,7 +752,7 @@ package services
 		
 		private static function peripheral_characteristic_writeHandler(event:CharacteristicEvent):void {
 			myTrace("peripheral_characteristic_writeHandler" + HM10Attributes.getCharacteristicName(event.characteristic.uuid));
-			if (isDexcomG5) {
+			if (isDexcomG5  || isBlucon) {
 			} else {
 				_instance.dispatchEvent(new BlueToothServiceEvent(BlueToothServiceEvent.BLUETOOTH_DEVICE_CONNECTION_COMPLETED));
 			}
@@ -768,7 +768,7 @@ package services
 		
 		private static function peripheral_characteristic_subscribeHandler(event:CharacteristicEvent):void {
 			myTrace("peripheral_characteristic_subscribeHandler success: " + HM10Attributes.getCharacteristicName(event.characteristic.uuid));
-			if (isDexcomG5) {
+			if (isDexcomG5 && !isBlucon) {
 				if (event.characteristic.uuid.toUpperCase() == HM10Attributes.G5_Control_Characteristic_UUID.toUpperCase()) {
 					getSensorData();
 				} else {
