@@ -688,7 +688,7 @@ package services
 				BC_desiredTransmitCharacteristic = event.peripheral.services[servicesIndex].characteristics[BC_desiredTransmitCharacteristicIndex];
 				myTrace("subscribing to BC_desiredReceiveCharacteristic");
 				
-				if (!activeBluetoothPeripheral.subscribeToCharacteristic(BC_desiredTransmitCharacteristic))
+				if (!activeBluetoothPeripheral.subscribeToCharacteristic(BC_desiredReceiveCharacteristic))
 				{
 					myTrace("Subscribe to characteristic failed due to invalid adapter state.");
 				}
