@@ -20,6 +20,7 @@ package services
 	import Utilities.Trace;
 	import Utilities.UniqueId;
 	
+	import databaseclasses.BgReading;
 	import databaseclasses.CommonSettings;
 	import databaseclasses.LocalSettings;
 	
@@ -117,11 +118,28 @@ package services
 			BackgroundFetch.minimumBackgroundFetchInterval = BackgroundFetch.BACKGROUND_FETCH_INTERVAL_NEVER;
 			BackgroundFetch.setMaxFetchTimeInSeconds(3);
 			iosxdripreader.instance.addEventListener(IosXdripReaderEvent.APP_IN_FOREGROUND, retryRegisterPushNotificationIfNeeded);
+			BackgroundFetch.initHealthKit();
+			TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, bgReadingReceived);
 			
 			//goal is to regularly check if phone is  musted
 			BluetoothLE.service.centralManager.addEventListener(PeripheralEvent.DISCOVERED, central_peripheralDiscoveredHandler);
 			//BluetoothService.instance.addEventListener(BlueToothServiceEvent.TRANSMITTER_DATA, transmitterDataReceived);
 		}
+		
+		private static function bgReadingReceived(be:TransmitterServiceEvent):void {
+			var bgReading:BgReading = BgReading.lastNoSensor();
+			if (bgReading.calculatedValue == 0) {
+				myTrace("in bgReadingReceived, calculatedvalue is 0, returning");
+				return;
+			}
+			if ((new Date()).valueOf() - bgReading.timestamp > 4 * 60 * 1000) {
+				myTrace("in bgReadingReceived, it's an old reading, probably where in a status where there's no sensor active but the app receives a reading from the transmitter, returning");
+				return;
+			}
+			myTrace("in bgReadingReceived, adding to HK");
+			BackgroundFetch.storeBGInHealthKitMgDl(bgReading.calculatedValue);
+		}
+
 		
 		private static function retryRegisterPushNotificationIfNeeded(event:Event = null):void {
 			myTrace("in registerPushNotification");
