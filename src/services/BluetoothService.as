@@ -781,7 +781,7 @@ package services
 				if (isDexcomG5 && !isBlucon) {
 					processG5TransmitterData(value, event.characteristic);
 				} if (isBlucon) {
-					myTrace("it's a BluCon no further processing for the moment");
+					processBLUCONTransmitterData(value);
 				} else {
 					processG4TransmitterData(value);
 				}
@@ -1052,7 +1052,7 @@ package services
 				myTrace("getNowGlucoseData -> single block response")
 				myTrace("now glucose value Original Limitter algo (divided by 10)-> \(self.nowGlucoseValue)")
 				myTrace("now glucose value Updated Limitter algo (divided by 8.5)-> \(self.nowGlucoseValue8p5)")
-				
+				sendCommand(BLUCON_COMMAND_sleep);
 				//dispatch event with glucosevalue;
 			} 
 		}
