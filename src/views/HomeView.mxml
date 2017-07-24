@@ -92,7 +92,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			
 			private static var initialStart:Boolean = true;
 			[Bindable]
+			/**
+			 * the label for toppart, this is inclusive arrow
+			 */
 			private static var currentBgLabelText:String = "---";
+			[Bindable]
+			/**
+			 * the label shown in large prt, this is exclusive arrow
+			 */
+			private static var largeBgLabelText:String = "---";
 			[Bindable]
 			private static var minutesAgoText:String = "";
 			[Bindable]
@@ -153,6 +161,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			private static var chartMaximumValue:Number;
 			[Bindable]
 			private static var chartInterval:Number;
+			[Bindable]
+			private static var fontSizeForLargeBGLabel:int = 100;
+
 			/**
 			 * default lowest value to show in chart mgdl
 			 */
@@ -529,6 +540,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			{
 				//instantiate modellocator because event listeners are being added to the database class, to receive logging information
 				ModelLocator.instance;
+				largeBGLabelGroup.includeInLayout = false;
+				largeBGLabelGroup.visible = false;
 			}
 			
 			private function displayCurrentInfoFromReading(event:Event = null):void {
@@ -536,6 +549,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 				var estimate:Number = new Number(0);
 				if (lastBgReading == null) {
 					currentBgLabelText = "---";
+					largeBgLabelText = currentBgLabelText;
 					currentBgLabellinethrough = false;//currentBgLabel.setStyle("lineThrough","false");
 					currentBgLabel.invalidateSize();
 					minutesAgoText = "";
@@ -545,6 +559,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 						estimate = lastBgReading.calculatedValue;
 						currentBgLabelText = BgGraphBuilder.unitizedString(estimate, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true");
 						currentBgLabellinethrough = true;//currentBgLabel.setStyle("lineThrough","true");
+						largeBgLabelText = currentBgLabelText;
 						currentBgLabel.invalidateSize();
 					} else {
 						estimate = lastBgReading.calculatedValue;
@@ -553,6 +568,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 						if (lastBgReading.hideSlope) {
 							slope_arrow = "";
 						}
+						largeBgLabelText = currentBgLabelText;
 						currentBgLabelText += " " + slope_arrow;
 						currentBgLabellinethrough = false;
 						currentBgLabel.invalidateSize();
@@ -1039,12 +1055,40 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			
 			protected function myChart_clickHandler(event:MouseEvent):void
 			{
-				if (hoursToShowInChart == MINIMUM_HOURS_TO_SHOW_IN_CHART) {
-					hoursToShowInChart = MAXIMUM_HOURS_TO_SHOW_IN_CHART;
+				if (myChart.includeInLayout) {
+					if (hoursToShowInChart == MINIMUM_HOURS_TO_SHOW_IN_CHART) {
+						hoursToShowInChart = MAXIMUM_HOURS_TO_SHOW_IN_CHART;
+						resetChartValues();
+					} else {
+						myChart.includeInLayout = false;
+						myChart.visible = false;
+						largeBGLabelGroup.includeInLayout = true;
+						largeBGLabelGroup.visible = true;
+					}
 				} else {
+					myChart.includeInLayout = true;
+					myChart.visible = true;
+					largeBGLabelGroup.includeInLayout = false;
+					largeBGLabelGroup.visible = false;
 					hoursToShowInChart = MINIMUM_HOURS_TO_SHOW_IN_CHART;
+					resetChartValues();
 				}
-				resetChartValues();
+			}
+			
+			protected function largeBGLabel_updateCompleteHandler(event:FlexEvent):void
+			{
+				if (!largeBGLabelGroup.includeInLayout)
+					return;
+				if (largeBGLabel.width > 1 * iosxdripreader.deviceScreenWidth) {
+					myTrace("in largeBGLabel_updateCompleteHandler, decreasing fontSizeForLargeBGLabel");
+					fontSizeForLargeBGLabel = fontSizeForLargeBGLabel * 0.9;
+				} else if (largeBGLabel.width < 0.9 * iosxdripreader.deviceScreenWidth) {
+					if (largeBGLabel.height < 0.95 * largeBGLabelGroup.height) {
+						fontSizeForLargeBGLabel = fontSizeForLargeBGLabel * 1.1;
+						myTrace("in largeBGLabel_updateCompleteHandler, increasing fontSizeForLargeBGLabel to " + fontSizeForLargeBGLabel + ", largeBGLabel.height = " + largeBGLabel.height + ", largebglabelgroup.height= " + largeBGLabelGroup.height);
+						myTrace("labelheight = " + largeBGLabel.height);
+					}
+				}  
 			}
 			
 		]]>
@@ -1102,5 +1146,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 				<mx:LineSeries yField="calculatedValue"/>
 			</mx:series>
 		</mx:LineChart>	
+		<s:Group width="100%" height="100%" click="myChart_clickHandler(event)" id = "largeBGLabelGroup" >
+			<s:layout>
+				<s:HorizontalLayout horizontalAlign="center" verticalAlign="middle"/>
+			</s:layout>
+			<s:Label id = "largeBGLabel" text="{largeBgLabelText}" fontSize="{fontSizeForLargeBGLabel}" lineThrough="{currentBgLabellinethrough}" 
+					 color="{currentBgLabelColor}" updateComplete="largeBGLabel_updateCompleteHandler(event)"/>
+		</s:Group>	
 	</s:Group>
 </s:View>

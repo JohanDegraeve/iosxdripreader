@@ -41,7 +41,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			import services.DialogService;
 			import services.NightScoutService;
 			
+			[Bindable]
 			public static var deviceScreenWidth:Number;
+			[Bindable]
 			public static var deviceScreenHeight:Number;
 			
 			private static var _instance:TabbedViewNavigatorApplication;
