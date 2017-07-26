@@ -52,7 +52,13 @@ Alert Types can be re-used for different types of alerts.
 
 # To Install the app.
 
-If you need a package for your device, sent my the UDID of your device in a mail please. (johan.degraeve@gmail.com).
+The application is not available on iTunes and must be signed for your device.
+If you have an Apple Developer Account then you can easily do this yourself as described here : https://github.com/dabear/iphoneipa-resign
+The ipa file to download is here, take the latest release : https://github.com/JohanDegraeve/iosxdripreader/releases
+Regulary check for updates.
+
+If you don't have an Apple Developer Account, and you don't know anybody who can help you with this, you can ask me.
+Send my the UDID of your device in a mail please. (johan.degraeve@gmail.com).
 To retrieve your UDID you must use iTunes (apps don't give you the right UDID). Here you can find an explanation how to find the UDID http://whatsmyudid.com/ . Follow the instructions "iTunes".
 I'll update the latest release version with a release signed for your device.
 

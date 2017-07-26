@@ -29,6 +29,8 @@ package services
 	import com.distriqt.extension.notifications.events.AuthorisationEvent;
 	import com.distriqt.extension.notifications.events.NotificationEvent;
 	
+	import flash.desktop.NativeApplication;
+	import flash.desktop.SystemIdleMode;
 	import flash.events.Event;
 	import flash.events.EventDispatcher;
 	
@@ -301,6 +303,8 @@ package services
 						ModelLocator.isInForeground = false;
 						myTrace("NotificationService.as, setting active window to Home screen");
 						(ModelLocator.navigator.parentNavigator as TabbedViewNavigator).selectedIndex = 0;
+						myTrace("in application_deactivateHandler, setting systemIdleMode = SystemIdleMode.NORMAL");
+						NativeApplication.nativeApplication.systemIdleMode = SystemIdleMode.NORMAL;
 					break;
 				}
 			}

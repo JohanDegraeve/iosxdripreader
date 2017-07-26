@@ -47,6 +47,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			import com.distriqt.extension.dialog.events.DialogDateTimeEvent;
 			import com.distriqt.extension.dialog.events.DialogViewEvent;
 			import com.distriqt.extension.dialog.objects.DialogAction;
+			import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
 			
 			import mx.charts.chartClasses.IAxis;
 			import mx.collections.ArrayCollection;
@@ -92,7 +93,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			
 			private static var initialStart:Boolean = true;
 			[Bindable]
+			/**
+			 * the label for toppart, this is inclusive arrow
+			 */
 			private static var currentBgLabelText:String = "---";
+			[Bindable]
+			/**
+			 * the label shown in large prt, this is exclusive arrow
+			 */
+			private static var largeBgLabelText:String = "---";
 			[Bindable]
 			private static var minutesAgoText:String = "";
 			[Bindable]
@@ -153,6 +162,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			private static var chartMaximumValue:Number;
 			[Bindable]
 			private static var chartInterval:Number;
+			[Bindable]
+			private static var fontSizeForLargeBGLabel:int = 100;
+
 			/**
 			 * default lowest value to show in chart mgdl
 			 */
@@ -186,6 +198,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			 */
 			private static const CHART_INTERVAL_MMOL:Number = 4;
 			private static var timeStampOfLatestReadingWithValueHigherThanFirstMax:Number = 0;
+			
+			private static var largeBgLabelTouchTimer:Timer;
 			
 			/**
 			 * connected or not. Should be replaced by if (BluetoothService.getActiveBluetoothPeripheral().state == PeripheralState.CONNECTED)<br>
@@ -529,6 +543,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			{
 				//instantiate modellocator because event listeners are being added to the database class, to receive logging information
 				ModelLocator.instance;
+				largeBGLabelGroup.includeInLayout = false;
+				largeBGLabelGroup.visible = false;
 			}
 			
 			private function displayCurrentInfoFromReading(event:Event = null):void {
@@ -536,6 +552,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 				var estimate:Number = new Number(0);
 				if (lastBgReading == null) {
 					currentBgLabelText = "---";
+					largeBgLabelText = currentBgLabelText;
 					currentBgLabellinethrough = false;//currentBgLabel.setStyle("lineThrough","false");
 					currentBgLabel.invalidateSize();
 					minutesAgoText = "";
@@ -545,6 +562,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 						estimate = lastBgReading.calculatedValue;
 						currentBgLabelText = BgGraphBuilder.unitizedString(estimate, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true");
 						currentBgLabellinethrough = true;//currentBgLabel.setStyle("lineThrough","true");
+						largeBgLabelText = currentBgLabelText;
 						currentBgLabel.invalidateSize();
 					} else {
 						estimate = lastBgReading.calculatedValue;
@@ -553,6 +571,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 						if (lastBgReading.hideSlope) {
 							slope_arrow = "";
 						}
+						largeBgLabelText = currentBgLabelText;
 						currentBgLabelText += " " + slope_arrow;
 						currentBgLabellinethrough = false;
 						currentBgLabel.invalidateSize();
@@ -881,6 +900,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 						);
 						DialogService.addDialog(alert);
 					}
+					if (currentVersion <= '0.0.54') {
+						var alert:DialogView = Dialog.service.create(
+							new AlertBuilder()
+							.setTitle(ModelLocator.resourceManagerInstance.getString('homeview',"info"))
+							.setMessage(ModelLocator.resourceManagerInstance.getString('homeview',"info_app_not_always_on_anymore"))
+							.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
+							.build()
+						);
+						DialogService.addDialog(alert);
+					}
 					LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_APPLICATION_VERSION, newVersion); 
 				}
 			}
@@ -1037,14 +1066,78 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 				Trace.myTrace("HomeView.mxml", log);
 			}
 			
-			protected function myChart_clickHandler(event:MouseEvent):void
+			protected function myChart_clickHandler(event:MouseEvent = null):void
 			{
-				if (hoursToShowInChart == MINIMUM_HOURS_TO_SHOW_IN_CHART) {
-					hoursToShowInChart = MAXIMUM_HOURS_TO_SHOW_IN_CHART;
+				if (myChart.includeInLayout) {
+					if (hoursToShowInChart == MINIMUM_HOURS_TO_SHOW_IN_CHART) {
+						hoursToShowInChart = MAXIMUM_HOURS_TO_SHOW_IN_CHART;
+						resetChartValues();
+					} else {
+						myChart.includeInLayout = false;
+						myChart.visible = false;
+						largeBGLabelGroup.includeInLayout = true;
+						largeBGLabelGroup.visible = true;
+						if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_INFO_ABOUT_LONG_PRESS_IN_HOME_SCREEN_GIVEN) == "false") {
+							var alert:DialogView = Dialog.service.create(
+								new AlertBuilder()
+								.setTitle(ModelLocator.resourceManagerInstance.getString('homeview',"info"))
+								.setMessage(ModelLocator.resourceManagerInstance.getString('homeview',"info_about_long_press_on_home_screen"))
+								.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
+								.build()
+							);
+							DialogService.addDialog(alert);
+							LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_INFO_ABOUT_LONG_PRESS_IN_HOME_SCREEN_GIVEN, "true");
+						}
+					}
 				} else {
+					myChart.includeInLayout = true;
+					myChart.visible = true;
+					largeBGLabelGroup.includeInLayout = false;
+					largeBGLabelGroup.visible = false;
 					hoursToShowInChart = MINIMUM_HOURS_TO_SHOW_IN_CHART;
+					resetChartValues();
 				}
-				resetChartValues();
+			}
+			
+			protected function largeBGLabel_updateCompleteHandler(event:FlexEvent):void
+			{
+				if (!largeBGLabelGroup.includeInLayout)
+					return;
+				if (largeBGLabel.width > 1 * iosxdripreader.deviceScreenWidth) {
+					myTrace("in largeBGLabel_updateCompleteHandler, decreasing fontSizeForLargeBGLabel");
+					fontSizeForLargeBGLabel = fontSizeForLargeBGLabel * 0.9;
+				} else if (largeBGLabel.width < 0.9 * iosxdripreader.deviceScreenWidth) {
+					if (largeBGLabel.height < 0.95 * largeBGLabelGroup.height) {
+						fontSizeForLargeBGLabel = fontSizeForLargeBGLabel * 1.1;
+						myTrace("in largeBGLabel_updateCompleteHandler, increasing fontSizeForLargeBGLabel to " + fontSizeForLargeBGLabel + ", largeBGLabel.height = " + largeBGLabel.height + ", largebglabelgroup.height= " + largeBGLabelGroup.height);
+						myTrace("labelheight = " + largeBGLabel.height);
+					}
+				}  
+			}
+			
+			protected function largeBGLabelGroup_touchBeginHandler(event:MouseEvent):void
+			{
+				largeBgLabelTouchTimer = new Timer(1 * 1000, 1);
+				largeBgLabelTouchTimer.addEventListener(TimerEvent.TIMER, largeBgLabelTouchTimerExpiry);
+				largeBgLabelTouchTimer.start();
+			}
+			
+			private static function largeBgLabelTouchTimerExpiry (event:TimerEvent):void {
+				myTrace("in largeBgLabelTouchTimerExpiry, setting systemIdleMode = SystemIdleMode.KEEP_AWAKE");
+				NativeApplication.nativeApplication.systemIdleMode = SystemIdleMode.KEEP_AWAKE;
+				BackgroundFetch.vibrate();
+			}
+			
+			protected function largeBGLabelGroup_touchEndHandler(event:MouseEvent):void
+			{
+				if (largeBgLabelTouchTimer != null) {
+					if (largeBgLabelTouchTimer.running) {
+						largeBgLabelTouchTimer.stop();
+						largeBgLabelTouchTimer = null;
+						myChart_clickHandler();
+						return;
+					}
+				}
 			}
 			
 		]]>
@@ -1080,7 +1173,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			</s:Group>
 			<s:Label id = "currentBgLabel" text="{currentBgLabelText}" fontSize="60" lineThrough="{currentBgLabellinethrough}" color="{currentBgLabelColor}"/>
 		</s:Group>
-		<mx:LineChart id="myChart" height="100%" width="{topGroup.width}" click="myChart_clickHandler(event)"
+		<mx:LineChart id="myChart" height="100%" width="{topGroup.width}" mouseDown="largeBGLabelGroup_touchBeginHandler(event)" mouseUp="largeBGLabelGroup_touchEndHandler(event)"
 					  dataProvider="{chartValues}" 
 					  showDataTips="false">
 
@@ -1102,5 +1195,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 				<mx:LineSeries yField="calculatedValue"/>
 			</mx:series>
 		</mx:LineChart>	
+		<s:Group width="100%" height="100%" id = "largeBGLabelGroup" mouseDown="largeBGLabelGroup_touchBeginHandler(event)" mouseUp="largeBGLabelGroup_touchEndHandler(event)">
+			<s:layout>
+				<s:HorizontalLayout horizontalAlign="center" verticalAlign="middle"/>
+			</s:layout>
+			<s:Label id = "largeBGLabel" text="{largeBgLabelText}" fontSize="{fontSizeForLargeBGLabel}" lineThrough="{currentBgLabellinethrough}" 
+					 color="{currentBgLabelColor}" updateComplete="largeBGLabel_updateCompleteHandler(event)"/>
+		</s:Group>	
 	</s:Group>
 </s:View>

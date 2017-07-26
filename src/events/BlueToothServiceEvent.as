@@ -26,6 +26,7 @@ package events
 	[Event(name="StoppedScanning",type="events.BlueToothServiceEvent")]
 	[Event(name="DeviceNotPaired",type="events.BlueToothServiceEvent")]
 	[Event(name="CharacteristicUpdate",type="events.BlueToothServiceEvent")]
+	[Event(name="glucosePatchReadError",type="events.BlueToothServiceEvent")]
 
 	/**
 	 * used by bluetoothservice to notify on all kinds of events : information messages like bluetooth state change, bluetooth state change,
@@ -56,6 +57,10 @@ package events
 		 */
 		public static const DEVICE_NOT_PAIRED:String = "DeviceNotPaired";
 		public static const CHARACTERISTIC_UPDATE:String = "CharacteristicUpdate";
+		/**
+		 * for BLUCON 
+		 */
+		public static const GLUCOSE_PATCH_READ_ERROR:String = "glucosePatchReadError";
 		
 		/**
 		 * To pass transmitter data<br>
