@@ -263,10 +263,15 @@
 		
 		<key>application-identifier</key>
 		<string>8DKSZ5HNLB.net.johandegraeve.iosxdripreader</string>
+		<key>com.apple.developer.healthkit</key>
+		<true/>
+		<key>NSHealthUpdateUsageDescription</key>
+		<string>Store BG readings</string>
 		<key>keychain-access-groups</key>
 		<array>
 		<string>8DKSZ5HNLB.*</string>
 		</array>
+		
 		
 			 ]]></Entitlements>
 		<!-- Display Resolution for the app (either "standard" or "high"). Optional. 
