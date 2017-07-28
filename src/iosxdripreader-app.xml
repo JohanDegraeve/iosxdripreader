@@ -247,6 +247,9 @@
       				<dict>
       					<key>NSAllowsArbitraryLoads</key><true/>
       				</dict>
+      			<key>NSHealthUpdateUsageDescription</key>
+				<string>Store bloodglucose readings to test Loop</string>
+      				
       			<key>UIRequiredDeviceCapabilities</key>
       				<array>
       					<string>healthkit</string>
@@ -265,8 +268,6 @@
 		<string>8DKSZ5HNLB.net.johandegraeve.iosxdripreader</string>
 		<key>com.apple.developer.healthkit</key>
 		<true/>
-		<key>NSHealthUpdateUsageDescription</key>
-		<string>Store BG readings</string>
 		<key>keychain-access-groups</key>
 		<array>
 		<string>8DKSZ5HNLB.*</string>
