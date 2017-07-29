@@ -900,7 +900,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 						);
 						DialogService.addDialog(alert);
 					}
-					if (currentVersion <= '0.0.54') {
+					if (currentVersion <= '0.0.53') {
 						var alert:DialogView = Dialog.service.create(
 							new AlertBuilder()
 							.setTitle(ModelLocator.resourceManagerInstance.getString('homeview',"info"))
