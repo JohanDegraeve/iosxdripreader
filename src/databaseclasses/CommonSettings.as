@@ -127,7 +127,7 @@
 		  */
 		 public static const COMMON_SETTING_PHONE_MUTED_ALERT:int = 24;
 		 /**
-		 * data read from g5 transmitter, default value 'unknown'
+		 * Not used anymore
 		  */
 		 public static const COMMON_SETTING_G5_STATUS:int = 25;
 		 /**
