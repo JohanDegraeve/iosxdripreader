@@ -27,6 +27,9 @@ package services
 				initialStart = false;
 			LocalSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, localSettingChanged);
 			TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, bgReadingReceived);
+			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_HEALTHKIT_STORE_ON) == "true") {
+				BackgroundFetch.initHealthKit();
+			}
 		}
 		
 		private static function localSettingChanged(event:SettingsServiceEvent):void {
