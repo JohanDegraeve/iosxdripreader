@@ -110,6 +110,7 @@ package databaseclasses
 		public static const LOCAL_SETTING_APPLICATION_VERSION:int = 19;
 		public static const LOCAL_SETTING_CHART_RANGE_INFO_GIVEN:int = 20;
 		public static const LOCAL_SETTING_INFO_ABOUT_LONG_PRESS_IN_HOME_SCREEN_GIVEN:int = 21;
+		public static const LOCAL_SETTING_HEALTHKIT_STORE_ON:int = 22;
 		
 		private static var localSettings:Array = [
 			"false",//LOCAL_SETTING_DETAILED_TRACING_ENABLED
@@ -133,7 +134,8 @@ package databaseclasses
 			"false",//LOCAL_SETTING_CALIBRATION_REQUEST_ALERT_WARNING_GIVEN
 			"0.0.55",//LOCAL_SETTING_APPLICATION_VERSION
 			"false",//LOCAL_SETTING_CHART_RANGE_INFO_GIVEN
-			"false"//LOCAL_SETTING_INFO_ABOUT_LONG_PRESS_IN_HOME_SCREEN_GIVEN
+			"false",//LOCAL_SETTING_INFO_ABOUT_LONG_PRESS_IN_HOME_SCREEN_GIVEN
+			"false"//LOCAL_SETTING_HEALTHKIT_STORE_ON
 		];
 		
 		public function LocalSettings() {

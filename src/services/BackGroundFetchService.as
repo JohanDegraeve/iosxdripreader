@@ -118,7 +118,6 @@ package services
 			BackgroundFetch.minimumBackgroundFetchInterval = BackgroundFetch.BACKGROUND_FETCH_INTERVAL_NEVER;
 			BackgroundFetch.setMaxFetchTimeInSeconds(3);
 			iosxdripreader.instance.addEventListener(IosXdripReaderEvent.APP_IN_FOREGROUND, retryRegisterPushNotificationIfNeeded);
-			BackgroundFetch.initHealthKit();
 			TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, bgReadingReceived);
 			
 			//goal is to regularly check if phone is  musted
@@ -136,8 +135,6 @@ package services
 				myTrace("in bgReadingReceived, it's an old reading, probably where in a status where there's no sensor active but the app receives a reading from the transmitter, returning");
 				return;
 			}
-			myTrace("in bgReadingReceived, adding to HK");
-			BackgroundFetch.storeBGInHealthKitMgDl(bgReading.calculatedValue);
 		}
 
 		

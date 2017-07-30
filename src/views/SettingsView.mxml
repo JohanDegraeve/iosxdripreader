@@ -46,6 +46,8 @@
 			[Bindable]
 			private static var alwaysOnNotificationTextOnOrOff:String = "";
 			[Bindable]
+			private static var healthkitStoreOnOrOff:String = "";
+			[Bindable]
 			private static var chosenUnitText:String = "";
 			[Bindable]
 			private static var lowValueText:String = "";
@@ -100,6 +102,12 @@
 					alwaysOnNotificationTextOnOrOff = ModelLocator.resourceManagerInstance.getString('settingsview','on');
 				} else {
 					alwaysOnNotificationTextOnOrOff = ModelLocator.resourceManagerInstance.getString('settingsview','off');
+				}
+				
+				if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_HEALTHKIT_STORE_ON) == "true") {
+					healthkitStoreOnOrOff = ModelLocator.resourceManagerInstance.getString('settingsview','on');
+				} else {
+					healthkitStoreOnOrOff = ModelLocator.resourceManagerInstance.getString('settingsview','off');
 				}
 				
 				nightScoutUrl = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME);
@@ -318,6 +326,20 @@
 				} else {
 					LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_ALWAYS_ON_NOTIFICATION, "true");
 					alwaysOnNotificationTextOnOrOff = ModelLocator.resourceManagerInstance.getString('settingsview','on');
+				}
+			}
+			
+			private function healthkitstore_clickHandler(event:MouseEvent):void {
+				rect47.color = uint("0xD3D3D3");
+				rect48.color = uint("0xD3D3D3");
+				setResetColorTimer();
+				
+				if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_HEALTHKIT_STORE_ON) == "true") {
+					LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_HEALTHKIT_STORE_ON, "false");
+					healthkitStoreOnOrOff = ModelLocator.resourceManagerInstance.getString('settingsview','off');
+				} else {
+					LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_HEALTHKIT_STORE_ON, "true");
+					healthkitStoreOnOrOff = ModelLocator.resourceManagerInstance.getString('settingsview','on');
 				}
 			}
 			
@@ -640,6 +662,8 @@
 					rect44.color = uint("0x212121");//very low
 					rect45.color = uint("0x212121");//very high
 					rect46.color = uint("0x212121");//very high
+					rect47.color = uint("0x212121");//healthkitstore
+					rect48.color = uint("0x212121");//healthkitstore
 				}
 			}
 			
@@ -759,6 +783,31 @@
 				</s:Line>	
 			</s:VGroup>
 
+			<!-- Chapter general settings store in healthkit -->
+			<s:VGroup click="healthkitstore_clickHandler(event)" width="100%">
+				<s:HGroup width="100%">
+					<s:Rect height="100%" width="5" >
+						<s:fill>
+							<s:SolidColor color="#212121" id="rect47"/>
+						</s:fill>
+					</s:Rect>
+					<s:Label text = "{ModelLocator.resourceManagerInstance.getString('settingsview','store_in_healthkit')}"
+							 width="100%" paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
+					<s:Label text = "{healthkitStoreOnOrOff}"  
+							 paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
+					<s:Rect height="100%" width="5" >
+						<s:fill>
+							<s:SolidColor color="#212121" id="rect48"/>
+						</s:fill>
+					</s:Rect>
+				</s:HGroup>
+				<s:Line width="100%">
+					<s:stroke>
+						<s:SolidColorStroke color="0xFFFFFF" weight="1" alpha="0.25"/>
+					</s:stroke>
+				</s:Line>	
+			</s:VGroup>
+			
 			<!-- Chapter general settings Subsection transmitter type -->
 			<s:VGroup click="changeTransmitterType_clickHandler(event)" width="100%">
 				<s:HGroup width="100%">

@@ -248,7 +248,7 @@
       					<key>NSAllowsArbitraryLoads</key><true/>
       				</dict>
       			<key>NSHealthUpdateUsageDescription</key>
-				<string>Store bloodglucose readings to test Loop</string>
+				<string>Store readings</string>
       				
       			<key>UIRequiredDeviceCapabilities</key>
       				<array>

@@ -48,6 +48,7 @@ package model
 	import services.BackGroundFetchService;
 	import services.BluetoothService;
 	import services.CalibrationService;
+	import services.HealthKitService;
 	import services.NightScoutService;
 	import services.NotificationService;
 	import services.TransmitterService;
@@ -216,6 +217,7 @@ package model
 							NetworkInfo.init(DistriqtKey.distriqtKey);
 							BackGroundFetchService.init();
 							AlarmService.init();
+							HealthKitService.init();
 							
 							NightScoutService.init();
 							NightScoutService.sync(null);
