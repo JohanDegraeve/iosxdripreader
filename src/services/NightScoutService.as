@@ -309,6 +309,13 @@ package services
 		
 		public static function sync(event:Event = null):void {
 			myTrace("calling NightScoutService.sync");
+			
+			if (!NetworkInfo.networkInfo.isReachable()) {
+				myTrace("network not reachable, calling BackGroundFetchService.callCompletionHandler although this wouldn't make any sense, no network, probably backgroundfetch is not waiting");
+				BackGroundFetchService.callCompletionHandler(BackGroundFetchService.NO_DATA);
+				return;
+				myTrace("and return");
+			}
 
 			//myTrace("LOCAL_SETTING_DEVICE_TOKEN_ID = " + LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_DEVICE_TOKEN_ID));
 			//myTrace("LOCAL_SETTING_SUBSCRIBED_TO_PUSH_NOTIFICATIONS = " + LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_SUBSCRIBED_TO_PUSH_NOTIFICATIONS));
