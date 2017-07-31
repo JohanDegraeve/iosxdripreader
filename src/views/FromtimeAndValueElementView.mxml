@@ -103,6 +103,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			 * the selected index
 			 */private var selectedIndex:int;
 			
+			private static var keyboardTypeToUse:Number = 0;
+			
 			/**
 			 * expects in data :<br>
 			 * data.title (optional), used as view title<br>
@@ -138,6 +140,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 				}
 				if (data.hideValue)
 					showValue = !data.hideValue;
+				
+				if (data.keyboardtype)
+					keyboardTypeToUse = data.keyboardtype;
+				else
+					keyboardTypeToUse = 0;
 				
 				if (data.selectedIndex != null) {
 					var fromtimeAndValue:FromtimeAndValue;
@@ -275,7 +282,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 					new AlertBuilder()
 					.setTitle(ModelLocator.resourceManagerInstance.getString('fromtimeandvalueelementview', 'change_value_alert_title'))
 					.setMessage(ModelLocator.resourceManagerInstance.getString('fromtimeandvalueelementview', 'change_value_alert_message'))
-					.addTextField("",value)
+					.addTextField("",value, false, keyboardTypeToUse)
 					.addOption(ModelLocator.resourceManagerInstance.getString("general","cancel"), DialogAction.STYLE_CANCEL, 1)
 					.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
 					.build()
