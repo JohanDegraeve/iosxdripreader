@@ -55,7 +55,7 @@ package Utilities
 		 private var dataSortField:SortField = new SortField();
 		 private var dataSort:Sort = new Sort();
 		 
-		 public function FromtimeAndValueArrayCollection(source:Array=null)
+		 public function FromtimeAndValueArrayCollection(source:Array, isBgValue:Boolean)
 		 {
 			 super(source);
 			 
@@ -68,7 +68,7 @@ package Utilities
 			 }
 			 if (cntr == length) {
 				 var noAlert:String = ModelLocator.resourceManagerInstance.getString("settingsview","no_alert")
-				 super.addItem(new FromtimeAndValue("00:00", 100, noAlert, true, false));
+				 super.addItem(new FromtimeAndValue("00:00", 100, noAlert, true, false, isBgValue));
 			 }
 			 
 			 dataSortField.name="from";//value in FromtimeAndValue
@@ -111,9 +111,9 @@ package Utilities
 			 
 			 //if percentage based, and if fromtime = 0 or 86400, then add it as not editable and not deletable
 			 if ((item as FromtimeAndValue).from == 0) {
-				 super.addItem(new FromtimeAndValue((item as FromtimeAndValue).from, (item as FromtimeAndValue).value, (item as FromtimeAndValue).alarmName, (item as FromtimeAndValue).editable,false));
+				 super.addItem(new FromtimeAndValue((item as FromtimeAndValue).from, (item as FromtimeAndValue).value, (item as FromtimeAndValue).alarmName, (item as FromtimeAndValue).editable,false,  (item as FromtimeAndValue).isBgValue));
 			 } else {
-				 super.addItem(new FromtimeAndValue((item as FromtimeAndValue).from, (item as FromtimeAndValue).value, (item as FromtimeAndValue).alarmName, (item as FromtimeAndValue).editable, (item as FromtimeAndValue).deletable));
+				 super.addItem(new FromtimeAndValue((item as FromtimeAndValue).from, (item as FromtimeAndValue).value, (item as FromtimeAndValue).alarmName, (item as FromtimeAndValue).editable, (item as FromtimeAndValue).deletable,  (item as FromtimeAndValue).isBgValue));
 			 }
 			 refresh();	
 			 _arrayChanged = true;
@@ -314,9 +314,9 @@ package Utilities
 		  * 70, as of 08:00 till 23:59 alarm with name Day applies, with value 100.
 		  * 
 		  */
-		 public static function createList(alarmListAsString:String):FromtimeAndValueArrayCollection {
+		 public static function createList(alarmListAsString:String, isBgValue:Boolean):FromtimeAndValueArrayCollection {
 			 var splittedByDash:Array = alarmListAsString.split("-");
-			 var returnValue:FromtimeAndValueArrayCollection = new FromtimeAndValueArrayCollection(null);
+			 var returnValue:FromtimeAndValueArrayCollection = new FromtimeAndValueArrayCollection(null, isBgValue);
 			 for (var ctr:int = 0;ctr < splittedByDash.length;ctr++) {
 				 returnValue.addItem( 
 					 new FromtimeAndValue(
@@ -324,7 +324,8 @@ package Utilities
 						 splittedByDash[ctr].split(">")[1],
 						 splittedByDash[ctr].split(">")[2],
 						 true,
-						 true
+						 true,
+						 isBgValue
 					 )
 				 );
 			 }
@@ -360,12 +361,12 @@ package Utilities
 			 return returnValue;
 		 }
 		 
-		 public static function replaceAllValues(alarmString:String, newValue:Number):String {
-			 var oldList:FromtimeAndValueArrayCollection = createList(alarmString);
-			 var newList:FromtimeAndValueArrayCollection = new FromtimeAndValueArrayCollection();
+		 public static function replaceAllValues(alarmString:String, newValue:Number, isBgValue:Boolean):String {
+			 var oldList:FromtimeAndValueArrayCollection = createList(alarmString, isBgValue);
+			 var newList:FromtimeAndValueArrayCollection = new FromtimeAndValueArrayCollection(null, isBgValue);
 			 for (var cntr:int = 0;cntr < oldList.length; cntr++) {
 				 var fromTimeAndValue:FromtimeAndValue = oldList.getItemAt(cntr) as FromtimeAndValue;
-				 var newFromTimeAndValue:FromtimeAndValue = new FromtimeAndValue(fromTimeAndValue.from, newValue, fromTimeAndValue.alarmName, fromTimeAndValue.editable, fromTimeAndValue.deletable);
+				 var newFromTimeAndValue:FromtimeAndValue = new FromtimeAndValue(fromTimeAndValue.from, newValue, fromTimeAndValue.alarmName, fromTimeAndValue.editable, fromTimeAndValue.deletable, isBgValue);
 					newList.addItem(newFromTimeAndValue);			 
 			 }
 			 return newList.createAlarmString();

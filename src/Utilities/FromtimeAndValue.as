@@ -87,6 +87,18 @@ package Utilities
 			_hasAddButton = value;
 		}
 		
+		private var _isBgValue:Boolean = true;
+
+		public function get isBgValue():Boolean
+		{
+			return _isBgValue;
+		}
+
+		public function set isBgValue(value:Boolean):void
+		{
+			_isBgValue = value;
+		}
+		
 		
 		/**
 		 * the fromtime in format hh:mm 
@@ -108,12 +120,13 @@ package Utilities
 		 * <br>
 		 * once created, value and from can't be modified anymore.<br>
 		 */
-		public function FromtimeAndValue(newFrom:Object,newValue:Number, alarmName:String, isEditable:Boolean,isDeletable:Boolean)
+		public function FromtimeAndValue(newFrom:Object,newValue:Number, alarmName:String, isEditable:Boolean,isDeletable:Boolean, isBgvalue:Boolean)
 		 {
 			 _editable = isEditable;
 			 _deletable = isDeletable;
 			 _alarmName = alarmName;
 			 _value = newValue;
+			 _isBgValue = isBgvalue;
 			 
 			 if (newFrom is Number || newFrom is int)
 				 _from = newFrom as Number;

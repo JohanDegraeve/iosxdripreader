@@ -253,7 +253,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 					new AlertBuilder()
 					.setTitle(ModelLocator.resourceManagerInstance.getString("alerttypeview","default_snooze"))
 					.setMessage(ModelLocator.resourceManagerInstance.getString("alerttypeview","default_snooze_text"))
-					.addTextField((new Number(defaultSnoozePeriodInMinutes)).toString(),"")
+					.addTextField((new Number(defaultSnoozePeriodInMinutes)).toString(),"", false, 4)
 					.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
 					.addOption(ModelLocator.resourceManagerInstance.getString("general","cancel"), DialogAction.STYLE_CANCEL, 1)
 					.build()
@@ -269,22 +269,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 						return;
 					
 					var asNumber:Number = new Number(event.values[0] as String);
-					if (isNaN(asNumber)) {
-						var alert:DialogView = Dialog.service.create(
-							new AlertBuilder()
-							.setTitle(ModelLocator.resourceManagerInstance.getString("alerttypeview","default_snooze_set_failed"))
-							.setMessage(ModelLocator.resourceManagerInstance.getString("alerttypeview","value_should_be_numeric"))
-							.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
-							.build()
-						);
-						DialogService.addDialog(alert);
-						//and ask again a value
-						defaultsnoozeperiod_clickHandler(null);
-					} else {
-						defaultSnoozePeriodInMinutes = (new Number(asNumber));
-						if (defaultSnoozePeriodInMinutes == alertType.defaultSnoozePeriodInMinutes) {
-							alertTypeChanged = true;
-						}
+					defaultSnoozePeriodInMinutes = (new Number(asNumber));
+					if (defaultSnoozePeriodInMinutes == alertType.defaultSnoozePeriodInMinutes) {
+						alertTypeChanged = true;
 					}
 				}
 			}

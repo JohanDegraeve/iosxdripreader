@@ -114,7 +114,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 					var alarmNameOfItemToDelete:String = (listOfElements.getItemAt(event.newIndex) as AlertType).alarmName;
 					for (var cntr2:int = CommonSettings.COMMON_SETTING_LOW_ALERT; cntr2 < CommonSettings.COMMON_SETTING_MISSED_READING_ALERT + 1;cntr2++) {
 						var setting:String = CommonSettings.getCommonSetting(cntr2);
-						var listOfAlertsInTheSetting:FromtimeAndValueArrayCollection =  FromtimeAndValueArrayCollection.createList(setting);
+						var listOfAlertsInTheSetting:FromtimeAndValueArrayCollection =  FromtimeAndValueArrayCollection.createList(setting, false);
 						for (var cntr3:int = 0;cntr3 < listOfAlertsInTheSetting.length;cntr3++) {
 							var fromTimeAndValue:FromtimeAndValue = listOfAlertsInTheSetting.getItemAt(cntr3) as FromtimeAndValue;
 							if (fromTimeAndValue.alarmName.toUpperCase() == alarmNameOfItemToDelete.toUpperCase()) {

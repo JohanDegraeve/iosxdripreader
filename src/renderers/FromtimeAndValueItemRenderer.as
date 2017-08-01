@@ -150,8 +150,10 @@ package renderers
 				return;
 			var theDataAsFromToAndValue:FromtimeAndValue = value as FromtimeAndValue;
 			var valueInCorrectUnit:Number = theDataAsFromToAndValue.value;
-			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) != "true") {
-				valueInCorrectUnit = valueInCorrectUnit * BgReading.MGDL_TO_MMOLL;
+			if (theDataAsFromToAndValue.isBgValue) {
+				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) != "true") {
+					valueInCorrectUnit = valueInCorrectUnit * BgReading.MGDL_TO_MMOLL;
+				}
 			}
 			
 			if (Database.getAlertType(theDataAsFromToAndValue.alarmName).enabled && valueInCorrectUnit > 0) {

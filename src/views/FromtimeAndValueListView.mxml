@@ -104,23 +104,25 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 					title = data.title;
 				else 
 					title = "";
+
+				if (data.isBgValue)
+					isBgValue = data.isBgValue;
+				else
+					isBgValue = false;
+				
 				if (!listOfElements)
 					//if listOfElements is not null, then it means listOfElements has already been assigned in addhandler, so no need to check again on the data.settingid value
 					//this would only reset the list to the initial value, as it still exists in the settings
 					if (data.settingid) {
 						//expecting the settingid that contains the list to be edit
 						listOfElements = FromtimeAndValueArrayCollection.createList(
-							CommonSettings.getCommonSetting(new Number(data.settingid)));
+							CommonSettings.getCommonSetting(new Number(data.settingid)), isBgValue);
 						listOfElements.setArrayChangedToFalse();
 					}
 				if (data.topText)
 					topText = data.topText;
 				else
 				    topText = "";
-				if (data.isBgValue)
-					isBgValue = data.isBgValue;
-				else
-				    isBgValue = "";
 				if (data.unit)
 					unit = data.unit;
 				else
@@ -195,7 +197,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 					editClicked = false;
 				} else if (addClicked)  {
 					var clickedItem:FromtimeAndValue = listOfElements.getItemAt(event.newIndex) as FromtimeAndValue;
-					listOfElements.addItem(new FromtimeAndValue(clickedItem.from + 60,clickedItem.value,clickedItem.alarmName,true,true));
+					listOfElements.addItem(new FromtimeAndValue(clickedItem.from + 60,clickedItem.value,clickedItem.alarmName,true,true, isBgValue));
 					dataToSend.selectedIndex = event.newIndex + 1;//tricky here, if everything goes right, the new element should be at event.newIndex +1
 					dataToSend.listOfElements = listOfElements;
 					navigator.pushView(FromtimeAndValueElementView,dataToSend,CONTEXT_EDIT_LIST_ELEMENT);

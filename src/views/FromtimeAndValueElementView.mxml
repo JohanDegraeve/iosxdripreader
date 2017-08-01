@@ -270,7 +270,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 				if (newFromtimeAndValue == null)
 					newFromtimeAndValue = (listOfElements.getItemAt(selectedIndex) as FromtimeAndValue);
 				newFromtimeAndValue = 
-					new FromtimeAndValue(timeText,newFromtimeAndValue.value,newFromtimeAndValue.alarmName,newFromtimeAndValue.editable,newFromtimeAndValue.deletable);
+					new FromtimeAndValue(timeText,newFromtimeAndValue.value,newFromtimeAndValue.alarmName,newFromtimeAndValue.editable,newFromtimeAndValue.deletable, newFromtimeAndValue.isBgValue);
 			}
 			
 			private function valueGroupClicked(event:Event = null):void {
@@ -295,7 +295,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 						return;
 					}
 					
-					var asNumber:Number = new Number(event.values[0] as String);
+					var asNumber:Number = new Number((event.values[0] as String).replace(",","."));
 					var asNumberAndToStore = asNumber;
 					if (isNaN(asNumber)) {
 						var alert:DialogView = Dialog.service.create(
@@ -325,7 +325,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 					if (newFromtimeAndValue == null)
 						newFromtimeAndValue = (listOfElements.getItemAt(selectedIndex) as FromtimeAndValue);
 					newFromtimeAndValue = 
-						new FromtimeAndValue(newFromtimeAndValue.from, new Number(asNumberAndToStore), newFromtimeAndValue.alarmName, newFromtimeAndValue.editable, newFromtimeAndValue.deletable);
+						new FromtimeAndValue(newFromtimeAndValue.from, new Number(asNumberAndToStore), newFromtimeAndValue.alarmName, newFromtimeAndValue.editable, newFromtimeAndValue.deletable, newFromtimeAndValue.isBgValue);
 				}
 			}
 			
@@ -370,7 +370,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 					if (newFromtimeAndValue == null)
 						newFromtimeAndValue = (listOfElements.getItemAt(selectedIndex) as FromtimeAndValue);
 					newFromtimeAndValue = 
-						new FromtimeAndValue(newFromtimeAndValue.from, newFromtimeAndValue.value, newAlarmName, newFromtimeAndValue.editable, newFromtimeAndValue.deletable);
+						new FromtimeAndValue(newFromtimeAndValue.from, newFromtimeAndValue.value, newAlarmName, newFromtimeAndValue.editable, newFromtimeAndValue.deletable, newFromtimeAndValue.isBgValue);
 				}
 			}
 			

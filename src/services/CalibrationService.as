@@ -79,7 +79,7 @@ package services
 						new AlertBuilder()
 						.setTitle(isNaN(bgLevel1) ? ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_first_calibration_title") : ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_second_calibration_title"))
 						.setMessage(ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_calibration"))
-						.addTextField("",ModelLocator.resourceManagerInstance.getString("calibrationservice",ModelLocator.resourceManagerInstance.getString("calibrationservice","blood_glucose_calibration_value")), false, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true" ? 4:2)
+						.addTextField("",ModelLocator.resourceManagerInstance.getString("calibrationservice",ModelLocator.resourceManagerInstance.getString("calibrationservice","blood_glucose_calibration_value")), false, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true" ? 4:8)
 						.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
 						.addOption(ModelLocator.resourceManagerInstance.getString("general","cancel"), DialogAction.STYLE_CANCEL, 1)
 						.build()
@@ -177,7 +177,7 @@ package services
 			//this will force clear of calibration request notification, if it exists
 			NotificationService.updateAllNotifications(null);
 			
-			var asNumber:Number = new Number(event.values[0] as String);
+			var asNumber:Number = new Number((event.values[0] as String).replace(",","."));
 			if (isNaN(asNumber)) {
 				//add the warning message
 				var alert:DialogView = Dialog.service.create(
@@ -218,7 +218,7 @@ package services
 				new AlertBuilder()
 				.setTitle(ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_calibration_title"))
 				.setMessage(ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_calibration"))
-				.addTextField("",ModelLocator.resourceManagerInstance.getString("calibrationservice",ModelLocator.resourceManagerInstance.getString("calibrationservice","blood_glucose_calibration_value")), false, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true" ? 4:2)
+				.addTextField("",ModelLocator.resourceManagerInstance.getString("calibrationservice",ModelLocator.resourceManagerInstance.getString("calibrationservice","blood_glucose_calibration_value")), false, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true" ? 4:8)
 				.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
 				.addOption(ModelLocator.resourceManagerInstance.getString("general","cancel"), DialogAction.STYLE_CANCEL, 1)
 				.build()
@@ -256,7 +256,7 @@ package services
 						new AlertBuilder()
 						.setTitle(ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_calibration_title_with_override"))
 						.setMessage(ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_bg_value_with_override"))
-						.addTextField("", ModelLocator.resourceManagerInstance.getString("calibrationservice", "blood_glucose_calibration_value"), false, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true" ? 4:2)
+						.addTextField("", ModelLocator.resourceManagerInstance.getString("calibrationservice", "blood_glucose_calibration_value"), false, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true" ? 4:8)
 						.addOption(ModelLocator.resourceManagerInstance.getString("general","cancel"), DialogAction.STYLE_CANCEL, 1)
 						.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
 						.build()
@@ -273,7 +273,7 @@ package services
 						if (event.index == 1) {
 							//it's a cancel
 						} else if (event.index == 0) {
-							var asNumber:Number = new Number(event.values[0] as String);
+							var asNumber:Number = new Number((event.values[0] as String).replace(",","."));
 							if (isNaN(asNumber)) {
 								var alert:DialogView = Dialog.service.create(
 									new AlertBuilder()
@@ -302,7 +302,7 @@ package services
 						new AlertBuilder()
 						.setTitle(ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_calibration_title"))
 						.setMessage(ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_bg_value_without_override"))
-						.addTextField("",ModelLocator.resourceManagerInstance.getString("calibrationservice","blood_glucose_calibration_value"), false, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true" ? 4:2)//4 is phone,2 is numeric but still sith characters also
+						.addTextField("",ModelLocator.resourceManagerInstance.getString("calibrationservice","blood_glucose_calibration_value"), false, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true" ? 4:8)//4 is numeric without "," 8 is numeric with ","
 						.addOption(ModelLocator.resourceManagerInstance.getString("general","cancel"), DialogAction.STYLE_CANCEL, 1)
 						.addOption("Ok", DialogAction.STYLE_POSITIVE, 2);
 					if (addSnoozeOption) {
@@ -323,7 +323,7 @@ package services
 						if (event.index == 1) {
 							return;
 						} else if (event.index == 2) {
-							var asNumber:Number = new Number(event.values[0] as String);
+							var asNumber:Number = new Number((event.values[0] as String).replace(",","."));
 							if (isNaN(asNumber)) {
 								var alert:DialogView = Dialog.service.create(
 									new AlertBuilder()
@@ -356,7 +356,7 @@ package services
 			if (event.index == 1) {
 				return;
 			}
-			var asNumber:Number = new Number(event.values[0] as String);
+			var asNumber:Number = new Number((event.values[0] as String).replace(",","."));
 			if (isNaN(asNumber)) {
 				//add the warning message
 				var alert:DialogView = Dialog.service.create(

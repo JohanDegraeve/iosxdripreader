@@ -278,7 +278,7 @@ package services
 				myTrace("in notificationReceived, event != null, id = " + notificationEvent.id);
 				if (notificationEvent.id == NotificationService.ID_FOR_LOW_ALERT) {
 					listOfAlerts = FromtimeAndValueArrayCollection.createList(
-						CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_LOW_ALERT));
+						CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_LOW_ALERT), true);
 					alertName = listOfAlerts.getAlarmName(Number.NaN, "", new Date());
 					alertType = Database.getAlertType(alertName);
 					myTrace("in notificationReceived with id = ID_FOR_LOW_ALERT, cancelling notification");
@@ -313,7 +313,7 @@ package services
 					}
 				} else if (notificationEvent.id == NotificationService.ID_FOR_HIGH_ALERT) {
 					listOfAlerts = FromtimeAndValueArrayCollection.createList(
-						CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_HIGH_ALERT));
+						CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_HIGH_ALERT), true);
 					alertName = listOfAlerts.getAlarmName(Number.NaN, "", new Date());
 					alertType = Database.getAlertType(alertName);
 					myTrace("in notificationReceived with id = ID_FOR_HIGH_ALERT, cancelling notification");
@@ -347,7 +347,7 @@ package services
 					}
 				} else if (notificationEvent.id == NotificationService.ID_FOR_VERY_LOW_ALERT) {
 					listOfAlerts = FromtimeAndValueArrayCollection.createList(
-						CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_VERY_LOW_ALERT));
+						CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_VERY_LOW_ALERT), true);
 					alertName = listOfAlerts.getAlarmName(Number.NaN, "", new Date());
 					alertType = Database.getAlertType(alertName);
 					myTrace("in notificationReceived with id = ID_FOR_VERY_LOW_ALERT, cancelling notification");
@@ -382,7 +382,7 @@ package services
 					}
 				} else if (notificationEvent.id == NotificationService.ID_FOR_VERY_HIGH_ALERT) {
 					listOfAlerts = FromtimeAndValueArrayCollection.createList(
-						CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_VERY_HIGH_ALERT));
+						CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_VERY_HIGH_ALERT), true);
 					alertName = listOfAlerts.getAlarmName(Number.NaN, "", new Date());
 					alertType = Database.getAlertType(alertName);
 					myTrace("in notificationReceived with id = ID_FOR_VERY_HIGH_ALERT, cancelling notification");
@@ -416,7 +416,7 @@ package services
 					}
 				} else if (notificationEvent.id == NotificationService.ID_FOR_MISSED_READING_ALERT) {
 					listOfAlerts = FromtimeAndValueArrayCollection.createList(
-						CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_MISSED_READING_ALERT));
+						CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_MISSED_READING_ALERT), false);
 					alertName = listOfAlerts.getAlarmName(Number.NaN, "", new Date());
 					alertType = Database.getAlertType(alertName);
 					myTrace("in notificationReceived with id = ID_FOR_MISSED_READING_ALERT, cancelling notification");
@@ -449,7 +449,7 @@ package services
 					}
 				} else if (notificationEvent.id == NotificationService.ID_FOR_PHONEMUTED_ALERT) {
 					listOfAlerts = FromtimeAndValueArrayCollection.createList(
-						CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PHONE_MUTED_ALERT));
+						CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PHONE_MUTED_ALERT), false);
 					alertName = listOfAlerts.getAlarmName(Number.NaN, "", new Date());
 					alertType = Database.getAlertType(alertName);
 					myTrace("in notificationReceived with id = ID_FOR_PHONEMUTED_ALERT, cancelling notification");
@@ -483,7 +483,7 @@ package services
 					}
 				} else if (notificationEvent.id == NotificationService.ID_FOR_BATTERY_ALERT) {
 					listOfAlerts = FromtimeAndValueArrayCollection.createList(
-						CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BATTERY_ALERT));
+						CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BATTERY_ALERT), false);
 					alertName = listOfAlerts.getAlarmName(Number.NaN, "", new Date());
 					alertType = Database.getAlertType(alertName);
 					myTrace("in notificationReceived with id = ID_FOR_BATTERY_ALERT, cancelling notification");
@@ -517,7 +517,7 @@ package services
 					}
 				} else if (notificationEvent.id == NotificationService.ID_FOR_CALIBRATION_REQUEST_ALERT) {
 					listOfAlerts = FromtimeAndValueArrayCollection.createList(
-						CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CALIBRATION_REQUEST_ALERT));
+						CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CALIBRATION_REQUEST_ALERT), false);
 					alertName = listOfAlerts.getAlarmName(Number.NaN, "", new Date());
 					alertType = Database.getAlertType(alertName);
 					myTrace("in notificationReceived with id = ID_FOR_CALIBRATION_REQUEST_ALERT, cancelling notification");
@@ -695,7 +695,7 @@ package services
 				lastPhoneMuteAlarmCheckTimeStamp = now.valueOf();
 				myTrace("in phoneMuted, checking phoneMute Alarm because it's been more than 4 minutes 45 seconds");
 				var listOfAlerts:FromtimeAndValueArrayCollection = FromtimeAndValueArrayCollection.createList(
-					CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PHONE_MUTED_ALERT));
+					CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PHONE_MUTED_ALERT), false);
 				//var alertValue:Number = listOfAlerts.getValue(Number.NaN, "", now);
 				var alertName:String = listOfAlerts.getAlarmName(Number.NaN, "", now);
 				var alertType:AlertType = Database.getAlertType(alertName);
@@ -806,7 +806,7 @@ package services
 			} 
 			
 			listOfAlerts = FromtimeAndValueArrayCollection.createList(
-				CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_MISSED_READING_ALERT));
+				CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_MISSED_READING_ALERT), false);
 			alertValue = listOfAlerts.getValue(Number.NaN, "", now);
 			alertName = listOfAlerts.getAlarmName(Number.NaN, "", now);
 			alertType = Database.getAlertType(alertName);
@@ -911,7 +911,7 @@ package services
 			var alertType:AlertType;
 			
 			listOfAlerts = FromtimeAndValueArrayCollection.createList(
-				CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CALIBRATION_REQUEST_ALERT));
+				CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CALIBRATION_REQUEST_ALERT), false);
 			alertValue = listOfAlerts.getValue(Number.NaN, "", now);
 			alertName = listOfAlerts.getAlarmName(Number.NaN, "", now);
 			alertType = Database.getAlertType(alertName);
@@ -963,7 +963,7 @@ package services
 			 var returnValue:Boolean = false;
 			 
 			 listOfAlerts = FromtimeAndValueArrayCollection.createList(
-				 CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BATTERY_ALERT));
+				 CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BATTERY_ALERT), false);
 			 alertValue = listOfAlerts.getValue(Number.NaN, "", now);
 			 alertName = listOfAlerts.getAlarmName(Number.NaN, "", now);
 			 alertType = Database.getAlertType(alertName);
@@ -1018,7 +1018,7 @@ package services
 			 var returnValue:Boolean = false;
 			 
 			 listOfAlerts = FromtimeAndValueArrayCollection.createList(
-				 CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_HIGH_ALERT));
+				 CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_HIGH_ALERT), true);
 			 alertValue = listOfAlerts.getValue(Number.NaN, "", now);
 			 alertName = listOfAlerts.getAlarmName(Number.NaN, "", now);
 			 alertType = Database.getAlertType(alertName);
@@ -1068,7 +1068,7 @@ package services
 			 var returnValue:Boolean = false;
 			 
 			 listOfAlerts = FromtimeAndValueArrayCollection.createList(
-				 CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_VERY_HIGH_ALERT));
+				 CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_VERY_HIGH_ALERT), true);
 			 alertValue = listOfAlerts.getValue(Number.NaN, "", now);
 			 alertName = listOfAlerts.getAlarmName(Number.NaN, "", now);
 			 alertType = Database.getAlertType(alertName);
@@ -1119,7 +1119,7 @@ package services
 			 var returnValue:Boolean = false;
 			 
 			 listOfAlerts = FromtimeAndValueArrayCollection.createList(
-				 CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_LOW_ALERT));
+				 CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_LOW_ALERT), true);
 			 alertValue = listOfAlerts.getValue(Number.NaN, "", now);
 			 alertName = listOfAlerts.getAlarmName(Number.NaN, "", now);
 			 alertType = Database.getAlertType(alertName);
@@ -1169,7 +1169,7 @@ package services
 			 var returnValue:Boolean = false;
 			 
 			 listOfAlerts = FromtimeAndValueArrayCollection.createList(
-				 CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_VERY_LOW_ALERT));
+				 CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_VERY_LOW_ALERT), true);
 			 alertValue = listOfAlerts.getValue(Number.NaN, "", now);
 			 alertName = listOfAlerts.getAlarmName(Number.NaN, "", now);
 			 alertType = Database.getAlertType(alertName);
