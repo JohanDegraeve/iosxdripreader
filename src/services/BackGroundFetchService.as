@@ -390,21 +390,12 @@ package services
 		
 		private static function updateUserSuccess(event:Event):void {
 			myTrace("quickblox-trace : updateUserSuccess with taglist " + wishedTagList);
-			
-			var backgroundfetchserviceEvent:BackGroundFetchServiceEvent = new BackGroundFetchServiceEvent(BackGroundFetchServiceEvent.LOG_INFO);
-			backgroundfetchserviceEvent.data = new Object();
-			backgroundfetchserviceEvent.data.information = "BackGroundFetchService.as updateUserSuccess with new tag list = " + wishedTagList;
-			_instance.dispatchEvent(backgroundfetchserviceEvent);
 			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_ACTUAL_QBLOX_SUBSCRIPTION_TAG, wishedTagList);
 			createSubscription();
 		}
 		
 		private static function updateUserFailure(event:IOErrorEvent):void {
 			myTrace("quickblox-trace : updateUserFailure, resetting taglist in settings to value received from quickblox = " + currentTagList + ", event.currentTarget.data = " + (event.currentTarget.data ? event.currentTarget.data:"No info received from quickblox"));
-			var backgroundfetchserviceEvent:BackGroundFetchServiceEvent = new BackGroundFetchServiceEvent(BackGroundFetchServiceEvent.LOG_INFO);
-			backgroundfetchserviceEvent.data = new Object();
-			backgroundfetchserviceEvent.data.information = "BackGroundFetchService.as updateUserFailure, resetting taglist in settings to value received from quickblox = " + currentTagList + ", event.currentTarget.data = " + (event.currentTarget.data ? event.currentTarget.data:"No info received from quickblox");
-			_instance.dispatchEvent(backgroundfetchserviceEvent);
 			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_ACTUAL_QBLOX_SUBSCRIPTION_TAG, currentTagList);
 			createSubscription();
 		}
@@ -435,10 +426,6 @@ package services
 		
 		private static function createBloxSessionFailure(event:IOErrorEvent):void {
 			myTrace("quickblox-trace : createBloxSessionFailure " + (event.currentTarget.data ? event.currentTarget.data:""));
-			var backgroundfetchserviceEvent:BackGroundFetchServiceEvent = new BackGroundFetchServiceEvent(BackGroundFetchServiceEvent.LOG_INFO);
-			backgroundfetchserviceEvent.data = new Object();
-			backgroundfetchserviceEvent.data.information = "BackGroundFetchService.as createBloxSessionFailure " + (event.currentTarget.data ? event.currentTarget.data:"No info received from quickblox");
-			_instance.dispatchEvent(backgroundfetchserviceEvent);
 		}
 		
 		private static function subscriptionSuccess(event:Event):void {
@@ -472,10 +459,6 @@ package services
 		
 		private static function sessionDestroyFailure(event:Event):void  {
 			myTrace("quickblox-trace : sessionDestroyFailure");
-			var backgroundfetchserviceEvent:BackGroundFetchServiceEvent = new BackGroundFetchServiceEvent(BackGroundFetchServiceEvent.LOG_INFO);
-			backgroundfetchserviceEvent.data = new Object();
-			backgroundfetchserviceEvent.data.information = "BackGroundFetchService.as sessionDestroyFailure " + (event.currentTarget.data ? event.currentTarget.data:"No info received from quickblox");
-			_instance.dispatchEvent(backgroundfetchserviceEvent);
 		}
 		
 		private static function myTrace(log:String):void {

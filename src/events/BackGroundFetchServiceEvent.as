@@ -27,10 +27,6 @@ package events
 	public class BackGroundFetchServiceEvent extends GenericEvent
 	{
 		/**
-		 * logging info, mainly for debugging purposes 
-		 */
-		public static const LOG_INFO:String="LogInfo";
-		/**
 		 * load request was successful, data.information contains the result
 		 */
 		public static const LOAD_REQUEST_RESULT:String = "LoadRequestResult";
