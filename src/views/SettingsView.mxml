@@ -571,6 +571,9 @@
 					} else {
 						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID, (event.values[0] as String).toUpperCase());
 						transmitterIdText = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID);
+						
+						//reset all battery levels
+						resetAllTransmitterBatteryLevels();
 					}
 				}
 			}
@@ -600,6 +603,20 @@
 				}
 				//no need to request new transmitter id here, this will be initiated from homeview which is listening
 				//changes in setting COMMON_SETTING_PERIPHERAL_TYPE
+				
+				//reset battery levels to unknown
+				resetAllTransmitterBatteryLevels();
+			}
+			
+			private static function resetAllTransmitterBatteryLevels():void {
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_G5_VOLTAGEA, "unknown");
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_G5_VOLTAGEB, "unknown");
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_G5_RESIST, "unknown");
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_G5_TEMPERATURE, "unknown");
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_G5_RUNTIME, "unknown");
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_G5_STATUS, "unknown");
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_G5_BATTERY_FROM_MARKER, "0");
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_G4_TRANSMITTER_BATTERY_VOLTAGE, "0");
 			}
 			
 			private function NSLog_clickHandler(event:MouseEvent):void {
