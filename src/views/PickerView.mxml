@@ -23,7 +23,6 @@
 			private var pickerCloseTimer:Timer;
 			private var picker:DialogView;
 			private var flipTrans:FlipViewTransition; 
-			//private var previousView:ViewNavigator;
 			
 			protected function view1_creationCompleteHandler(event:FlexEvent):void
 			{
@@ -31,8 +30,6 @@
 				flipTrans.duration = 0;
 				
 				myTrace("in view1_creationCompleteHandler");
-				//previousView = ModelLocator.navigator;
-				//ModelLocator.navigator = navigator;
 				actionBarVisible = false;
 				tabBarVisible = false;
 				if (data.picker) {
