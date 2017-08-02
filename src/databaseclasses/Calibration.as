@@ -449,7 +449,7 @@ package databaseclasses
 		 * no database insert of the new calibration !
 		 */
 		public static function create(bg:Number):Calibration {
-			myTrace("create bgreading");
+			myTrace("create calibration");
 			var calibration:Calibration;
 			var unit:String = "mgdl";
 			if (unit != "mgdl") {
