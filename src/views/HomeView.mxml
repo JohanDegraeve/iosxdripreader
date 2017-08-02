@@ -201,15 +201,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			
 			private static var largeBgLabelTouchTimer:Timer;
 			
-			/**
-			 * connected or not. Should be replaced by if (BluetoothService.getActiveBluetoothPeripheral().state == PeripheralState.CONNECTED)<br>
-			 * but this last one is not working see https://github.com/distriqt/ANE-BluetoothLE/issues/8
-			 */
-			public static function get peripheralConnected():Boolean
-			{
-				return _peripheralConnected;
-			}
-			
 			protected function onCreationComplete(event:FlexEvent):void
 			{
 				ModelLocator.navigator = navigator;
@@ -417,9 +408,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			}
 			
 			private function bluetoothDeviceConnectionCompleted(event:BlueToothServiceEvent):void {
+				myTrace("in bluetoothDeviceConnectionCompleted");
 				if (!BluetoothService.isDexcomG5)
 					currentState = "bluetoothgreen";
 				if (!_peripheralConnected) {
+					myTrace("in bluetoothDeviceConnectionCompleted, setting _peripheralConnected = true");
 					_peripheralConnected = true;
 					peripheralConnectionStatusChangeTimestamp = (new Date()).valueOf();
 				}
@@ -445,6 +438,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			
 			private function central_peripheralDisconnectHandler(event:PeripheralEvent):void {
 				if (_peripheralConnected) {
+					myTrace("in central_peripheralDisconnectHandler, setting _peripheralConnected = false");
 					_peripheralConnected = false;
 					peripheralConnectionStatusChangeTimestamp = (new Date()).valueOf();
 				}

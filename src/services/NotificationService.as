@@ -366,22 +366,12 @@ package services
 						valueToShow = "---"
 					}
 					
-					var bodyText:String;
-					if (!(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE) == "G5")) {
-						bodyText = HomeView.peripheralConnected ? 
-							ModelLocator.resourceManagerInstance.getString("notificationservice","connected")
-							:
-							ModelLocator.resourceManagerInstance.getString("notificationservice","not_connected");
-					} else {
-						bodyText = " ";						
-					}
-
 					Notifications.service.notify(
 						new NotificationBuilder()
 						.setId(NotificationService.ID_FOR_BG_VALUE)
 						.setAlert("Bg value")
 						.setTitle(valueToShow)
-						.setBody(bodyText)
+						.setBody(" ")
 						.setSound("")
 						.enableVibration(false)
 						.enableLights(false)

@@ -63,8 +63,6 @@ package services
 	import model.TransmitterDataXBridgeDataPacket;
 	import model.TransmitterDataXdripDataPacket;
 	
-	import views.HomeView;
-	
 	/**
 	 * all functionality related to bluetooth connectivity<br>
 	 * init function must be called once immediately at start of the application<br>
@@ -121,6 +119,8 @@ package services
 		public static var isDexcomG5:Boolean;
 		private static var timeStampOfLastDeviceDiscovery:Number = 0;
 		private static var scanTimer:Timer;
+		
+		private static var peripheralConnected:Boolean = false;
 		
 		public static var isBlucon:Boolean = false;
 		private static var bluconCurrentCommand:String="";
@@ -250,6 +250,7 @@ package services
 			else
 				initialStart = false;
 			
+			peripheralConnected = false;
 			CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, settingChanged);
 			
 			isDexcomG5 = (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE) == "G5");
@@ -476,6 +477,8 @@ package services
 		}
 		
 		private static function central_peripheralConnectHandler(event:PeripheralEvent):void {
+			myTrace("in central_peripheralConnectHandler, setting peripheralConnected = true");
+			peripheralConnected = true;
 			if (!awaitingConnect) {
 				myTrace("in central_peripheralConnectHandler but awaitingConnect = false, will disconnect");
 				//activeBluetoothPeripheral = null;
@@ -544,7 +547,8 @@ package services
 		}
 		
 		private static function central_peripheralDisconnectHandler(event:Event = null):void {
-			myTrace('Disconnected from device or attempt to reconnect failed.');
+			myTrace('Disconnected from device or attempt to reconnect failed, setting peripheralConnected = false');
+			peripheralConnected = false;
 			awaitingConnect = false;
 			forgetBlueToothDevice();
 			startRescan(null);
@@ -1118,6 +1122,8 @@ package services
 					
 					xBridgeProtocolLevel = buffer.readUnsignedByte();//not needed for the moment
 					break;
+				default:
+					myTrace("processG4TransmitterData unknown packetType received : " + packetType);
 			}
 		}
 		
@@ -1170,7 +1176,7 @@ package services
 				return;
 			}
 			
-			if (HomeView.peripheralConnected) {
+			if (peripheralConnected) {
 				myTrace("In startRescan but connected so returning");
 				return;
 			}
