@@ -15,7 +15,6 @@ package services
 	import flash.net.URLRequestMethod;
 	import flash.net.URLVariables;
 	import flash.utils.ByteArray;
-	import flash.utils.Timer;
 	
 	import Utilities.Trace;
 	import Utilities.UniqueId;
@@ -25,7 +24,6 @@ package services
 	import databaseclasses.LocalSettings;
 	
 	import events.BackGroundFetchServiceEvent;
-	import events.BlueToothServiceEvent;
 	import events.IosXdripReaderEvent;
 	import events.TransmitterServiceEvent;
 	
@@ -51,12 +49,10 @@ package services
 		
 		private static const QUICKBLOX_DOMAIN:String = "https://api.quickblox.com";
 		private static const QUICKBLOX_REST_API_VERSION:String = "0.1.0";
-		private static var QB_TokenTimeStamp:Number = (new Date()).valueOf();
 		
 		private static var QB_Token:String = "";
 		private static var _QBSessionBusy:Boolean = false;
 		private static var QBSessionBusySetToTrueTimestamp:Number = 0;
-		private static var callCompletionHandlerTimer:Timer;
 		private static var timeStampOfLastDeviceDiscovery:Number = 0;
 		
 		//private static var completionHandlerResult:String;
@@ -122,7 +118,6 @@ package services
 			
 			//goal is to regularly check if phone is  musted
 			BluetoothLE.service.centralManager.addEventListener(PeripheralEvent.DISCOVERED, central_peripheralDiscoveredHandler);
-			//BluetoothService.instance.addEventListener(BlueToothServiceEvent.TRANSMITTER_DATA, transmitterDataReceived);
 		}
 		
 		private static function bgReadingReceived(be:TransmitterServiceEvent):void {
@@ -275,8 +270,6 @@ package services
 				+ "&auth_key=" + QuickBloxSecrets.AuthorizationKey
 				+ "&nonce=" + nonce
 				+ "&timestamp=" + timeStamp;
-			//+ "&user[login]=" + udid
-			//+ "&user[password]=" + QuickBloxSecrets.GenericUserPassword;
 			
 			var key:ByteArray = Hex.toArray(Hex.fromString(QuickBloxSecrets.AuthorizationSecret));
 			var data:ByteArray = Hex.toArray(Hex.fromString(toSign));
@@ -288,7 +281,6 @@ package services
 				'", "timestamp": "' + timeStamp + 
 				'", "nonce": "' + nonce + 
 				'", "signature": "' + signature +
-				//'", "user": {"login": "' + udid + '", "password": "' + QuickBloxSecrets.GenericUserPassword + 
 				'"}';
 			var loader:URLLoader = new URLLoader();
 			var request:URLRequest = new URLRequest(QUICKBLOX_DOMAIN + "/session.json");

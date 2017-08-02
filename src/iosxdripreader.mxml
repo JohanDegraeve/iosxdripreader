@@ -30,16 +30,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			
 			import Utilities.Trace;
 			
-			import databaseclasses.CommonSettings;
-			import databaseclasses.LocalSettings;
-			
 			import events.IosXdripReaderEvent;
 			
 			import model.ModelLocator;
 			
-			import services.BackGroundFetchService;
 			import services.DialogService;
-			import services.NightScoutService;
 			
 			[Bindable]
 			public static var deviceScreenWidth:Number;

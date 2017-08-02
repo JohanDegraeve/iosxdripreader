@@ -498,9 +498,7 @@ package databaseclasses
 					var latest3Calibrations:ArrayCollection = latest(2);
 					latest3Calibrations.addItemAt(calibration,0);
 					adjustRecentBgReadings(1, latest3Calibrations);
-					
 					//calling requestCalibrationIfRangeTooNarrow in the CalibrationService which handles also the save to database
-					
 				}
 			}
 			return calibration;
