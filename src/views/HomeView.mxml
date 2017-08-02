@@ -949,10 +949,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 						chartValues.addItem(newItem);
 					}
 					
+					
 					//now add the reading
 					newItem = new Object();
 					newItem.timestamp = bgReading.timestamp;
+					//if the value is zero then set to Number.NaN
 					newItem.calculatedValue = bgReading.calculatedValue;
+					if (newItem.calculatedValue == 0)						
+						newItem.calculatedValue = Number.NaN;
 					
 					if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true") {
 						if (bgReading.calculatedValue > CHART_MAXIMUM_VALUE_1_MGDL) {
