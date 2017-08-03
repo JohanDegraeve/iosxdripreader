@@ -704,7 +704,7 @@ package services
 					if (((now).valueOf() - _phoneMutedAlertLatestSnoozeTimeInMs) > _phoneMutedAlertSnoozePeriodInMinutes * 60 * 1000
 						||
 						isNaN(_phoneMutedAlertLatestSnoozeTimeInMs)) {
-						myTrace("in phoneMuted, phoneMuted alert not snoozed (anymore)");
+						myTrace("in phoneMuted, phoneMuted alert not snoozed ");
 						fireAlert(
 							alertType, 
 							NotificationService.ID_FOR_PHONEMUTED_ALERT, 
@@ -811,26 +811,27 @@ package services
 			alertName = listOfAlerts.getAlarmName(Number.NaN, "", now);
 			alertType = Database.getAlertType(alertName);
 			if (alertType.enabled) {
+				myTrace("in checkMissedReadingAlert, alertType enabled");
 				if (((now).valueOf() - _missedReadingAlertLatestSnoozeTimeInMs) > _missedReadingAlertSnoozePeriodInMinutes * 60 * 1000
 					||
 					isNaN(_missedReadingAlertLatestSnoozeTimeInMs)) {
-					myTrace("in checkAlarms, missed reading alert not snoozed (anymore), canceling any planned missed reading alert");
+					myTrace("in checkMissedReadingAlert, missed reading alert not snoozed, canceling any planned missed reading alert");
 					//not snoozed
 					//cance any planned alert because it's not snoozed and we actually received a reading
 					Notifications.service.cancel(NotificationService.ID_FOR_MISSED_READING_ALERT);
 					//check if missed reading alert is still enabled at the time it's supposed to fire
 					var dateOfFire:Date = new Date(now.valueOf() + alertValue * 60 * 1000);
 					delay = alertValue * 60;
-					myTrace("in checkAlarms, calculated delay in minutes = " + delay/60);
+					myTrace("in checkcheckMissedReadingAlertAlarms, calculated delay in minutes = " + delay/60);
 					if (notTriggeredByNewReading) {
 						var diffInSeconds:Number = (now.valueOf() - lastBgReading.timestamp)/1000;
 						delay = delay - diffInSeconds;
 						if (delay < 0)
 							delay = 0;
-						myTrace("in checkAlarms, was not triggered by new reading, reducing delay with time since last bgreading, new delay value in minutes = " + delay/60);
+						myTrace("in checkMissedReadingAlert, was not triggered by new reading, reducing delay with time since last bgreading, new delay value in minutes = " + delay/60);
 					}
 					if (Database.getAlertType(listOfAlerts.getAlarmName(Number.NaN, "", dateOfFire)).enabled) {
-						myTrace("in checkAlarms, missed reading planned with delay in minutes = " + delay/60);
+						myTrace("in checkMissedReadingAlert, missed reading planned with delay in minutes = " + delay/60);
 						latestAlertTypeUsedInMissedReadingNotification = alertType;
 						fireAlert(
 							alertType, 
@@ -845,24 +846,25 @@ package services
 						_missedReadingAlertLatestSnoozeTimeInMs = Number.NaN;
 						_missedReadingAlertSnoozePeriodInMinutes = 0;
 					} else {
-						myTrace("in checkAlarms, current missed reading alert is enabled, but the time it's supposed to expire it is not enabled so not setting it");
+						myTrace("in checkMissedReadingAlert, current missed reading alert is enabled, but the time it's supposed to expire it is not enabled so not setting it");
 					}
 					
 				} else {
 					//snoozed no need to do anything
-					myTrace("in checkAlarms, missed reading snoozed, _missedReadingAlertLatestSnoozeTimeInMs = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date(_missedReadingAlertLatestSnoozeTimeInMs)) + ", _missedReadingAlertSnoozePeriodInMinutes = " + _missedReadingAlertSnoozePeriodInMinutes + ", actual time = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date()));
+					myTrace("in checkMissedReadingAlert, missed reading snoozed, _missedReadingAlertLatestSnoozeTimeInMs = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date(_missedReadingAlertLatestSnoozeTimeInMs)) + ", _missedReadingAlertSnoozePeriodInMinutes = " + _missedReadingAlertSnoozePeriodInMinutes + ", actual time = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date()));
 				}
 			} else {// missed reading alert according to current time not enabled, but check if next period has the alert enabled
+				myTrace("in checkMissedReadingAlert, alertType not enabled");
 				if (((now).valueOf() - _missedReadingAlertLatestSnoozeTimeInMs) > _missedReadingAlertSnoozePeriodInMinutes * 60 * 1000
 					||
 					isNaN(_missedReadingAlertLatestSnoozeTimeInMs)) {
-					myTrace("in checkAlarms, missed reading, current alert not enabled and also not snoozed, checking next alert");
+					myTrace("in checkMissedReadingAlert, missed reading, current alert not enabled and also not snoozed, checking future alert");
 					//get the next alertname
 					alertName = listOfAlerts.getNextAlarmName(Number.NaN, "", now);
 					alertValue = listOfAlerts.getNextValue(Number.NaN, "", now);
 					alertType = Database.getAlertType(alertName);
 					if (alertType.enabled) {
-						myTrace("in checkAlarms, next alert is enabled");
+						myTrace("in checkMissedReadingAlert, next alert is enabled");
 						var currentHourLocal:int = now.hours;
 						var currentMinuteLocal:int = now.minutes;
 						var currentSecondsLocal:int = now.seconds;
@@ -874,7 +876,7 @@ package services
 							delay = 24 * 3600  - (currentTimeInSeconds - fromTimeNextAlertInSeconds);
 						if (delay < alertValue * 60)
 							delay = alertValue * 60;
-						myTrace("in checkAlarms, missed reading planned with delay in minutes = " + delay/60);
+						myTrace("in checkMissedReadingAlert, missed reading planned with delay in minutes = " + delay/60);
 						latestAlertTypeUsedInMissedReadingNotification = alertType;
 						fireAlert(
 							alertType, 
@@ -890,7 +892,7 @@ package services
 						_missedReadingAlertSnoozePeriodInMinutes = 0;
 					} else {
 						//no need to set the notification, on the contrary just cancel any existing notification
-						myTrace("in checkAlarms, missed reading, snoozed, and current alert not enabled anymore, so canceling alert and resetting snooze");
+						myTrace("in checkMissedReadingAlert, missed reading, snoozed, and current alert not enabled anymore, so canceling alert and resetting snooze");
 						Notifications.service.cancel(NotificationService.ID_FOR_MISSED_READING_ALERT);
 						_missedReadingAlertLatestSnoozeTimeInMs = Number.NaN;
 						_missedReadingAlertLatestNotificationTime = Number.NaN;
@@ -899,7 +901,7 @@ package services
 					
 				} else {
 					//snoozed no need to do anything
-					myTrace("in checkAlarms, missed reading snoozed, _missedReadingAlertLatestSnoozeTimeInMs = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date(_missedReadingAlertLatestSnoozeTimeInMs)) + ", _missedReadingAlertSnoozePeriodInMinutes = " + _missedReadingAlertSnoozePeriodInMinutes + ", actual time = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date()));
+					myTrace("in checkMissedReadingAlert, missed reading snoozed, _missedReadingAlertLatestSnoozeTimeInMs = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date(_missedReadingAlertLatestSnoozeTimeInMs)) + ", _missedReadingAlertSnoozePeriodInMinutes = " + _missedReadingAlertSnoozePeriodInMinutes + ", actual time = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date()));
 				}
 			}
 		}
@@ -919,7 +921,7 @@ package services
 				if ((now.valueOf() - _calibrationRequestLatestSnoozeTimeInMs) > _calibrationRequestSnoozePeriodInMinutes * 60 * 1000
 					||
 					isNaN(_calibrationRequestLatestSnoozeTimeInMs)) {
-					myTrace("in checkAlarms, calibration request alert not snoozed (anymore)");
+					myTrace("in checkAlarms, calibration request alert not snoozed ");
 					if (Calibration.last() != null && BgReading.last30Minutes().length >= 2) {
 						if (alertValue < ((now.valueOf() - Calibration.last().timestamp) / 1000 / 60 / 60)) {
 							myTrace("in checkAlarms, calibration is necessary");
@@ -972,7 +974,7 @@ package services
 				 if (((now).valueOf() - _batteryLevelAlertLatestSnoozeTimeInMs) > _batteryLevelAlertSnoozePeriodInMinutes * 60 * 1000
 					 ||
 					 isNaN(_batteryLevelAlertLatestSnoozeTimeInMs)) {
-					 myTrace("in checkAlarms, batteryLevel alert not snoozed (anymore)");
+					 myTrace("in checkAlarms, batteryLevel alert not snoozed ");
 					 //not snoozed
 					 
 					 if ((!BluetoothService.isDexcomG5 && (new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G4_TRANSMITTER_BATTERY_VOLTAGE)) < alertValue) && (new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G4_TRANSMITTER_BATTERY_VOLTAGE)) > 0))
@@ -1027,7 +1029,7 @@ package services
 				 if (((now).valueOf() - _highAlertLatestSnoozeTimeInMs) > _highAlertSnoozePeriodInMinutes * 60 * 1000
 					 ||
 					 isNaN(_highAlertLatestSnoozeTimeInMs)) {
-					 myTrace("in checkAlarms, high alert not snoozed (anymore)");
+					 myTrace("in checkAlarms, high alert not snoozed ");
 					 //not snoozed
 					 
 					 if (alertValue < BgReading.lastNoSensor().calculatedValue) {
@@ -1077,7 +1079,7 @@ package services
 				 if (((now).valueOf() - _veryHighAlertLatestSnoozeTimeInMs) > _veryHighAlertSnoozePeriodInMinutes * 60 * 1000
 					 ||
 					 isNaN(_veryHighAlertLatestSnoozeTimeInMs)) {
-					 myTrace("in checkAlarms, veryHigh alert not snoozed (anymore)");
+					 myTrace("in checkAlarms, veryHigh alert not snoozed ");
 					 //not snoozed
 					 
 					 if (alertValue < BgReading.lastNoSensor().calculatedValue) {
@@ -1128,7 +1130,7 @@ package services
 				 if ((now.valueOf() - _lowAlertLatestSnoozeTimeInMs) > _lowAlertSnoozePeriodInMinutes * 60 * 1000
 					 ||
 					 isNaN(_lowAlertLatestSnoozeTimeInMs)) {
-					 myTrace("in checkAlarms, low alert not snoozed (anymore)");
+					 myTrace("in checkAlarms, low alert not snoozed ");
 					 //not snoozed
 					 
 					 if (alertValue > BgReading.lastNoSensor().calculatedValue) {
@@ -1178,7 +1180,7 @@ package services
 				 if ((now.valueOf() - _veryLowAlertLatestSnoozeTimeInMs) > _veryLowAlertSnoozePeriodInMinutes * 60 * 1000
 					 ||
 					 isNaN(_veryLowAlertLatestSnoozeTimeInMs)) {
-					 myTrace("in checkAlarms, veryLow alert not snoozed (anymore)");
+					 myTrace("in checkAlarms, veryLow alert not snoozed ");
 					 //not snoozed
 					 
 					 if (alertValue > BgReading.lastNoSensor().calculatedValue) {
