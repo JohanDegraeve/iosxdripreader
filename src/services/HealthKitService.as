@@ -45,7 +45,11 @@ package services
 			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_HEALTHKIT_STORE_ON) == "false") {
 				return;
 			}
+			
 			var bgReading:BgReading = BgReading.lastNoSensor();
+			
+			if (bgReading == null)
+				return;
 			if (bgReading.calculatedValue == 0) {
 				return;
 			}
