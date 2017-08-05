@@ -882,6 +882,9 @@ package services
 					alertType = Database.getAlertType(alertName);
 					if (alertType.enabled) {
 						myTrace("in checkMissedReadingAlert, next alert is enabled");
+						//cance any planned alert because it's not snoozed and we actually received a reading
+						myTrace("cancel any existing alert for ID_FOR_MISSED_READING_ALERT");
+						Notifications.service.cancel(NotificationService.ID_FOR_MISSED_READING_ALERT);
 						var currentHourLocal:int = now.hours;
 						var currentMinuteLocal:int = now.minutes;
 						var currentSecondsLocal:int = now.seconds;
