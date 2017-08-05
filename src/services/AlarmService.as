@@ -282,6 +282,7 @@ package services
 					alertName = listOfAlerts.getAlarmName(Number.NaN, "", new Date());
 					alertType = Database.getAlertType(alertName);
 					myTrace("in notificationReceived with id = ID_FOR_LOW_ALERT, cancelling notification");
+					myTrace("cancel any existing alert for ID_FOR_LOW_ALERT");
 					Notifications.service.cancel(NotificationService.ID_FOR_LOW_ALERT);
 					index = 0;
 					for (var cntr:int = 0;cntr < snoozeValueMinutes.length;cntr++) {
@@ -317,6 +318,7 @@ package services
 					alertName = listOfAlerts.getAlarmName(Number.NaN, "", new Date());
 					alertType = Database.getAlertType(alertName);
 					myTrace("in notificationReceived with id = ID_FOR_HIGH_ALERT, cancelling notification");
+					myTrace("cancel any existing alert for ID_FOR_HIGH_ALERT");
 					Notifications.service.cancel(NotificationService.ID_FOR_HIGH_ALERT);
 					index = 0;
 					for (var cntr:int = 0;cntr < snoozeValueMinutes.length;cntr++) {
@@ -351,6 +353,7 @@ package services
 					alertName = listOfAlerts.getAlarmName(Number.NaN, "", new Date());
 					alertType = Database.getAlertType(alertName);
 					myTrace("in notificationReceived with id = ID_FOR_VERY_LOW_ALERT, cancelling notification");
+					myTrace("cancel any existing alert for ID_FOR_VERY_LOW_ALERT");
 					Notifications.service.cancel(NotificationService.ID_FOR_VERY_LOW_ALERT);
 					index = 0;
 					for (var cntr:int = 0;cntr < snoozeValueMinutes.length;cntr++) {
@@ -386,6 +389,7 @@ package services
 					alertName = listOfAlerts.getAlarmName(Number.NaN, "", new Date());
 					alertType = Database.getAlertType(alertName);
 					myTrace("in notificationReceived with id = ID_FOR_VERY_HIGH_ALERT, cancelling notification");
+					myTrace("cancel any existing alert for ID_FOR_VERY_HIGH_ALERT");
 					Notifications.service.cancel(NotificationService.ID_FOR_VERY_HIGH_ALERT);
 					index = 0;
 					for (var cntr:int = 0;cntr < snoozeValueMinutes.length;cntr++) {
@@ -420,6 +424,7 @@ package services
 					alertName = listOfAlerts.getAlarmName(Number.NaN, "", new Date());
 					alertType = Database.getAlertType(alertName);
 					myTrace("in notificationReceived with id = ID_FOR_MISSED_READING_ALERT, cancelling notification");
+					myTrace("cancel any existing alert for ID_FOR_MISSED_READING_ALERT");
 					Notifications.service.cancel(NotificationService.ID_FOR_MISSED_READING_ALERT);
 					index = 0;
 					for (var cntr:int = 0;cntr < snoozeValueMinutes.length;cntr++) {
@@ -453,6 +458,7 @@ package services
 					alertName = listOfAlerts.getAlarmName(Number.NaN, "", new Date());
 					alertType = Database.getAlertType(alertName);
 					myTrace("in notificationReceived with id = ID_FOR_PHONEMUTED_ALERT, cancelling notification");
+					myTrace("cancel any existing alert for ID_FOR_PHONEMUTED_ALERT");
 					Notifications.service.cancel(NotificationService.ID_FOR_PHONEMUTED_ALERT);
 					index = 0;
 					for (var cntr:int = 0;cntr < snoozeValueMinutes.length;cntr++) {
@@ -487,6 +493,7 @@ package services
 					alertName = listOfAlerts.getAlarmName(Number.NaN, "", new Date());
 					alertType = Database.getAlertType(alertName);
 					myTrace("in notificationReceived with id = ID_FOR_BATTERY_ALERT, cancelling notification");
+					myTrace("cancel any existing alert for ID_FOR_BATTERY_ALERT");
 					Notifications.service.cancel(NotificationService.ID_FOR_BATTERY_ALERT);
 					index = 0;
 					for (var cntr:int = 0;cntr < snoozeValueMinutes.length;cntr++) {
@@ -521,6 +528,7 @@ package services
 					alertName = listOfAlerts.getAlarmName(Number.NaN, "", new Date());
 					alertType = Database.getAlertType(alertName);
 					myTrace("in notificationReceived with id = ID_FOR_CALIBRATION_REQUEST_ALERT, cancelling notification");
+					myTrace("cancel any existing alert for ID_FOR_CALIBRATION_REQUEST_ALERT");
 					Notifications.service.cancel(NotificationService.ID_FOR_CALIBRATION_REQUEST_ALERT);
 					index = 0;
 					for (var cntr:int = 0;cntr < snoozeValueMinutes.length;cntr++) {
@@ -577,12 +585,13 @@ package services
 			
 			function missedReadingSnoozePicker_canceledHandler(event:DialogViewEvent):void {
 				missedReadingSnoozePickerOpen = false;
-				myTrace("in missedReadingSnoozePicker_canceledHandler snoozing the notification for 5 minutes ");
+				myTrace("in missedReadingSnoozePicker_canceledHandler");
 				//first cancelling any existing because it may already have been set while app came in foreground
+				myTrace("cancel any existing alert for ID_FOR_MISSED_READING_ALERT");
 				Notifications.service.cancel(NotificationService.ID_FOR_MISSED_READING_ALERT);
 				_missedReadingAlertSnoozePeriodInMinutes = 5;
 				_missedReadingAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
-				myTrace("in missedReadingSnoozePicker_canceledHandler planning a new notification of the same type with delay in minues 5");
+				myTrace("planning a new notification of the same type with delay in minues 5");
 				
 				if (latestAlertTypeUsedInMissedReadingNotification != null) {
 					fireAlert(
@@ -602,6 +611,7 @@ package services
 				missedReadingSnoozePickerOpen = false;
 				myTrace("in missedReadingSnoozePicker_closedHandler snoozing the notification for " + snoozeValueStrings[event.indexes[0]] + " minutes");
 				//first cancelling any existing because it may already have been set while app came in foreground
+				myTrace("cancel any existing alert for ID_FOR_MISSED_READING_ALERT");
 				Notifications.service.cancel(NotificationService.ID_FOR_MISSED_READING_ALERT);
 				_missedReadingAlertSnoozePeriodInMinutes = snoozeValueMinutes[event.indexes[0]];
 				_missedReadingAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
@@ -718,11 +728,12 @@ package services
 						_phoneMutedAlertSnoozePeriodInMinutes = 0;
 					} else {
 						//snoozed no need to do anything
-						myTrace("in phoneMuted, alarm snoozed, _phoneMutedAlertLatestSnoozeTimeInMs = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date(_phoneMutedAlertLatestSnoozeTimeInMs)) + ", _phoneMutedAlertSnoozePeriodInMinutes = " + _phoneMutedAlertSnoozePeriodInMinutes + ", actual time = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date()));
+						myTrace("in phoneMuted, alarm snoozed, _phoneMutedAlertLatestSnoozeTime = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date(_phoneMutedAlertLatestSnoozeTimeInMs)) + ", _phoneMutedAlertSnoozePeriodInMinutes = " + _phoneMutedAlertSnoozePeriodInMinutes + ", actual time = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date()));
 					}
 				} else {
 					//remove notification, even if there isn't any
 					myTrace("in phoneMuted, alerttype not enabled");
+					myTrace("cancel any existing alert for ID_FOR_PHONEMUTED_ALERT");
 					Notifications.service.cancel(NotificationService.ID_FOR_PHONEMUTED_ALERT);
 					_phoneMutedAlertLatestSnoozeTimeInMs = Number.NaN;
 					_phoneMutedAlertLatestNotificationTime = Number.NaN;
@@ -738,6 +749,7 @@ package services
 		private static function phoneNotMuted(event:BackgroundFetchEvent):void {
 			myTrace("in phoneNotMuted");
 			//remove notification, even if there isn't any
+			myTrace("cancel any existing alert for ID_FOR_PHONEMUTED_ALERT");
 			Notifications.service.cancel(NotificationService.ID_FOR_PHONEMUTED_ALERT);
 			_phoneMutedAlertLatestSnoozeTimeInMs = Number.NaN;
 			_phoneMutedAlertLatestNotificationTime = Number.NaN;
@@ -795,12 +807,14 @@ package services
 			
 			if (Sensor.getActiveSensor() == null) {
 				myTrace("in checkMissedReadingAlert, but sensor is not active, not planning a missed reading alert now, and cancelling any missed reading alert that maybe still exists");
+				myTrace("cancel any existing alert for ID_FOR_MISSED_READING_ALERT");
 				Notifications.service.cancel(NotificationService.ID_FOR_MISSED_READING_ALERT);
 				return;
 			}
 			var lastBgReading:BgReading = BgReading.lastNoSensor();
 			if (lastBgReading == null) {
 				myTrace("in checkMissedReadingAlert, but no readings exist yet, not planning a missed reading alert now, and cancelling any missed reading alert that maybe still exists");
+				myTrace("cancel any existing alert for ID_FOR_MISSED_READING_ALERT");
 				Notifications.service.cancel(NotificationService.ID_FOR_MISSED_READING_ALERT);
 				return;
 			} 
@@ -818,11 +832,12 @@ package services
 					myTrace("in checkMissedReadingAlert, missed reading alert not snoozed, canceling any planned missed reading alert");
 					//not snoozed
 					//cance any planned alert because it's not snoozed and we actually received a reading
+					myTrace("cancel any existing alert for ID_FOR_MISSED_READING_ALERT");
 					Notifications.service.cancel(NotificationService.ID_FOR_MISSED_READING_ALERT);
 					//check if missed reading alert is still enabled at the time it's supposed to fire
 					var dateOfFire:Date = new Date(now.valueOf() + alertValue * 60 * 1000);
 					delay = alertValue * 60;
-					myTrace("in checkcheckMissedReadingAlertAlarms, calculated delay in minutes = " + delay/60);
+					myTrace("in checkMissedReadingAlert, calculated delay in minutes = " + delay/60);
 					if (notTriggeredByNewReading) {
 						var diffInSeconds:Number = (now.valueOf() - lastBgReading.timestamp)/1000;
 						delay = delay - diffInSeconds;
@@ -831,8 +846,8 @@ package services
 						myTrace("in checkMissedReadingAlert, was not triggered by new reading, reducing delay with time since last bgreading, new delay value in minutes = " + delay/60);
 					}
 					if (Database.getAlertType(listOfAlerts.getAlarmName(Number.NaN, "", dateOfFire)).enabled) {
-						myTrace("in checkMissedReadingAlert, missed reading planned with delay in minutes = " + delay/60);
 						latestAlertTypeUsedInMissedReadingNotification = alertType;
+						myTrace("in checkMissedReadingAlert, missed reading planned with delay in minutes = " + delay/60);
 						fireAlert(
 							alertType, 
 							NotificationService.ID_FOR_MISSED_READING_ALERT, 
@@ -851,7 +866,7 @@ package services
 					
 				} else {
 					//snoozed no need to do anything
-					myTrace("in checkMissedReadingAlert, missed reading snoozed, _missedReadingAlertLatestSnoozeTimeInMs = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date(_missedReadingAlertLatestSnoozeTimeInMs)) + ", _missedReadingAlertSnoozePeriodInMinutes = " + _missedReadingAlertSnoozePeriodInMinutes + ", actual time = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date()));
+					myTrace("in checkMissedReadingAlert, missed reading snoozed, _missedReadingAlertLatestSnoozeTime = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date(_missedReadingAlertLatestSnoozeTimeInMs)) + ", _missedReadingAlertSnoozePeriodInMinutes = " + _missedReadingAlertSnoozePeriodInMinutes + ", actual time = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date()));
 				}
 			} else {// missed reading alert according to current time not enabled, but check if next period has the alert enabled
 				myTrace("in checkMissedReadingAlert, alertType not enabled");
@@ -876,8 +891,9 @@ package services
 							delay = 24 * 3600  - (currentTimeInSeconds - fromTimeNextAlertInSeconds);
 						if (delay < alertValue * 60)
 							delay = alertValue * 60;
-						myTrace("in checkMissedReadingAlert, missed reading planned with delay in minutes = " + delay/60);
+						myTrace("in checkMissedReadingAlert, calculated delay in minutes = " + delay/60);
 						latestAlertTypeUsedInMissedReadingNotification = alertType;
+						myTrace("in checkMissedReadingAlert, missed reading planned with delay in minutes = " + delay/60);
 						fireAlert(
 							alertType, 
 							NotificationService.ID_FOR_MISSED_READING_ALERT, 
@@ -893,6 +909,7 @@ package services
 					} else {
 						//no need to set the notification, on the contrary just cancel any existing notification
 						myTrace("in checkMissedReadingAlert, missed reading, snoozed, and current alert not enabled anymore, so canceling alert and resetting snooze");
+						myTrace("cancel any existing alert for ID_FOR_MISSED_READING_ALERT");
 						Notifications.service.cancel(NotificationService.ID_FOR_MISSED_READING_ALERT);
 						_missedReadingAlertLatestSnoozeTimeInMs = Number.NaN;
 						_missedReadingAlertLatestNotificationTime = Number.NaN;
@@ -901,7 +918,7 @@ package services
 					
 				} else {
 					//snoozed no need to do anything
-					myTrace("in checkMissedReadingAlert, missed reading snoozed, _missedReadingAlertLatestSnoozeTimeInMs = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date(_missedReadingAlertLatestSnoozeTimeInMs)) + ", _missedReadingAlertSnoozePeriodInMinutes = " + _missedReadingAlertSnoozePeriodInMinutes + ", actual time = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date()));
+					myTrace("in checkMissedReadingAlert, missed reading snoozed, _missedReadingAlertLatestSnoozeTime = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date(_missedReadingAlertLatestSnoozeTimeInMs)) + ", _missedReadingAlertSnoozePeriodInMinutes = " + _missedReadingAlertSnoozePeriodInMinutes + ", actual time = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date()));
 				}
 			}
 		}
@@ -937,17 +954,20 @@ package services
 							_calibrationRequestLatestSnoozeTimeInMs = Number.NaN;
 							_calibrationRequestSnoozePeriodInMinutes = 0;
 						} else {
+							myTrace("cancel any existing alert for ID_FOR_CALIBRATION_REQUEST_ALERT");
 							Notifications.service.cancel(NotificationService.ID_FOR_CALIBRATION_REQUEST_ALERT);
 						}
 					} else {
+						myTrace("cancel any existing alert for ID_FOR_CALIBRATION_REQUEST_ALERT");
 						Notifications.service.cancel(NotificationService.ID_FOR_CALIBRATION_REQUEST_ALERT);
 					}
 				} else {
 					//snoozed no need to do anything
-					myTrace("in checkAlarms, alarm snoozed, _calibrationRequestLatestSnoozeTimeInMs = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date(_calibrationRequestLatestSnoozeTimeInMs)) + ", _calibrationRequestSnoozePeriodInMinutes = " + _calibrationRequestSnoozePeriodInMinutes + ", actual time = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date()));
+					myTrace("in checkAlarms, alarm snoozed, _calibrationRequestLatestSnoozeTime = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date(_calibrationRequestLatestSnoozeTimeInMs)) + ", _calibrationRequestSnoozePeriodInMinutes = " + _calibrationRequestSnoozePeriodInMinutes + ", actual time = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date()));
 				}
 			} else {
-				//remove calibration request notification, even if there isn't any						
+				//remove calibration request notification, even if there isn't any	
+				myTrace("cancel any existing alert for ID_FOR_CALIBRATION_REQUEST_ALERT");
 				Notifications.service.cancel(NotificationService.ID_FOR_CALIBRATION_REQUEST_ALERT);
 				_calibrationRequestLatestSnoozeTimeInMs = Number.NaN;
 				_calibrationRequestLatestNotificationTime = Number.NaN;
@@ -994,14 +1014,16 @@ package services
 						 _batteryLevelAlertSnoozePeriodInMinutes = 0;
 						 returnValue = true;
 					 } else {
+						 myTrace("cancel any existing alert for ID_FOR_BATTERY_ALERT");
 						 Notifications.service.cancel(NotificationService.ID_FOR_BATTERY_ALERT);
 					 }
 				 } else {
 					 //snoozed no need to do anything
-					 myTrace("in checkAlarms, alarm snoozed, _batteryLevelAlertLatestSnoozeTimeInMs = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date(_batteryLevelAlertLatestSnoozeTimeInMs)) + ", _batteryLevelAlertSnoozePeriodInMinutes = " + _batteryLevelAlertSnoozePeriodInMinutes + ", actual time = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date()));
+					 myTrace("in checkAlarms, alarm snoozed, _batteryLevelAlertLatestSnoozeTime = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date(_batteryLevelAlertLatestSnoozeTimeInMs)) + ", _batteryLevelAlertSnoozePeriodInMinutes = " + _batteryLevelAlertSnoozePeriodInMinutes + ", actual time = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date()));
 				 }
 			 } else {
 				 //remove notification, even if there isn't any
+				 myTrace("cancel any existing alert for ID_FOR_BATTERY_ALERT");
 				 Notifications.service.cancel(NotificationService.ID_FOR_BATTERY_ALERT);
 				 _batteryLevelAlertLatestSnoozeTimeInMs = Number.NaN;
 				 _batteryLevelAlertLatestNotificationTime = Number.NaN;
@@ -1047,11 +1069,12 @@ package services
 						 _highAlertSnoozePeriodInMinutes = 0;
 						 returnValue = true;
 					 } else {
+						 myTrace("cancel any existing alert for ID_FOR_HIGH_ALERT");
 						 Notifications.service.cancel(NotificationService.ID_FOR_HIGH_ALERT);
 					 }
 				 } else {
 					 //snoozed no need to do anything
-					 myTrace("in checkAlarms, alarm snoozed, _highAlertLatestSnoozeTimeInMs = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date(_highAlertLatestSnoozeTimeInMs)) + ", _highAlertSnoozePeriodInMinutes = " + _highAlertSnoozePeriodInMinutes + ", actual time = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date()));
+					 myTrace("in checkAlarms, alarm snoozed, _highAlertLatestSnoozeTime = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date(_highAlertLatestSnoozeTimeInMs)) + ", _highAlertSnoozePeriodInMinutes = " + _highAlertSnoozePeriodInMinutes + ", actual time = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date()));
 				 }
 			 } else {
 				 //remove notification, even if there isn't any
@@ -1097,12 +1120,13 @@ package services
 						 _veryHighAlertSnoozePeriodInMinutes = 0;
 						 returnValue = true;
 					 } else {
+						 myTrace("cancel any existing alert for ID_FOR_VERY_HIGH_ALERT");
 						 Notifications.service.cancel(NotificationService.ID_FOR_VERY_HIGH_ALERT);
 					 }
 				 } else {
 					 //snoozed no need to do anything,returnvalue = true because there's no need to check for high alert
 					 returnValue = true;
-					 myTrace("in checkAlarms, alarm snoozed, _veryHighAlertLatestSnoozeTimeInMs = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date(_veryHighAlertLatestSnoozeTimeInMs)) + ", _veryHighAlertSnoozePeriodInMinutes = " + _veryHighAlertSnoozePeriodInMinutes + ", actual time = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date()));
+					 myTrace("in checkAlarms, alarm snoozed, _veryHighAlertLatestSnoozeTime = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date(_veryHighAlertLatestSnoozeTimeInMs)) + ", _veryHighAlertSnoozePeriodInMinutes = " + _veryHighAlertSnoozePeriodInMinutes + ", actual time = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date()));
 				 }
 			 } else {
 				 //remove notification, even if there isn't any
@@ -1148,11 +1172,12 @@ package services
 						 _lowAlertSnoozePeriodInMinutes = 0;
 						 returnValue = true;
 					 } else {
+						 myTrace("cancel any existing alert for ID_FOR_LOW_ALERT");
 						 Notifications.service.cancel(NotificationService.ID_FOR_LOW_ALERT);
 					 }
 				 } else {
 					 //snoozed no need to do anything
-					 myTrace("in checkAlarms, alarm snoozed, _lowAlertLatestSnoozeTimeInMs = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date(_lowAlertLatestSnoozeTimeInMs)) + ", _lowAlertSnoozePeriodInMinutes = " + _lowAlertSnoozePeriodInMinutes + ", actual time = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date()));
+					 myTrace("in checkAlarms, alarm snoozed, _lowAlertLatestSnoozeTime = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date(_lowAlertLatestSnoozeTimeInMs)) + ", _lowAlertSnoozePeriodInMinutes = " + _lowAlertSnoozePeriodInMinutes + ", actual time = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date()));
 				 }
 			 } else {
 				 //remove low notification, even if there isn't any
@@ -1198,12 +1223,13 @@ package services
 						 _veryLowAlertSnoozePeriodInMinutes = 0;
 						 returnValue = true;
 					 } else {
+						 myTrace("cancel any existing alert for ID_FOR_VERY_LOW_ALERT");
 						 Notifications.service.cancel(NotificationService.ID_FOR_VERY_LOW_ALERT);
 					 }
 				 } else {
 					 //snoozed no need to do anything, set returnvalue to true because there's no need to further check
 					 returnValue = true;
-					 myTrace("in checkAlarms, alarm snoozed, _veryLowAlertLatestSnoozeTimeInMs = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date(_veryLowAlertLatestSnoozeTimeInMs)) + ", _veryLowAlertSnoozePeriodInMinutes = " + _veryLowAlertSnoozePeriodInMinutes + ", actual time = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date()));
+					 myTrace("in checkAlarms, alarm snoozed, _veryLowAlertLatestSnoozeTime = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date(_veryLowAlertLatestSnoozeTimeInMs)) + ", _veryLowAlertSnoozePeriodInMinutes = " + _veryLowAlertSnoozePeriodInMinutes + ", actual time = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date()));
 				 }
 			 } else {
 				 //remove veryLow notification, even if there isn't any
@@ -1213,6 +1239,7 @@ package services
 		 }
 		
 		private static function resetVeryHighAlert():void {
+			myTrace("cancel any existing alert for ID_FOR_VERY_HIGH_ALERT");
 			Notifications.service.cancel(NotificationService.ID_FOR_VERY_HIGH_ALERT);
 			_veryHighAlertLatestSnoozeTimeInMs = Number.NaN;
 			_veryHighAlertLatestNotificationTime = Number.NaN;
@@ -1220,6 +1247,7 @@ package services
 		}
 		
 		private static function resetVeryLowAlert():void {
+			myTrace("cancel any existing alert for ID_FOR_VERY_LOW_ALERT");
 			Notifications.service.cancel(NotificationService.ID_FOR_VERY_LOW_ALERT);
 			_veryLowAlertLatestSnoozeTimeInMs = Number.NaN;
 			_veryLowAlertLatestNotificationTime = Number.NaN;
@@ -1227,6 +1255,7 @@ package services
 		}
 		
 		private static function resetHighAlert():void {
+			myTrace("cancel any existing alert for ID_FOR_HIGH_ALERT");
 			Notifications.service.cancel(NotificationService.ID_FOR_HIGH_ALERT);
 			_highAlertLatestSnoozeTimeInMs = Number.NaN;
 			_highAlertLatestNotificationTime = Number.NaN;
@@ -1234,6 +1263,7 @@ package services
 		}
 		
 		private static function resetLowAlert():void {
+			myTrace("cancel any existing alert for ID_FOR_LOW_ALERT");
 			Notifications.service.cancel(NotificationService.ID_FOR_LOW_ALERT);
 			_lowAlertLatestSnoozeTimeInMs = Number.NaN;
 			_lowAlertLatestNotificationTime = Number.NaN;
