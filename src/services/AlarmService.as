@@ -845,6 +845,8 @@ package services
 							delay = 0;
 						myTrace("in checkMissedReadingAlert, was not triggered by new reading, reducing delay with time since last bgreading, new delay value in minutes = " + delay/60);
 					}
+					myTrace("in checkMissedReadingAlert, adding 30 seconds to the planned firedate, to avoid it fires just before a new reading is received");
+					delay += 30;
 					if (Database.getAlertType(listOfAlerts.getAlarmName(Number.NaN, "", dateOfFire)).enabled) {
 						latestAlertTypeUsedInMissedReadingNotification = alertType;
 						myTrace("in checkMissedReadingAlert, missed reading planned with delay in minutes = " + delay/60);
@@ -893,6 +895,8 @@ package services
 							delay = alertValue * 60;
 						myTrace("in checkMissedReadingAlert, calculated delay in minutes = " + delay/60);
 						latestAlertTypeUsedInMissedReadingNotification = alertType;
+						myTrace("in checkMissedReadingAlert, adding 30 seconds to the planned firedate, to avoid it fires just before a new reading is received");
+						delay += 30;
 						myTrace("in checkMissedReadingAlert, missed reading planned with delay in minutes = " + delay/60);
 						fireAlert(
 							alertType, 
