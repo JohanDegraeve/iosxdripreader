@@ -35,8 +35,11 @@ package databaseclasses
 	import Utilities.Trace;
 	
 	import events.DatabaseEvent;
+	import events.TransmitterServiceEvent;
 	
 	import model.ModelLocator;
+	
+	import services.TransmitterService;
 	
 	public class Database extends EventDispatcher
 	{
@@ -189,6 +192,8 @@ package databaseclasses
 		{
 			if (debugMode) trace("Database.init");
 			
+			TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, bgReadingEventReceived);
+
 			dbFile  = File.applicationStorageDirectory.resolvePath(dbFileName);
 			
 			aConn = new SQLConnection();
@@ -528,7 +533,7 @@ package databaseclasses
 			function oldLogFilesDeleted(se:SQLEvent):void {
 				sqlStatement.removeEventListener(SQLEvent.RESULT,oldLogFilesDeleted);
 				sqlStatement.removeEventListener(SQLErrorEvent.ERROR,oldLogFileDeletionFailed);
-				deleteOldbgReadings();
+				deleteOldBgReadings(true);
 			}
 			
 			function oldLogFileDeletionFailed(see:SQLErrorEvent):void {
@@ -542,7 +547,7 @@ package databaseclasses
 		/**
 		 * asynchronous 
 		 */
-		private static function deleteOldbgReadings():void {
+		private static function deleteOldBgReadings(continueCreatingTables:Boolean):void {
 			sqlStatement.clearParameters();
 			sqlStatement.text = "DELETE FROM bgreading where (timestamp < :timestamp)";
 			sqlStatement.parameters[":timestamp"] = (new Date()).valueOf() - maxDaysToKeepBgReadings * 24 * 60 * 60 * 1000;
@@ -554,7 +559,8 @@ package databaseclasses
 			function oldBgReadingsDeleted(se:SQLEvent):void {
 				sqlStatement.removeEventListener(SQLEvent.RESULT,oldBgReadingsDeleted);
 				sqlStatement.removeEventListener(SQLErrorEvent.ERROR,oldBgReadingDeletionFailed);
-				createAlertTypeTable();
+				if (continueCreatingTables)
+					createAlertTypeTable();
 			}
 			
 			function oldBgReadingDeletionFailed(see:SQLErrorEvent):void {
@@ -563,6 +569,10 @@ package databaseclasses
 				sqlStatement.removeEventListener(SQLErrorEvent.ERROR,oldBgReadingDeletionFailed);
 				dispatchInformation("failed to delete old bgreadings", see.error.message + " - " + see.error.details);
 			}
+		}
+		
+		private static function bgReadingEventReceived(event:TransmitterServiceEvent):void {
+			deleteOldBgReadings(false);
 		}
 		
 		private static function createAlertTypeTable():void {
