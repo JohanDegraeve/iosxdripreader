@@ -44,7 +44,6 @@ package services
 	import G5Model.SensorTxMessage;
 	import G5Model.TransmitterStatus;
 	
-	import Utilities.HM10Attributes;
 	import Utilities.Trace;
 	import Utilities.UniqueId;
 	
@@ -98,13 +97,22 @@ package services
 			'G', 'H', 'J', 'K', 'L', 'M', 'N', 'P',
 			'Q', 'R', 'S', 'T', 'U', 'W', 'X', 'Y' ];
 		
-		private static const uuids_G4_Service:Vector.<String> = new <String>[HM10Attributes.HM_10_SERVICE_G4];
+		public static const HM_10_SERVICE_G4:String = "0000ffe0-0000-1000-8000-00805f9b34fb"; 
+		public static const HM_10_SERVICE_G5:String = "F8083532-849E-531C-C594-30F1F86A4EA5"; 
+		public static const HM_10_SERVICE_BLUCON:String = "436A62C0-082E-4CE8-A08B-01D81F195B24"; 
+		public static const HM_RX_TX_G4:String = "0000ffe1-0000-1000-8000-00805f9b34fb";
+		public static const G5_Communication_Characteristic_UUID:String = "F8083533-849E-531C-C594-30F1F86A4EA5";
+		public static const G5_Control_Characteristic_UUID:String = "F8083534-849E-531C-C594-30F1F86A4EA5";
+		public static const G5_Authentication_Characteristic_UUID:String = "F8083535-849E-531C-C594-30F1F86A4EA5";
+		public static const BC_desiredTransmitCharacteristicUUID:String = "436AA6E9-082E-4CE8-A08B-01D81F195B24";
+		public static const BC_desiredReceiveCharacteristicUUID:String = "436A0C82-082E-4CE8-A08B-01D81F195B24";
+		private static const uuids_G4_Service:Vector.<String> = new <String>[HM_10_SERVICE_G4];
 		private static const uuids_G5_Service:Vector.<String> = new <String>["F8083532-849E-531C-C594-30F1F86A4EA5"];
 		private static const uuids_BLUCON_Service:Vector.<String> = new <String>["436A62C0-082E-4CE8-A08B-01D81F195B24"]
 		private static const uuids_G5_Advertisement:Vector.<String> = new <String>["0000FEBC-0000-1000-8000-00805F9B34FB"];
-		private static const uuids_G4_Characteristics:Vector.<String> = new <String>[HM10Attributes.HM_RX_TX_G4];
-		private static const uuids_G5_Characteristics:Vector.<String> = new <String>[HM10Attributes.G5_Authentication_Characteristic_UUID, HM10Attributes.G5_Communication_Characteristic_UUID, HM10Attributes.G5_Control_Characteristic_UUID];
-		private static const uuids_BLUCON_Characteristics:Vector.<String> = new <String>[HM10Attributes.BC_desiredReceiveCharacteristicUUID, HM10Attributes.BC_desiredTransmitCharacteristicUUID];
+		private static const uuids_G4_Characteristics:Vector.<String> = new <String>[HM_RX_TX_G4];
+		private static const uuids_G5_Characteristics:Vector.<String> = new <String>[G5_Authentication_Characteristic_UUID, G5_Communication_Characteristic_UUID, G5_Control_Characteristic_UUID];
+		private static const uuids_BLUCON_Characteristics:Vector.<String> = new <String>[BC_desiredReceiveCharacteristicUUID, BC_desiredTransmitCharacteristicUUID];
 		private static var connectionAttemptTimeStamp:Number;
 		private static const maxTimeBetweenConnectAttemptAndConnectSuccess:Number = 3;
 		private static var waitingForPeripheralCharacteristicsDiscovered:Boolean = false;
@@ -193,41 +201,11 @@ package services
 			_G4characteristic = value;
 		}
 		
-		private static var _G5AuthenticationCharacteristic:Characteristic;
+		private static var G5AuthenticationCharacteristic:Characteristic;
 		
-		private static function get G5AuthenticationCharacteristic():Characteristic
-		{
-			return _G5AuthenticationCharacteristic;
-		}
+		private static var G5CommunicationCharacteristic:Characteristic;
 		
-		private static function set G5AuthenticationCharacteristic(value:Characteristic):void
-		{
-			_G5AuthenticationCharacteristic = value;
-		}
-		
-		private static var _G5CommunicationCharacteristic:Characteristic;
-		
-		private static function get G5CommunicationCharacteristic():Characteristic
-		{
-			return _G5CommunicationCharacteristic;
-		}
-		
-		private static function set G5CommunicationCharacteristic(value:Characteristic):void
-		{
-			_G5CommunicationCharacteristic = value;
-		}
-		
-		private static var _G5ControlCharacteristic:Characteristic;
-		
-		private static function get G5ControlCharacteristic():Characteristic
-		{
-			return _G5ControlCharacteristic;
-		}
-		
-		private static function set G5ControlCharacteristic(value:Characteristic):void
-		{
-			_G5ControlCharacteristic = value;
-		}
+		private static var G5ControlCharacteristic:Characteristic;
 		
 		private static var BC_desiredTransmitCharacteristic:Characteristic;
 
@@ -605,21 +583,21 @@ package services
 				var index:int;
 				if (isDexcomG5 && !isBlucon) {
 					for each (var o:Object in activeBluetoothPeripheral.services) {
-						if (HM10Attributes.HM_10_SERVICE_G5.indexOf((o.uuid as String).toUpperCase()) > -1) {
+						if (HM_10_SERVICE_G5.indexOf((o.uuid as String).toUpperCase()) > -1) {
 							break;
 						}
 						index++;
 					}
 				} else if (isBlucon) {
 					for each (var o:Object in activeBluetoothPeripheral.services) {
-						if (HM10Attributes.HM_10_SERVICE_BLUCON.indexOf((o.uuid as String).toUpperCase()) > -1) {
+						if (HM_10_SERVICE_BLUCON.indexOf((o.uuid as String).toUpperCase()) > -1) {
 							break;
 						}
 						index++;
 					}
 				} else {
 					for each (var o:Object in activeBluetoothPeripheral.services) {
-						if (HM10Attributes.HM_10_SERVICE_G4.indexOf(o.uuid as String) > -1) {
+						if (HM_10_SERVICE_G4.indexOf(o.uuid as String) > -1) {
 							break;
 						}
 						index++;
@@ -671,25 +649,25 @@ package services
 			var o:Object;
 			if (isDexcomG5 && !isBlucon) {
 				for each (o in activeBluetoothPeripheral.services) {
-					if (HM10Attributes.HM_10_SERVICE_G5.indexOf((o.uuid as String).toUpperCase()) > -1) {
+					if (HM_10_SERVICE_G5.indexOf((o.uuid as String).toUpperCase()) > -1) {
 						break;
 					}
 					servicesIndex++;
 				}
 				for each (o in activeBluetoothPeripheral.services[servicesIndex].characteristics) {
-					if (HM10Attributes.G5_Authentication_Characteristic_UUID.indexOf((o.uuid as String).toUpperCase()) > -1) {
+					if (G5_Authentication_Characteristic_UUID.indexOf((o.uuid as String).toUpperCase()) > -1) {
 						break;
 					}
 					G5AuthenticationCharacteristicsIndex++;
 				}
 				for each (o in activeBluetoothPeripheral.services[servicesIndex].characteristics) {
-					if (HM10Attributes.G5_Communication_Characteristic_UUID.indexOf((o.uuid as String).toUpperCase()) > -1) {
+					if (G5_Communication_Characteristic_UUID.indexOf((o.uuid as String).toUpperCase()) > -1) {
 						break;
 					}
 					G5CommunicationCharacteristicsIndex++;
 				}
 				for each (o in activeBluetoothPeripheral.services[servicesIndex].characteristics) {
-					if (HM10Attributes.G5_Control_Characteristic_UUID.indexOf((o.uuid as String).toUpperCase()) > -1) {
+					if (G5_Control_Characteristic_UUID.indexOf((o.uuid as String).toUpperCase()) > -1) {
 						break;
 					}
 					G5ControlCharacteristicsIndex++;
@@ -704,26 +682,26 @@ package services
 					myTrace("Subscribe to characteristic failed due to invalid adapter state.");
 				}
 			} else if (isBlucon) {
-				myTrace("looping through services to find service " + HM10Attributes.HM_10_SERVICE_BLUCON);
+				myTrace("looping through services to find service " + HM_10_SERVICE_BLUCON);
 				for each (o in activeBluetoothPeripheral.services) {
-					if (HM10Attributes.HM_10_SERVICE_BLUCON.indexOf((o.uuid as String).toUpperCase()) > -1) {
-						myTrace("found service " + HM10Attributes.HM_10_SERVICE_BLUCON + ", index = " + servicesIndex);
+					if (HM_10_SERVICE_BLUCON.indexOf((o.uuid as String).toUpperCase()) > -1) {
+						myTrace("found service " + HM_10_SERVICE_BLUCON + ", index = " + servicesIndex);
 						break;
 					}
 					servicesIndex++;
 				}
 				myTrace("looping through service to find BC_desiredReceiveCharacteristicUUID");
 				for each (o in activeBluetoothPeripheral.services[servicesIndex].characteristics) {
-					if (HM10Attributes.BC_desiredReceiveCharacteristicUUID.indexOf((o.uuid as String).toUpperCase()) > -1) {
-						myTrace("found service " + HM10Attributes.BC_desiredReceiveCharacteristicUUID + ", index = " + BC_desiredReceiveCharacteristicIndex);
+					if (BC_desiredReceiveCharacteristicUUID.indexOf((o.uuid as String).toUpperCase()) > -1) {
+						myTrace("found service " + BC_desiredReceiveCharacteristicUUID + ", index = " + BC_desiredReceiveCharacteristicIndex);
 						break;
 					}
 					BC_desiredReceiveCharacteristicIndex++;
 				}
 				myTrace("looping through service to find BC_desiredTransmitCharacteristicUUID");
 				for each (o in activeBluetoothPeripheral.services[servicesIndex].characteristics) {
-					if (HM10Attributes.BC_desiredTransmitCharacteristicUUID.indexOf((o.uuid as String).toUpperCase()) > -1) {
-						myTrace("found service " + HM10Attributes.BC_desiredTransmitCharacteristicUUID + ", index = " + BC_desiredTransmitCharacteristicIndex);
+					if (BC_desiredTransmitCharacteristicUUID.indexOf((o.uuid as String).toUpperCase()) > -1) {
+						myTrace("found service " + BC_desiredTransmitCharacteristicUUID + ", index = " + BC_desiredTransmitCharacteristicIndex);
 						break;
 					}
 					BC_desiredTransmitCharacteristicIndex++;
@@ -738,13 +716,13 @@ package services
 				}
 			} else {
 				for each (o in activeBluetoothPeripheral.services) {
-					if (HM10Attributes.HM_10_SERVICE_G4.indexOf(o.uuid as String) > -1) {
+					if (HM_10_SERVICE_G4.indexOf(o.uuid as String) > -1) {
 						break;
 					}
 					servicesIndex++;
 				}
 				for each (o in activeBluetoothPeripheral.services[servicesIndex].characteristics) {
-					if (HM10Attributes.HM_RX_TX_G4.indexOf(o.uuid as String) > -1) {
+					if (HM_RX_TX_G4.indexOf(o.uuid as String) > -1) {
 						break;
 					}
 					G4CharacteristicsIndex++;
@@ -768,7 +746,7 @@ package services
 		}
 		
 		private static function peripheral_characteristic_updatedHandler(event:CharacteristicEvent):void {
-			myTrace("peripheral_characteristic_updatedHandler characteristic uuid = " + HM10Attributes.getCharacteristicName(event.characteristic.uuid) +
+			myTrace("peripheral_characteristic_updatedHandler characteristic uuid = " + getCharacteristicName(event.characteristic.uuid) +
 				" with byte 0 = " + event.characteristic.value[0] + " decimal.");
 			
 			var blueToothServiceEvent:BlueToothServiceEvent = new BlueToothServiceEvent(BlueToothServiceEvent.CHARACTERISTIC_UPDATE);
@@ -795,7 +773,7 @@ package services
 		}
 		
 		private static function peripheral_characteristic_writeHandler(event:CharacteristicEvent):void {
-			myTrace("peripheral_characteristic_writeHandler" + HM10Attributes.getCharacteristicName(event.characteristic.uuid));
+			myTrace("peripheral_characteristic_writeHandler" + getCharacteristicName(event.characteristic.uuid));
 			if (isDexcomG5  || isBlucon) {
 			} else {
 				_instance.dispatchEvent(new BlueToothServiceEvent(BlueToothServiceEvent.BLUETOOTH_DEVICE_CONNECTION_COMPLETED));
@@ -803,26 +781,26 @@ package services
 		}
 		
 		private static function peripheral_characteristic_writeErrorHandler(event:CharacteristicEvent):void {
-			myTrace("peripheral_characteristic_writeErrorHandler"  + HM10Attributes.getCharacteristicName(event.characteristic.uuid));
+			myTrace("peripheral_characteristic_writeErrorHandler"  + getCharacteristicName(event.characteristic.uuid));
 			if (event.error != null)
 				myTrace("event.error = " + event.error);
 			myTrace("event.errorCode = " + event.errorCode); 
 		}
 		
 		private static function peripheral_characteristic_errorHandler(event:CharacteristicEvent):void {
-			myTrace("peripheral_characteristic_errorHandler"  + HM10Attributes.getCharacteristicName(event.characteristic.uuid));
+			myTrace("peripheral_characteristic_errorHandler"  + getCharacteristicName(event.characteristic.uuid));
 		}
 		
 		private static function peripheral_characteristic_subscribeHandler(event:CharacteristicEvent):void {
-			myTrace("peripheral_characteristic_subscribeHandler success: " + HM10Attributes.getCharacteristicName(event.characteristic.uuid));
+			myTrace("peripheral_characteristic_subscribeHandler success: " + getCharacteristicName(event.characteristic.uuid));
 			if (isDexcomG5 && !isBlucon) {
-				if (event.characteristic.uuid.toUpperCase() == HM10Attributes.G5_Control_Characteristic_UUID.toUpperCase()) {
+				if (event.characteristic.uuid.toUpperCase() == G5_Control_Characteristic_UUID.toUpperCase()) {
 					getSensorData();
 				} else {
 					fullAuthenticateG5();
 				}
 			} else if (isBlucon) {
-				if (event.characteristic.uuid.toUpperCase() == HM10Attributes.BC_desiredReceiveCharacteristicUUID.toUpperCase()) {
+				if (event.characteristic.uuid.toUpperCase() == BC_desiredReceiveCharacteristicUUID.toUpperCase()) {
 				}
 			} else {
 				_instance.dispatchEvent(new BlueToothServiceEvent(BlueToothServiceEvent.BLUETOOTH_DEVICE_CONNECTION_COMPLETED));
@@ -830,7 +808,7 @@ package services
 		}
 		
 		private static function peripheral_characteristic_subscribeErrorHandler(event:CharacteristicEvent):void {
-			myTrace("peripheral_characteristic_subscribeErrorHandler: " + HM10Attributes.getCharacteristicName(event.characteristic.uuid));
+			myTrace("peripheral_characteristic_subscribeErrorHandler: " + getCharacteristicName(event.characteristic.uuid));
 			myTrace("event.error = " + event.error);
 			myTrace("event.errorcode  = " + event.errorCode);
 		}
@@ -1188,6 +1166,21 @@ package services
 				myTrace("in startRescan but already scanning, so returning");
 				return;
 			}
+		}
+		
+		public static function getCharacteristicName(uuid:String):String {
+			if (uuid.toUpperCase() == G5_Communication_Characteristic_UUID) {
+				return "G5_Communication_Characteristic_UUID";
+			} else if (uuid.toUpperCase() == G5_Authentication_Characteristic_UUID) {
+				return "G5_Authentication_Characteristic_UUID";
+			} else if (uuid.toUpperCase() == G5_Control_Characteristic_UUID) {
+				return "G5_Control_Characteristic_UUID";
+			} else if (uuid.toUpperCase() == BC_desiredTransmitCharacteristicUUID) {
+				return "BC_desiredTransmitCharacteristicUUID";
+			} else if (uuid.toUpperCase() == BC_desiredReceiveCharacteristicUUID) {
+				return "BC_desiredReceiveCharacteristicUUID";
+			} 
+			return "";
 		}
 	}
 }
