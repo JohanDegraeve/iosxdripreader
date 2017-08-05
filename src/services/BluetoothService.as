@@ -773,7 +773,7 @@ package services
 		}
 		
 		private static function peripheral_characteristic_writeHandler(event:CharacteristicEvent):void {
-			myTrace("peripheral_characteristic_writeHandler" + getCharacteristicName(event.characteristic.uuid));
+			myTrace("peripheral_characteristic_writeHandler " + getCharacteristicName(event.characteristic.uuid));
 			if (isDexcomG5  || isBlucon) {
 			} else {
 				_instance.dispatchEvent(new BlueToothServiceEvent(BlueToothServiceEvent.BLUETOOTH_DEVICE_CONNECTION_COMPLETED));

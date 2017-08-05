@@ -114,24 +114,10 @@ package services
 			BackgroundFetch.minimumBackgroundFetchInterval = BackgroundFetch.BACKGROUND_FETCH_INTERVAL_NEVER;
 			BackgroundFetch.setMaxFetchTimeInSeconds(3);
 			iosxdripreader.instance.addEventListener(IosXdripReaderEvent.APP_IN_FOREGROUND, retryRegisterPushNotificationIfNeeded);
-			TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, bgReadingReceived);
 			
 			//goal is to regularly check if phone is  musted
 			BluetoothLE.service.centralManager.addEventListener(PeripheralEvent.DISCOVERED, central_peripheralDiscoveredHandler);
 		}
-		
-		private static function bgReadingReceived(be:TransmitterServiceEvent):void {
-			var bgReading:BgReading = BgReading.lastNoSensor();
-			if (bgReading.calculatedValue == 0) {
-				myTrace("in bgReadingReceived, calculatedvalue is 0, returning");
-				return;
-			}
-			if ((new Date()).valueOf() - bgReading.timestamp > 4 * 60 * 1000) {
-				myTrace("in bgReadingReceived, it's an old reading, probably where in a status where there's no sensor active but the app receives a reading from the transmitter, returning");
-				return;
-			}
-		}
-
 		
 		private static function retryRegisterPushNotificationIfNeeded(event:Event = null):void {
 			myTrace("in registerPushNotification");
