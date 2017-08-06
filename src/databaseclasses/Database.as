@@ -533,7 +533,7 @@ package databaseclasses
 			function oldLogFilesDeleted(se:SQLEvent):void {
 				sqlStatement.removeEventListener(SQLEvent.RESULT,oldLogFilesDeleted);
 				sqlStatement.removeEventListener(SQLErrorEvent.ERROR,oldLogFileDeletionFailed);
-				deleteOldBgReadings(true);
+				deleteBgReadingsAsynchronous(true);
 			}
 			
 			function oldLogFileDeletionFailed(see:SQLErrorEvent):void {
@@ -547,7 +547,7 @@ package databaseclasses
 		/**
 		 * asynchronous 
 		 */
-		private static function deleteOldBgReadings(continueCreatingTables:Boolean):void {
+		private static function deleteBgReadingsAsynchronous(continueCreatingTables:Boolean):void {
 			sqlStatement.clearParameters();
 			sqlStatement.text = "DELETE FROM bgreading where (timestamp < :timestamp)";
 			sqlStatement.parameters[":timestamp"] = (new Date()).valueOf() - maxDaysToKeepBgReadings * 24 * 60 * 60 * 1000;
@@ -571,8 +571,29 @@ package databaseclasses
 			}
 		}
 		
+		private static function deleteBgReadingsSynchronous():void {
+			try {
+				var conn:SQLConnection = new SQLConnection();
+				conn.open(dbFile, SQLMode.READ);
+				conn.begin();
+				var deleteRequest:SQLStatement = new SQLStatement();
+				deleteRequest.sqlConnection = conn;
+				deleteRequest.text = "DELETE FROM bgreading where (timestamp < :timestamp)";
+				deleteRequest.parameters[":timestamp"] = (new Date()).valueOf() - maxDaysToKeepBgReadings * 24 * 60 * 60 * 1000;
+				deleteRequest.execute();
+				deleteRequest.getResult();
+				conn.close();
+			} catch (error:SQLError) {
+				if (conn.connected) conn.close();
+				dispatchInformation('deleteBgReadingsSynchronous : error while deleting bgreadings', error.message + " - " + error.details);
+			} catch (other:Error) {
+				if (conn.connected) conn.close();
+				dispatchInformation('deleteBgReadingsSynchronous : error while deleting bgreadings', other.getStackTrace().toString());
+			}
+		}
+		
 		private static function bgReadingEventReceived(event:TransmitterServiceEvent):void {
-			deleteOldBgReadings(false);
+			deleteBgReadingsSynchronous();
 		}
 		
 		private static function createAlertTypeTable():void {
