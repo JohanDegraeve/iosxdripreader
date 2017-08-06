@@ -44,7 +44,15 @@ package Utilities
 			}
 		}
 		
-		public static function myTrace(tag:String, log:String):void {
+		/**
+		 * tag usually the name of the class that generates the log<br>
+		 * log is the actually log<br>
+		 * <br>
+		 * dontWriteToFile : if true, then even if  LOCAL_SETTING_DETAILED_TRACING_ENABLED = true, the log will not be written to file<br>
+		 * Useful for instance to avoid that personal data is written to the file (and afterwards send via e-mail).
+		 * It will however still be logged with NSLog, which means to view such logs, the only way is with phone connected to Mac and cfgutil
+		 */
+		public static function myTrace(tag:String, log:String, dontWriteToFile:Boolean = false):void {
 			if (dateFormatter == null) {
 				dateFormatter = new DateTimeFormatter();
 				dateFormatter.dateTimePattern = "HH:mm:ss";
@@ -60,7 +68,7 @@ package Utilities
 				BackgroundFetch.traceNSLog(traceText);
 			}
 			
-			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_DETAILED_TRACING_ENABLED) == "false") {
+			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_DETAILED_TRACING_ENABLED) == "false" || dontWriteToFile) {
 				
 			} else {
 				if (filePath == "")

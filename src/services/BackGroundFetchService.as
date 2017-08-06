@@ -184,8 +184,8 @@ package services
 		}
 		
 		private static function loadRequestSuccess(event:BackgroundFetchEvent):void {
-			myTrace("loadRequestSuccess");
-			myTrace("result = " + (event.data.result as String)); 
+			myTrace("loadRequestSuccess, result only visible in NSLog : connect phone to Mac and use cfgutil");
+			myTrace("result = " + (event.data.result as String), true); 
 			
 			var backgroundFetchServiceResult:BackGroundFetchServiceEvent = new BackGroundFetchServiceEvent(BackGroundFetchServiceEvent.LOAD_REQUEST_RESULT);
 			backgroundFetchServiceResult.data = new Object();
@@ -447,8 +447,8 @@ package services
 			myTrace("quickblox-trace : sessionDestroyFailure");
 		}
 		
-		private static function myTrace(log:String):void {
-			Trace.myTrace("BackGroundFetchService.as", log);
+		private static function myTrace(log:String, dontWriteToFile:Boolean = false):void {
+			Trace.myTrace("BackGroundFetchService.as", log, dontWriteToFile);
 		}
 		
 	}
