@@ -9,9 +9,10 @@ package services
 	import com.distriqt.extension.notifications.builders.NotificationBuilder;
 	import com.distriqt.extension.notifications.events.NotificationEvent;
 	
+	import flash.events.Event;
 	import flash.events.EventDispatcher;
-	import flash.events.TimerEvent;
-	import flash.utils.Timer;
+	
+	import mx.collections.ArrayCollection;
 	
 	import Utilities.Trace;
 	
@@ -21,6 +22,7 @@ package services
 	import databaseclasses.Sensor;
 	
 	import events.CalibrationServiceEvent;
+	import events.IosXdripReaderEvent;
 	import events.NotificationServiceEvent;
 	import events.TransmitterServiceEvent;
 	
@@ -38,9 +40,13 @@ package services
 		private static var _instance:CalibrationService = new CalibrationService();
 		private static var bgLevel1:Number;
 		private static var timeStampOfFirstBgLevel:Number;
-		private static var timerForWaitCalibration:Timer;
+		/**
+		 * if notification launched for requesting initial calibration, this value will be true<br>
+		 *
+		 */
+		private static var initialCalibrationRequested:Boolean;
 		
-		private static const MAXIMUM_WAIT_FOR_CALIBRATION_IN_SECONDS:int = 60;
+		private static const MAXIMUM_WAIT_FOR_CALIBRATION_IN_SECONDS:int = 120;
 		
 		
 		public static function get instance():CalibrationService {
@@ -59,41 +65,77 @@ package services
 			timeStampOfFirstBgLevel = new Number(0);
 			TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, bgReadingReceived);
 			NotificationService.instance.addEventListener(NotificationServiceEvent.NOTIFICATION_EVENT, notificationReceived);
+			iosxdripreader.instance.addEventListener(IosXdripReaderEvent.APP_IN_FOREGROUND, appInForeGround);
 			myTrace("finished init");
 		}
 		
+		public static function appInForeGround(event:Event = null):void {
+			myTrace("in appInForeGround");
+			if (initialCalibrationRequested) {
+				myTrace("in appInForeGround, app has fired a notification for initialcalibration, but app was opened before notification was received - or appInForeGround is triggered faster than the notification event");
+				initialCalibrationRequested = false;
+				requestInitialCalibration();
+			}
+		}
+		
 		private static function notificationReceived(event:NotificationServiceEvent):void {
-			myTrace("notificationReceived");
+			myTrace("in notificationReceived");
 			if (event != null) {//not sure why checking, this would mean NotificationService received a null object, shouldn't happen
 				var notificationEvent:NotificationEvent = event.data as NotificationEvent;
-				if (notificationEvent.id == NotificationService.ID_FOR_REQUEST_CALIBRATION) {
-					myTrace("in notificationReceived with ID_FOR_REQUEST_CALIBRATION");
-					//we don't need to do anything with the bgreading, but we need to ask the user for a calibration
-					if (((new Date()).valueOf() - timeStampOfFirstBgLevel) > (7 * 60 * 1000 + 100)) { //previous measurement was more than 7 minutes ago , restart
-						myTrace("previous measurement was more than 7 minutes ago , restart");
-						timeStampOfFirstBgLevel = new Number(0);
-						bgLevel1 = Number.NaN;
-					}
-					//create alert to get the user's input
-					var alert:DialogView = Dialog.service.create(
-						new AlertBuilder()
-						.setTitle(isNaN(bgLevel1) ? ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_first_calibration_title") : ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_second_calibration_title"))
-						.setMessage(ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_calibration"))
-						.addTextField("",ModelLocator.resourceManagerInstance.getString("calibrationservice",ModelLocator.resourceManagerInstance.getString("calibrationservice","blood_glucose_calibration_value")), false, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true" ? 4:8)
-						.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
-						.addOption(ModelLocator.resourceManagerInstance.getString("general","cancel"), DialogAction.STYLE_CANCEL, 1)
-						.build()
-					);
-					alert.addEventListener(DialogViewEvent.CLOSED, intialCalibrationValueEntered);
-					alert.addEventListener(DialogViewEvent.CANCELLED, cancellation);
-					//setting maximum wait which means in fact user will have two times this period to calibrate
-					//because also the notification remains 60 seconds
-					DialogService.addDialog(alert, MAXIMUM_WAIT_FOR_CALIBRATION_IN_SECONDS);
+				if (notificationEvent.id == NotificationService.ID_FOR_REQUEST_CALIBRATION && initialCalibrationRequested) {
+					myTrace("in notificationReceived with ID_FOR_REQUEST_CALIBRATION && initialCalibrationRequested = true");
+					initialCalibrationRequested = false;
+					requestInitialCalibration();
+				} else {
+					myTrace("in notificationReceived with id = " + notificationEvent.id + ", and initialCalibrationRequested = " + initialCalibrationRequested);
 				}
 			}
 		}
 		
-		public static function stop():void {
+		/**
+		 * opens dialogview to request calibration 
+		 */
+		private static function requestInitialCalibration():void {
+			myTrace("in requestInitialCalibration");
+			var latestReadings:ArrayCollection = BgReading.latestBySize(1);
+			if (latestReadings.length == 0) {
+				myTrace("in requestInitialCalibration but latestReadings.length == 0, looks like an error because there shouldn't have been an calibration request, returning");
+				return;
+			}
+			
+			var latestReading:BgReading = (latestReadings.getItemAt(0)) as BgReading;
+			if ((new Date()).valueOf() - latestReading.timestamp > MAXIMUM_WAIT_FOR_CALIBRATION_IN_SECONDS * 1000) {
+				myTrace("in requestInitialCalibration, but latest reading was more than MAXIMUM_WAIT_FOR_CALIBRATION_IN_SECONDS");
+				myTrace("app was opened via notification, opening warning dialog");
+				var alert:DialogView = Dialog.service.create(
+					new AlertBuilder()
+					.setTitle(ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_calibration_title"))
+					.setMessage(ModelLocator.resourceManagerInstance.getString("calibrationservice","latest_reading_is_too_old"))
+					.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
+					.build()
+				);
+				DialogService.addDialog(alert);
+				return;
+			}
+
+			if (((new Date()).valueOf() - timeStampOfFirstBgLevel) > (7 * 60 * 1000 + 100)) {
+				myTrace("previous calibration was more than 7 minutes ago , restart");
+				timeStampOfFirstBgLevel = new Number(0);
+				bgLevel1 = Number.NaN;
+			}
+			
+			var alert:DialogView = Dialog.service.create(
+				new AlertBuilder()
+				.setTitle(isNaN(bgLevel1) ? ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_first_calibration_title") : ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_second_calibration_title"))
+				.setMessage(ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_calibration"))
+				.addTextField("",ModelLocator.resourceManagerInstance.getString("calibrationservice",ModelLocator.resourceManagerInstance.getString("calibrationservice","blood_glucose_calibration_value")), false, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true" ? 4:8)
+				.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
+				.addOption(ModelLocator.resourceManagerInstance.getString("general","cancel"), DialogAction.STYLE_CANCEL, 1)
+				.build()
+			);
+			alert.addEventListener(DialogViewEvent.CLOSED, initialCalibrationValueEntered);
+			alert.addEventListener(DialogViewEvent.CANCELLED, cancellation);
+			DialogService.addDialog(alert, MAXIMUM_WAIT_FOR_CALIBRATION_IN_SECONDS);
 		}
 		
 		private static function bgReadingReceived(be:TransmitterServiceEvent):void {
@@ -112,16 +154,6 @@ package services
 					//because the timer based function timerForWaitCalibration doesn't always work as expected
 					NotificationService.updateAllNotifications(null);
 					
-					//launch a notifcation but wait maximum MAXIMUM_WAIT_FOR_CALIBRATION_IN_SECONDS
-					if (timerForWaitCalibration != null) {
-						if (timerForWaitCalibration.running) {
-							timerForWaitCalibration.stop();					
-						}
-					}
-					timerForWaitCalibration = new Timer(MAXIMUM_WAIT_FOR_CALIBRATION_IN_SECONDS * 1000, 1);
-					timerForWaitCalibration.addEventListener(TimerEvent.TIMER, removeInitialCalibrationRequestNotification);
-					timerForWaitCalibration.start();
-					
 					//launch a notification
 					//don't do it via the notificationservice, this could result in the notification being cleared but not recreated (NotificationService.updateAllNotifications)
 					//the notification doesn't need to open any action, the dialog is create when the user opens the notification, or if the app is in the foreground, as soon as the notification is build. 
@@ -137,6 +169,7 @@ package services
 							.enableVibration(true)
 							.enableLights(true)
 							.build());
+						initialCalibrationRequested = true;
 					} else {
 						myTrace("opening dialog to request calibration");
 						var alert:DialogView = Dialog.service.create(
@@ -148,29 +181,21 @@ package services
 							.addOption(ModelLocator.resourceManagerInstance.getString("general","cancel"), DialogAction.STYLE_CANCEL, 1)
 							.build()
 						);
-						alert.addEventListener(DialogViewEvent.CLOSED, intialCalibrationValueEntered);
+						alert.addEventListener(DialogViewEvent.CLOSED, initialCalibrationValueEntered);
 						alert.addEventListener(DialogViewEvent.CANCELLED, cancellation);
-						//setting maximum wait which means in fact user will have two times this period to calibrate
-						//because also the notification remains 60 seconds
-						DialogService.addDialog(alert, MAXIMUM_WAIT_FOR_CALIBRATION_IN_SECONDS);
+						DialogService.addDialog(alert);
 					}
 				}
 			}
 		}
 		
-		private static function removeInitialCalibrationRequestNotification (event:TimerEvent):void {
-			//user didn't give input on time, dialog is closed by DialogService
-			//but also notification needs to be removed, call to update will remove this notification
-			myTrace("in removeInitialCalibrationRequestNotification");
-			NotificationService.updateAllNotifications(null);
-		}
-		
 		private static function cancellation(event:DialogViewEvent):void {
 		}
 		
-		private static function intialCalibrationValueEntered(event:DialogViewEvent):void {
-			myTrace("intialCalibrationValueEntered");
+		private static function initialCalibrationValueEntered(event:DialogViewEvent):void {
+			myTrace("in intialCalibrationValueEntered");
 			if (event.index == 1) {
+				myTrace("in intialCalibrationValueEntered, user pressed cancel, returning");
 				return;
 			}
 			
@@ -179,6 +204,7 @@ package services
 			
 			var asNumber:Number = new Number((event.values[0] as String).replace(",","."));
 			if (isNaN(asNumber)) {
+				myTrace("in intialCalibrationValueEntered, user gave non numeric value, opening alert and requesting new value");
 				//add the warning message
 				var alert:DialogView = Dialog.service.create(
 					new AlertBuilder()
@@ -195,9 +221,11 @@ package services
 					asNumber = asNumber * BgReading.MMOLL_TO_MGDL; 	
 				}
 				if (isNaN(bgLevel1)) {
+					myTrace("in intialCalibrationValueEntered, this is the first calibration, waiting for next reading");
 					bgLevel1 = asNumber;
 					timeStampOfFirstBgLevel = (new Date()).valueOf();
 				} else {
+					myTrace("in intialCalibrationValueEntered, this is the second calibration, starting Calibration.initialCalibration");
 					Calibration.initialCalibration(bgLevel1, timeStampOfFirstBgLevel, asNumber, (new Date()).valueOf());
 					var calibrationServiceEvent:CalibrationServiceEvent = new CalibrationServiceEvent(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT);
 					_instance.dispatchEvent(calibrationServiceEvent);

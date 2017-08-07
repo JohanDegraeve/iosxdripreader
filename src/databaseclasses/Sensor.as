@@ -104,7 +104,6 @@ package databaseclasses
 				Database.updateSensor(currentSensor);
 			}
 			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_CURRENT_SENSOR, "0");
-			CalibrationService.stop();
 			NotificationService.clearAllNotifications();
 		}
 		
