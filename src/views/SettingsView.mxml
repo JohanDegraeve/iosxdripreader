@@ -264,6 +264,15 @@
 						.build()
 					);
 					DialogService.addDialog(alert);
+				} else if (asNumber > new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_HIGH_MARK))) {
+					var alert:DialogView = Dialog.service.create(
+						new AlertBuilder()
+						.setTitle(ModelLocator.resourceManagerInstance.getString("settingsview","high_value"))
+						.setMessage(ModelLocator.resourceManagerInstance.getString("settingsview","low_value_should_be_lower_than_high_value"))
+						.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
+						.build()
+					);
+					DialogService.addDialog(alert);
 				} else {
 					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_LOW_MARK,
 						CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true" ?
@@ -302,6 +311,15 @@
 						new AlertBuilder()
 						.setTitle(ModelLocator.resourceManagerInstance.getString("settingsview","high_value"))
 						.setMessage(ModelLocator.resourceManagerInstance.getString("calibrationservice","value_should_be_numeric"))
+						.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
+						.build()
+					);
+					DialogService.addDialog(alert);
+				} else if (asNumber < new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_LOW_MARK))) {
+					var alert:DialogView = Dialog.service.create(
+						new AlertBuilder()
+						.setTitle(ModelLocator.resourceManagerInstance.getString("settingsview","high_value"))
+						.setMessage(ModelLocator.resourceManagerInstance.getString("settingsview","high_value_should_be_higher_than_low_value"))
 						.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
 						.build()
 					);
