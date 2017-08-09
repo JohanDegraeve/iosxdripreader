@@ -8,6 +8,7 @@ xdrip/xbridge/G5 reader for iOS devices -
 * Chart
 * Always on notification (not really always but almost always) that allows to see the current value by just lifting up the phone (iOS 10).
 * Upload to Nightscout (works always for G5, for xDrip not recently tested since I don't use G4 anymore, there may be some delay in upload).
+* store values in HealthKit
 
 
 # Alerts
@@ -64,9 +65,11 @@ I'll update the latest release version with a release signed for your device.
 
 Then
 
-Installation is done via itunes on a pc or mac, 
+Easist is if you have xCode on a Mac : Connect your iphone to your mac,
+Select "Window", "Devices", go to "Installed apps", click the + sign, then select the ipa file.
 
-* download the IPA file in the Releases
+Or if you don't have xCode you can use iTunes 
+
 * Open iTunes, select File > Add to Library and add the application IPA file to iTunes (or drag and drop it onto the iTunes dock icon).
 * Locate your new application in Apps. (see http://wwwimages.adobe.com/content/dam/Adobe/en/devnet/air/articles/packaging-air-apps-ios/fig_18.jpg)
 * Connect your iOS device to your computer's USB port.
