@@ -84,7 +84,7 @@ package services
 		
 		private static var initialStart:Boolean = true;
 		
-		private static const MAX_SCAN_TIME_IN_SECONDS:int = 15;
+		private static const MAX_SCAN_TIME_IN_SECONDS:int = 320;
 		private static var discoverServiceOrCharacteristicTimer:Timer;
 		private static const DISCOVER_SERVICES_OR_CHARACTERISTICS_RETRY_TIME_IN_SECONDS:int = 1;
 		private static const MAX_RETRY_DISCOVER_SERVICES_OR_CHARACTERISTICS:int = 5;
@@ -411,6 +411,7 @@ package services
 						|| (event.peripheral.name as String).toUpperCase().indexOf("BRIDGE") > -1 
 						|| (event.peripheral.name as String).toUpperCase().indexOf("LIMITIX") > -1
 						|| (event.peripheral.name as String).toUpperCase().indexOf("LIMITTER") > -1
+						|| (event.peripheral.name as String).toUpperCase().indexOf("BLUEREADER") > -1
 					)
 				) 
 				||

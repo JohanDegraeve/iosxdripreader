@@ -17,6 +17,8 @@
  */
 package databaseclasses
 {
+	import Utilities.Trace;
+	
 	import services.BluetoothService;
 	
 	public class BlueToothDevice extends SuperDatabaseClass
@@ -131,7 +133,14 @@ package databaseclasses
 		}
 		
 		public static function isLimitter():Boolean {
-			return _name.toUpperCase().indexOf("LIMITTER") > -1;
+			var returnValue:Boolean = _name.toUpperCase().indexOf("LIMITTER") > -1 || _name.toUpperCase().indexOf("BLUEREADER") > -1;
+			if (returnValue)
+				myTrace("in isLimitter, it's a limitter (or bluereader)");
+			return (returnValue);
+		}
+		
+		private static function myTrace(log:String):void {
+			Trace.myTrace("BlueToothDevice.as", log);
 		}
 	}
 }
