@@ -643,6 +643,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 							.build()
 						);
 						DialogService.addDialog(alert, 30);
+						myTrace("in actionSheet_closedHandler, initial scan for device, setting systemIdleMode = SystemIdleMode.KEEP_AWAKE");
+						NativeApplication.nativeApplication.systemIdleMode = SystemIdleMode.KEEP_AWAKE;
 					} else {
 						var alert:DialogView = Dialog.service.create(
 							new AlertBuilder()
