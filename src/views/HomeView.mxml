@@ -250,7 +250,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 						}
 					}
 					
-					if (event.data == CommonSettings.COMMON_SETTING_DO_MGDL)
+					if (event.data == CommonSettings.COMMON_SETTING_DO_MGDL 
+						|| 
+						event.data == CommonSettings.COMMON_SETTING_HIGH_MARK 
+						|| 
+						event.data == CommonSettings.COMMON_SETTING_LOW_MARK)
 						resetChartValues();
 				}
 				
@@ -1189,7 +1193,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 				</mx:LinearAxis>
 			</mx:verticalAxis>
 			<mx:series>
-				<mx:LineSeries yField="calculatedValue"/>
+				<mx:PlotSeries yField="calculatedValue" itemRenderer="renderers.BGGraphItemRenderer"/>
 			</mx:series>
 		</mx:LineChart>	
 		<s:Group width="100%" height="100%" id = "largeBGLabelGroup" mouseDown="largeBGLabelGroup_touchBeginHandler(event)" mouseUp="largeBGLabelGroup_touchEndHandler(event)">
