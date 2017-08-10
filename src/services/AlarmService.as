@@ -18,6 +18,8 @@ package services
 	import flash.events.TimerEvent;
 	import flash.utils.Timer;
 	
+	import mx.collections.ArrayCollection;
+	
 	import spark.components.TabbedViewNavigator;
 	import spark.transitions.FlipViewTransition;
 	
@@ -811,13 +813,14 @@ package services
 				Notifications.service.cancel(NotificationService.ID_FOR_MISSED_READING_ALERT);
 				return;
 			}
-			var lastBgReading:BgReading = BgReading.lastNoSensor();
-			if (lastBgReading == null) {
+			var lastBgReadings:ArrayCollection = BgReading.latestBySize(1);
+			if (lastBgReadings.length == 0) {
 				myTrace("in checkMissedReadingAlert, but no readings exist yet, not planning a missed reading alert now, and cancelling any missed reading alert that maybe still exists");
 				myTrace("cancel any existing alert for ID_FOR_MISSED_READING_ALERT");
 				Notifications.service.cancel(NotificationService.ID_FOR_MISSED_READING_ALERT);
 				return;
 			} 
+			var lastBgReading:BgReading = lastBgReadings.getItemAt(0) as BgReading;
 			
 			listOfAlerts = FromtimeAndValueArrayCollection.createList(
 				CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_MISSED_READING_ALERT), false);
