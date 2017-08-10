@@ -969,14 +969,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 						newItem.calculatedValue = Number.NaN;
 					
 					if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true") {
-						if (bgReading.calculatedValue > CHART_MAXIMUM_VALUE_1_MGDL) {
+						if (newItem.calculatedValue > CHART_MAXIMUM_VALUE_1_MGDL) {
 							chartMaximumValue = CHART_MAXIMUM_VALUE_2_MGDL;
 							timeStampOfLatestReadingWithValueHigherThanFirstMax = bgReading.timestamp;
 						}
-						if (bgReading.calculatedValue > CHART_MAXIMUM_VALUE_2_MGDL) {
+						if (newItem.calculatedValue > CHART_MAXIMUM_VALUE_2_MGDL) {
 							newItem.calculatedValue = CHART_MAXIMUM_VALUE_2_MGDL;
 						}
-						if (bgReading.calculatedValue < CHART_MINIMUM_VALUE_MGDL) {
+						if (newItem.calculatedValue < CHART_MINIMUM_VALUE_MGDL) {
 							newItem.calculatedValue = CHART_MINIMUM_VALUE_MGDL;
 						}
 					} else {
