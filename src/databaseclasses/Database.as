@@ -574,7 +574,7 @@ package databaseclasses
 		private static function deleteBgReadingsSynchronous():void {
 			try {
 				var conn:SQLConnection = new SQLConnection();
-				conn.open(dbFile, SQLMode.READ);
+				conn.open(dbFile, SQLMode.UPDATE);
 				conn.begin();
 				var deleteRequest:SQLStatement = new SQLStatement();
 				deleteRequest.sqlConnection = conn;
