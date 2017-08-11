@@ -20,7 +20,6 @@
  */
 package databaseclasses
 {
-	import services.CalibrationService;
 	import services.NotificationService;
 
 	public class Sensor extends SuperDatabaseClass
@@ -61,7 +60,6 @@ package databaseclasses
 		/**
 		 * if sensor is active, then returns the active sensor<br>
 		 * if sensor not active, then returns null<br>
-		 * to be used in stead of isActive (used in the android project) 
 		 */
 		public static function getActiveSensor():Sensor {
 			var sensorId:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CURRENT_SENSOR);
@@ -73,7 +71,6 @@ package databaseclasses
 		/**
 		 * starts a new sensor and inserts it in the database<br>
 		 * if a sensor is currently active then it will be stopped<br>
-		 * Also calls CalibrationService.init()<br>
 		 * <br>
 		 *  If timestamp isNaN then start time will be set to current time - 2 hours, otherwise it's assigned value of timestamp<br>
 		 * Number.NaN is only to be used for testpurposes
@@ -94,7 +91,6 @@ package databaseclasses
 		
 		/**
 		 * stops the sensor and updates the database<br>
-		 * CommonSettings.COMMON_SETTING_INITIAL_CALIBRATION_DONE_ID is not adapted !!!! TODO check why this is marked, compare with android version
 		 */
 		public static function stopSensor():void {
 			var currentSensor:Sensor = getActiveSensor();
