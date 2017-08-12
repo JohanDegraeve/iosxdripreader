@@ -981,7 +981,7 @@ package services
 				Notifications.service.cancel(NotificationService.ID_FOR_CALIBRATION_REQUEST_ALERT);
 				_calibrationRequestLatestSnoozeTimeInMs = Number.NaN;
 				_calibrationRequestLatestNotificationTime = Number.NaN;
-				_lowAlertSnoozePeriodInMinutes = 0;
+				_calibrationRequestSnoozePeriodInMinutes = 0;
 			}
 		}
 		
