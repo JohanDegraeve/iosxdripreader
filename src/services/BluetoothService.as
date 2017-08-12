@@ -450,7 +450,7 @@ package services
 				BluetoothLE.service.centralManager.connect(event.peripheral);
 				
 			} else {
-				myTrace("doesn't seem to be a device we are interested in, either it's not an xdrip/bridge, .. or it's a G5/BluCon but not with the right name - restart scan");
+				myTrace("doesn't seem to be a device we are interested in, name : " + event.peripheral.name + " - restart scan");
 				startRescan(null);
 			}
 		}
