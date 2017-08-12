@@ -67,11 +67,7 @@ package model
 		private static var dataSortForBGReadings:Sort;
 
 		public static var image_calibrate_active:Image;
-		public static var image_bluetooth_red:Image;
-		public static var image_bluetooth_green:Image;
-		public static var image_bluetooth_orange:Image;
 		public static var image_add:Image;
-		public static var image_G5:Image;
 		public static var imageDone:Image;
 		public static var iconCache:ContentCache;
 
@@ -234,25 +230,9 @@ package model
 			image_calibrate_active.contentLoader = iconCache;
 			image_calibrate_active.source = '../assets/image_calibrate_active.png';
 			
-			image_bluetooth_red = new Image();
-			image_bluetooth_red.contentLoader = iconCache;
-			image_bluetooth_red.source = "../assets/image_bluetooth_red.png";
-			
-			image_bluetooth_orange = new Image();
-			image_bluetooth_orange.contentLoader = iconCache;
-			image_bluetooth_orange.source = "../assets/image_bluetooth_orange.png";
-			
 			image_add = new Image();
 			image_add.contentLoader = iconCache;
 			image_add.source = "../assets/add48x48.png";
-			
-			image_bluetooth_green = new Image();
-			image_bluetooth_green.contentLoader = iconCache;
-			image_bluetooth_green.source = "../assets/image_bluetooth_green.png";
-
-			image_G5 = new Image();
-			image_G5.contentLoader = iconCache;
-			image_G5.source = "../assets/image_G5.png";
 			
 			imageDone = new Image();
 			imageDone.contentLoader = iconCache;
