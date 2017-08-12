@@ -807,6 +807,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			}
 			
 			private static function scanningStopped(event:Event):void {
+				BluetoothService.instance.removeEventListener(BlueToothServiceEvent.STOPPED_SCANNING, scanningStopped);
 				if (!BluetoothService.bluetoothPeripheralActive()) {
 					//create alert to get the user's input
 					var alert:DialogView = Dialog.service.create(
