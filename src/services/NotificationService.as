@@ -381,6 +381,34 @@ package services
 			
 		}
 		
+		public static function notificationIdToText(id:int):String {
+			var returnValue:String = "notification id unknown";
+			if (id == ID_FOR_BG_VALUE)
+				returnValue = "ID_FOR_BG_VALUE";
+			if (id == ID_FOR_REQUEST_CALIBRATION)
+				returnValue = "ID_FOR_REQUEST_CALIBRATION";
+			if (id == ID_FOR_ENTER_TRANSMITTER_ID)
+				returnValue = "ID_FOR_ENTER_TRANSMITTER_ID";
+			if (id == ID_FOR_DEVICE_NOT_PAIRED)
+				returnValue = "ID_FOR_DEVICE_NOT_PAIRED";
+			if (id == ID_FOR_LOW_ALERT)
+				returnValue = "ID_FOR_LOW_ALERT";
+			if (id == ID_FOR_HIGH_ALERT)
+				returnValue = "ID_FOR_HIGH_ALERT";
+			if (id == ID_FOR_MISSED_READING_ALERT)
+				returnValue = "ID_FOR_MISSED_READING_ALERT";
+			if (id == ID_FOR_PHONEMUTED_ALERT)
+				returnValue = "ID_FOR_PHONEMUTED_ALERT";
+			if (id == ID_FOR_BATTERY_ALERT)
+				returnValue = "ID_FOR_BATTERY_ALERT";
+			if (id == ID_FOR_CALIBRATION_REQUEST_ALERT)
+				returnValue = "ID_FOR_CALIBRATION_REQUEST_ALERT";
+			if (id == ID_FOR_VERY_LOW_ALERT)
+				returnValue = "ID_FOR_VERY_LOW_ALERT";
+			if (id == ID_FOR_VERY_HIGH_ALERT)
+				returnValue = "ID_FOR_VERY_HIGH_ALERT";
+		}
+		
 		private static function myTrace(log:String):void {
 			Trace.myTrace("NotificationService.as", log);
 		}
