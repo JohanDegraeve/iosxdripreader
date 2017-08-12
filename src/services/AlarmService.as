@@ -277,7 +277,7 @@ package services
 				//((ModelLocator.navigator.parentNavigator as TabbedViewNavigator).navigators[0] as ViewNavigator).popToFirstView();
 				
 				var notificationEvent:NotificationEvent = event.data as NotificationEvent;
-				myTrace("in notificationReceived, event != null, id = " + NotificationService.notificationIdToText(notificationEvent.id);
+				myTrace("in notificationReceived, event != null, id = " + NotificationService.notificationIdToText(notificationEvent.id));
 				if (notificationEvent.id == NotificationService.ID_FOR_LOW_ALERT) {
 					listOfAlerts = FromtimeAndValueArrayCollection.createList(
 						CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_LOW_ALERT), true);

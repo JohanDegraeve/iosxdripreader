@@ -407,6 +407,7 @@ package services
 				returnValue = "ID_FOR_VERY_LOW_ALERT";
 			if (id == ID_FOR_VERY_HIGH_ALERT)
 				returnValue = "ID_FOR_VERY_HIGH_ALERT";
+			return returnValue;
 		}
 		
 		private static function myTrace(log:String):void {
