@@ -225,9 +225,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 						BlueToothDevice.forgetBlueToothDevice();
 						SettingsView.requestNewTransmitterId();
 						if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE) == "G5") {
-							showG5InfoScreen();
+							if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_INFO_SCREEN_SHOWN) == "false") {
+								showG5InfoScreen();
+							}
 						} else {
-							showG4InfoScreen();
+							if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G4_INFO_SCREEN_SHOWN) == "false") {
+								showG4InfoScreen();
+							}
 						}
 					}
 					
