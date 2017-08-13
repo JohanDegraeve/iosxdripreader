@@ -298,7 +298,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			}
 			
 			public static function notificationServiceInitiated(ev:NotificationServiceEvent):void {
-				NotificationService.updateAllNotifications(null);
+				NotificationService.updateBgNotification(null);
 				if (DialogService.isInitiated) {
 					dialogServiceInitiated(null);
 					checkApplicationVersion(null);
@@ -400,9 +400,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 					peripheralConnected = true;
 					peripheralConnectionStatusChangeTimestamp = (new Date()).valueOf();
 				}
-				if (!(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE) == "G5")) {
-					NotificationService.updateAllNotifications(null);
-				}
 			}
 			
 			private function userInitiatedScanningSucceeded(event:PeripheralEvent):void {
@@ -425,9 +422,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 					myTrace("in central_peripheralDisconnectHandler, setting peripheralConnected = false");
 					peripheralConnected = false;
 					peripheralConnectionStatusChangeTimestamp = (new Date()).valueOf();
-				}
-				if (!(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE) == "G5")) {
-					NotificationService.updateAllNotifications(null);
 				}
 			}
 			
@@ -714,7 +708,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 					return;
 				}
 				Sensor.stopSensor();
-				NotificationService.updateAllNotifications(null);
+				NotificationService.updateBgNotification(null);
 				_calibrateButtonActive = false;
 			}
 			

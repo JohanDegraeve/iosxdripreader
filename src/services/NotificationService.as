@@ -283,8 +283,8 @@ package services
 				Notifications.service.addEventListener(NotificationEvent.NOTIFICATION_SELECTED, notificationHandler);
 				Notifications.service.addEventListener(NotificationEvent.NOTIFICATION, notificationHandler);
 				Notifications.service.addEventListener(NotificationEvent.ACTION, notificationHandler);
-				CalibrationService.instance.addEventListener(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT, updateAllNotifications);
-				TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, bgReadingEventReceived);
+				CalibrationService.instance.addEventListener(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT, updateBgNotification);
+				TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, updateBgNotification);
 				if (Application.isSupported) {
 					Application.service.addEventListener(ApplicationStateEvent.DEACTIVATE, application_deactivateHandler);
 				}
@@ -309,16 +309,6 @@ package services
 				}
 			}
 			
-			function initialCalibrationEventReceived(event:CalibrationServiceEvent):void {
-				updateAllNotifications(null);
-			}
-			
-			function bgReadingEventReceived(event:TransmitterServiceEvent):void {
-				if (Calibration.allForSensor().length >= 2) {
-					updateAllNotifications(null);
-				}
-			}
-			
 			function notificationHandler(event:NotificationEvent):void {
 				myTrace("in Notificationservice notificationHandler at " + (new Date()).toLocaleTimeString());
 				var notificationServiceEvent:NotificationServiceEvent = new NotificationServiceEvent(NotificationServiceEvent.NOTIFICATION_EVENT);
@@ -334,17 +324,9 @@ package services
 			_instance.dispatchEvent(notificationserviceEvent);
 		}
 		
-		/**
-		 * simply clears all notifications 
-		 */
-		public static function clearAllNotifications():void {
-			Notifications.service.cancel(ID_FOR_BG_VALUE);
-			Notifications.service.cancel(ID_FOR_REQUEST_CALIBRATION);
-		}
-		
-		public static function updateAllNotifications(be:Event):void {
+		public static function updateBgNotification(be:Event = null):void {
 			myTrace("NotificationService.as in updateAllNotifications");
-			clearAllNotifications();
+			Notifications.service.cancel(ID_FOR_BG_VALUE);
 			
 			//start with bgreading notification
 			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_ALWAYS_ON_NOTIFICATION) == "true" && !ModelLocator.isInForeground) {
@@ -378,7 +360,6 @@ package services
 						.build());
 				}
 			}
-			
 		}
 		
 		public static function notificationIdToText(id:int):String {

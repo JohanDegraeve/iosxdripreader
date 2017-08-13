@@ -100,7 +100,6 @@ package databaseclasses
 				Database.updateSensor(currentSensor);
 			}
 			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_CURRENT_SENSOR, "0");
-			NotificationService.clearAllNotifications();
 		}
 		
 		public function print(indentation:String):String {

@@ -151,9 +151,6 @@ package services
 				if ((new Date()).valueOf() - Sensor.getActiveSensor().startedAt < 2 * 3600 * 1000) {
 					myTrace("CalibrationService : bgreading received but sensor age < 2 hours, so ignoring");
 				} else {
-					//because the timer based function timerForWaitCalibration doesn't always work as expected
-					NotificationService.updateAllNotifications(null);
-					
 					//launch a notification
 					//don't do it via the notificationservice, this could result in the notification being cleared but not recreated (NotificationService.updateAllNotifications)
 					//the notification doesn't need to open any action, the dialog is create when the user opens the notification, or if the app is in the foreground, as soon as the notification is build. 
@@ -198,9 +195,6 @@ package services
 				myTrace("in intialCalibrationValueEntered, user pressed cancel, returning");
 				return;
 			}
-			
-			//this will force clear of calibration request notification, if it exists
-			NotificationService.updateAllNotifications(null);
 			
 			var asNumber:Number = new Number((event.values[0] as String).replace(",","."));
 			if (isNaN(asNumber)) {
