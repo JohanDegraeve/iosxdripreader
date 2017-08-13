@@ -225,13 +225,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 						BlueToothDevice.forgetBlueToothDevice();
 						SettingsView.requestNewTransmitterId();
 						if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE) == "G5") {
-							BluetoothService.isDexcomG5 = true;
-							if (BluetoothLE.service.centralManager.state == BluetoothLEState.STATE_ON) {
-								if (!BluetoothLE.service.centralManager.isScanning) {
-									BluetoothService.startScanning();
-								}
-								showG5InfoScreen();
-							}
+							showG5InfoScreen();
 						} else {
 							showG4InfoScreen();
 						}

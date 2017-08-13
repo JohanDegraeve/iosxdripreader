@@ -285,12 +285,14 @@ package services
 		
 		private static function settingChanged(event:SettingsServiceEvent):void {
 			if (event.data == CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE) {
+				myTrace("in settingChanged, event.data = COMMON_SETTING_PERIPHERAL_TYPE, calling stopscanning");
+				stopScanning(null);//need to stop scanning because device type has changed, means also the UUID to scan for
 				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE) == "G5") {
 					isDexcomG5 = true;	
-					startScanning();
+					if (BluetoothLE.service.centralManager.state == BluetoothLEState.STATE_ON) {
+							BluetoothService.startScanning();
+					}
 				} else {
-					myTrace("in settingChanged, event.data = COMMON_SETTING_PERIPHERAL_TYPE, calling stopscanning");
-					stopScanning(null);
 					isDexcomG5 = false;
 				}
 			} else if (event.data == CommonSettings.COMMON_SETTING_TRANSMITTER_ID) {
