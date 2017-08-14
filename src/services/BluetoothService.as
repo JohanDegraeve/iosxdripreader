@@ -126,7 +126,10 @@ package services
 		
 		public static var isDexcomG5:Boolean;
 		private static var timeStampOfLastDeviceDiscovery:Number = 0;
-		private static var scanTimer:Timer;
+		/**
+		 * used for intial scan G4, but also other peripherals that broadcast themselves continuously, like bluereader
+		 */
+		private static var G4ScanTimer:Timer;
 		
 		private static var peripheralConnected:Boolean = false;
 		
@@ -286,6 +289,12 @@ package services
 		private static function settingChanged(event:SettingsServiceEvent):void {
 			if (event.data == CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE) {
 				myTrace("in settingChanged, event.data = COMMON_SETTING_PERIPHERAL_TYPE, calling stopscanning");
+				if (G4ScanTimer != null) {
+					if (G4ScanTimer.running) {
+						G4ScanTimer.stop();
+					}
+					G4ScanTimer = null;
+				}
 				stopScanning(null);//need to stop scanning because device type has changed, means also the UUID to scan for
 				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE) == "G5") {
 					isDexcomG5 = true;	
@@ -351,12 +360,12 @@ package services
 					myTrace("failed to start scanning for peripherals");
 					return;
 				} else {
-					myTrace("started scanning for peripherals");
+					myTrace("started scanning for peripherals, peripheraltype = " + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE));
 					if (initialG4Scan) {
 						myTrace("it's a G4 scan, starting scanTimer");
-						scanTimer = new Timer(MAX_SCAN_TIME_IN_SECONDS * 1000, 1);
-						scanTimer.addEventListener(TimerEvent.TIMER, stopScanning);
-						scanTimer.start();
+						G4ScanTimer = new Timer(MAX_SCAN_TIME_IN_SECONDS * 1000, 1);
+						G4ScanTimer.addEventListener(TimerEvent.TIMER, stopScanning);
+						G4ScanTimer.start();
 					}
 				}
 			} else {
@@ -460,6 +469,16 @@ package services
 		private static function central_peripheralConnectHandler(event:PeripheralEvent):void {
 			myTrace("in central_peripheralConnectHandler, setting peripheralConnected = true");
 			peripheralConnected = true;
+
+			
+			if (G4ScanTimer != null) {
+				if (G4ScanTimer.running) {
+					myTrace("in central_peripheralConnectHandler, stopping scanTimer");
+					G4ScanTimer.stop();
+				}
+				G4ScanTimer = null;
+			}
+
 			if (!awaitingConnect) {
 				myTrace("in central_peripheralConnectHandler but awaitingConnect = false, will disconnect");
 				//activeBluetoothPeripheral = null;
@@ -563,6 +582,8 @@ package services
 			if (event.peripheral.services.length > 0)
 			{
 				discoverCharacteristics();
+			} else {
+				myTrace("event.peripheral.services.length == 0, not calling discoverCharacteristics");
 			}
 		}
 		
