@@ -41,6 +41,7 @@ package services
 	import events.TransmitterServiceEvent;
 	
 	import model.ModelLocator;
+	import model.TransmitterDataBlueReaderPacket;
 	import model.TransmitterDataG5Packet;
 	import model.TransmitterDataXBridgeBeaconPacket;
 	import model.TransmitterDataXBridgeDataPacket;
@@ -228,6 +229,24 @@ package services
 					//create and save bgreading
 					BgReading.
 						create(transmitterDataG5Packet.rawData, transmitterDataG5Packet.filteredData)
+						.saveToDatabaseSynchronous();
+					
+					//dispatch the event that there's new data
+					transmitterServiceEvent = new TransmitterServiceEvent(TransmitterServiceEvent.BGREADING_EVENT);
+					_instance.dispatchEvent(transmitterServiceEvent);
+				} else if (be.data is TransmitterDataBlueReaderPacket) {
+					var transmitterDataBlueReaderPacket:TransmitterDataBlueReaderPacket = be.data as TransmitterDataBlueReaderPacket;
+					if (!isNaN(transmitterDataBlueReaderPacket.bridgeBatteryLevel)) {
+						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_FSL_BRIDGE_BATTERY_LEVEL, transmitterDataBlueReaderPacket.bridgeBatteryLevel.toString());
+					}
+					if (!isNaN(transmitterDataBlueReaderPacket.sensorBatteryLevel)) {
+						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_FSL_SENSOR_BATTERY_LEVEL, transmitterDataBlueReaderPacket.sensorBatteryLevel.toString());
+					}
+					if (!isNaN(transmitterDataBlueReaderPacket.sensorAge)) {
+						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_FSL_SENSOR_AGE, transmitterDataBlueReaderPacket.sensorAge.toString());
+					}
+					BgReading.
+						create(transmitterDataBlueReaderPacket.rawData, transmitterDataBlueReaderPacket.filteredData)
 						.saveToDatabaseSynchronous();
 					
 					//dispatch the event that there's new data

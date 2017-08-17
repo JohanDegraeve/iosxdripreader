@@ -158,6 +158,23 @@
 		 public static const COMMON_SETTING_CALIBRATION_REQUEST_ALERT:int = 32;
 		 public static const COMMON_SETTING_VERY_LOW_ALERT:int = 33;
 		 public static const COMMON_SETTING_VERY_HIGH_ALERT:int = 34;
+		 
+		 /**
+		 * For limitter and/or bluereaderw<br>
+		 * value 0 means level not known
+		  */
+		 public static const COMMON_SETTING_FSL_SENSOR_BATTERY_LEVEL:int = 35;
+		 /**
+		  * For limitter and/or bluereaderw<br>
+		  * value 0 means level not known
+		  */
+		 public static const COMMON_SETTING_FSL_BRIDGE_BATTERY_LEVEL:int = 36;
+		 /**
+		  * For limitter and/or bluereaderw<br>
+		  * value 0 means level not known<br>
+		  * time in ms
+		  */
+		 public static const COMMON_SETTING_FSL_SENSOR_AGE:int = 37;
 
 		 private static var commonSettings:Array = [
 			 "0",//COMMON_SETTING_CURRENT_SENSOR
@@ -194,7 +211,10 @@
 			 "00:00>DefaultValue>DefaultNoAlertToBeReplaced-08:00>DefaultValue>SilentToBeReplaced",//COMMON_SETTING_BATTERY_ALERT
 			 "00:00>12>DefaultNoAlertToBeReplaced-08:00>12>SilentToBeReplaced-23:00>12>DefaultNoAlertToBeReplaced",//COMMON_SETTING_CALIBRATION_REQUEST_ALERT
 			 "00:00>50>DefaultNoAlertToBeReplaced",//COMMON_SETTING_VERY_LOW_ALERT
-			 "00:00>300>DefaultNoAlertToBeReplaced"//COMMON_SETTING_VERY_HIGH_ALERT
+			 "00:00>300>DefaultNoAlertToBeReplaced",//COMMON_SETTING_VERY_HIGH_ALERT
+			 "0",//COMMON_SETTING_FSL_SENSOR_BATTERY_LEVEL
+			 "0",//COMMON_SETTING_FSL_BRIDGE_BATTERY_LEVEL
+			 "0"//COMMON_SETTING_FSL_SENSOR_AGE
 		 ];
 		 
 		 public function CommonSettings()
