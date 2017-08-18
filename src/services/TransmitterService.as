@@ -93,6 +93,7 @@ package services
 			else {
 				if (be.data is TransmitterDataXBridgeBeaconPacket) {
 					if (((new Date()).valueOf() - lastPacketTime) < 60000) {
+						myTrace("in transmitterDataReceived , is TransmitterDataXBridgeBeaconPacket but lastPacketTime < 60 seconds ago, ignoring");
 					} else {
 						lastPacketTime = (new Date()).valueOf();
 						var transmitterDataBeaconPacket:TransmitterDataXBridgeBeaconPacket = be.data as TransmitterDataXBridgeBeaconPacket;
@@ -143,7 +144,7 @@ package services
 				} else if (be.data is TransmitterDataXBridgeDataPacket) {
 					var transmitterDataXBridgeDataPacket:TransmitterDataXBridgeDataPacket = be.data as TransmitterDataXBridgeDataPacket;
 					if (((new Date()).valueOf() - lastPacketTime) < 60000) {
-						//if previous packet was less than 1 minute ago then ignore it
+						myTrace("in transmitterDataReceived , is TransmitterDataXBridgeDataPacket but lastPacketTime < 60 seconds ago, ignoring");
 					} else {
 						lastPacketTime = (new Date()).valueOf();
 						if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID) == "00000" 
@@ -198,7 +199,7 @@ package services
 				} else if (be.data is TransmitterDataXdripDataPacket) {
 					var transmitterDataXdripDataPacket:TransmitterDataXdripDataPacket = be.data as TransmitterDataXdripDataPacket;
 					if (((new Date()).valueOf() - lastPacketTime) < 60000) {
-						//if previous packet was less than 1 minute ago then ignore it
+						myTrace("in transmitterDataReceived , is TransmitterDataXdripDataPacket but lastPacketTime < 60 seconds ago, ignoring");
 					} else {//it's an xdrip, with old software, 
 						lastPacketTime = (new Date()).valueOf();
 						
@@ -235,23 +236,27 @@ package services
 					transmitterServiceEvent = new TransmitterServiceEvent(TransmitterServiceEvent.BGREADING_EVENT);
 					_instance.dispatchEvent(transmitterServiceEvent);
 				} else if (be.data is TransmitterDataBlueReaderPacket) {
-					var transmitterDataBlueReaderPacket:TransmitterDataBlueReaderPacket = be.data as TransmitterDataBlueReaderPacket;
-					if (!isNaN(transmitterDataBlueReaderPacket.bridgeBatteryLevel)) {
-						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_FSL_BRIDGE_BATTERY_LEVEL, transmitterDataBlueReaderPacket.bridgeBatteryLevel.toString());
+					if (((new Date()).valueOf() - lastPacketTime) < 120000) {
+						myTrace("in transmitterDataReceived , is TransmitterDataBlueReaderPacket but lastPacketTime < 120 seconds ago, ignoring");
+					} else {
+						var transmitterDataBlueReaderPacket:TransmitterDataBlueReaderPacket = be.data as TransmitterDataBlueReaderPacket;
+						if (!isNaN(transmitterDataBlueReaderPacket.bridgeBatteryLevel)) {
+							CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_FSL_BRIDGE_BATTERY_LEVEL, transmitterDataBlueReaderPacket.bridgeBatteryLevel.toString());
+						}
+						if (!isNaN(transmitterDataBlueReaderPacket.sensorBatteryLevel)) {
+							CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_FSL_SENSOR_BATTERY_LEVEL, transmitterDataBlueReaderPacket.sensorBatteryLevel.toString());
+						}
+						if (!isNaN(transmitterDataBlueReaderPacket.sensorAge)) {
+							CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_FSL_SENSOR_AGE, transmitterDataBlueReaderPacket.sensorAge.toString());
+						}
+						BgReading.
+							create(transmitterDataBlueReaderPacket.rawData, transmitterDataBlueReaderPacket.filteredData)
+							.saveToDatabaseSynchronous();
+						
+						//dispatch the event that there's new data
+						transmitterServiceEvent = new TransmitterServiceEvent(TransmitterServiceEvent.BGREADING_EVENT);
+						_instance.dispatchEvent(transmitterServiceEvent);
 					}
-					if (!isNaN(transmitterDataBlueReaderPacket.sensorBatteryLevel)) {
-						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_FSL_SENSOR_BATTERY_LEVEL, transmitterDataBlueReaderPacket.sensorBatteryLevel.toString());
-					}
-					if (!isNaN(transmitterDataBlueReaderPacket.sensorAge)) {
-						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_FSL_SENSOR_AGE, transmitterDataBlueReaderPacket.sensorAge.toString());
-					}
-					BgReading.
-						create(transmitterDataBlueReaderPacket.rawData, transmitterDataBlueReaderPacket.filteredData)
-						.saveToDatabaseSynchronous();
-					
-					//dispatch the event that there's new data
-					transmitterServiceEvent = new TransmitterServiceEvent(TransmitterServiceEvent.BGREADING_EVENT);
-					_instance.dispatchEvent(transmitterServiceEvent);
 				}
 			}
 		}
