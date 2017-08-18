@@ -236,9 +236,10 @@ package services
 					transmitterServiceEvent = new TransmitterServiceEvent(TransmitterServiceEvent.BGREADING_EVENT);
 					_instance.dispatchEvent(transmitterServiceEvent);
 				} else if (be.data is TransmitterDataBlueReaderPacket) {
-					if (((new Date()).valueOf() - lastPacketTime) < 120000) {
-						myTrace("in transmitterDataReceived , is TransmitterDataBlueReaderPacket but lastPacketTime < 120 seconds ago, ignoring");
+					if (((new Date()).valueOf() - lastPacketTime) < 270000) {
+						myTrace("in transmitterDataReceived , is TransmitterDataBlueReaderPacket but lastPacketTime < 270 seconds ago, ignoring");
 					} else {
+						lastPacketTime = (new Date()).valueOf();
 						var transmitterDataBlueReaderPacket:TransmitterDataBlueReaderPacket = be.data as TransmitterDataBlueReaderPacket;
 						if (!isNaN(transmitterDataBlueReaderPacket.bridgeBatteryLevel)) {
 							CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_FSL_BRIDGE_BATTERY_LEVEL, transmitterDataBlueReaderPacket.bridgeBatteryLevel.toString());
