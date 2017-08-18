@@ -100,7 +100,14 @@
 		 public static const COMMON_SETTING_G5_BATTERY_MARKER:int = 14;
 		 public static const COMMON_SETTING_G5_BATTERY_FROM_MARKER:int = 15;
 		 /**
-		 * G4 or G5, also for limitter G4 is used
+		 * Possible values :<br>
+		 * G4 : any xdrip or xbridge that receives G4 transmitter signal<br> 
+		 * G5<br>
+		 * Limitter<br>
+		 * Bluereader<br>
+		 * BluCon<br>
+		 * <br>
+		 * Default value is an empty string, peripheral type unknown
 		  */
 		 public static const COMMON_SETTING_PERIPHERAL_TYPE:int = 16;
 		 public static const COMMON_SETTING_G5_INFO_SCREEN_SHOWN:int = 17;

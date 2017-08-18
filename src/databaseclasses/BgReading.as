@@ -726,7 +726,7 @@ package databaseclasses
 				return this;
 			}
 			var adjust_for:Number = AGE_ADJUSTMENT_TIME - (timestamp - sensor.startedAt);
-			if (adjust_for <= 0 || BlueToothDevice.isLimitter()) {
+			if (adjust_for <= 0 || BlueToothDevice.isTypeLimitter()) {
 				_ageAdjustedRawValue = rawData;
 			} else {
 				_ageAdjustedRawValue = ((AGE_ADJUSTMENT_FACTOR * (adjust_for / AGE_ADJUSTMENT_TIME)) * rawData) + rawData;

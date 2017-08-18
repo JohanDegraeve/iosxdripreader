@@ -123,6 +123,39 @@ package databaseclasses
 		}
 		
 		/**
+		 * True for xdrip or xbridge connecting to Dexcom G4
+		 */
+		public static function isDexcomG4():Boolean {
+			return (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE).toUpperCase() == "G4");
+		}
+		
+		public static function isDexcomG5():Boolean {
+			return (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE).toUpperCase() == "G5");
+		}
+		
+		public static function isBlueReader():Boolean {
+			return (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE).toUpperCase() == "BLUEREADER");
+		}
+		
+		public static function isBluCon():Boolean {
+			return (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE).toUpperCase() == "BLUCON");
+		}
+		
+		public static function isLimitter():Boolean {
+			return (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE).toUpperCase() == "LIMITTER");
+		}
+
+		/**
+		 * for type BlueReader, Limitter, BluCon, ie devices that transmit FSL sensor data<br>
+		 *  
+		 */
+		public static function isTypeLimitter():Boolean {
+			return (isBlueReader() || isBluCon() || isLimitter());
+		}
+		
+		public static function 
+
+		/**
 		 * if name contains BRIDGE (case insensitive) then returns true<br>
 		 * otherwise false<br><br>
 		 * THIS DOES NOT NECESSARILY MEAN THAT IT DOES NOT HAVE THE XBRIDGE SOFTWARE, IT MIGHT BE AN XDRIP THAT IS LATER ON UPGRADED TO XBRIDGE<BR>
@@ -131,16 +164,10 @@ package databaseclasses
 		public static function isXBridge():Boolean {
 			return _name.toUpperCase().indexOf("BRIDGE") > -1;
 		}
-		
-		public static function isLimitter():Boolean {
-			var returnValue:Boolean = _name.toUpperCase().indexOf("LIMITTER") > -1 || _name.toUpperCase().indexOf("BLUEREADER") > -1;
-			if (returnValue)
-				myTrace("in isLimitter, it's a limitter (or bluereader)");
-			return (returnValue);
-		}
-		
+
 		private static function myTrace(log:String):void {
 			Trace.myTrace("BlueToothDevice.as", log);
 		}
+		
 	}
 }
