@@ -20,6 +20,7 @@ package services
 	import Utilities.UniqueId;
 	
 	import databaseclasses.BgReading;
+	import databaseclasses.BlueToothDevice;
 	import databaseclasses.CommonSettings;
 	import databaseclasses.LocalSettings;
 	
@@ -129,15 +130,14 @@ package services
 		}
 		
 		private static function central_peripheralDiscoveredHandler(be:PeripheralEvent):void {
-			if (BluetoothService.isDexcomG5) {
+			if (BlueToothDevice.alwaysScan()) {
 				if ((new Date()).valueOf() - timeStampOfLastDeviceDiscovery < 60 * 1000) {
 					
 				} else {
 					timeStampOfLastDeviceDiscovery = (new Date()).valueOf();
 					BackgroundFetch.checkMuted();
 				}
-			}
-				
+			}				
 		}
 		
 		public static function callCompletionHandler(result:String):void {

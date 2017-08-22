@@ -111,7 +111,7 @@
 		  */
 		 public static const COMMON_SETTING_PERIPHERAL_TYPE:int = 16;
 		 public static const COMMON_SETTING_G5_INFO_SCREEN_SHOWN:int = 17;
-		 public static const COMMON_SETTING_INITIAL_SELECTION_G4_OR_G5_DONE:int = 18;
+		 public static const COMMON_SETTING_INITIAL_SELECTION_PERIPHERAL_TYPE_DONE:int = 18;
 		 public static const COMMON_SETTING_LICENSE_INFO_CONFIRMED:int = 19;
 		 /**
 		 * only related to quickblox subscription in iosxdripreader.mxml activateHandler 
@@ -175,7 +175,7 @@
 		  * For limitter and/or bluereaderw<br>
 		  * value 0 means level not known
 		  */
-		 public static const COMMON_SETTING_FSL_BRIDGE_BATTERY_LEVEL:int = 36;
+		 public static const COMMON_SETTING_BLUEREADER_BATTERY_LEVEL:int = 36;
 		 /**
 		  * For limitter and/or bluereaderw<br>
 		  * value 0 means level not known<br>
@@ -202,7 +202,7 @@
 			 "0",//COMMON_SETTING_G5_BATTERY_FROM_MARKER
 			 "",//COMMON_SETTING_PERIPHERAL_TYPE
 			 "false",//COMMON_SETTING_G5_INFO_SCREEN_SHOWN
-			 "false",//COMMON_SETTING_INITIAL_SELECTION_G4_OR_G5_DONE
+			 "false",//COMMON_SETTING_INITIAL_SELECTION_PERIPHERAL_TYPE_DONE
 			 "false",//COMMON_SETTING_LICENSE_INFO_CONFIRMED
 			 "0",//COMMON_SETTING_TIME_SINCE_LAST_QUICK_BLOX_SUBSCRIPTION
 			 "00:00>70>DefaultNoAlertToBeReplaced",//COMMON_SETTING_LOW_ALERT
@@ -220,7 +220,7 @@
 			 "00:00>50>DefaultNoAlertToBeReplaced",//COMMON_SETTING_VERY_LOW_ALERT
 			 "00:00>300>DefaultNoAlertToBeReplaced",//COMMON_SETTING_VERY_HIGH_ALERT
 			 "0",//COMMON_SETTING_FSL_SENSOR_BATTERY_LEVEL
-			 "0",//COMMON_SETTING_FSL_BRIDGE_BATTERY_LEVEL
+			 "0",//COMMON_SETTING_BLUEREADER_BATTERY_LEVEL
 			 "0"//COMMON_SETTING_FSL_SENSOR_AGE
 		 ];
 		 

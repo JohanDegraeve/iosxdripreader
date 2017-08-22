@@ -115,6 +115,8 @@ package databaseclasses
 		 * It will look at the address and if it's different from "" then returns true 
 		 */
 		public static function known():Boolean {
+			if (_address == null)
+				return false;
 			return (_address != "");
 		}
 		
@@ -147,13 +149,20 @@ package databaseclasses
 
 		/**
 		 * for type BlueReader, Limitter, BluCon, ie devices that transmit FSL sensor data<br>
+		 * important for calibration
 		 *  
 		 */
 		public static function isTypeLimitter():Boolean {
 			return (isBlueReader() || isBluCon() || isLimitter());
 		}
 		
-		public static function 
+		/**
+		 * if true, then scanning can start as soon as transmitter id is chosen. For the moment this is only the case for Dexcom G5<br>
+		 * For others like xdrip, bluereader, etc... scanning can only start if user initiates it 
+		 */
+		public static function alwaysScan():Boolean {
+			return (isDexcomG5() || isBluCon()); 
+		}
 
 		/**
 		 * if name contains BRIDGE (case insensitive) then returns true<br>
@@ -163,6 +172,14 @@ package databaseclasses
 		 */
 		public static function isXBridge():Boolean {
 			return _name.toUpperCase().indexOf("BRIDGE") > -1;
+		}
+		
+		public static function needsTransmitterId():Boolean {
+			return (isDexcomG5() || isDexcomG4() || isBluCon());
+		}
+		
+		public static function transmitterIdKnown():Boolean {
+			return (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID) != "00000");
 		}
 
 		private static function myTrace(log:String):void {

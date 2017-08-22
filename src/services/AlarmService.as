@@ -29,6 +29,7 @@ package services
 	
 	import databaseclasses.AlertType;
 	import databaseclasses.BgReading;
+	import databaseclasses.BlueToothDevice;
 	import databaseclasses.Calibration;
 	import databaseclasses.CommonSettings;
 	import databaseclasses.Database;
@@ -258,7 +259,7 @@ package services
 		}
 		
 		private static function characteristicUpdate(event:Event):void {
-			if (!BluetoothService.isDexcomG5 && !BluetoothService.isBlucon)
+			if (!BlueToothDevice.alwaysScan())
 				BackgroundFetch.checkMuted();
 		}
 		
@@ -1007,9 +1008,9 @@ package services
 					 myTrace("in checkAlarms, batteryLevel alert not snoozed ");
 					 //not snoozed
 					 
-					 if ((!BluetoothService.isDexcomG5 && (new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G4_TRANSMITTER_BATTERY_VOLTAGE)) < alertValue) && (new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G4_TRANSMITTER_BATTERY_VOLTAGE)) > 0))
+					 if ((!BlueToothDevice.isDexcomG5() && (new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G4_TRANSMITTER_BATTERY_VOLTAGE)) < alertValue) && (new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G4_TRANSMITTER_BATTERY_VOLTAGE)) > 0))
 						 ||
-						 (BluetoothService.isDexcomG5 && (new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_VOLTAGEA)) < alertValue) && (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_VOLTAGEA) != "unknown"))) {
+						 (BlueToothDevice.isDexcomG5() && (new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_VOLTAGEA)) < alertValue) && (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_VOLTAGEA) != "unknown"))) {
 						 myTrace("in checkAlarms, battery level is too low");
 						 fireAlert(
 							 alertType, 

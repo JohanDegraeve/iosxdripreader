@@ -222,9 +222,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 						event.data == CommonSettings.COMMON_SETTING_LOW_MARK) {
 						displayCurrentInfoFromReading();
 					} else if (event.data == CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE) {
-						BlueToothDevice.forgetBlueToothDevice();
-						SettingsView.requestNewTransmitterId();
-						if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE) == "G5") {
+						if (BlueToothDevice.needsTransmitterId()) {
+							SettingsView.requestNewTransmitterId();
+						}
+						if (BlueToothDevice.alwaysScan()) {
 							scanningWasUserInitiated = false;
 							if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_INFO_SCREEN_SHOWN) == "false") {
 								showG5InfoScreen();
@@ -309,7 +310,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 				}
 			}
 						
-			private static function peripheralTypeSelected(event:DialogViewEvent):void {
+			/*private static function peripheralTypeSelected(event:DialogViewEvent):void {
 				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_INITIAL_SELECTION_G4_OR_G5_DONE, "true");
 				if (event.index== 1) {
 					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE, "G5");
@@ -326,7 +327,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE, "G4");
 					showG4InfoScreen();
 				}
-			}
+			}*/
 			
 			private static function showG4InfoScreen():void {
 				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G4_INFO_SCREEN_SHOWN) == "false") {
@@ -378,19 +379,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			}
 			
 			private static function licenseInfoConfirmed(ev:Event):void {
-				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_INITIAL_SELECTION_G4_OR_G5_DONE) == "false") {
-					var alert:DialogView = Dialog.service.create(
-						new AlertBuilder()
-						.setTitle(ModelLocator.resourceManagerInstance.getString('homeview',"selectG4_or_G5_title"))
-						.setMessage(ModelLocator.resourceManagerInstance.getString('homeview',"selectG4_or_G5"))//info about buttons top right corner
-						.addOption(ModelLocator.resourceManagerInstance.getString('general',"yes"), DialogAction.STYLE_POSITIVE, 1)
-						.addOption(ModelLocator.resourceManagerInstance.getString('general',"no"), DialogAction.STYLE_POSITIVE, 2)
-						.build()
-					);
-					alert.addEventListener(DialogViewEvent.CLOSED, peripheralTypeSelected);
-					alert.addEventListener(DialogViewEvent.CANCELLED, peripheralTypeSelected);
-					DialogService.addDialog(alert);
-					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_INITIAL_SELECTION_G4_OR_G5_DONE,"true");
+				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_INITIAL_SELECTION_PERIPHERAL_TYPE_DONE) == "false") {
+					SettingsView.changeTransmitterType();
+					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_INITIAL_SELECTION_PERIPHERAL_TYPE_DONE,"true");
 				}
 			}
 			
@@ -530,12 +521,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 				
 				actionsheetBuilder.addAction(ModelLocator.resourceManagerInstance.getString('homeview','view_device_status'), DialogAction.STYLE_DEFAULT, ACTION_SHEET_INDEX_FOR_STATUS);
 				
-				if (!BluetoothService.bluetoothPeripheralActive() && !BluetoothService.isDexcomG5) {
+				if (!BluetoothService.bluetoothPeripheralActive() && !BlueToothDevice.alwaysScan()) {
 					//this is the case where bluetoothdevice is known or not, time for a scan
 					actionsheetBuilder.addAction(ModelLocator.resourceManagerInstance.getString('homeview','scan_for_device'), DialogAction.STYLE_DEFAULT, ACTION_SHEET_INDEX_FOR_SCAN_FOR_DEVICE);
 				} 
 				
-				if (BlueToothDevice.known() && !BluetoothService.isDexcomG5) {
+				if (BlueToothDevice.known() && !BlueToothDevice.alwaysScan()) {
 					actionsheetBuilder.addAction(ModelLocator.resourceManagerInstance.getString('homeview','forget_device'), DialogAction.STYLE_DEFAULT, ACTION_SHEET_INDEX_FOR_FORGET_DEVICE);
 				}
 				
@@ -635,7 +626,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 						dateFormatterForSensorStartTimeAndDate.format(new Date(peripheralConnectionStatusChangeTimestamp));
 					}
 					message += "\n";
-					if (BluetoothService.isDexcomG5) {
+					if (BlueToothDevice.isDexcomG5()) {
 						message += ModelLocator.resourceManagerInstance.getString('homeview','home_view_transmitter_status_info_G5_VOLTAGEA') + " " + 
 							CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_VOLTAGEA);
 						if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_VOLTAGEA) != "unknown")
@@ -655,7 +646,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 						if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_RESIST) != "unknown")
 							message += " (" + (new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_RESIST)) > G5Model.TransmitterStatus.RESIST_BAD ? "BAD":(new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_RESIST)) > G5Model.TransmitterStatus.RESIST_NOTICE ? "NOTICE":(new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_RESIST)) > G5Model.TransmitterStatus.RESIST_NORMAL ? "NORMAL":"GOOD"))) + 
 								")";
-					} else {
+					} else if (BlueToothDevice.isDexcomG4()) {
 						message += ModelLocator.resourceManagerInstance.getString('homeview','status_info_transmitter_battery_level');
 						var batteryLevel:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G4_TRANSMITTER_BATTERY_VOLTAGE);
 						if (batteryLevel == "0") {
@@ -663,6 +654,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 							message += " " + batteryLevel;
 						} else {
 							message += G4Model.TransmitterStatus.getBatteryLevel(new Number(batteryLevel));
+						}
+					} else if (BlueToothDevice.isBlueReader()) {
+						message += ModelLocator.resourceManagerInstance.getString('homeview','battery_level');
+						var batteryLevel:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BLUEREADER_BATTERY_LEVEL);
+						if (batteryLevel == "0") {
+							batteryLevel = ModelLocator.resourceManagerInstance.getString('homeview','status_info_transmitter_battery_level_unknown');
+							message += " " + batteryLevel;
+						} else {
+							message += (new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BLUEREADER_BATTERY_LEVEL)))/1000;
 						}
 					}
 					

@@ -9,7 +9,9 @@
 		<![CDATA[
 			import com.distriqt.extension.dialog.Dialog;
 			import com.distriqt.extension.dialog.DialogView;
+			import com.distriqt.extension.dialog.PickerDialogView;
 			import com.distriqt.extension.dialog.builders.AlertBuilder;
+			import com.distriqt.extension.dialog.builders.PickerDialogBuilder;
 			import com.distriqt.extension.dialog.events.DialogViewEvent;
 			import com.distriqt.extension.dialog.objects.DialogAction;
 			import com.hurlant.crypto.hash.SHA1;
@@ -27,6 +29,7 @@
 			import Utilities.Trace;
 			
 			import databaseclasses.BgReading;
+			import databaseclasses.BlueToothDevice;
 			import databaseclasses.CommonSettings;
 			import databaseclasses.LocalSettings;
 			
@@ -115,17 +118,29 @@
 				
 				transmitterIdText = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID);
 				transmitterTypeText = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE);
+				if (BlueToothDevice.needsTransmitterId()) {
+					groupTransmitterId.alpha = 1;
+				} else {
+					groupTransmitterId.alpha = 0.25;
+				}
 				
 				LocalSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, settingChanged);
+				CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, settingChanged);
 				
 				versionText = ModelLocator.resourceManagerInstance.getString('general','version');
 			}
 			
-			private static function settingChanged(event:SettingsServiceEvent):void {
+			private function settingChanged(event:SettingsServiceEvent):void {
 				if (event.data == CommonSettings.COMMON_SETTING_TRANSMITTER_ID) {
 					transmitterIdText = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID);
 				} else if (event.data == CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE) {
 					transmitterTypeText = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE);
+					if (BlueToothDevice.needsTransmitterId()) {
+						groupTransmitterId.alpha = 1;
+					} else {
+						groupTransmitterId.alpha = 0.25;
+					}
+
 				}
 			}
 			
@@ -555,10 +570,18 @@
 			public static function requestNewTransmitterId(calledFromHomeView:Boolean = false):void {
 				var title:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE) + " " +
 					ModelLocator.resourceManagerInstance.getString("transmitterservice","transmitter_id_settings_title");
+				var message:String = ModelLocator.resourceManagerInstance.getString("transmitterservice","enter_transmitter_id");
+				if (BlueToothDevice.isDexcomG4()) {
+					message += " (5 characters)";
+				} else if (BlueToothDevice.isDexcomG5()) {
+					message += " (6 characters)";
+				} else if (BlueToothDevice.isBluCon()) {
+					message += " (PIN)";
+				} 
 				var alert:DialogView = Dialog.service.create(
 					new AlertBuilder()
 					.setTitle(title)
-					.setMessage(ModelLocator.resourceManagerInstance.getString("transmitterservice","enter_transmitter_id"))
+					.setMessage(message)
 					.addTextField("",CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID))
 					.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
 					.addOption(ModelLocator.resourceManagerInstance.getString("general","cancel"), DialogAction.STYLE_CANCEL, 1)
@@ -571,59 +594,89 @@
 					if (event.index == 1) {
 						return;
 					}
-					var idLength:Number = (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE)) == "G5" ? 6:5
-					if ((event.values[0] as String).length != idLength) {
-						var alertMessage:String =
-							(ModelLocator.resourceManagerInstance.getString("transmitterservice","transmitter_id_should_be_five_chars")).replace("{max}", idLength.toString());
-						if (calledFromHomeView) {
-							alertMessage += " " + (ModelLocator.resourceManagerInstance.getString("transmitterservice","set_transmitter_id_in_settings"));
-						}
-						var alert:DialogView = Dialog.service.create(
-							new AlertBuilder()
-							.setTitle(ModelLocator.resourceManagerInstance.getString("transmitterservice","enter_transmitter_id_dialog_title"))
-							.setMessage(alertMessage)
-							.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
-							.build()
-						);
-						DialogService.addDialog(alert);
-					} else {
-						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID, (event.values[0] as String).toUpperCase());
-						transmitterIdText = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID);
-						
-						//reset all battery levels
-						resetAllTransmitterBatteryLevels();
+					var idLength:Number = BlueToothDevice.isDexcomG5() ? 6:
+						(BlueToothDevice.isDexcomG4() ? 5: Number.NaN);
+					
+					if (!isNaN(idLength)) {
+						if ((event.values[0] as String).length != idLength) {
+							var alertMessage:String =
+								(ModelLocator.resourceManagerInstance.getString("transmitterservice","transmitter_id_should_be_five_chars")).replace("{max}", idLength.toString());
+							if (calledFromHomeView) {
+								alertMessage += " " + (ModelLocator.resourceManagerInstance.getString("transmitterservice","set_transmitter_id_in_settings"));
+							}
+							var alert:DialogView = Dialog.service.create(
+								new AlertBuilder()
+								.setTitle(ModelLocator.resourceManagerInstance.getString("transmitterservice","enter_transmitter_id_dialog_title"))
+								.setMessage(alertMessage)
+								.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
+								.build()
+							);
+							DialogService.addDialog(alert);
+							return;
+						}					
 					}
+					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID, (event.values[0] as String).toUpperCase());
+					transmitterIdText = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID);
+						
+					//reset all battery levels
+					resetAllTransmitterBatteryLevels();
 				}
 			}
 			
 			private function changeTransmitterId_clickHandler(event:MouseEvent):void {
+				if (!BlueToothDevice.needsTransmitterId())
+					return;
 				rect21.color = uint("0xD3D3D3");
 				rect22.color = uint("0xD3D3D3");
 				setResetColorTimer();
 				requestNewTransmitterId();
 			}
 			
-			private function changeTransmitterType_clickHandler(event:MouseEvent):void {
+			public function changeTransmitterType_clickHandler(event:MouseEvent = null):void {
 				rect27.color = uint("0xD3D3D3");
 				rect28.color = uint("0xD3D3D3");
 				setResetColorTimer();
-				var newSetting:String
-				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE) == "G4") {
-					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE, "G5");
-					transmitterTypeText = "G5";
-					newSetting = FromtimeAndValueArrayCollection.replaceAllValues(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BATTERY_ALERT), new Number(G5Model.TransmitterStatus.LOW_BATTERY_WARNING_LEVEL_VOLTAGEA), false)
-					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_BATTERY_ALERT, newSetting);
-				} else {
-					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE, "G4");
-					transmitterTypeText = "G4";
-					newSetting = FromtimeAndValueArrayCollection.replaceAllValues(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BATTERY_ALERT), new Number(G4Model.TransmitterStatus.TRANSMITTER_BATTERY_LOW), false)
-					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_BATTERY_ALERT, newSetting);
+				changeTransmitterType();
+			}
+			
+			public static function changeTransmitterType():void {
+				var selectedTransmitterType:int = 0;
+				var currentType:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE);
+				if (currentType.toUpperCase() == "G5") {
+					selectedTransmitterType = 1;
+				} else if (currentType.toUpperCase() == "LIMITTER") {
+					selectedTransmitterType = 2;
+				} else if (currentType.toUpperCase() == "BLUEREADER") {
+					selectedTransmitterType = 3;
+				}  else if (currentType.toUpperCase() == "BLUCON") {
+					selectedTransmitterType = 4;
 				}
-				//no need to request new transmitter id here, this will be initiated from homeview which is listening
-				//changes in setting COMMON_SETTING_PERIPHERAL_TYPE
+				var transmitterTypeNames:Array = new Array();
+				transmitterTypeNames.push("G4", "G5", "Limitter", "Bluereader", "BluCon");
 				
-				//reset battery levels to unknown
-				resetAllTransmitterBatteryLevels();
+				var picker:PickerDialogView = Dialog.service.create(
+					new PickerDialogBuilder()
+					.setTitle(ModelLocator.resourceManagerInstance.getString('settingsview', 'transmittertype_picker_title'))
+					.setCancelLabel(ModelLocator.resourceManagerInstance.getString("general","cancel"))
+					.setAcceptLabel("Ok")
+					.addColumn(transmitterTypeNames, selectedTransmitterType)
+					.build()
+				);
+				
+				picker.addEventListener( DialogViewEvent.CLOSED, picker_closedHandler );
+				picker.show();
+				
+				function picker_closedHandler(event:DialogViewEvent): void {
+					var newTransmitterType:String = event.values[0];
+					if (newTransmitterType.toUpperCase() == currentType.toUpperCase())
+						return;
+					
+					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE, newTransmitterType);
+					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID, "00000");
+					transmitterIdText = "00000";
+					//transmitterTypeText = newTransmitterType;	
+					resetAllTransmitterBatteryLevels();
+				}
 			}
 			
 			private static function resetAllTransmitterBatteryLevels():void {
@@ -635,6 +688,8 @@
 				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_G5_STATUS, "unknown");
 				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_G5_BATTERY_FROM_MARKER, "0");
 				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_G4_TRANSMITTER_BATTERY_VOLTAGE, "0");
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_FSL_SENSOR_BATTERY_LEVEL, "0");
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_BLUEREADER_BATTERY_LEVEL, "0");
 			}
 			
 			private function NSLog_clickHandler(event:MouseEvent):void {
@@ -876,7 +931,7 @@
 			</s:VGroup>
 			
 			<!-- Chapter general settings Subsection transmitter Id -->
-			<s:VGroup click="changeTransmitterId_clickHandler(event)" width="100%">
+			<s:VGroup id="groupTransmitterId" click="changeTransmitterId_clickHandler(event)" width="100%">
 				<s:HGroup width="100%">
 					<s:Rect height="100%" width="5" >
 						<s:fill>
