@@ -104,10 +104,11 @@ package databaseclasses
 		 * also updates database and calls bluetoothservce.forgetdevice
 		 */
 		public static function forgetBlueToothDevice():void {
+			myTrace("in forgetBlueToothDevice");
 			_address = "";
 			_name = "";
 			Database.updateBlueToothDeviceSynchronous("", "", (new Date()).valueOf());
-			BluetoothService.forgetBlueToothDevice();
+			BluetoothService.forgetActiveBluetoothPeripheral();
 		}
 		
 		/**

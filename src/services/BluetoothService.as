@@ -314,7 +314,7 @@ package services
 				} else {
 				}
 			} else if (event.data == CommonSettings.COMMON_SETTING_TRANSMITTER_ID) {
-				myTrace("in settingChanged, event.data = COMMON_SETTING_TRANSMITTER_ID, calling forgetbluetoothdevice");
+				myTrace("in settingChanged, event.data = COMMON_SETTING_TRANSMITTER_ID, calling BlueToothDevice.forgetbluetoothdevice");
 				BlueToothDevice.forgetBlueToothDevice();
 				if (BlueToothDevice.transmitterIdKnown() && BlueToothDevice.alwaysScan()) {
 					if (BluetoothLE.service.centralManager.state == BluetoothLEState.STATE_ON) {
@@ -574,7 +574,7 @@ package services
 			myTrace('Disconnected from device or attempt to reconnect failed, setting peripheralConnected = false');
 			peripheralConnected = false;
 			awaitingConnect = false;
-			forgetBlueToothDevice();
+			forgetActiveBluetoothPeripheral();
 			startRescan(null);
 		}
 		
@@ -925,7 +925,8 @@ package services
 		/**
 		 * Disconnects the active bluetooth peripheral if any and sets it to null(otherwise returns without doing anything)<br>
 		 */
-		public static function forgetBlueToothDevice():void {
+		public static function forgetActiveBluetoothPeripheral():void {
+			myTrace("in forgetActiveBluetoothPeripheral");
 			if (activeBluetoothPeripheral == null)
 				return;
 			
@@ -1064,7 +1065,7 @@ package services
 					myTrace("doDisconnectMessageG5 failed");
 				}
 			}
-			forgetBlueToothDevice();
+			forgetActiveBluetoothPeripheral();
 			myTrace("doDisconnectMessageG5 finished");
 		}
 		
