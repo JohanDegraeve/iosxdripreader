@@ -174,8 +174,8 @@ package services
 		private static const BLUCON_COMMAND_unknowncommand010d0a00:String = "010d0a00"
 		private static const BLUCON_COMMAND_unknowncommand010d0b00:String = "010d0b00"
 
-		private static const BLUCON_NACK_RESPONSE_patchNotFound = "8b1a02000f"
-		private static const BLUCON_NACK_RESPONSE_patchReadError = "8b1a020011"
+		private static const BLUCON_NACK_RESPONSE_patchNotFound:String = "8b1a02000f"
+		private static const BLUCON_NACK_RESPONSE_patchReadError:String = "8b1a020011"
 		
 		private static function set activeBluetoothPeripheral(value:Peripheral):void
 		{
@@ -426,14 +426,17 @@ package services
 			}
 			
 			// event.peripheral will contain a Peripheral object with information about the Peripheral
-			var expectedG5_name:String;
-			var expectedBLUCON_name:String;
+			var expectedDeviceName:String;
 			if (BlueToothDevice.isDexcomG5()) {
-				expectedG5_name = "DEXCOM" + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID).substring(4,6);
-				myTrace("expected g5 device name = " + expectedG5_name);
+				expectedDeviceName = "DEXCOM" + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID).substring(4,6);
+				myTrace("expected g5 device name = " + expectedDeviceName);
 			} else if (BlueToothDevice.isBluCon()) {
-				expectedBLUCON_name = "BLU" + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID);
-				myTrace("expected blucon device name = " + expectedBLUCON_name);
+				var pin:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID);
+				while (pin.length < 5) {
+					pin = "0" + pin;
+				}
+				expectedDeviceName = "BLU" + pin;
+				myTrace("expected blucon device name = " + expectedDeviceName);
 			}
 			if (
 				(!(BlueToothDevice.alwaysScan()) &&
@@ -448,13 +451,13 @@ package services
 				||
 				(BlueToothDevice.isDexcomG5() &&
 					(
-						(event.peripheral.name as String).toUpperCase().indexOf(expectedG5_name) > -1
+						(event.peripheral.name as String).toUpperCase().indexOf(expectedDeviceName) > -1
 					)
 				)
 				||
 				(BlueToothDevice.isBluCon() &&
 					(
-						(event.peripheral.name as String).toUpperCase().indexOf(expectedBLUCON_name) > -1
+						(event.peripheral.name as String).toUpperCase().indexOf(expectedDeviceName) > -1
 					)
 				)
 			) {
@@ -1125,8 +1128,8 @@ package services
 				if (bufferAsString.toLowerCase().indexOf(BLUCON_NACK_RESPONSE_patchReadError) == 0) {
 					var blueToothServiceEvent:BlueToothServiceEvent = new BlueToothServiceEvent(BlueToothServiceEvent.GLUCOSE_PATCH_READ_ERROR);
 					_instance.dispatchEvent(blueToothServiceEvent);
+					myTrace("patchreaderror");
 				}
-				myTrace("NACK received from BluCon");
 			}
 			
 			if (bluconCurrentCommand == BLUCON_COMMAND_initialState && (bufferAsString.toLowerCase().indexOf(BLUCON_COMMAND_wakeup) == 0) ) {
@@ -1136,21 +1139,29 @@ package services
 				myTrace("Patch Info received")
 				sendCommand(BLUCON_COMMAND_ackWakeup);
 			} else if (bluconCurrentCommand == BLUCON_COMMAND_getNowDataIndex && (bufferAsString.toLowerCase().indexOf(BLUCON_RESPONSE_singleBlockInfoResponsePrefix) == 0) ) {
-				myTrace("getNowDataIndex -> single block response")
-				myTrace("reached block getNowDataIndex")
-				sendCommand("010d0e01" + blockNumberForNowGlucoseData());
+				buffer.position = 0;
+				var commandAsString:String = "010d0e01" + blockNumberForNowGlucoseData(buffer);
+				myTrace("reached block getNowDataIndex calling sendCommand with hexstring = " + commandAsString);
+				buffer.position = 0;
+				sendCommand("010d0e01" + blockNumberForNowGlucoseData(buffer));
 			} else if (bluconCurrentCommand == BLUCON_COMMAND_getNowGlucoseData && (bufferAsString.toLowerCase().indexOf(BLUCON_RESPONSE_singleBlockInfoResponsePrefix) == 0) ) {
-				myTrace("reached block getNowGlucoseData")
-				myTrace("getNowGlucoseData -> single block response")
-				myTrace("now glucose value Original Limitter algo (divided by 10)-> \(self.nowGlucoseValue)")
-				myTrace("now glucose value Updated Limitter algo (divided by 8.5)-> \(self.nowGlucoseValue8p5)")
+				myTrace("reached block getNowGlucoseData");
+				myTrace("value = " + BackgroundFetch.nowGetGlucoseValue(buffer));
 				sendCommand(BLUCON_COMMAND_sleep);
 				//dispatch event with glucosevalue;
 			} 
 		}
 		
-		private static function blockNumberForNowGlucoseData():void {
-			myTrace("BLOCKNUMBERFORNOWGLUCOSEDATA NOT YET IMPLEMENTED");
+		/**
+		 * returns hex string
+		 */
+		private static function blockNumberForNowGlucoseData(block:ByteArray):String {
+			var nowGlucoseDataAsNumber:Number = BackgroundFetch.blockNumberForNowGlucoseData(block);
+			var nowGlucoseDataAsHexString:String = nowGlucoseDataAsNumber.toString(16);
+			while (nowGlucoseDataAsHexString.length < 2) {
+				nowGlucoseDataAsHexString = "0" + nowGlucoseDataAsHexString;
+			}
+			return nowGlucoseDataAsHexString;
 		}
 		
 		/**
