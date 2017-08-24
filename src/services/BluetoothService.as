@@ -135,7 +135,7 @@ package services
 		
 		public static const BATTERY_READ_PERIOD_MS:Number = 1000 * 60 * 60 * 12; // how often to poll battery data (12 hours)
 		
-		private static var timeStampOfLastDeviceDiscovery:Number = 0;
+		private static var timeStampOfLastG5Reading:Number = 0;
 		/**
 		 * used for intial scan G4, but also other peripherals that broadcast themselves continuously, like bluereader
 		 */
@@ -417,7 +417,7 @@ package services
 			}
 			
 			if (BlueToothDevice.isDexcomG5()) {
-				if ((new Date()).valueOf() - timeStampOfLastDeviceDiscovery < 60 * 1000) {
+				if ((new Date()).valueOf() - timeStampOfLastG5Reading < 60 * 1000) {
 					myTrace("G5 but last reading was less than 1 minute ago, ignoring this peripheral discovery");
 					myTrace("restart scan");
 					startRescan(null);
@@ -462,7 +462,6 @@ package services
 				)
 			) {
 				myTrace("Found peripheral with name" + " = " + event.peripheral.name);
-				timeStampOfLastDeviceDiscovery = (new Date()).valueOf();
 				
 				if (BlueToothDevice.address != "") {
 					if (BlueToothDevice.address != event.peripheral.uuid) {
@@ -1024,6 +1023,7 @@ package services
 						doDisconnectMessageG5(characteristic);
 					}
 					
+					timeStampOfLastG5Reading = (new Date()).valueOf();
 					var blueToothServiceEvent:BlueToothServiceEvent = new BlueToothServiceEvent(BlueToothServiceEvent.TRANSMITTER_DATA);
 					blueToothServiceEvent.data = new TransmitterDataG5Packet(sensorRx.unfiltered, sensorRx.filtered, sensor_battery_level, sensorRx.timestamp, sensorRx.transmitterStatus);
 					_instance.dispatchEvent(blueToothServiceEvent);
