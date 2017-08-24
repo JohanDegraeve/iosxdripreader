@@ -522,7 +522,7 @@ package services
 				activeBluetoothPeripheral = event.peripheral;
 
 			if (BlueToothDevice.isBluCon()) {
-				myTrace("it's a blucon, setting state to " + BLUCON_COMMAND_initialState);
+				myTrace("it's a blucon, setting state to BLUCON_COMMAND_initialState " + BLUCON_COMMAND_initialState);
 				bluconCurrentCommand = BLUCON_COMMAND_initialState;
 			}
 			discoverServices();
@@ -1105,7 +1105,7 @@ package services
 		}
 		
 		private static function processBLUCONTransmitterData(buffer:ByteArray):void {
-			myTrace("in processBLUCONTransmitterData");
+			myTrace("in processBLUCONTransmitterData with bluconCurrentcomand = " + bluconCurrentCommand);
 			buffer.position = 0;
 			buffer.endian = Endian.LITTLE_ENDIAN;
 			var bufferAsString:String = Utilities.UniqueId.bytesToHex(buffer);
@@ -1116,7 +1116,8 @@ package services
 			} else if (bufferAsString.toLowerCase().indexOf(BLUCON_RESPONSE_bluconACKResponse) == 0) {
 				if (bluconCurrentCommand == BLUCON_COMMAND_ackWakeup) {
 					//ack received
-					myTrace("Got ack, now getting getNowGlucoseDataIndexCommand")
+					myTrace("Got ack, now getting getNowGlucoseDataIndexCommand");
+					bluconCurrentCommand = BLUCON_COMMAND_getNowDataIndex;
 					sendCommand(BLUCON_COMMAND_getNowDataIndex);
 				} else {
 					myTrace("Got sleep ack, resetting initialstate!")
@@ -1133,20 +1134,24 @@ package services
 			}
 			
 			if (bluconCurrentCommand == BLUCON_COMMAND_initialState && (bufferAsString.toLowerCase().indexOf(BLUCON_COMMAND_wakeup) == 0) ) {
+				bluconCurrentCommand = BLUCON_COMMAND_getPatchInfo;
 				sendCommand(BLUCON_COMMAND_getPatchInfo);
 				myTrace("reached block initialstate")
 			} else if (bluconCurrentCommand == BLUCON_COMMAND_getPatchInfo && (bufferAsString.toLowerCase().indexOf(BLUCON_RESPONSE_patchInfoResponsePrefix) == 0) ) {
-				myTrace("Patch Info received")
+				myTrace("Patch Info received");
+				bluconCurrentCommand = BLUCON_COMMAND_ackWakeup;
 				sendCommand(BLUCON_COMMAND_ackWakeup);
 			} else if (bluconCurrentCommand == BLUCON_COMMAND_getNowDataIndex && (bufferAsString.toLowerCase().indexOf(BLUCON_RESPONSE_singleBlockInfoResponsePrefix) == 0) ) {
 				buffer.position = 0;
 				var commandAsString:String = "010d0e01" + blockNumberForNowGlucoseData(buffer);
 				myTrace("reached block getNowDataIndex calling sendCommand with hexstring = " + commandAsString);
 				buffer.position = 0;
+				bluconCurrentCommand = BLUCON_COMMAND_getNowGlucoseData;
 				sendCommand("010d0e01" + blockNumberForNowGlucoseData(buffer));
 			} else if (bluconCurrentCommand == BLUCON_COMMAND_getNowGlucoseData && (bufferAsString.toLowerCase().indexOf(BLUCON_RESPONSE_singleBlockInfoResponsePrefix) == 0) ) {
 				myTrace("reached block getNowGlucoseData");
 				myTrace("value = " + BackgroundFetch.nowGetGlucoseValue(buffer));
+				bluconCurrentCommand = BLUCON_COMMAND_sleep;
 				sendCommand(BLUCON_COMMAND_sleep);
 				//dispatch event with glucosevalue;
 			} 
@@ -1168,11 +1173,10 @@ package services
 		 * sends the command to  BC_desiredTransmitCharacteristic and also assigns bluconCurrentCommand to command
 		 */
 		private static function sendCommand(command:String):void {
-			bluconCurrentCommand = command;
 			if (!activeBluetoothPeripheral.writeValueForCharacteristic(BC_desiredTransmitCharacteristic, Utilities.UniqueId.hexStringToByteArray(command))) {
 				myTrace("send " + command + " failed");
 			} else {
-				myTrace("send " + command + " succesful");
+				myTrace("send " + command + " succesfull");
 			}
 		}
 		
