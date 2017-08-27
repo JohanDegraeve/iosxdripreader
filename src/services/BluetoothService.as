@@ -1143,6 +1143,7 @@ package services
 				sendCommand(BLUCON_COMMAND_ackWakeup);
 			} else if (bluconCurrentCommand == BLUCON_COMMAND_getNowDataIndex && (bufferAsString.toLowerCase().indexOf(BLUCON_RESPONSE_singleBlockInfoResponsePrefix) == 0) ) {
 				buffer.position = 0;
+				myTrace("before calling blockNumberForNowGlucoseData");
 				var commandAsString:String = "010d0e01" + blockNumberForNowGlucoseData(buffer);
 				myTrace("reached block getNowDataIndex calling sendCommand with hexstring = " + commandAsString);
 				buffer.position = 0;
@@ -1160,12 +1161,14 @@ package services
 		/**
 		 * returns hex string
 		 */
-		private static function blockNumberForNowGlucoseData(block:ByteArray):String {
+		public static function blockNumberForNowGlucoseData(block:ByteArray):String {
+			myTrace("in blockNumberForNowGlucoseData");
 			var nowGlucoseDataAsNumber:Number = BackgroundFetch.blockNumberForNowGlucoseData(block);
 			var nowGlucoseDataAsHexString:String = nowGlucoseDataAsNumber.toString(16);
 			while (nowGlucoseDataAsHexString.length < 2) {
 				nowGlucoseDataAsHexString = "0" + nowGlucoseDataAsHexString;
 			}
+			myTrace("in blockNumberForNowGlucoseData = " + nowGlucoseDataAsHexString);
 			return nowGlucoseDataAsHexString;
 		}
 		

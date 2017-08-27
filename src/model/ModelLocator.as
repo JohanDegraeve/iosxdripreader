@@ -217,6 +217,9 @@ package model
 							
 							NightScoutService.init();
 							NightScoutService.sync(null);
+							/*var bufferasstring:String = "8BDE030B830E145E048892";
+							var bufferasbytearray:ByteArray = Utilities.UniqueId.hexStringToByteArray(bufferasstring);
+							trace("result  " + BluetoothService.blockNumberForNowGlucoseData(bufferasbytearray));*/
 						} else {
 						}
 					}

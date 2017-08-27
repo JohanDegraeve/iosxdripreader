@@ -21,11 +21,6 @@
 			
 			import spark.primitives.Rect;
 			
-			import G4Model.TransmitterStatus;
-			
-			import G5Model.TransmitterStatus;
-			
-			import Utilities.FromtimeAndValueArrayCollection;
 			import Utilities.Trace;
 			
 			import databaseclasses.BgReading;
@@ -676,6 +671,25 @@
 					transmitterIdText = "00000";
 					//transmitterTypeText = newTransmitterType;	
 					resetAllTransmitterBatteryLevels();
+					if (BlueToothDevice.isBluCon()) {
+						var alert:DialogView = Dialog.service.create(
+							new AlertBuilder()
+							.setTitle("Warning")
+							.setMessage("Blucon is still under development, please change to another transmittertype")
+							.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
+							.build()
+						);
+						DialogService.addDialog(alert);
+					} else if (BlueToothDevice.isLimitter()) {
+						var alert:DialogView = Dialog.service.create(
+							new AlertBuilder()
+							.setTitle("Warning")
+							.setMessage("Limitter is not yet tested, if you want to support testing, please send me an e-mail")
+							.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
+							.build()
+						);
+						DialogService.addDialog(alert);
+					} 
 				}
 			}
 			
