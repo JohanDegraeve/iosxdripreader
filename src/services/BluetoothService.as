@@ -57,6 +57,7 @@ package services
 	import events.BlueToothServiceEvent;
 	import events.SettingsServiceEvent;
 	
+	import model.TransmitterDataBluConPacket;
 	import model.TransmitterDataBlueReaderBatteryPacket;
 	import model.TransmitterDataBlueReaderPacket;
 	import model.TransmitterDataG5Packet;
@@ -136,6 +137,12 @@ package services
 		public static const BATTERY_READ_PERIOD_MS:Number = 1000 * 60 * 60 * 12; // how often to poll battery data (12 hours)
 		
 		private static var timeStampOfLastG5Reading:Number = 0;
+		
+		/**
+		 * for blucon protocol
+		 */
+		private static var nowGlucoseOffset:int = 0;
+		
 		/**
 		 * used for intial scan G4, but also other peripherals that broadcast themselves continuously, like bluereader
 		 */
@@ -1143,34 +1150,81 @@ package services
 				sendCommand(BLUCON_COMMAND_ackWakeup);
 			} else if (bluconCurrentCommand == BLUCON_COMMAND_getNowDataIndex && (bufferAsString.toLowerCase().indexOf(BLUCON_RESPONSE_singleBlockInfoResponsePrefix) == 0) ) {
 				buffer.position = 0;
-				myTrace("before calling blockNumberForNowGlucoseData");
 				var commandAsString:String = "010d0e01" + blockNumberForNowGlucoseData(buffer);
 				myTrace("reached block getNowDataIndex calling sendCommand with hexstring = " + commandAsString);
-				buffer.position = 0;
 				bluconCurrentCommand = BLUCON_COMMAND_getNowGlucoseData;
-				sendCommand("010d0e01" + blockNumberForNowGlucoseData(buffer));
+				sendCommand(commandAsString);
 			} else if (bluconCurrentCommand == BLUCON_COMMAND_getNowGlucoseData && (bufferAsString.toLowerCase().indexOf(BLUCON_RESPONSE_singleBlockInfoResponsePrefix) == 0) ) {
 				myTrace("reached block getNowGlucoseData");
-				myTrace("value = " + BackgroundFetch.nowGetGlucoseValue(buffer));
+				var value:Number = nowGetGlucoseValue(buffer);
+				myTrace("value = " + value);
 				bluconCurrentCommand = BLUCON_COMMAND_sleep;
 				sendCommand(BLUCON_COMMAND_sleep);
 				//dispatch event with glucosevalue;
+				myTrace("in processBluconTransmitterData, dispatching transmitter data");
+				var blueToothServiceEvent:BlueToothServiceEvent = new BlueToothServiceEvent(BlueToothServiceEvent.TRANSMITTER_DATA);
+				blueToothServiceEvent.data = new TransmitterDataBluConPacket(value, value, 0, 0, 0, (new Date()).valueOf());
+				_instance.dispatchEvent(blueToothServiceEvent);
 			} 
 		}
 		
-		/**
-		 * returns hex string
-		 */
-		public static function blockNumberForNowGlucoseData(block:ByteArray):String {
-			myTrace("in blockNumberForNowGlucoseData");
-			var nowGlucoseDataAsNumber:Number = BackgroundFetch.blockNumberForNowGlucoseData(block);
-			var nowGlucoseDataAsHexString:String = nowGlucoseDataAsNumber.toString(16);
+		public static function blockNumberForNowGlucoseData(input:ByteArray):String {
+			input.position = 5;
+			var nowGlucoseIndex2:int = 0;
+			var nowGlucoseIndex3:int = 0;
+			
+			nowGlucoseIndex2 = input.readByte();
+			
+			// caculate byte position in sensor body
+			nowGlucoseIndex2 = (nowGlucoseIndex2 * 6) + 4;
+			
+			// decrement index to get the index where the last valid BG reading is stored
+			nowGlucoseIndex2 -= 6;
+			// adjust round robin
+			if ( nowGlucoseIndex2 < 4 )
+				nowGlucoseIndex2 = nowGlucoseIndex2 + 96;
+			
+			// calculate the absolute block number which correspond to trend index
+			nowGlucoseIndex3 = 3 + (nowGlucoseIndex2/8);
+			
+			// calculate offset of the 2 bytes in the block
+			nowGlucoseOffset = nowGlucoseIndex2 % 8;
+			
+			myTrace("in blockNumberForNowGlucoseData, nowGlucoseOffset = " + nowGlucoseOffset);
+			
+			var nowGlucoseDataAsHexString:String = nowGlucoseIndex3.toString(16);
 			while (nowGlucoseDataAsHexString.length < 2) {
 				nowGlucoseDataAsHexString = "0" + nowGlucoseDataAsHexString;
 			}
-			myTrace("in blockNumberForNowGlucoseData = " + nowGlucoseDataAsHexString);
+			myTrace("in blockNumberForNowGlucoseData, nowGlucoseDataAsHexString =  " + nowGlucoseDataAsHexString);
 			return nowGlucoseDataAsHexString;
 		}
+		
+		private static function getGlucose(rawGlucose:Number):Number {
+			// standard devicder for raw Libre data (1000 range) to 100 range
+			return (rawGlucose / 8.5);
+		}
+		
+		public static function nowGetGlucoseValue(input:ByteArray):Number {
+			input.position = 3 + nowGlucoseOffset;
+			var curGluc:Number;
+			var rawGlucose:Number;
+			
+			// grep 2 bytes with BG data from input bytearray, mask out 12 LSB bits and rescale for xDrip+
+			//rawGlucose = (input[3+m_nowGlucoseOffset+1]&0x0F)*16 + input[3+m_nowGlucoseOffset];
+			var value1:int = input.readByte();
+			var value2:int = input.readByte();
+			rawGlucose = ((value2 & 0x0F)<<8) | (value1 & 0xFF);
+			myTrace("in nowGetGlucoseValue rawGlucose=" + rawGlucose);
+			
+			// rescale
+			curGluc = getGlucose(rawGlucose);
+			
+			return(curGluc);
+		}
+		
+
+
 		
 		/**
 		 * sends the command to  BC_desiredTransmitCharacteristic and also assigns bluconCurrentCommand to command

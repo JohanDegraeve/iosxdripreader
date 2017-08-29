@@ -41,6 +41,7 @@ package services
 	import events.TransmitterServiceEvent;
 	
 	import model.ModelLocator;
+	import model.TransmitterDataBluConPacket;
 	import model.TransmitterDataBlueReaderBatteryPacket;
 	import model.TransmitterDataBlueReaderPacket;
 	import model.TransmitterDataG5Packet;
@@ -264,7 +265,25 @@ package services
 						}
 					}
 					BluetoothService.writeBlueReaderCharacteristic(Utilities.UniqueId.hexStringToByteArray("6C"));
-				}
+				} else if (be.data is TransmitterDataBluConPacket) {
+					var transmitterDataBluConPacket:TransmitterDataBluConPacket = be.data as TransmitterDataBluConPacket;
+					/*if (!isNaN(transmitterDataBluConPacket.bridgeBatteryLevel)) {
+						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_BLUEREADER_BATTERY_LEVEL, transmitterDataBluConPacket.bridgeBatteryLevel.toString());
+					}*/
+					/*if (!isNaN(transmitterDataBluConPacket.sensorBatteryLevel)) {
+						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_FSL_SENSOR_BATTERY_LEVEL, transmitterDataBluConPacket.sensorBatteryLevel.toString());
+					}*/
+					/*if (!isNaN(transmitterDataBluConPacket.sensorAge)) {
+						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_FSL_SENSOR_AGE, transmitterDataBluConPacket.sensorAge.toString());
+					}*/
+					BgReading.
+						create(transmitterDataBluConPacket.rawData, transmitterDataBluConPacket.filteredData)
+						.saveToDatabaseSynchronous();
+					
+					//dispatch the event that there's new data
+					transmitterServiceEvent = new TransmitterServiceEvent(TransmitterServiceEvent.BGREADING_EVENT);
+					_instance.dispatchEvent(transmitterServiceEvent);
+				} 
 			}
 		}
 		

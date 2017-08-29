@@ -23,6 +23,7 @@ package model
 	
 	import flash.events.Event;
 	import flash.events.EventDispatcher;
+	import flash.utils.ByteArray;
 	
 	import mx.collections.ArrayCollection;
 	import mx.resources.IResourceManager;
@@ -54,6 +55,8 @@ package model
 	import services.TransmitterService;
 	
 	import views.HomeView;
+	
+	import Utilities.UniqueId;
 
 	/**
 	 * holds arraylist needed for displaying etc, like bgreadings of last 24 hours, loggings, .. 
@@ -217,9 +220,20 @@ package model
 							
 							NightScoutService.init();
 							NightScoutService.sync(null);
-							/*var bufferasstring:String = "8BDE030B830E145E048892";
+							
+							//test blockNumberForNowGlucoseData
+							/*var bufferasstring:String = "8BDE03423F07115203C8A0";
 							var bufferasbytearray:ByteArray = Utilities.UniqueId.hexStringToByteArray(bufferasstring);
-							trace("result  " + BluetoothService.blockNumberForNowGlucoseData(bufferasbytearray));*/
+							trace("test blockNumberForNowGlucoseData, result  " + BluetoothService.blockNumberForNowGlucoseData(bufferasbytearray) + ", expected = 08");
+							
+							bufferasstring = "8bde031ffd081d8804c834";
+							bufferasbytearray = Utilities.UniqueId.hexStringToByteArray(bufferasstring);
+							trace("test 2 for blockNumberForNowGlucoseData, result  " + BluetoothService.blockNumberForNowGlucoseData(bufferasbytearray) + ", expected = 08");
+							
+							//test nowGetGlucoseValue
+							var nowGlucoseValueasString = "8bde08c204c8a45f00b804";
+							bufferasbytearray = Utilities.UniqueId.hexStringToByteArray(nowGlucoseValueasString);
+							trace("test nowGetGlucoseValue =   " + BluetoothService.nowGetGlucoseValue(bufferasbytearray) + ", expected = 142");*/
 						} else {
 						}
 					}
