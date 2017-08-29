@@ -1414,6 +1414,8 @@ package services
 				return "BlueReader_RX_Characteristic_UUID";
 			} else if (uuid.toUpperCase() == BlueReader_TX_Characteristic_UUID.toUpperCase()) {
 				return "BlueReader_TX_Characteristic_UUID";
+			} else if (uuid.toUpperCase() == HM_RX_TX_G4.toUpperCase()) {
+				return "HM_RX_TX_G4";
 			} 
 			return "unkonwn";
 		}
