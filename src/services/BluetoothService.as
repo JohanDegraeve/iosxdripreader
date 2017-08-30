@@ -1116,52 +1116,51 @@ package services
 			buffer.position = 0;
 			buffer.endian = Endian.LITTLE_ENDIAN;
 			var bufferAsString:String = Utilities.UniqueId.bytesToHex(buffer);
-			myTrace("buffer as string = " + bufferAsString);
+			myTrace("in processBLUCONTransmitterData  buffer as string = " + bufferAsString);
 			if (bufferAsString.toLowerCase().indexOf(BLUCON_COMMAND_wakeup) == 0) {
-				myTrace("wakeup received");
+				myTrace("in processBLUCONTransmitterData  wakeup received");
 				bluconCurrentCommand = BLUCON_COMMAND_initialState;
 			} else if (bufferAsString.toLowerCase().indexOf(BLUCON_RESPONSE_bluconACKResponse) == 0) {
 				if (bluconCurrentCommand == BLUCON_COMMAND_ackWakeup) {
 					//ack received
-					myTrace("Got ack, now getting getNowGlucoseDataIndexCommand");
+					myTrace("in processBLUCONTransmitterData Got ack, now getting getNowGlucoseDataIndexCommand");
 					bluconCurrentCommand = BLUCON_COMMAND_getNowDataIndex;
 					sendCommand(BLUCON_COMMAND_getNowDataIndex);
 				} else {
-					myTrace("Got sleep ack, resetting initialstate!")
+					myTrace("in processBLUCONTransmitterData Got sleep ack, resetting initialstate!")
 					bluconCurrentCommand = BLUCON_COMMAND_initialState;
 				}
 			} else if (bufferAsString.toLowerCase().indexOf(BLUCON_RESPONSE_bluconNACKResponsePrefix) == 0) {
-				myTrace("Got NACKResponse, resetting initialstate!")
+				myTrace("in processBLUCONTransmitterData Got NACKResponse, resetting initialstate!")
 				bluconCurrentCommand = BLUCON_COMMAND_initialState;
 				if (bufferAsString.toLowerCase().indexOf(BLUCON_NACK_RESPONSE_patchReadError) == 0) {
 					var blueToothServiceEvent:BlueToothServiceEvent = new BlueToothServiceEvent(BlueToothServiceEvent.GLUCOSE_PATCH_READ_ERROR);
 					_instance.dispatchEvent(blueToothServiceEvent);
-					myTrace("patchreaderror");
+					myTrace("in processBLUCONTransmitterData patchreaderror");
 				}
 			}
 			
 			if (bluconCurrentCommand == BLUCON_COMMAND_initialState && (bufferAsString.toLowerCase().indexOf(BLUCON_COMMAND_wakeup) == 0) ) {
 				bluconCurrentCommand = BLUCON_COMMAND_getPatchInfo;
 				sendCommand(BLUCON_COMMAND_getPatchInfo);
-				myTrace("reached block initialstate")
+				myTrace("in processBLUCONTransmitterData reached block initialstate")
 			} else if (bluconCurrentCommand == BLUCON_COMMAND_getPatchInfo && (bufferAsString.toLowerCase().indexOf(BLUCON_RESPONSE_patchInfoResponsePrefix) == 0) ) {
-				myTrace("Patch Info received");
+				myTrace("in processBLUCONTransmitterData Patch Info received");
 				bluconCurrentCommand = BLUCON_COMMAND_ackWakeup;
 				sendCommand(BLUCON_COMMAND_ackWakeup);
 			} else if (bluconCurrentCommand == BLUCON_COMMAND_getNowDataIndex && (bufferAsString.toLowerCase().indexOf(BLUCON_RESPONSE_singleBlockInfoResponsePrefix) == 0) ) {
 				buffer.position = 0;
 				var commandAsString:String = "010d0e01" + blockNumberForNowGlucoseData(buffer);
-				myTrace("reached block getNowDataIndex calling sendCommand with hexstring = " + commandAsString);
+				myTrace("in processBLUCONTransmitterData reached block getNowDataIndex calling sendCommand with hexstring = " + commandAsString);
 				bluconCurrentCommand = BLUCON_COMMAND_getNowGlucoseData;
 				sendCommand(commandAsString);
 			} else if (bluconCurrentCommand == BLUCON_COMMAND_getNowGlucoseData && (bufferAsString.toLowerCase().indexOf(BLUCON_RESPONSE_singleBlockInfoResponsePrefix) == 0) ) {
-				myTrace("reached block getNowGlucoseData");
 				var value:Number = nowGetGlucoseValue(buffer);
-				myTrace("value = " + value);
+				myTrace("in processBLUCONTransmitterData reached block getNowGlucoseData with value = " + value);
 				bluconCurrentCommand = BLUCON_COMMAND_sleep;
 				sendCommand(BLUCON_COMMAND_sleep);
 				//dispatch event with glucosevalue;
-				myTrace("in processBluconTransmitterData, dispatching transmitter data");
+				myTrace("in processBLUCONTransmitterData in processBluconTransmitterData, dispatching transmitter data");
 				var blueToothServiceEvent:BlueToothServiceEvent = new BlueToothServiceEvent(BlueToothServiceEvent.TRANSMITTER_DATA);
 				blueToothServiceEvent.data = new TransmitterDataBluConPacket(value, value, 0, 0, 0, (new Date()).valueOf());
 				_instance.dispatchEvent(blueToothServiceEvent);
