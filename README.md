@@ -1,8 +1,8 @@
-# connects to xDrip and G5
+# connects to xDrip, G5 and BlueReader
 
 
 
-xdrip/xbridge/G5 reader for iOS devices - 
+xdrip/xbridge/G5/Bluereader for iOS devices - 
 
 * Alerts
 * Chart
