@@ -2,18 +2,11 @@ package model
 {
 	public class TransmitterDataBlueReaderPacket extends TransmitterData
 	{
-		private var _rawData:Number;
+		private var _bgValue:Number;
 		
-		public function get rawData():Number
+		public function get bgValue():Number
 		{
-			return _rawData;
-		}
-		
-		private var _filteredData:Number;
-		
-		public function get filteredData():Number
-		{
-			return _filteredData;
+			return _bgValue;
 		}
 		
 		private var _timeStamp:Number;
@@ -45,10 +38,9 @@ package model
 		}
 		
 		
-		public function TransmitterDataBlueReaderPacket(rawData:Number, filteredData:Number, sensorBatteryLevel:Number, bridgeBatteryLevel:Number, sensorAge:Number, timestamp:Number)
+		public function TransmitterDataBlueReaderPacket(rawData:Number, sensorBatteryLevel:Number, bridgeBatteryLevel:Number, sensorAge:Number, timestamp:Number)
 		{
-			_rawData = rawData;
-			_filteredData = filteredData;
+			_bgValue = rawData;
 			_sensorBatteryLevel = sensorBatteryLevel;
 			_bridgeBatteryLevel = bridgeBatteryLevel;
 			_timeStamp = timestamp;

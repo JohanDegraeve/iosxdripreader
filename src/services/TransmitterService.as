@@ -249,7 +249,7 @@ package services
 						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_FSL_SENSOR_AGE, transmitterDataBlueReaderPacket.sensorAge.toString());
 					}
 					BgReading.
-						create(transmitterDataBlueReaderPacket.rawData, transmitterDataBlueReaderPacket.filteredData)
+						create(transmitterDataBlueReaderPacket.bgValue, transmitterDataBlueReaderPacket.bgValue)
 						.saveToDatabaseSynchronous();
 					
 					//dispatch the event that there's new data
@@ -277,7 +277,7 @@ package services
 						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_FSL_SENSOR_AGE, transmitterDataBluConPacket.sensorAge.toString());
 					}*/
 					BgReading.
-						create(transmitterDataBluConPacket.rawData, transmitterDataBluConPacket.filteredData)
+						create(transmitterDataBluConPacket.bgvalue, transmitterDataBluConPacket.bgvalue)
 						.saveToDatabaseSynchronous();
 					
 					//dispatch the event that there's new data

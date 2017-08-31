@@ -1162,7 +1162,7 @@ package services
 				//dispatch event with glucosevalue;
 				myTrace("in processBLUCONTransmitterData in processBluconTransmitterData, dispatching transmitter data");
 				var blueToothServiceEvent:BlueToothServiceEvent = new BlueToothServiceEvent(BlueToothServiceEvent.TRANSMITTER_DATA);
-				blueToothServiceEvent.data = new TransmitterDataBluConPacket(value, value, 0, 0, 0, (new Date()).valueOf());
+				blueToothServiceEvent.data = new TransmitterDataBluConPacket(value, 0, 0, 0, (new Date()).valueOf());
 				_instance.dispatchEvent(blueToothServiceEvent);
 			} 
 		}
@@ -1281,7 +1281,7 @@ package services
 			}
 			myTrace("in processBlueReaderTransmitterData, dispatching transmitter data");
 			var blueToothServiceEvent:BlueToothServiceEvent = new BlueToothServiceEvent(BlueToothServiceEvent.TRANSMITTER_DATA);
-			blueToothServiceEvent.data = new TransmitterDataBlueReaderPacket(raw_data, filtered_data, sensor_battery_level, bridge_battery_level, sensorAge, (new Date()).valueOf());
+			blueToothServiceEvent.data = new TransmitterDataBlueReaderPacket(raw_data, sensor_battery_level, bridge_battery_level, sensorAge, (new Date()).valueOf());
 			_instance.dispatchEvent(blueToothServiceEvent);
 		}
 		
