@@ -613,7 +613,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 					if (BlueToothDevice.known()) {
 						message += " " + BlueToothDevice.name;
 					} else {
-						message += " " + ModelLocator.resourceManagerInstance.getString('homeview','status_info_no_device_known');
+						message += " " + ModelLocator.resourceManagerInstance.getString('homeview','unknown');
 					}
 					message += "\n";
 					
@@ -650,7 +650,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 						message += ModelLocator.resourceManagerInstance.getString('homeview','status_info_transmitter_battery_level');
 						var batteryLevel:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G4_TRANSMITTER_BATTERY_VOLTAGE);
 						if (batteryLevel == "0") {
-							batteryLevel = ModelLocator.resourceManagerInstance.getString('homeview','status_info_transmitter_battery_level_unknown');
+							batteryLevel = ModelLocator.resourceManagerInstance.getString('homeview','unknown');
 							message += " " + batteryLevel;
 						} else {
 							message += G4Model.TransmitterStatus.getBatteryLevel(new Number(batteryLevel));
@@ -659,10 +659,32 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 						message += ModelLocator.resourceManagerInstance.getString('homeview','battery_level');
 						var batteryLevel:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BLUEREADER_BATTERY_LEVEL);
 						if (batteryLevel == "0") {
-							batteryLevel = ModelLocator.resourceManagerInstance.getString('homeview','status_info_transmitter_battery_level_unknown');
+							batteryLevel = ModelLocator.resourceManagerInstance.getString('homeview','unknown');
 							message += " " + batteryLevel;
 						} else {
 							message += (new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BLUEREADER_BATTERY_LEVEL)))/1000;
+						}
+						
+					} else if (BlueToothDevice.isBluCon()) {
+						message += ModelLocator.resourceManagerInstance.getString('homeview','battery_level');
+						var batteryLevel:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BLUCON_BATTERY_LEVEL);
+						if (batteryLevel == "0") {
+							batteryLevel = ModelLocator.resourceManagerInstance.getString('homeview','unknown');
+							message += " " + batteryLevel;
+						} else {
+							message += (new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BLUCON_BATTERY_LEVEL)))/1000;
+						}
+					}
+					
+					if (BlueToothDevice.isBluCon() || BlueToothDevice.isBlueReader()) {
+						message += '\n';
+						message += ModelLocator.resourceManagerInstance.getString('homeview','sensor_age');
+						var sensorAge:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FSL_SENSOR_AGE);
+						if (sensorAge == "0") {
+							sensorAge = ModelLocator.resourceManagerInstance.getString('homeview','unknown');
+							message += " " + sensorAge;
+						} else {
+							message += (new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FSL_SENSOR_AGE)))/1000;
 						}
 					}
 					

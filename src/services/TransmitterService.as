@@ -267,15 +267,15 @@ package services
 					BluetoothService.writeBlueReaderCharacteristic(Utilities.UniqueId.hexStringToByteArray("6C"));
 				} else if (be.data is TransmitterDataBluConPacket) {
 					var transmitterDataBluConPacket:TransmitterDataBluConPacket = be.data as TransmitterDataBluConPacket;
-					/*if (!isNaN(transmitterDataBluConPacket.bridgeBatteryLevel)) {
-						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_BLUEREADER_BATTERY_LEVEL, transmitterDataBluConPacket.bridgeBatteryLevel.toString());
-					}*/
-					/*if (!isNaN(transmitterDataBluConPacket.sensorBatteryLevel)) {
+					if (!isNaN(transmitterDataBluConPacket.bridgeBatteryLevel)) {
+						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_BLUCON_BATTERY_LEVEL, transmitterDataBluConPacket.bridgeBatteryLevel.toString());
+					}
+					if (!isNaN(transmitterDataBluConPacket.sensorBatteryLevel)) {
 						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_FSL_SENSOR_BATTERY_LEVEL, transmitterDataBluConPacket.sensorBatteryLevel.toString());
-					}*/
-					/*if (!isNaN(transmitterDataBluConPacket.sensorAge)) {
+					}
+					if (!isNaN(transmitterDataBluConPacket.sensorAge)) {
 						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_FSL_SENSOR_AGE, transmitterDataBluConPacket.sensorAge.toString());
-					}*/
+					}
 					BgReading.
 						create(transmitterDataBluConPacket.bgvalue, transmitterDataBluConPacket.bgvalue)
 						.saveToDatabaseSynchronous();
