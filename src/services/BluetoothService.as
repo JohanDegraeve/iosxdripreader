@@ -813,12 +813,6 @@ package services
 				}
 				BlueReader_RX_Characteristic = event.peripheral.services[servicesIndex].characteristics[BlueReader_Rx_CharacteristicIndex];
 
-				var properties:Array = BlueReader_RX_Characteristic.properties;
-				myTrace("looping through BlueReader_RX_Characteristic properties to print the values");
-				for (var propertycntr:int = 0; propertycntr < properties.length; propertycntr++) {
-					myTrace("property " + propertycntr + " has value " + properties[propertycntr]);
-				}
-
 				myTrace("trying to find BlueReader_TX_Characteristic_UUID");
 				for each (o in activeBluetoothPeripheral.services[servicesIndex].characteristics) {
 					if (BlueReader_TX_Characteristic_UUID.toUpperCase().indexOf((o.uuid as String).toUpperCase()) > -1) {
@@ -828,12 +822,6 @@ package services
 					BlueReader_Tx_CharacteristicIndex++;
 				}
 				BlueReader_TX_Characteristic = event.peripheral.services[servicesIndex].characteristics[BlueReader_Tx_CharacteristicIndex];
-
-				properties = BlueReader_TX_Characteristic.properties;
-				myTrace("looping through BlueReader_TX_Characteristic properties to print the values");
-				for (var propertycntr:int = 0; propertycntr < properties.length; propertycntr++) {
-					myTrace("property " + propertycntr + " has value " + properties[propertycntr]);
-				}
 
 				myTrace("subscribing to BlueReader_RX_Characteristic");
 				if (!activeBluetoothPeripheral.subscribeToCharacteristic(BlueReader_RX_Characteristic))
