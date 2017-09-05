@@ -438,13 +438,16 @@ package services
 				expectedDeviceName = "DEXCOM" + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID).substring(4,6);
 				myTrace("expected g5 device name = " + expectedDeviceName);
 			} else if (BlueToothDevice.isBluCon()) {
-				var pin:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID);
-				while (pin.length < 5) {
-					pin = "0" + pin;
+				expectedDeviceName = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID).toUpperCase();
+				if (expectedDeviceName.toUpperCase().indexOf("BLU") < 0) {
+					while (expectedDeviceName.length < 5) {
+						expectedDeviceName = "0" + expectedDeviceName;
+					}
+					expectedDeviceName = "BLU" + expectedDeviceName;
 				}
-				expectedDeviceName = "BLU" + pin;
 				myTrace("expected blucon device name = " + expectedDeviceName);
 			}
+			
 			if (
 				(!(BlueToothDevice.alwaysScan()) &&
 					(
