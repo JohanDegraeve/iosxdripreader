@@ -179,7 +179,7 @@
 		 /**
 		  * For limitter and/or bluereaderw<br>
 		  * value 0 means level not known<br>
-		  * time in ms
+		  * time in minutes
 		  */
 		 public static const COMMON_SETTING_FSL_SENSOR_AGE:int = 37;
 		 /**

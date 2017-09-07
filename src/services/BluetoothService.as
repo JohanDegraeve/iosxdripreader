@@ -151,39 +151,9 @@ package services
 		private static var peripheralConnected:Boolean = false;
 		
 		private static var bluconCurrentCommand:String="";
-		//blucon commands
-		//wakeup & sleep commands...
-		private static const BLUCON_COMMAND_initialState:String = ""
-		private static const BLUCON_COMMAND_wakeup_cb010000:String = "cb010000"
-		private static const BLUCON_COMMAND_ackWakeup_810a00:String = "810a00"
-		private static const BLUCON_COMMAND_sleep_010c0e00:String = "010c0e00"
+		
+		private static var m_getNowGlucoseDataIndexCommand:int = 0;
 
-		//blucon command response prefixes
-		private static const BLUCON_RESPONSE_patchInfoResponsePrefix_8bd9:String = "8bd9"
-		private static const BLUCON_RESPONSE_singleBlockInfoResponsePrefix_8bde:String = "8bde"
-		private static const BLUCON_RESPONSE_multipleBlockInfoResponsePrefix_8bdf:String = "8bdf"
-		private static const BLUCON_RESPONSE_sensorTimeResponsePrefix_8bde27:String = "8bde27"
-		private static const BLUCON_RESPONSE_bluconACKResponse_8b0a00:String = "8b0a00"
-		private static const BLUCON_RESPONSE_bluconNACKResponsePrefix_8b1a02:String = "8b1a02"
-		
-		//sensor info commands...
-		private static const BLUCON_COMMAND_getSerialNumber_010d0e0100:String = "010d0e0100"
-		private static const BLUCON_COMMAND_getPatchInfo_010d0900:String = "010d0900"
-		private static const BLUCON_COMMAND_getSensorTime_010d0e0127:String = "010d0e0127"
-		
-		//data commands...
-		private static const BLUCON_COMMAND_getNowDataIndex_010d0e0103:String = "010d0e0103"
-		private static const BLUCON_COMMAND_getNowGlucoseData_9999999999:String = "9999999999"
-		private static const BLUCON_COMMAND_getTrendData_010d0f02030c:String = "010d0f02030c"
-		private static const BLUCON_COMMAND_getHistoricData_010d0f020f18:String = "010d0f020f18"
-		
-		//unknown commands added
-		private static const BLUCON_COMMAND_unknowncommand_010d0a00:String = "010d0a00"
-		private static const BLUCON_COMMAND_unknowncommand_010d0b00:String = "010d0b00"
-
-		private static const BLUCON_NACK_RESPONSE_patchNotFound_8b1a02000f:String = "8b1a02000f"
-		private static const BLUCON_NACK_RESPONSE_patchReadError_8b1a020011:String = "8b1a020011"
-		
 		private static function set activeBluetoothPeripheral(value:Peripheral):void
 		{
 			if (value == _activeBluetoothPeripheral)
@@ -536,8 +506,8 @@ package services
 				activeBluetoothPeripheral = event.peripheral;
 
 			if (BlueToothDevice.isBluCon()) {
-				myTrace("it's a blucon, setting state to BLUCON_COMMAND_initialState " + BLUCON_COMMAND_initialState);
-				bluconCurrentCommand = BLUCON_COMMAND_initialState;
+				myTrace("it's a blucon, setting state to BLUCON_COMMAND_initialState " + "");
+				bluconCurrentCommand = "";
 			}
 			discoverServices();
 		}
@@ -1107,61 +1077,164 @@ package services
 		
 		private static function processBLUCONTransmitterData(buffer:ByteArray):void {
 			myTrace("in processBLUCONTransmitterData with bluconCurrentcomand = " + bluconCurrentCommand);
+			if (buffer == null) {
+				myTrace("in processBLUCONTransmitterData, null buffer passed to decodeBlukonPacket");
+				return;
+			}
 			buffer.position = 0;
 			buffer.endian = Endian.LITTLE_ENDIAN;
-			var bufferAsString:String = Utilities.UniqueId.bytesToHex(buffer);
-			myTrace("in processBLUCONTransmitterData  buffer as string = " + bufferAsString);
-			if (bufferAsString.toLowerCase().indexOf(BLUCON_COMMAND_wakeup_cb010000) == 0) {
-				myTrace("in processBLUCONTransmitterData  wakeup received");
-				bluconCurrentCommand = BLUCON_COMMAND_initialState;
-			} else if (bufferAsString.toLowerCase().indexOf(BLUCON_RESPONSE_bluconACKResponse_8b0a00) == 0) {
-				if (bluconCurrentCommand == BLUCON_COMMAND_ackWakeup_810a00) {
+			var strRecCmd:String = Utilities.UniqueId.bytesToHex(buffer).toLowerCase();
+			buffer.position = 0;
+			myTrace("in processBLUCONTransmitterData  buffer as string = " + strRecCmd);
+			
+			////////code copied form xdripplus, commit 05c51872b19c643eb5146e5c5d86844d03d4baf4
+			var cmdFound:int = 0;
+			
+			//BluCon code by gregorybel
+			myTrace("in processBLUCONTransmitterData, BlueCon data: " + strRecCmd);
+			
+			if (strRecCmd == "cb010000") {
+				myTrace("in processBLUCONTransmitterData, wakeup received");
+				bluconCurrentCommand = "";
+				cmdFound = 1;
+			}
+			
+			// BluconACKRespons will come in two different situations
+			// 1) after we have sent an ackwakeup command
+			// 2) after we have a sleep command
+			if (strRecCmd.indexOf("8b0a00") == 0) {
+				cmdFound = 1;
+				myTrace("in processBLUCONTransmitterData, Got ACK");
+				
+				if (bluconCurrentCommand.indexOf("810a00") == 0) {//ACK sent
 					//ack received
-					myTrace("in processBLUCONTransmitterData Got ack, now getting getNowGlucoseDataIndexCommand");
-					bluconCurrentCommand = BLUCON_COMMAND_getNowDataIndex_010d0e0103;
-					sendCommand(BLUCON_COMMAND_getNowDataIndex_010d0e0103);
+					
+					bluconCurrentCommand = "010d0b00";
+					myTrace("in processBLUCONTransmitterData, getUnknownCmd1: " + bluconCurrentCommand);
+					
 				} else {
-					myTrace("in processBLUCONTransmitterData Got sleep ack, resetting initialstate!")
-					bluconCurrentCommand = BLUCON_COMMAND_initialState;
-				}
-			} else if (bufferAsString.toLowerCase().indexOf(BLUCON_RESPONSE_bluconNACKResponsePrefix_8b1a02) == 0) {
-				myTrace("in processBLUCONTransmitterData Got NACKResponse, resetting initialstate!")
-				bluconCurrentCommand = BLUCON_COMMAND_initialState;
-				if (bufferAsString.toLowerCase().indexOf(BLUCON_NACK_RESPONSE_patchReadError_8b1a020011) == 0) {
-					var blueToothServiceEvent:BlueToothServiceEvent = new BlueToothServiceEvent(BlueToothServiceEvent.GLUCOSE_PATCH_READ_ERROR);
-					_instance.dispatchEvent(blueToothServiceEvent);
-					myTrace("in processBLUCONTransmitterData patchreaderror");
+					myTrace("in processBLUCONTransmitterData, Got sleep ack, resetting initialstate!");
+					bluconCurrentCommand = "";
 				}
 			}
 			
-			if (bluconCurrentCommand == BLUCON_COMMAND_initialState && (bufferAsString.toLowerCase().indexOf(BLUCON_COMMAND_wakeup_cb010000) == 0) ) {
-				bluconCurrentCommand = BLUCON_COMMAND_getPatchInfo_010d0900;
-				sendCommand(BLUCON_COMMAND_getPatchInfo_010d0900);
-				myTrace("in processBLUCONTransmitterData reached block initialstate")
-			} else if (bluconCurrentCommand == BLUCON_COMMAND_getPatchInfo_010d0900 && (bufferAsString.toLowerCase().indexOf(BLUCON_RESPONSE_patchInfoResponsePrefix_8bd9) == 0) ) {
-				myTrace("in processBLUCONTransmitterData Patch Info received");
-				bluconCurrentCommand = BLUCON_COMMAND_ackWakeup_810a00;
-				sendCommand(BLUCON_COMMAND_ackWakeup_810a00);
-			} else if (bluconCurrentCommand == BLUCON_COMMAND_getNowDataIndex_010d0e0103 && (bufferAsString.toLowerCase().indexOf(BLUCON_RESPONSE_singleBlockInfoResponsePrefix_8bde) == 0) ) {
+			if (strRecCmd.indexOf("8b1a02") == 0) {
+				cmdFound = 1;
+				myTrace("in processBLUCONTransmitterData, Got NACK on cmd=" + bluconCurrentCommand + " with error=" + strRecCmd.substring(6));
+				
+				if (strRecCmd.indexOf("8b1a020014") == 0) {
+					//reason unknown!
+				}
+				
+				if (strRecCmd.indexOf("8b1a02000f") == 0) {
+					myTrace("in processBLUCONTransmitterData, Libre sensor not present!");
+				}
+				
+				bluconCurrentCommand = "";
+			}
+			
+			if (bluconCurrentCommand == "" && strRecCmd == "cb010000") {
+				cmdFound = 1;
+				myTrace("in processBLUCONTransmitterData, wakeup received");
+				
+				bluconCurrentCommand = "010d0900";
+				myTrace("in processBLUCONTransmitterData, getPatchInfo");
+				
+			} else if (bluconCurrentCommand.indexOf("010d0b00") == 0 /*getUnknownCmd1*/ && strRecCmd.indexOf("8bdb") == 0) {
+				cmdFound = 1;
+				myTrace("in processBLUCONTransmitterData, gotUnknownCmd1 (010d0b00): "+strRecCmd);
+				
+				bluconCurrentCommand = "010d0a00";
+				myTrace("in processBLUCONTransmitterData, getUnknownCmd2 "+ bluconCurrentCommand);
+				
+			} else if (bluconCurrentCommand.indexOf("010d0a00") == 0 /*getUnknownCmd2*/ && strRecCmd.indexOf("8bda") == 0) {
+				cmdFound = 1;
+				myTrace("in processBLUCONTransmitterData, gotUnknownCmd2 (010d0a00): "+strRecCmd);
+				
+				bluconCurrentCommand = "010d0e0127";
+				myTrace("in processBLUCONTransmitterData, getSensorAge");
+				
+			} else if (bluconCurrentCommand.indexOf("010d0e0127") == 0 /*getSensorAge*/ && strRecCmd.indexOf("8bde") == 0) {
+				cmdFound = 1;
+				myTrace("in processBLUCONTransmitterData, SensorAge received");
+				
 				buffer.position = 0;
-				var commandAsString:String = "010d0e01" + blockNumberForNowGlucoseData(buffer);
-				myTrace("in processBLUCONTransmitterData reached block getNowDataIndex calling sendCommand with hexstring = " + commandAsString);
-				bluconCurrentCommand = BLUCON_COMMAND_getNowGlucoseData_9999999999;
-				sendCommand(commandAsString);
-			} else if (bluconCurrentCommand == BLUCON_COMMAND_getNowGlucoseData_9999999999 && (bufferAsString.toLowerCase().indexOf(BLUCON_RESPONSE_singleBlockInfoResponsePrefix_8bde) == 0) ) {
-				var value:Number = nowGetGlucoseValue(buffer);
-				myTrace("in processBLUCONTransmitterData reached block getNowGlucoseData with value = " + value);
-				bluconCurrentCommand = BLUCON_COMMAND_sleep_010c0e00;
-				sendCommand(BLUCON_COMMAND_sleep_010c0e00);
-				//dispatch event with glucosevalue;
-				myTrace("in processBLUCONTransmitterData in processBluconTransmitterData, dispatching transmitter data");
+				var sensorAge:int = sensorAge(buffer);
+				
+				if ((sensorAge > 0) && (sensorAge < 200000)) {
+				} else {
+					myTrace("in processBLUCONTransmitterData, setting sensor age to Number.NAN");
+					sensorAge = Number.NaN;
+				}
+				
+				bluconCurrentCommand = "010d0e0103";
+				m_getNowGlucoseDataIndexCommand = 1;//to avoid issue when gotNowDataIndex cmd could be same as getNowGlucoseData (case block=3)
+				myTrace("in processBLUCONTransmitterData, getNowGlucoseDataIndexCommand");
+				
+			} else if (bluconCurrentCommand.indexOf("010d0900") == 0 /*getPatchInfo*/ && strRecCmd.indexOf("8bd9") == 0) {
+				cmdFound = 1;
+				myTrace("in processBLUCONTransmitterData, Patch Info received");
+				bluconCurrentCommand = "810a00";
+				myTrace("in processBLUCONTransmitterData, Send ACK");
+			} else if (bluconCurrentCommand.indexOf("010d0e0103") == 0 /*getNowDataIndex*/ && m_getNowGlucoseDataIndexCommand == 1 && strRecCmd.indexOf("8bde") == 0) {
+				cmdFound = 1;
+				myTrace("in processBLUCONTransmitterData, gotNowDataIndex");
+				
+				var blockNumber:String = blockNumberForNowGlucoseData(buffer);
+				myTrace("in processBLUCONTransmitterData, block Number is "+ blockNumber);
+				
+				bluconCurrentCommand = "010d0e010"+ blockNumber;//getNowGlucoseData
+				m_getNowGlucoseDataIndexCommand = 0;
+				
+				myTrace("in processBLUCONTransmitterData, getNowGlucoseData");
+				
+				
+			} else if (bluconCurrentCommand.indexOf("010d0e01") == 0 /*getNowGlucoseData*/ && strRecCmd.indexOf("8bde") == 0) {
+				cmdFound = 1;
+				var currentGlucose:Number = nowGetGlucoseValue(buffer);
+				
+				myTrace("in processBLUCONTransmitterData, *****************got getNowGlucoseData = " + currentGlucose);
+				
+				myTrace("in processBluconTransmitterData, dispatching transmitter data");
 				var blueToothServiceEvent:BlueToothServiceEvent = new BlueToothServiceEvent(BlueToothServiceEvent.TRANSMITTER_DATA);
-				blueToothServiceEvent.data = new TransmitterDataBluConPacket(value, 0, 0, 0, (new Date()).valueOf());
+				blueToothServiceEvent.data = new TransmitterDataBluConPacket(currentGlucose, 0, 0, sensorAge, (new Date()).valueOf());
 				_instance.dispatchEvent(blueToothServiceEvent);
-			} 
+
+				
+				bluconCurrentCommand = "010c0e00";
+				myTrace("in processBLUCONTransmitterData, Send sleep cmd");
+				
+			}  else if (strRecCmd.indexOf("cb020000") == 0) {
+				myTrace("in processBLUCONTransmitterData, is bridge battery low????! NOT YET SETTING BRIDGE BATTERY");
+				
+			} else if (strRecCmd.indexOf("cbdb0000") == 0) {
+				//something to do with really low battery????
+				
+			}
+			
+			if (bluconCurrentCommand.length > 0 && cmdFound == 1) {
+				myTrace("in processBLUCONTransmitterData, Sending reply: " + bluconCurrentCommand);
+				sendCommand(bluconCurrentCommand);
+			} else {
+				if (cmdFound == 0) {
+					myTrace("in processBLUCONTransmitterData, ************COMMAND NOT FOUND! -> " + strRecCmd);
+				}
+			}
 		}
 		
-		public static function blockNumberForNowGlucoseData(input:ByteArray):String {
+		private static function sensorAge(input:ByteArray):int {
+			input.position = 3 + 4;
+			var value3plus4:int = input.readByte();
+			input.position = 3 + 5;
+			var value3plus5:int = input.readByte();
+
+			var sensorAge:int = ((value3plus5 & 0xFF) << 8) | (value3plus4 & 0xFF);
+			myTrace("in sensorAge sensorAge = " + sensorAge);
+			
+			return sensorAge;
+		}
+		
+		private static function blockNumberForNowGlucoseData(input:ByteArray):String {
 			input.position = 5;
 			var nowGlucoseIndex2:int = 0;
 			var nowGlucoseIndex3:int = 0;

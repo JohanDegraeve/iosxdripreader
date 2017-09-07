@@ -650,7 +650,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 							sensorAge = ModelLocator.resourceManagerInstance.getString('homeview','unknown');
 							message += " " + sensorAge;
 						} else {
-							message += (new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FSL_SENSOR_AGE)))/1000;
+							var sensorAgeInDays:int = (new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FSL_SENSOR_AGE)))/1440;
+							message += sensorAgeInDays;
 						}
 					}
 					
