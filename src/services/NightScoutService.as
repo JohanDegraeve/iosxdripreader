@@ -268,14 +268,9 @@ package services
 			myTrace(ModelLocator.resourceManagerInstance.getString("nightscoutservice","nightscout_test_result_ok"));
 			
 			if (ModelLocator.isInForeground) {
-				var alert:DialogView = Dialog.service.create(
-					new AlertBuilder()
-					.setTitle(ModelLocator.resourceManagerInstance.getString("nightscoutservice","nightscout_title"))
-					.setMessage(ModelLocator.resourceManagerInstance.getString("nightscoutservice","nightscout_test_result_ok"))
-					.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
-					.build()
-				);
-				DialogService.addDialog(alert, 60);
+				DialogService.openSimpleDialog(ModelLocator.resourceManagerInstance.getString("nightscoutservice","nightscout_title"),
+					ModelLocator.resourceManagerInstance.getString("nightscoutservice","nightscout_test_result_ok"),
+					60);
 			}
 		}
 		
@@ -294,14 +289,9 @@ package services
 				
 				myTrace(errorMessage);
 				
-				var alert:DialogView = Dialog.service.create(
-					new AlertBuilder()
-					.setTitle(ModelLocator.resourceManagerInstance.getString("nightscoutservice","nightscout_title"))
-					.setMessage(errorMessage)
-					.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
-					.build()
-				);
-				DialogService.addDialog(alert, 60);
+				DialogService.openSimpleDialog(ModelLocator.resourceManagerInstance.getString("nightscoutservice","nightscout_title"),
+					errorMessage,
+					60);
 				myTrace("nightscout_test_result_nok");
 				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_WARNING_THAT_NIGHTSCOUT_URL_AND_SECRET_IS_NOT_OK_ALREADY_GIVEN, "true");
 			}

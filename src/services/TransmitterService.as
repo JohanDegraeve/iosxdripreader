@@ -311,14 +311,8 @@ package services
 				return;
 			}
 			if ((event.values[0] as String).length != 5) {
-				var alert:DialogView = Dialog.service.create(
-					new AlertBuilder()
-					.setTitle(ModelLocator.resourceManagerInstance.getString("transmitterservice","enter_transmitter_id_dialog_title"))
-					.setMessage(ModelLocator.resourceManagerInstance.getString("transmitterservice","transmitter_id_should_be_five_chars"))
-					.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
-					.build()
-				);
-				DialogService.addDialog(alert);
+				DialogService.openSimpleDialog(ModelLocator.resourceManagerInstance.getString("transmitterservice","enter_transmitter_id_dialog_title"),
+					ModelLocator.resourceManagerInstance.getString("transmitterservice","transmitter_id_should_be_five_chars"));
 			} else {
 				var value:ByteArray = new ByteArray();
 				value.endian = Endian.LITTLE_ENDIAN;

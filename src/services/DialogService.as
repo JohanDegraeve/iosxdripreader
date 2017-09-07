@@ -188,5 +188,19 @@ package services
 				maxDurationTimer = null;
 			}
 		}
+		
+		/**
+		 * if maxDurationInSeconds specified then the dialog will be closed after the specified time
+		 */
+		public static function openSimpleDialog(title:String, message:String, maxDurationInSeconds:Number = Number.NaN):void {
+			var alert:DialogView = Dialog.service.create(
+				new AlertBuilder()
+				.setTitle(title)
+				.setMessage(message)
+				.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
+				.build()
+			);
+			DialogService.addDialog(alert, maxDurationInSeconds);
+		}
 	}
 }

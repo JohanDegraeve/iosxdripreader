@@ -191,14 +191,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 						var listOfAlarmname:ArrayCollection = Database.getAllAlertTypes();
 						for (var i:int = 0;i < listOfAlarmname.length;i++) {
 							if ((event.values[0] as String).toUpperCase() == (listOfAlarmname.getItemAt(i) as AlertType).alarmName.toUpperCase()) {
-								var alert:DialogView = Dialog.service.create(
-									new AlertBuilder()
-									.setTitle(ModelLocator.resourceManagerInstance.getString("alerttypeview","alarm_name_invalid"))
-									.setMessage(ModelLocator.resourceManagerInstance.getString("alerttypeview","alarm_name_already_exists"))
-									.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
-									.build()
-								);
-								DialogService.addDialog(alert);
+								DialogService.openSimpleDialog(ModelLocator.resourceManagerInstance.getString("alerttypeview","alarm_name_invalid"),
+									ModelLocator.resourceManagerInstance.getString("alerttypeview","alarm_name_already_exists"));
 								return;
 							}
 						}

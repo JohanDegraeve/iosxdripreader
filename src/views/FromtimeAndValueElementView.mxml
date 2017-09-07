@@ -179,14 +179,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 					if (showValue) {
 						if (!alertType.enabled) {
 							if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_FROM_TIME_AND_VALUE_ELEMENT_VIEW_VALUE_INFO_GIVEN) == "false") {
-								var alert:DialogView = Dialog.service.create(
-									new AlertBuilder()
-									.setTitle(ModelLocator.resourceManagerInstance.getString('settingsview',"warning"))
-									.setMessage(ModelLocator.resourceManagerInstance.getString('fromtimeandvalueelementview',"give_info_about_value"))
-									.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
-									.build()
-								);
-								DialogService.addDialog(alert);
+								DialogService.openSimpleDialog(ModelLocator.resourceManagerInstance.getString('settingsview',"warning"),
+									ModelLocator.resourceManagerInstance.getString('fromtimeandvalueelementview',"give_info_about_value"));
 								LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_FROM_TIME_AND_VALUE_ELEMENT_VIEW_VALUE_INFO_GIVEN,"true");
 							}
 						}
@@ -197,14 +191,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			
 			private function fromGroupClicked(event:Event):void {
 				if (selectedIndex == 0) {
-					var alert:DialogView = Dialog.service.create(
-						new AlertBuilder()
-						.setTitle(ModelLocator.resourceManagerInstance.getString('fromtimeandvalueelementview', 'change_from_alert_title'))
-						.setMessage(ModelLocator.resourceManagerInstance.getString('fromtimeandvalueelementview', 'first_element_can_not_change_time'))
-						.addOption("Ok", DialogAction.STYLE_POSITIVE, 1)
-						.build()
-					);
-					DialogService.addDialog(alert);
+					DialogService.openSimpleDialog(ModelLocator.resourceManagerInstance.getString('fromtimeandvalueelementview', 'change_from_alert_title'),
+						ModelLocator.resourceManagerInstance.getString('fromtimeandvalueelementview', 'first_element_can_not_change_time'));
 					return;
 				} 
 				var minTime:Number;
@@ -298,14 +286,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 					var asNumber:Number = new Number((event.values[0] as String).replace(",","."));
 					var asNumberAndToStore = asNumber;
 					if (isNaN(asNumber)) {
-						var alert:DialogView = Dialog.service.create(
-							new AlertBuilder()
-							.setTitle(ModelLocator.resourceManagerInstance.getString('fromtimeandvalueelementview', 'change_value_alert_title'))
-							.setMessage(ModelLocator.resourceManagerInstance.getString("calibrationservice","value_should_be_numeric"))
-							.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
-							.build()
-						);
-						DialogService.addDialog(alert);
+						DialogService.openSimpleDialog(ModelLocator.resourceManagerInstance.getString('fromtimeandvalueelementview', 'change_value_alert_title'),
+							ModelLocator.resourceManagerInstance.getString("calibrationservice","value_should_be_numeric"));
 						//and ask again a value
 						valueGroupClicked(null);
 						return;

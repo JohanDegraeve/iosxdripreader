@@ -285,14 +285,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 				if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_CHART_RANGE_INFO_GIVEN) == "false") {
 					if (ModelLocator.bgReadings.length > 1) {
 						if ((ModelLocator.bgReadings.getItemAt(ModelLocator.bgReadings.length - 1) as BgReading).timestamp - (ModelLocator.bgReadings.getItemAt(0) as BgReading).timestamp > MINIMUM_HOURS_TO_SHOW_IN_CHART * 60 * 60 * 1000) {
-							var alert:DialogView = Dialog.service.create(
-								new AlertBuilder()
-								.setTitle(ModelLocator.resourceManagerInstance.getString('homeview',"info"))
-								.setMessage(ModelLocator.resourceManagerInstance.getString('homeview',"info_about_click_on_chart"))//info about buttons top right corner
-								.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
-								.build()
-							);
-							DialogService.addDialog(alert);
+							DialogService.openSimpleDialog(ModelLocator.resourceManagerInstance.getString('homeview',"info"),
+								ModelLocator.resourceManagerInstance.getString('homeview',"info_about_click_on_chart"));
 							LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_CHART_RANGE_INFO_GIVEN,"true");
 						}
 					}
@@ -331,14 +325,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			
 			private static function showG4InfoScreen():void {
 				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G4_INFO_SCREEN_SHOWN) == "false") {
-					var alert:DialogView = Dialog.service.create(
-						new AlertBuilder()
-						.setTitle(ModelLocator.resourceManagerInstance.getString('homeview',"info"))
-						.setMessage(ModelLocator.resourceManagerInstance.getString('homeview',"info_screen_1"))//info about buttons top right corner
-						.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
-						.build()
-					);
-					DialogService.addDialog(alert);
+					DialogService.openSimpleDialog(ModelLocator.resourceManagerInstance.getString('homeview',"info"),
+						ModelLocator.resourceManagerInstance.getString('homeview',"info_screen_1"));
 					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_G4_INFO_SCREEN_SHOWN,"true");
 				}
 			}
@@ -349,14 +337,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 					if (Sensor.getActiveSensor() == null) {
 						message += "\n\n" + ModelLocator.resourceManagerInstance.getString('homeview',"info_screen_2_start_sensor");
 					}
-					var alert:DialogView = Dialog.service.create(
-						new AlertBuilder()
-						.setTitle(ModelLocator.resourceManagerInstance.getString('homeview',"info"))
-						.setMessage(message)//info about buttons top right corner
-						.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
-						.build()
-					);
-					DialogService.addDialog(alert);
+					DialogService.openSimpleDialog(ModelLocator.resourceManagerInstance.getString('homeview',"info"),
+						message);
 					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_G5_INFO_SCREEN_SHOWN,"true");
 				}
 			}
@@ -397,15 +379,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			private function userInitiatedScanningSucceeded(event:PeripheralEvent):void {
 				if (scanningWasUserInitiated) {
 					scanningWasUserInitiated = false;
-					var alert:DialogView = Dialog.service.create(
-						new AlertBuilder()
-						.setTitle(ModelLocator.resourceManagerInstance.getString('homeview',"scan_for_device"))
-						.setMessage(ModelLocator.resourceManagerInstance.getString('homeview',"connected_to_peripheral_device_id_stored"))
-						.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
-						
-						.build()
-					);
-					DialogService.addDialog(alert, 30);
+					DialogService.openSimpleDialog(ModelLocator.resourceManagerInstance.getString('homeview',"scan_for_device"),
+						ModelLocator.resourceManagerInstance.getString('homeview',"connected_to_peripheral_device_id_stored"),
+						30);
 				}
 			}
 			
@@ -554,25 +530,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 						BluetoothLE.service.centralManager.addEventListener(PeripheralEvent.CONNECT, userInitiatedScanningSucceeded);
 						scanningWasUserInitiated = true;
 						BluetoothService.startScanning(true);
-						var alert:DialogView = Dialog.service.create(
-							new AlertBuilder()
-							.setTitle(ModelLocator.resourceManagerInstance.getString('homeview',"scan_for_device"))
-							.setMessage(ModelLocator.resourceManagerInstance.getString('homeview',"scanning_started_message"))
-							.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
-							.build()
-						);
-						DialogService.addDialog(alert, 30);
+						DialogService.openSimpleDialog(ModelLocator.resourceManagerInstance.getString('homeview',"scan_for_device"),
+							ModelLocator.resourceManagerInstance.getString('homeview',"scanning_started_message"), 30);
+						
 						myTrace("in actionSheet_closedHandler, initial scan for device, setting systemIdleMode = SystemIdleMode.KEEP_AWAKE");
 						NativeApplication.nativeApplication.systemIdleMode = SystemIdleMode.KEEP_AWAKE;
 					} else {
-						var alert:DialogView = Dialog.service.create(
-							new AlertBuilder()
-							.setTitle(ModelLocator.resourceManagerInstance.getString('homeview',"scanning_failed_tile"))
-							.setMessage(ModelLocator.resourceManagerInstance.getString('homeview',"bluetooth_not_switched_on"))
-							.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
-							.build()
-						);
-						DialogService.addDialog(alert, 30);
+						DialogService.openSimpleDialog(ModelLocator.resourceManagerInstance.getString('homeview',"scanning_failed_tile"),
+							ModelLocator.resourceManagerInstance.getString('homeview',"bluetooth_not_switched_on"),
+							30);
 					}
 				} else if (event.index == ACTION_SHEET_INDEX_FOR_FORGET_DEVICE) {
 					BlueToothDevice.forgetBlueToothDevice();
@@ -688,14 +654,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 						}
 					}
 					
-					var alert:DialogView = Dialog.service.create(
-						new AlertBuilder()
-						.setTitle(ModelLocator.resourceManagerInstance.getString('homeview',"status_title"))
-						.setMessage(message)
-						.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
-						.build()
-					);
-					DialogService.addDialog(alert, 60);
+					DialogService.openSimpleDialog(ModelLocator.resourceManagerInstance.getString('homeview',"status_title"),
+						message, 60);
 				}
 			}
 			
@@ -786,14 +746,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 				var sensorStartTimeAsDate:Date = new Date(sensorStartYear, sensorStartMonth, sensorStartDate, sensorStartHours, sensorStartMinutes, sensorStartSeconds);
 				var sensorStartTime:Number = sensorStartTimeAsDate.valueOf();
 				if (sensorStartTime > (new Date()).valueOf() + 5 * 60 * 1000) {
-					var alert:DialogView = Dialog.service.create(
-						new AlertBuilder()
-						.setTitle(ModelLocator.resourceManagerInstance.getString('homeview',"start_sensor"))
-						.setMessage(ModelLocator.resourceManagerInstance.getString('homeview',"dont_start_with_time_in_future"))
-						.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
-						.build()
-					);
-					DialogService.addDialog(alert, 60);
+					DialogService.openSimpleDialog(ModelLocator.resourceManagerInstance.getString('homeview',"start_sensor"),
+						ModelLocator.resourceManagerInstance.getString('homeview',"dont_start_with_time_in_future"),
+						60);
 				} else {
 					Sensor.startSensor(sensorStartTime);
 					var actualTime:Number = (new Date()).valueOf();
@@ -810,14 +765,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 					} else {
 						message = ModelLocator.resourceManagerInstance.getString('homeview',"sensor_started_no_wait_needed");
 					}
-					var alert:DialogView = Dialog.service.create(
-						new AlertBuilder()
-						.setTitle(ModelLocator.resourceManagerInstance.getString('homeview',"start_sensor"))
-						.setMessage(message)
-						.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
-						.build()
-					);
-					DialogService.addDialog(alert, 60);
+					DialogService.openSimpleDialog(ModelLocator.resourceManagerInstance.getString('homeview',"start_sensor"),
+						message,
+						60);
 				}
 			}
 			
@@ -845,24 +795,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 				var currentVersion:String = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_APPLICATION_VERSION);
 				if (currentVersion < newVersion) {
 					if (currentVersion <= '0.0.46') {
-						var alert:DialogView = Dialog.service.create(
-							new AlertBuilder()
-							.setTitle(ModelLocator.resourceManagerInstance.getString('homeview',"info"))
-							.setMessage(ModelLocator.resourceManagerInstance.getString('homeview',"info_additional_calibration_request_alert"))//info about buttons top right corner
-							.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
-							.build()
-						);
-						DialogService.addDialog(alert);
+						DialogService.openSimpleDialog(ModelLocator.resourceManagerInstance.getString('homeview',"info"),
+							ModelLocator.resourceManagerInstance.getString('homeview',"info_additional_calibration_request_alert"));
 					}
 					if (currentVersion <= '0.0.53') {
-						var alert:DialogView = Dialog.service.create(
-							new AlertBuilder()
-							.setTitle(ModelLocator.resourceManagerInstance.getString('homeview',"info"))
-							.setMessage(ModelLocator.resourceManagerInstance.getString('homeview',"info_app_not_always_on_anymore"))
-							.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
-							.build()
-						);
-						DialogService.addDialog(alert);
+						DialogService.openSimpleDialog(ModelLocator.resourceManagerInstance.getString('homeview',"info"),
+							ModelLocator.resourceManagerInstance.getString('homeview',"info_app_not_always_on_anymore"));
 					}
 					LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_APPLICATION_VERSION, newVersion); 
 				}
@@ -1036,14 +974,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 						largeBGLabelGroup.includeInLayout = true;
 						largeBGLabelGroup.visible = true;
 						if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_INFO_ABOUT_LONG_PRESS_IN_HOME_SCREEN_GIVEN) == "false") {
-							var alert:DialogView = Dialog.service.create(
-								new AlertBuilder()
-								.setTitle(ModelLocator.resourceManagerInstance.getString('homeview',"info"))
-								.setMessage(ModelLocator.resourceManagerInstance.getString('homeview',"info_about_long_press_on_home_screen"))
-								.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
-								.build()
-							);
-							DialogService.addDialog(alert);
+							DialogService.openSimpleDialog(ModelLocator.resourceManagerInstance.getString('homeview',"info"),
+								ModelLocator.resourceManagerInstance.getString('homeview',"info_about_long_press_on_home_screen"));
 							LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_INFO_ABOUT_LONG_PRESS_IN_HOME_SCREEN_GIVEN, "true");
 						}
 					}

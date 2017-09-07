@@ -118,14 +118,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 						for (var cntr3:int = 0;cntr3 < listOfAlertsInTheSetting.length;cntr3++) {
 							var fromTimeAndValue:FromtimeAndValue = listOfAlertsInTheSetting.getItemAt(cntr3) as FromtimeAndValue;
 							if (fromTimeAndValue.alarmName.toUpperCase() == alarmNameOfItemToDelete.toUpperCase()) {
-								var alert:DialogView = Dialog.service.create(
-									new AlertBuilder()
-									.setTitle(ModelLocator.resourceManagerInstance.getString("alerttypesview","delete_alert_type"))
-									.setMessage(ModelLocator.resourceManagerInstance.getString("alerttypesview","alerttype_still_used"))
-									.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
-									.build()
-								);
-								DialogService.addDialog(alert);
+								DialogService.openSimpleDialog(ModelLocator.resourceManagerInstance.getString("alerttypesview","delete_alert_type"),
+									ModelLocator.resourceManagerInstance.getString("alerttypesview","alerttype_still_used"));
 								return;
 							}
 						}

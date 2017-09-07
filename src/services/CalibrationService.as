@@ -107,14 +107,8 @@ package services
 			if ((new Date()).valueOf() - latestReading.timestamp > MAXIMUM_WAIT_FOR_CALIBRATION_IN_SECONDS * 1000) {
 				myTrace("in requestInitialCalibration, but latest reading was more than MAXIMUM_WAIT_FOR_CALIBRATION_IN_SECONDS");
 				myTrace("app was opened via notification, opening warning dialog");
-				var alert:DialogView = Dialog.service.create(
-					new AlertBuilder()
-					.setTitle(ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_calibration_title"))
-					.setMessage(ModelLocator.resourceManagerInstance.getString("calibrationservice","latest_reading_is_too_old"))
-					.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
-					.build()
-				);
-				DialogService.addDialog(alert);
+				DialogService.openSimpleDialog(ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_calibration_title"),
+					ModelLocator.resourceManagerInstance.getString("calibrationservice","latest_reading_is_too_old"));
 				return;
 			}
 
@@ -200,14 +194,8 @@ package services
 			if (isNaN(asNumber)) {
 				myTrace("in intialCalibrationValueEntered, user gave non numeric value, opening alert and requesting new value");
 				//add the warning message
-				var alert:DialogView = Dialog.service.create(
-					new AlertBuilder()
-					.setTitle(ModelLocator.resourceManagerInstance.getString("calibrationservice","invalid_value"))
-					.setMessage(ModelLocator.resourceManagerInstance.getString("calibrationservice","value_should_be_numeric"))
-					.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
-					.build()
-				);
-				DialogService.addDialog(alert);
+				DialogService.openSimpleDialog(ModelLocator.resourceManagerInstance.getString("calibrationservice","invalid_value"),
+					ModelLocator.resourceManagerInstance.getString("calibrationservice","value_should_be_numeric"));
 				//and ask again a value
 				bgReadingReceived(null);
 			} else {
@@ -264,14 +252,8 @@ package services
 			//check if there's 2 readings the last 30 minutes
 			if (BgReading.last30Minutes().length < 2) {
 				myTrace(" in calibrationOnRequest, BgReading.last30Minutes().length < 2");
-				var alert:DialogView = Dialog.service.create(
-					new AlertBuilder()
-					.setTitle(ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_calibration_title"))
-					.setMessage(ModelLocator.resourceManagerInstance.getString("calibrationservice","can_not_calibrate_right_now"))
-					.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
-					.build()
-				);
-				DialogService.addDialog(alert, 60);
+				DialogService.openSimpleDialog(ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_calibration_title"),
+					ModelLocator.resourceManagerInstance.getString("calibrationservice","can_not_calibrate_right_now"), 60);
 			} else { //check if it's an override calibration
 				if (((new Date()).valueOf() - (Calibration.latest(2).getItemAt(0) as Calibration).timestamp < (1000 * 60 * 60)) && override) {
 					var alert:DialogView = Dialog.service.create(
@@ -297,14 +279,9 @@ package services
 						} else if (event.index == 0) {
 							var asNumber:Number = new Number((event.values[0] as String).replace(",","."));
 							if (isNaN(asNumber)) {
-								var alert:DialogView = Dialog.service.create(
-									new AlertBuilder()
-									.setTitle(ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_calibration_title"))
-									.setMessage(ModelLocator.resourceManagerInstance.getString("calibrationservice","value_should_be_numeric"))
-									.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
-									.build()
-								);
-								DialogService.addDialog(alert);
+								DialogService.openSimpleDialog(ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_calibration_title"),
+									ModelLocator.resourceManagerInstance.getString("calibrationservice","value_should_be_numeric"));
+
 								//and ask again a value
 								calibrationOnRequest(override);
 							} else {
@@ -347,14 +324,8 @@ package services
 						} else if (event.index == 2) {
 							var asNumber:Number = new Number((event.values[0] as String).replace(",","."));
 							if (isNaN(asNumber)) {
-								var alert:DialogView = Dialog.service.create(
-									new AlertBuilder()
-									.setTitle(ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_calibration_title"))
-									.setMessage(ModelLocator.resourceManagerInstance.getString("calibrationservice","value_should_be_numeric"))
-									.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
-									.build()
-								);
-								DialogService.addDialog(alert);
+								DialogService.openSimpleDialog(ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_calibration_title"),
+									ModelLocator.resourceManagerInstance.getString("calibrationservice","value_should_be_numeric"));
 								//and ask again a value
 								calibrationOnRequest(override);
 							} else {
@@ -381,14 +352,8 @@ package services
 			var asNumber:Number = new Number((event.values[0] as String).replace(",","."));
 			if (isNaN(asNumber)) {
 				//add the warning message
-				var alert:DialogView = Dialog.service.create(
-					new AlertBuilder()
-					.setTitle(ModelLocator.resourceManagerInstance.getString("calibrationservice","invalid_value"))
-					.setMessage(ModelLocator.resourceManagerInstance.getString("calibrationservice","value_should_be_numeric"))
-					.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
-					.build()
-				);
-				DialogService.addDialog(alert);
+				DialogService.openSimpleDialog(ModelLocator.resourceManagerInstance.getString("calibrationservice","invalid_value"),
+					ModelLocator.resourceManagerInstance.getString("calibrationservice","value_should_be_numeric"));
 				//and ask again a value
 				initialCalibrate();
 			} else {
