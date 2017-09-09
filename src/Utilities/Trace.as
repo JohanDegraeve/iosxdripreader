@@ -55,12 +55,14 @@ package Utilities
 		public static function myTrace(tag:String, log:String, dontWriteToFile:Boolean = false):void {
 			if (dateFormatter == null) {
 				dateFormatter = new DateTimeFormatter();
-				dateFormatter.dateTimePattern = "HH:mm:ss";
+				dateFormatter.dateTimePattern = "yyyy-MM-dd HH:mm:ss";
 				dateFormatter.useUTC = false;
 				//dateFormatter.setStyle("locale",Capabilities.language.substr(0,2));
 			}
-			var now:Date = new Date();
-			var traceText:String = dateFormatter.format(new Date()) + "." + now.milliseconds + " xdripreadertrace " + tag + " : " + log;
+			var nowMilliSecondsAsString:String = (new Date()).milliseconds.toString();
+			while (nowMilliSecondsAsString.length < 3)
+				nowMilliSecondsAsString = "0" + nowMilliSecondsAsString
+			var traceText:String = dateFormatter.format(new Date()) + "." + nowMilliSecondsAsString + " xdripreadertrace " + tag + " : " + log;
 			if (debugMode)
 				trace(traceText);
 			
