@@ -266,6 +266,13 @@ package services
 					}
 					BluetoothService.writeBlueReaderCharacteristic(Utilities.UniqueId.hexStringToByteArray("6C"));
 				} else if (be.data is TransmitterDataBluConPacket) {
+					var lastBgRading:BgReading = BgReading.lastNoSensor();
+					if (lastBgRading != null) {
+						if (lastBgRading.timestamp + ((4*60 + 15) * 1000) >= (new Date()).valueOf()) {
+							myTrace("in transmitterDataReceived,  is TransmitterDataBluConPacket, but lastbgReading less than 255 seconds old, ignoring");
+							return;
+						}
+					}
 					var transmitterDataBluConPacket:TransmitterDataBluConPacket = be.data as TransmitterDataBluConPacket;
 					if (!isNaN(transmitterDataBluConPacket.bridgeBatteryLevel)) {
 						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_BLUCON_BATTERY_LEVEL, transmitterDataBluConPacket.bridgeBatteryLevel.toString());

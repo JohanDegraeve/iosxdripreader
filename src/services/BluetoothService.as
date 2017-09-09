@@ -153,6 +153,7 @@ package services
 		private static var bluconCurrentCommand:String="";
 		
 		private static var m_getNowGlucoseDataIndexCommand:int = 0;
+		private static var m_gotOneTimeUnknownCmd:int = 0;
 
 		private static function set activeBluetoothPeripheral(value:Peripheral):void
 		{
@@ -1108,8 +1109,22 @@ package services
 				if (bluconCurrentCommand.indexOf("810a00") == 0) {//ACK sent
 					//ack received
 					
-					bluconCurrentCommand = "010d0b00";
-					myTrace("in processBLUCONTransmitterData, getUnknownCmd1: " + bluconCurrentCommand);
+					//This command will be asked only one time after first connect and never again
+					if (m_gotOneTimeUnknownCmd == 0) {
+						bluconCurrentCommand = "010d0b00";
+						myTrace("in processBLUCONTransmitterData, getUnknownCmd1: " + bluconCurrentCommand);
+					} else {
+						if ((new Date()).valueOf() - new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TIME_STAMP_LAST_SENSOR_AGE_CHECK_IN_MS)) > 4 * 3600 * 1000) {
+							// do something only once every 4 hours
+							bluconCurrentCommand = "010d0e0127";
+							myTrace("in processBLUCONTransmitterData, getSensorAge");
+							CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_TIME_STAMP_LAST_SENSOR_AGE_CHECK_IN_MS, (new Date()).valueOf().toString());
+						} else {
+							bluconCurrentCommand = "010d0e0103";
+							m_getNowGlucoseDataIndexCommand = 1;//to avoid issue when gotNowDataIndex cmd could be same as getNowGlucoseData (case block=3)
+							myTrace("in processBLUCONTransmitterData, getNowGlucoseDataIndexCommand");
+						}
+					}
 					
 				} else {
 					myTrace("in processBLUCONTransmitterData, Got sleep ack, resetting initialstate!");
@@ -1122,14 +1137,16 @@ package services
 				myTrace("in processBLUCONTransmitterData, Got NACK on cmd=" + bluconCurrentCommand + " with error=" + strRecCmd.substring(6));
 				
 				if (strRecCmd.indexOf("8b1a020014") == 0) {
-					//reason unknown!
+					myTrace("in processBLUCONTransmitterData, Timeout: please wait 5min or push button to restart!");
 				}
 				
 				if (strRecCmd.indexOf("8b1a02000f") == 0) {
-					myTrace("in processBLUCONTransmitterData, Libre sensor not present!");
+					myTrace("in processBLUCONTransmitterData, Libre sensor has been removed!");
 				}
 				
+				m_gotOneTimeUnknownCmd = 0;
 				bluconCurrentCommand = "";
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_TIME_STAMP_LAST_SENSOR_AGE_CHECK_IN_MS, (new Date()).valueOf().toString());
 			}
 			
 			if (bluconCurrentCommand == "" && strRecCmd == "cb010000") {
@@ -1139,6 +1156,11 @@ package services
 				bluconCurrentCommand = "010d0900";
 				myTrace("in processBLUCONTransmitterData, getPatchInfo");
 				
+			} else if (bluconCurrentCommand.indexOf("010d0900") == 0 /*getPatchInfo*/ && strRecCmd.indexOf("8bd9") == 0) {
+				cmdFound = 1;
+				myTrace("in processBLUCONTransmitterData, Patch Info received");
+				bluconCurrentCommand = "810a00";
+				myTrace("in processBLUCONTransmitterData, Send ACK");
 			} else if (bluconCurrentCommand.indexOf("010d0b00") == 0 /*getUnknownCmd1*/ && strRecCmd.indexOf("8bdb") == 0) {
 				cmdFound = 1;
 				myTrace("in processBLUCONTransmitterData, gotUnknownCmd1 (010d0b00): "+strRecCmd);
@@ -1151,6 +1173,7 @@ package services
 				myTrace("in processBLUCONTransmitterData, gotUnknownCmd2 (010d0a00): "+strRecCmd);
 				
 				bluconCurrentCommand = "010d0e0127";
+				m_gotOneTimeUnknownCmd = 1;
 				myTrace("in processBLUCONTransmitterData, getSensorAge");
 				
 			} else if (bluconCurrentCommand.indexOf("010d0e0127") == 0 /*getSensorAge*/ && strRecCmd.indexOf("8bde") == 0) {
@@ -1170,11 +1193,6 @@ package services
 				m_getNowGlucoseDataIndexCommand = 1;//to avoid issue when gotNowDataIndex cmd could be same as getNowGlucoseData (case block=3)
 				myTrace("in processBLUCONTransmitterData, getNowGlucoseDataIndexCommand");
 				
-			} else if (bluconCurrentCommand.indexOf("010d0900") == 0 /*getPatchInfo*/ && strRecCmd.indexOf("8bd9") == 0) {
-				cmdFound = 1;
-				myTrace("in processBLUCONTransmitterData, Patch Info received");
-				bluconCurrentCommand = "810a00";
-				myTrace("in processBLUCONTransmitterData, Send ACK");
 			} else if (bluconCurrentCommand.indexOf("010d0e0103") == 0 /*getNowDataIndex*/ && m_getNowGlucoseDataIndexCommand == 1 && strRecCmd.indexOf("8bde") == 0) {
 				cmdFound = 1;
 				myTrace("in processBLUCONTransmitterData, gotNowDataIndex");
@@ -1204,11 +1222,13 @@ package services
 				myTrace("in processBLUCONTransmitterData, Send sleep cmd");
 				
 			}  else if (strRecCmd.indexOf("cb020000") == 0) {
-				myTrace("in processBLUCONTransmitterData, is bridge battery low????! NOT YET SETTING BRIDGE BATTERY");
-				
+				cmdFound = 1;
+				myTrace("in processBLUCONTransmitterData, is bridge battery low????!");
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_BLUCON_BATTERY_LEVEL, "50");
 			} else if (strRecCmd.indexOf("cbdb0000") == 0) {
-				//something to do with really low battery????
-				
+				cmdFound = 1;
+				myTrace("in processBLUCONTransmitterData, is bridge battery really low????!");
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_BLUCON_BATTERY_LEVEL, "25");
 			}
 			
 			if (bluconCurrentCommand.length > 0 && cmdFound == 1) {

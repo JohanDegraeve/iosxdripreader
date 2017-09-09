@@ -187,6 +187,7 @@
 		  * value 0 means level not known
 		  */
 		 public static const COMMON_SETTING_BLUCON_BATTERY_LEVEL:int = 38;
+		 public static const COMMON_SETTING_TIME_STAMP_LAST_SENSOR_AGE_CHECK_IN_MS:int = 39;
 
 		 private static var commonSettings:Array = [
 			 "0",//COMMON_SETTING_CURRENT_SENSOR
@@ -227,7 +228,8 @@
 			 "0",//COMMON_SETTING_FSL_SENSOR_BATTERY_LEVEL
 			 "0",//COMMON_SETTING_BLUEREADER_BATTERY_LEVEL
 			 "0",//COMMON_SETTING_FSL_SENSOR_AGE
-			 "0"//COMMON_SETTING_BLUCON_BATTERY_LEVEL
+			 "0",//COMMON_SETTING_BLUCON_BATTERY_LEVEL
+			 "0"//COMMON_SETTING_TIME_STAMP_LAST_SENSOR_AGE_CHECK_IN_MS
 		 ];
 		 
 		 public function CommonSettings()
