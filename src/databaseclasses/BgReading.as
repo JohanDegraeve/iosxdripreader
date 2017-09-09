@@ -602,8 +602,7 @@ package databaseclasses
 			myTrace("start of create bgreading with rawdata = " + rawData + ", and filtereddata = " + filteredData);
 			var sensor:Sensor = Sensor.getActiveSensor();
 			var calibration:Calibration = Calibration.last();
-			if (calibration != null) {
-			}
+
 			var timestamp:Number = (new Date()).valueOf();
 			
 			var bgReading:BgReading = (new BgReading(
@@ -727,6 +726,7 @@ package databaseclasses
 			}
 			var adjust_for:Number = AGE_ADJUSTMENT_TIME - (timestamp - sensor.startedAt);
 			if (adjust_for <= 0 || BlueToothDevice.isTypeLimitter()) {
+				myTrace("in calculateAgeAdjustedRawValue, istypelimitter, not applying age adjustment");
 				_ageAdjustedRawValue = rawData;
 			} else {
 				_ageAdjustedRawValue = ((AGE_ADJUSTMENT_FACTOR * (adjust_for / AGE_ADJUSTMENT_TIME)) * rawData) + rawData;
