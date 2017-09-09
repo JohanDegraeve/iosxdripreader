@@ -1085,7 +1085,6 @@ package services
 			buffer.endian = Endian.LITTLE_ENDIAN;
 			var strRecCmd:String = Utilities.UniqueId.bytesToHex(buffer).toLowerCase();
 			buffer.position = 0;
-			myTrace("in processBLUCONTransmitterData  buffer as string = " + strRecCmd);
 			
 			////////code copied form xdripplus, commit 05c51872b19c643eb5146e5c5d86844d03d4baf4
 			var cmdFound:int = 0;
@@ -1259,9 +1258,6 @@ package services
 			myTrace("in blockNumberForNowGlucoseData, nowGlucoseOffset = " + nowGlucoseOffset);
 			
 			var nowGlucoseDataAsHexString:String = nowGlucoseIndex3.toString(16);
-			while (nowGlucoseDataAsHexString.length < 2) {
-				nowGlucoseDataAsHexString = "0" + nowGlucoseDataAsHexString;
-			}
 			myTrace("in blockNumberForNowGlucoseData, nowGlucoseDataAsHexString =  " + nowGlucoseDataAsHexString);
 			return nowGlucoseDataAsHexString;
 		}
