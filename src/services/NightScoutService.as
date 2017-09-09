@@ -321,7 +321,7 @@ package services
 					!=
 				LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_ACTUAL_QBLOX_SUBSCRIPTION_TAG)))
 			) {
-				myTrace("sync, url and secret tested, device token not empty and not subscribed, so registering now for push notifications");
+				myTrace("sync, url and secret tested, device token not empty and not subscribed, calling BackGroundFetchService.registerPushNotification");
 				BackGroundFetchService.registerPushNotification(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_WISHED_QBLOX_SUBSCRIPTION_TAG));
 			}
 				

@@ -236,6 +236,8 @@ package services
 		}
 		
 		public static function registerPushNotification(newTagList:String ):void {
+			myTrace("in registerPushNotification, but quickblox registration is disabled, returning");
+			return;//quick blox registration disabled
 			if (QBSessionBusy) {
 				myTrace("quickblox-trace : registerPushNotification not executed because QBSessionBusy, setting LOCAL_SETTING_SUBSCRIBED_TO_PUSH_NOTIFICATIONS to false");
 				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_SUBSCRIBED_TO_PUSH_NOTIFICATIONS, "false");
