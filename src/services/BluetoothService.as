@@ -1264,7 +1264,7 @@ package services
 		
 		private static function getGlucose(rawGlucose:Number):Number {
 			// standard devicder for raw Libre data (1000 range) to 100 range
-			return (rawGlucose / 8.5);
+			return (rawGlucose * 117.64705);
 		}
 		
 		public static function nowGetGlucoseValue(input:ByteArray):Number {
