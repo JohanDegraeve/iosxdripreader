@@ -182,6 +182,20 @@ package databaseclasses
 		public static function transmitterIdKnown():Boolean {
 			return (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID) != "00000");
 		}
+		
+		public static function deviceType():String {
+			if (isDexcomG4()) 
+				return "G4";
+			if (isDexcomG5())
+				return "G5";
+			if (isBlueReader())
+				return "BlueReader";
+			if (isBluCon())
+				return "BluCon";
+			if (isLimitter())
+				return "Limitter";
+			return "unknown";
+		}
 
 		private static function myTrace(log:String):void {
 			Trace.myTrace("BlueToothDevice.as", log);
