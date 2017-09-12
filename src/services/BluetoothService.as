@@ -156,6 +156,7 @@ package services
 		private static var m_gotOneTimeUnknownCmd:Boolean = false;
 		private static var GET_SENSOR_AGE_DELAY_IN_SECONDS:int =  3 * 3600;
 		private static var m_getNowGlucoseDataCommand:Boolean = false;// to be sure we wait for a GlucoseData Block and not using another block
+		private static var FSLSensorAGe:Number;
 
 		private static function set activeBluetoothPeripheral(value:Peripheral):void
 		{
@@ -1120,7 +1121,6 @@ package services
 							// do something only once every 4 hours
 							bluconCurrentCommand = "010d0e0127";
 							myTrace("in processBLUCONTransmitterData, getSensorAge");
-							CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_TIME_STAMP_LAST_SENSOR_AGE_CHECK_IN_MS, (new Date()).valueOf().toString());
 						} else {
 							bluconCurrentCommand = "010d0e0103";
 							m_getNowGlucoseDataIndexCommand = true;//to avoid issue when gotNowDataIndex cmd could be same as getNowGlucoseData (case block=3)
@@ -1205,14 +1205,14 @@ package services
 				myTrace("in processBLUCONTransmitterData, SensorAge received");
 				
 				buffer.position = 0;
-				var sensorAge:int = sensorAge(buffer);
+				FSLSensorAGe = sensorAge(buffer);
 				
-				if ((sensorAge > 0) && (sensorAge < 200000)) {
+				if ((FSLSensorAGe > 0) && (FSLSensorAGe < 200000)) {
 				} else {
 					myTrace("in processBLUCONTransmitterData, setting sensor age to Number.NAN");
-					sensorAge = Number.NaN;
+					FSLSensorAGe = Number.NaN;
 				}
-				
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_TIME_STAMP_LAST_SENSOR_AGE_CHECK_IN_MS, (new Date()).valueOf().toString());
 				bluconCurrentCommand = "010d0e0103";
 				m_getNowGlucoseDataIndexCommand = true;//to avoid issue when gotNowDataIndex cmd could be same as getNowGlucoseData (case block=3)
 				myTrace("in processBLUCONTransmitterData, getNowGlucoseDataIndexCommand");
@@ -1239,9 +1239,9 @@ package services
 				
 				myTrace("in processBluconTransmitterData, dispatching transmitter data");
 				var blueToothServiceEvent:BlueToothServiceEvent = new BlueToothServiceEvent(BlueToothServiceEvent.TRANSMITTER_DATA);
-				blueToothServiceEvent.data = new TransmitterDataBluConPacket(currentGlucose, 0, 0, sensorAge, (new Date()).valueOf());
+				blueToothServiceEvent.data = new TransmitterDataBluConPacket(currentGlucose, 0, 0, FSLSensorAGe, (new Date()).valueOf());
 				_instance.dispatchEvent(blueToothServiceEvent);
-
+				FSLSensorAGe = Number.NaN;
 				
 				bluconCurrentCommand = "010c0e00";
 				myTrace("in processBLUCONTransmitterData, Send sleep cmd");
@@ -1273,10 +1273,10 @@ package services
 			input.position = 3 + 5;
 			var value3plus5:int = input.readByte();
 
-			var sensorAge:int = ((value3plus5 & 0xFF) << 8) | (value3plus4 & 0xFF);
-			myTrace("in sensorAge sensorAge = " + sensorAge);
+			var returnValue:int = ((value3plus5 & 0xFF) << 8) | (value3plus4 & 0xFF);
+			myTrace("in sensorAge, sensorAge = " + returnValue);
 			
-			return sensorAge;
+			return returnValue;
 		}
 		
 		private static function blockNumberForNowGlucoseData(input:ByteArray):String {
@@ -1309,7 +1309,7 @@ package services
 		}
 		
 		private static function getGlucose(rawGlucose:Number):Number {
-			// standard devicder for raw Libre data (1000 range) to 100 range
+			//LIBRE_MULTIPLIER
 			return (rawGlucose * 117.64705);
 		}
 		
@@ -1375,7 +1375,6 @@ package services
 			
 			var sensor_battery_level:Number; 
 			var bridge_battery_level:Number;
-			var sensorAge:Number;
 			if (bufferAsStringSplitted.length > 1) {
 				sensor_battery_level = new Number(bufferAsStringSplitted[1]);
 				myTrace("in processBlueReaderTransmitterData, sensor_battery_level = " + sensor_battery_level.toString());
@@ -1383,15 +1382,16 @@ package services
 					bridge_battery_level = new Number(bufferAsStringSplitted[2]);
 					myTrace("in processBlueReaderTransmitterData, fsl_battery_level = " + bridge_battery_level.toString());
 					if (bufferAsStringSplitted.length > 3) {
-						sensorAge = new Number(bufferAsStringSplitted[3]);
-						myTrace("in processBlueReaderTransmitterData, sensorAge = " + sensorAge.toString());
+						FSLSensorAGe = new Number(bufferAsStringSplitted[3]);
+						myTrace("in processBlueReaderTransmitterData, sensorAge = " + FSLSensorAGe.toString());
 					}
 				}
 			}
 			myTrace("in processBlueReaderTransmitterData, dispatching transmitter data");
 			var blueToothServiceEvent:BlueToothServiceEvent = new BlueToothServiceEvent(BlueToothServiceEvent.TRANSMITTER_DATA);
-			blueToothServiceEvent.data = new TransmitterDataBlueReaderPacket(raw_data, sensor_battery_level, bridge_battery_level, sensorAge, (new Date()).valueOf());
+			blueToothServiceEvent.data = new TransmitterDataBlueReaderPacket(raw_data, sensor_battery_level, bridge_battery_level, FSLSensorAGe, (new Date()).valueOf());
 			_instance.dispatchEvent(blueToothServiceEvent);
+			FSLSensorAGe = Number.NaN;
 		}
 		
 		private static function processG4TransmitterData(buffer:ByteArray):void {

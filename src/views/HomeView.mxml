@@ -651,7 +651,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 							message += " " + sensorAge;
 						} else {
 							var sensorAgeInDays:int = (new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FSL_SENSOR_AGE)))/1440;
-							message += sensorAgeInDays;
+							message += " "+ sensorAgeInDays + " " + ModelLocator.resourceManagerInstance.getString('homeview','days');
 						}
 					}
 					
@@ -995,13 +995,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 				if (!largeBGLabelGroup.includeInLayout)
 					return;
 				if (largeBGLabel.width > 1 * iosxdripreader.deviceScreenWidth) {
-					myTrace("in largeBGLabel_updateCompleteHandler, decreasing fontSizeForLargeBGLabel");
+					//myTrace("in largeBGLabel_updateCompleteHandler, decreasing fontSizeForLargeBGLabel");
 					fontSizeForLargeBGLabel = fontSizeForLargeBGLabel * 0.9;
 				} else if (largeBGLabel.width < 0.9 * iosxdripreader.deviceScreenWidth) {
 					if (largeBGLabel.height < 0.95 * largeBGLabelGroup.height) {
 						fontSizeForLargeBGLabel = fontSizeForLargeBGLabel * 1.1;
-						myTrace("in largeBGLabel_updateCompleteHandler, increasing fontSizeForLargeBGLabel to " + fontSizeForLargeBGLabel + ", largeBGLabel.height = " + largeBGLabel.height + ", largebglabelgroup.height= " + largeBGLabelGroup.height);
-						myTrace("labelheight = " + largeBGLabel.height);
+						//myTrace("in largeBGLabel_updateCompleteHandler, increasing fontSizeForLargeBGLabel to " + fontSizeForLargeBGLabel + ", largeBGLabel.height = " + largeBGLabel.height + ", largebglabelgroup.height= " + largeBGLabelGroup.height);
+						//myTrace("labelheight = " + largeBGLabel.height);
 					}
 				}  
 			}
