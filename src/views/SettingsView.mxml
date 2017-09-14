@@ -599,6 +599,11 @@
 			}
 			
 			public static function changeTransmitterType():void {
+				if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_LICENSE_INFO_ACCEPTED) == "false") {
+					HomeView.dialogServiceInitiated(null);
+					return;
+				}
+				
 				var selectedTransmitterType:int = 0;
 				var currentType:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE);
 				if (currentType.toUpperCase() == "G5") {

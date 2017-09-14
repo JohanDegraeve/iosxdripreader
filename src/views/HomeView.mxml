@@ -343,24 +343,32 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 				}
 			}
 			
-			private static function dialogServiceInitiated(event:Event):void {
-				/*if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_LICENSE_INFO_CONFIRMED) == "false") {
+			public static function dialogServiceInitiated(event:Event):void {
+				if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_LICENSE_INFO_ACCEPTED) == "false") {
 					var alert:DialogView = Dialog.service.create(
 						new AlertBuilder()
-						.setTitle("xDrip for iOS")
+						.setTitle("xDrip")
 						.setMessage(ModelLocator.resourceManagerInstance.getString('homeview', "licenseinfo"))//info about buttons top right corner
-						.addOption("Ok", DialogAction.STYLE_POSITIVE, 1)
+						.addOption(ModelLocator.resourceManagerInstance.getString('homeview', "iagree"), DialogAction.STYLE_POSITIVE, 0)
+						.addOption(ModelLocator.resourceManagerInstance.getString('homeview', "idontagree"), DialogAction.STYLE_CANCEL, 1)
 						.build()
 					);
 					alert.addEventListener(DialogViewEvent.CLOSED, licenseInfoConfirmed);
 					DialogService.addDialog(alert);
-					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_LICENSE_INFO_CONFIRMED,"true");
-				} else {*/
+				} else {
 					licenseInfoConfirmed(null);
-				//}
+				}
 			}
 			
-			private static function licenseInfoConfirmed(ev:Event):void {
+			private static function licenseInfoConfirmed(ev:DialogViewEvent):void {
+				if (ev != null) {
+					if (ev.index == 1) {
+						return;
+					}
+				}
+
+				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_LICENSE_INFO_ACCEPTED,"true");
+				
 				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_INITIAL_SELECTION_PERIPHERAL_TYPE_DONE) == "false") {
 					SettingsView.changeTransmitterType();
 					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_INITIAL_SELECTION_PERIPHERAL_TYPE_DONE,"true");
