@@ -54,7 +54,7 @@ Alert Types can be re-used for different types of alerts.
 # To Install the app.
 
 The application is not available on iTunes and must be signed for your device.
-If you have an Apple Developer Account then you can easily do this yourself as described here : https://github.com/dabear/iphoneipa-resign
+If you have an Apple Developer Account then you can do this yourself as described here : https://github.com/dabear/iphoneipa-resign If that doesn't work send me your UDID anyway.
 The ipa file to download is here, take the latest release : https://github.com/JohanDegraeve/iosxdripreader/releases
 Regulary check for updates.
 
@@ -68,13 +68,7 @@ Then
 Easist is if you have xCode on a Mac : Connect your iphone to your mac,
 Select "Window", "Devices", go to "Installed apps", click the + sign, then select the ipa file.
 
-Or if you don't have xCode you can use iTunes 
-
-* Open iTunes, select File > Add to Library and add the application IPA file to iTunes (or drag and drop it onto the iTunes dock icon).
-* Locate your new application in Apps. (see http://wwwimages.adobe.com/content/dam/Adobe/en/devnet/air/articles/packaging-air-apps-ios/fig_18.jpg)
-* Connect your iOS device to your computer's USB port.
-* In iTunes, select the attached device and make sure your application is selected to be synced on the device and then sync the device (see http://wwwimages.adobe.com/content/dam/Adobe/en/devnet/air/articles/packaging-air-apps-ios/fig_19.jpg)
-* Locate the application on the device and run it. (See http://wwwimages.adobe.com/content/dam/Adobe/en/devnet/air/articles/packaging-air-apps-ios/fig_20.jpg and http://wwwimages.adobe.com/content/dam/Adobe/en/devnet/air/articles/packaging-air-apps-ios/fig_20.jpg)
+Or with iTunes, just drag and drop the ipa file onto the 'On My Device' panel in the left hand column of iTunes. The status bar should indicate that it is syncing the information, and the app should load.
 
 # To compile (only if you want to develop):
 - install Flash Builder 4.7 with FLex SDK 4.15.0, AIR 22.0 en_US
