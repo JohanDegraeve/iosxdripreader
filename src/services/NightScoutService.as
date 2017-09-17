@@ -1,12 +1,7 @@
 package services
 {
-	import com.distriqt.extension.dialog.Dialog;
-	import com.distriqt.extension.dialog.DialogView;
-	import com.distriqt.extension.dialog.builders.AlertBuilder;
-	import com.distriqt.extension.dialog.objects.DialogAction;
 	import com.distriqt.extension.networkinfo.NetworkInfo;
 	import com.distriqt.extension.networkinfo.events.NetworkInfoEvent;
-	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
 	import com.hurlant.crypto.hash.SHA1;
 	import com.hurlant.util.Hex;
 	
@@ -32,7 +27,6 @@ package services
 	import events.BackGroundFetchServiceEvent;
 	import events.CalibrationServiceEvent;
 	import events.IosXdripReaderEvent;
-	import events.NightScoutServiceEvent;
 	import events.SettingsServiceEvent;
 	import events.TransmitterServiceEvent;
 	
@@ -133,6 +127,8 @@ package services
 				CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_URL_AND_API_SECRET_TESTED) == "true"
 			) {
 				sync();
+			} else {
+				syncFinished();
 			}
 			
 			function initialCalibrationReceived(event:CalibrationServiceEvent):void {
@@ -298,13 +294,12 @@ package services
 		}
 		
 		public static function sync(event:Event = null):void {
-			myTrace("calling NightScoutService.sync");
+			myTrace("in syncc");
 			
 			if (!NetworkInfo.networkInfo.isReachable()) {
 				myTrace("network not reachable, calling BackGroundFetchService.callCompletionHandler although this wouldn't make any sense, no network, probably backgroundfetch is not waiting");
 				BackGroundFetchService.callCompletionHandler(BackGroundFetchService.NO_DATA);
-				return;
-				myTrace("and return");
+				syncFinished();
 			}
 
 			//myTrace("LOCAL_SETTING_DEVICE_TOKEN_ID = " + LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_DEVICE_TOKEN_ID));
@@ -341,12 +336,12 @@ package services
 				||
 				CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_URL_AND_API_SECRET_TESTED) ==  "false") {
 				BackGroundFetchService.callCompletionHandler(BackGroundFetchService.NO_DATA);
-				return;
+				syncFinished();
 			}
 			
 			if (Calibration.allForSensor().length < 2) {
 				BackGroundFetchService.callCompletionHandler(BackGroundFetchService.NO_DATA);
-				return;
+				syncFinished();
 			}
 			
 			myTrace("setting syncRunning = true");
@@ -410,6 +405,7 @@ package services
 				myTrace("setting syncRunning = false");
 				BackGroundFetchService.callCompletionHandler(BackGroundFetchService.NO_DATA);
 				syncRunning = false;
+				syncFinished();
 			}
 		}
 		
@@ -419,7 +415,7 @@ package services
 			
 			myTrace("upload_to_nightscout_successfull");
 			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_SYNC_TIMESTAMP, (new Date()).valueOf().toString());
-			syncFinished(true);
+			syncFinished();
 		}
 		
 		private static function nightScoutUploadFailed(event:BackGroundFetchServiceEvent):void {
@@ -435,17 +431,14 @@ package services
 			}
 			
 			myTrace("upload_to_nightscout_unsuccessfull" + errorMessage);
-			syncFinished(false);
+			syncFinished();
 		}
 		
 		private static function defaultErrorFunction(event:BackGroundFetchServiceEvent):void {
-			myTrace("in defaultErrorFunction");
 			if(functionToCallAtUpOrDownloadFailure != null) {
-				myTrace("in defaultErrorFunction functionToCallAtUpOrDownloadFailure != null");
 				functionToCallAtUpOrDownloadFailure(event);
 			}
 			else {
-				myTrace("in defaultErrorFunction functionToCallAtUpOrDownloadFailure = null");
 				BackGroundFetchService.callCompletionHandler(BackGroundFetchService.FETCH_FAILED);
 			}
 			
@@ -453,13 +446,10 @@ package services
 			functionToCallAtUpOrDownloadFailure = null;
 		}
 		private static function defaultSuccessFunction(event:BackGroundFetchServiceEvent):void {
-			myTrace("in defaultSuccessFunction");
 			if(functionToCallAtUpOrDownloadSuccess != null) {
-				myTrace("in defaultSuccessFunction functionToCallAtUpOrDownloadSuccess != null");
 				functionToCallAtUpOrDownloadSuccess(event);
 			}
 			else {
-				myTrace("in defaultSuccessFunction functionToCallAtUpOrDownloadSuccess = null");
 				BackGroundFetchService.callCompletionHandler(BackGroundFetchService.NEW_DATA);
 			}
 			
@@ -487,10 +477,11 @@ package services
 			Trace.myTrace("NightScoutService.as", log);
 		}
 		
-		private static function syncFinished(result:Boolean):void {
+		private static function syncFinished():void {
 			myTrace("syncfinished");
 			myTrace("setting syncRunning = false");
 			syncRunning = false;
+			//DexcomShareService.sync();
 		}
 		
 	}

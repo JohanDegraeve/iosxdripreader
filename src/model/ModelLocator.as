@@ -35,6 +35,8 @@ package model
 	import spark.components.ViewNavigator;
 	import spark.core.ContentCache;
 	
+	import Utilities.UniqueId;
+	
 	import databaseclasses.BgReading;
 	import databaseclasses.Database;
 	import databaseclasses.LocalSettings;
@@ -49,14 +51,13 @@ package model
 	import services.BackGroundFetchService;
 	import services.BluetoothService;
 	import services.CalibrationService;
+	import services.DexcomShareService;
 	import services.HealthKitService;
 	import services.NightScoutService;
 	import services.NotificationService;
 	import services.TransmitterService;
 	
 	import views.HomeView;
-	
-	import Utilities.UniqueId;
 
 	/**
 	 * holds arraylist needed for displaying etc, like bgreadings of last 24 hours, loggings, .. 
@@ -218,8 +219,8 @@ package model
 							AlarmService.init();
 							HealthKitService.init();
 							
+							DexcomShareService.init();
 							NightScoutService.init();
-							NightScoutService.sync(null);
 							
 							//test blockNumberForNowGlucoseData
 							/*var bufferasstring:String = "8BDE03423F07115203C8A0";
