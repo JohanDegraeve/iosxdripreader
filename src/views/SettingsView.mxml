@@ -526,7 +526,7 @@
 					message += " (5 characters)";
 				} else if (BlueToothDevice.isDexcomG5()) {
 					message += " (6 characters)";
-				} else if (BlueToothDevice.isBluCon()) {
+				} else if (BlueToothDevice.isBluKon()) {
 					message += " (BLUxxxxx)";
 				} 
 				var alert:DialogView = Dialog.service.create(
@@ -561,10 +561,10 @@
 						}					
 					}
 					
-					if (BlueToothDevice.isBluCon()) {
+					if (BlueToothDevice.isBluKon()) {
 						if (((event.values[0] as String).length != 8) || ((event.values[0] as String).toUpperCase().indexOf("BLU") < 0)) {
 							var alertMessage:String =
-								(ModelLocator.resourceManagerInstance.getString("transmitterservice","blucon_transmitter_id_should_be_five_chars"));
+								(ModelLocator.resourceManagerInstance.getString("transmitterservice","blukon_transmitter_id_should_be_five_chars"));
 							if (calledFromHomeView) {
 								alertMessage += " " + (ModelLocator.resourceManagerInstance.getString("transmitterservice","set_transmitter_id_in_settings"));
 							}
@@ -612,11 +612,11 @@
 					selectedTransmitterType = 2;
 				} else if (currentType.toUpperCase() == "BLUEREADER") {
 					selectedTransmitterType = 3;
-				}  else if (currentType.toUpperCase() == "BLUCON") {
+				}  else if (currentType.toUpperCase() == "BLUKON") {
 					selectedTransmitterType = 4;
 				}
 				var transmitterTypeNames:Array = new Array();
-				transmitterTypeNames.push("G4", "G5", "Limitter", "Bluereader", "BluCon");
+				transmitterTypeNames.push("G4", "G5", "Limitter", "Bluereader", "BluKon");
 				
 				var picker:PickerDialogView = Dialog.service.create(
 					new PickerDialogBuilder()
@@ -640,9 +640,9 @@
 					transmitterIdText = "00000";
 					//transmitterTypeText = newTransmitterType;	
 					resetAllTransmitterBatteryLevels();
-					if (BlueToothDevice.isBluCon()) {
+					if (BlueToothDevice.isBluKon()) {
 						DialogService.openSimpleDialog("Warning",
-							"Blucon is still under development, please change to another transmittertype");
+							"Blukon is still under development, please change to another transmittertype");
 					} else if (BlueToothDevice.isLimitter()) {
 						DialogService.openSimpleDialog("Warning",
 							"Limitter is not yet tested, if you want to support testing, please send me an e-mail");
@@ -661,7 +661,7 @@
 				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_G4_TRANSMITTER_BATTERY_VOLTAGE, "0");
 				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_FSL_SENSOR_BATTERY_LEVEL, "0");
 				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_BLUEREADER_BATTERY_LEVEL, "0");
-				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_BLUCON_BATTERY_LEVEL, "0");
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_BLUKON_BATTERY_LEVEL, "0");
 			}
 			
 			private function NSLog_clickHandler(event:MouseEvent):void {

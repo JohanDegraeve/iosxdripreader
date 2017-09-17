@@ -58,7 +58,7 @@ package events
 		public static const DEVICE_NOT_PAIRED:String = "DeviceNotPaired";
 		public static const CHARACTERISTIC_UPDATE:String = "CharacteristicUpdate";
 		/**
-		 * for BLUCON 
+		 * for BLUKON 
 		 */
 		public static const GLUCOSE_PATCH_READ_ERROR:String = "glucosePatchReadError";
 		

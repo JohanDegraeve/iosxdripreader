@@ -1,6 +1,6 @@
 package model
 {
-	public class TransmitterDataBluConPacket extends TransmitterData
+	public class TransmitterDataBluKonPacket extends TransmitterData
 	{
 		private var _bgValue:Number;
 		
@@ -38,7 +38,7 @@ package model
 		}
 		
 		
-		public function TransmitterDataBluConPacket(rawData:Number, sensorBatteryLevel:Number, bridgeBatteryLevel:Number, sensorAge:Number, timestamp:Number)
+		public function TransmitterDataBluKonPacket(rawData:Number, sensorBatteryLevel:Number, bridgeBatteryLevel:Number, sensorAge:Number, timestamp:Number)
 		{
 			_bgValue = rawData;
 			_sensorBatteryLevel = sensorBatteryLevel;

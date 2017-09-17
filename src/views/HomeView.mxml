@@ -639,18 +639,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 							message += (new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BLUEREADER_BATTERY_LEVEL)))/1000;
 						}
 						
-					} else if (BlueToothDevice.isBluCon()) {
+					} else if (BlueToothDevice.isBluKon()) {
 						message += ModelLocator.resourceManagerInstance.getString('homeview','battery_level');
-						var batteryLevel:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BLUCON_BATTERY_LEVEL);
+						var batteryLevel:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BLUKON_BATTERY_LEVEL);
 						if (batteryLevel == "0") {
 							batteryLevel = ModelLocator.resourceManagerInstance.getString('homeview','unknown');
 							message += " " + batteryLevel;
 						} else {
-							message += (new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BLUCON_BATTERY_LEVEL)))/1000;
+							message += (new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BLUKON_BATTERY_LEVEL)))/1000;
 						}
 					}
 					
-					if (BlueToothDevice.isBluCon() || BlueToothDevice.isBlueReader()) {
+					if (BlueToothDevice.isBluKon() || BlueToothDevice.isBlueReader()) {
 						message += '\n';
 						message += ModelLocator.resourceManagerInstance.getString('homeview','sensor_age');
 						var sensorAge:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FSL_SENSOR_AGE);

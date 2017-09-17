@@ -105,7 +105,7 @@
 		 * G5<br>
 		 * Limitter<br>
 		 * Bluereader<br>
-		 * BluCon<br>
+		 * BluKon<br>
 		 * <br>
 		 * Default value is an empty string, peripheral type unknown
 		  */
@@ -183,10 +183,10 @@
 		  */
 		 public static const COMMON_SETTING_FSL_SENSOR_AGE:int = 37;
 		 /**
-		  * For blucon<br>
+		  * For blukon<br>
 		  * value 0 means level not known
 		  */
-		 public static const COMMON_SETTING_BLUCON_BATTERY_LEVEL:int = 38;
+		 public static const COMMON_SETTING_BLUKON_BATTERY_LEVEL:int = 38;
 		 public static const COMMON_SETTING_TIME_STAMP_LAST_SENSOR_AGE_CHECK_IN_MS:int = 39;
 
 		 private static var commonSettings:Array = [
@@ -228,7 +228,7 @@
 			 "0",//COMMON_SETTING_FSL_SENSOR_BATTERY_LEVEL
 			 "0",//COMMON_SETTING_BLUEREADER_BATTERY_LEVEL
 			 "0",//COMMON_SETTING_FSL_SENSOR_AGE
-			 "0",//COMMON_SETTING_BLUCON_BATTERY_LEVEL
+			 "0",//COMMON_SETTING_BLUKON_BATTERY_LEVEL
 			 "0"//COMMON_SETTING_TIME_STAMP_LAST_SENSOR_AGE_CHECK_IN_MS
 		 ];
 		 

@@ -41,7 +41,7 @@ package services
 	import events.TransmitterServiceEvent;
 	
 	import model.ModelLocator;
-	import model.TransmitterDataBluConPacket;
+	import model.TransmitterDataBluKonPacket;
 	import model.TransmitterDataBlueReaderBatteryPacket;
 	import model.TransmitterDataBlueReaderPacket;
 	import model.TransmitterDataG5Packet;
@@ -265,7 +265,7 @@ package services
 						}
 					}
 					BluetoothService.writeBlueReaderCharacteristic(Utilities.UniqueId.hexStringToByteArray("6C"));
-				} else if (be.data is TransmitterDataBluConPacket) {
+				} else if (be.data is TransmitterDataBluKonPacket) {
 					var lastBgRading:BgReading = BgReading.lastNoSensor();
 					if (lastBgRading != null) {
 						if (lastBgRading.timestamp + ((4*60 + 15) * 1000) >= (new Date()).valueOf()) {
@@ -273,18 +273,18 @@ package services
 							return;
 						}
 					}
-					var transmitterDataBluConPacket:TransmitterDataBluConPacket = be.data as TransmitterDataBluConPacket;
-					if (!isNaN(transmitterDataBluConPacket.bridgeBatteryLevel)) {
-						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_BLUCON_BATTERY_LEVEL, transmitterDataBluConPacket.bridgeBatteryLevel.toString());
+					var transmitterDataBluKonPacket:TransmitterDataBluKonPacket = be.data as TransmitterDataBluKonPacket;
+					if (!isNaN(transmitterDataBluKonPacket.bridgeBatteryLevel)) {
+						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_BLUKON_BATTERY_LEVEL, transmitterDataBluKonPacket.bridgeBatteryLevel.toString());
 					}
-					if (!isNaN(transmitterDataBluConPacket.sensorBatteryLevel)) {
-						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_FSL_SENSOR_BATTERY_LEVEL, transmitterDataBluConPacket.sensorBatteryLevel.toString());
+					if (!isNaN(transmitterDataBluKonPacket.sensorBatteryLevel)) {
+						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_FSL_SENSOR_BATTERY_LEVEL, transmitterDataBluKonPacket.sensorBatteryLevel.toString());
 					}
-					if (!isNaN(transmitterDataBluConPacket.sensorAge)) {
-						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_FSL_SENSOR_AGE, transmitterDataBluConPacket.sensorAge.toString());
+					if (!isNaN(transmitterDataBluKonPacket.sensorAge)) {
+						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_FSL_SENSOR_AGE, transmitterDataBluKonPacket.sensorAge.toString());
 					}
 					BgReading.
-						create(transmitterDataBluConPacket.bgvalue, transmitterDataBluConPacket.bgvalue)
+						create(transmitterDataBluKonPacket.bgvalue, transmitterDataBluKonPacket.bgvalue)
 						.saveToDatabaseSynchronous();
 					
 					//dispatch the event that there's new data

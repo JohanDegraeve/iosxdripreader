@@ -140,8 +140,9 @@ package databaseclasses
 			return (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE).toUpperCase() == "BLUEREADER");
 		}
 		
-		public static function isBluCon():Boolean {
-			return (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE).toUpperCase() == "BLUCON");
+		public static function isBluKon():Boolean {
+			return (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE).toUpperCase() == "BLUKON" ||
+				CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE).toUpperCase() == "BLUCON");
 		}
 		
 		public static function isLimitter():Boolean {
@@ -149,12 +150,12 @@ package databaseclasses
 		}
 
 		/**
-		 * for type BlueReader, Limitter, BluCon, ie devices that transmit FSL sensor data<br>
+		 * for type BlueReader, Limitter, BluKon, ie devices that transmit FSL sensor data<br>
 		 * important for calibration
 		 *  
 		 */
 		public static function isTypeLimitter():Boolean {
-			return (isBlueReader() || isBluCon() || isLimitter());
+			return (isBlueReader() || isBluKon() || isLimitter());
 		}
 		
 		/**
@@ -162,7 +163,7 @@ package databaseclasses
 		 * For others like xdrip, bluereader, etc... scanning can only start if user initiates it 
 		 */
 		public static function alwaysScan():Boolean {
-			return (isDexcomG5() || isBluCon()); 
+			return (isDexcomG5() || isBluKon()); 
 		}
 
 		/**
@@ -176,7 +177,7 @@ package databaseclasses
 		}
 		
 		public static function needsTransmitterId():Boolean {
-			return (isDexcomG5() || isDexcomG4() || isBluCon());
+			return (isDexcomG5() || isDexcomG4() || isBluKon());
 		}
 		
 		public static function transmitterIdKnown():Boolean {
@@ -190,8 +191,8 @@ package databaseclasses
 				return "G5";
 			if (isBlueReader())
 				return "BlueReader";
-			if (isBluCon())
-				return "BluCon";
+			if (isBluKon())
+				return "BluKon";
 			if (isLimitter())
 				return "Limitter";
 			return "unknown";
