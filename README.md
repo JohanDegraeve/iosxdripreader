@@ -63,12 +63,16 @@ Send my the UDID of your device in a mail please. (johan.degraeve@gmail.com).
 To retrieve your UDID you must use iTunes (apps don't give you the right UDID). Here you can find an explanation how to find the UDID http://whatsmyudid.com/ . Follow the instructions "iTunes".
 I'll update the latest release version with a release signed for your device.
 
-Then
+Up to before iTunes 12.7 it was possible to install an IPA with iTunes, this seems not possible anymore.
 
 Easist is if you have xCode on a Mac : Connect your iphone to your mac,
 Select "Window", "Devices", go to "Installed apps", click the + sign, then select the ipa file.
 
-Or with iTunes, just drag and drop the ipa file onto the 'On My Device' panel in the left hand column of iTunes. The status bar should indicate that it is syncing the information, and the app should load.
+Alternative for Mac is "Apple 2 Configurator". Download from Apple store, install, open, connect device, then "Add", "Apps", "Select from My Mac"
+
+Also working on Mac is http://www.i-funbox.com/en_download.html. Install, connect your iphone and chose "Install App"
+
+On Windows, try http://www.i-funbox.com/en_download.html
 
 # To compile (only if you want to develop):
 - install Flash Builder 4.7 with FLex SDK 4.15.0, AIR 22.0 en_US
