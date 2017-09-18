@@ -128,7 +128,9 @@ package Utilities
 				additionalInfoToWrite += (Sensor.getActiveSensor() == null ? ".\n": dateFormatter.format(new Date(Sensor.getActiveSensor().startedAt)) + ".\n");
 				if (Sensor.getActiveSensor() != null) {
 					additionalInfoToWrite += "Numer of calibrations for this sensor = " + Calibration.allForSensor().length + ".\n";
-					additionalInfoToWrite += "Last calibration = " + dateFormatter.format(new Date((Calibration.allForSensor().getItemAt(Calibration.allForSensor().length - 1) as Calibration).timestamp))  + ".\n";
+					if (Calibration.allForSensor().length > 0) {
+						additionalInfoToWrite += "Last calibration = " + dateFormatter.format(new Date((Calibration.allForSensor().getItemAt(Calibration.allForSensor().length - 1) as Calibration).timestamp))  + ".\n";
+					}
 				}
 				BackgroundFetch.writeStringToFile(filePath, additionalInfoToWrite);
 			} else {
