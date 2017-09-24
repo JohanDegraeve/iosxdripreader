@@ -759,17 +759,20 @@ package services
 			} else if (BlueToothDevice.isDexcomG4()) {
 				for each (o in activeBluetoothPeripheral.services) {
 					if (HM_10_SERVICE_G4.indexOf(o.uuid as String) > -1) {
+						myTrace("peripheral_discoverCharacteristicsHandler, found service " + HM_10_SERVICE_G4);
 						break;
 					}
 					servicesIndex++;
 				}
 				for each (o in activeBluetoothPeripheral.services[servicesIndex].characteristics) {
 					if (HM_RX_TX_G4.indexOf(o.uuid as String) > -1) {
+						myTrace("peripheral_discoverCharacteristicsHandler, found characteristic " + HM_RX_TX_G4);
 						break;
 					}
 					G4CharacteristicsIndex++;
 				}
 				G4characteristic = event.peripheral.services[servicesIndex].characteristics[G4CharacteristicsIndex];
+				myTrace("subscribing to G4characteristic");
 				if (!activeBluetoothPeripheral.subscribeToCharacteristic(G4characteristic))
 				{
 					myTrace("Subscribe to characteristic failed due to invalid adapter state.");
@@ -1525,7 +1528,7 @@ package services
 			} else if (uuid.toUpperCase() == HM_RX_TX_G4.toUpperCase()) {
 				return "HM_RX_TX_G4";
 			} 
-			return "unkonwn";
+			return uuid + ", unknown characteristic uuid";
 		}
 	}
 }
