@@ -165,6 +165,10 @@
 		 public static const COMMON_SETTING_CALIBRATION_REQUEST_ALERT:int = 32;
 		 public static const COMMON_SETTING_VERY_LOW_ALERT:int = 33;
 		 public static const COMMON_SETTING_VERY_HIGH_ALERT:int = 34;
+		 /**
+		  * 0 = never synced 
+		  */
+		 public static const COMMON_SETTING_DEXCOMSHARE_SYNC_TIMESTAMP:int = 35;
 		 
 		 /**
 		 * For limitter and/or bluereaderw<br>
@@ -187,7 +191,13 @@
 		  * value 0 means level not known
 		  */
 		 public static const COMMON_SETTING_BLUKON_BATTERY_LEVEL:int = 38;
+		 
 		 public static const COMMON_SETTING_TIME_STAMP_LAST_SENSOR_AGE_CHECK_IN_MS:int = 39;
+		 
+		 /**
+		 * dexcom receiver serial number
+		  */
+		 public static const COMMON_SETTING_RECEIVER_SN:int = 40;
 
 		 private static var commonSettings:Array = [
 			 "0",//COMMON_SETTING_CURRENT_SENSOR
@@ -229,7 +239,9 @@
 			 "0",//COMMON_SETTING_BLUEREADER_BATTERY_LEVEL
 			 "0",//COMMON_SETTING_FSL_SENSOR_AGE
 			 "0",//COMMON_SETTING_BLUKON_BATTERY_LEVEL
-			 "0"//COMMON_SETTING_TIME_STAMP_LAST_SENSOR_AGE_CHECK_IN_MS
+			 "0",//COMMON_SETTING_TIME_STAMP_LAST_SENSOR_AGE_CHECK_IN_MS
+			 "0",//COMMON_SETTING_DEXCOMSHARE_SYNC_TIMESTAMP
+			 "SM00000000"//COMMON_SETTING_RECEIVER_SN
 		 ];
 		 
 		 public function CommonSettings()

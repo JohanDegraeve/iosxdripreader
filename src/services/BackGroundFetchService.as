@@ -141,7 +141,7 @@ package services
 		}
 		
 		public static function callCompletionHandler(result:String):void {
-			myTrace("callCompletionhandler with result " + result);
+			myTrace("in callCompletionhandler , result = " + result);
 			BackgroundFetch.callCompletionHandler(result);
 		}
 		
@@ -196,6 +196,10 @@ package services
 		private static function loadRequestError(event:BackgroundFetchEvent):void {
 			myTrace("loadRequestError");
 			myTrace("error = " + (event.data.error as String));
+			if (event.data.text)
+				myTrace("text = " + (event.data.text as String));
+			if (event.data.type)
+				myTrace("type = " + (event.data.type as String));
 			
 			var backgroundFetchServiceResult:BackGroundFetchServiceEvent = new BackGroundFetchServiceEvent(BackGroundFetchServiceEvent.LOAD_REQUEST_ERROR);
 			backgroundFetchServiceResult.data = new Object();

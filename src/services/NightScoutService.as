@@ -54,6 +54,10 @@ package services
 		private static var lastSyncrunningChangeDate:Number = (new Date()).valueOf();
 		private static const maxMinutesToKeepSyncRunningTrue:int = 1;
 		
+		public static function NightScoutSyncRunning():Boolean {
+			return syncRunning;
+		}
+		
 		private static function get syncRunning():Boolean
 		{
 			if (!_syncRunning)
@@ -185,7 +189,9 @@ package services
 						&&
 						CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_API_SECRET) != CommonSettings.DEFAULT_API_SECRET
 						&& 
-						!syncRunning) {
+						!syncRunning
+						&& 
+						!DexcomShareService.DexcomShareSyncRunning()) {
 						testNightScoutUrlAndSecret();
 					}
 				}
@@ -294,7 +300,7 @@ package services
 		}
 		
 		public static function sync(event:Event = null):void {
-			myTrace("in syncc");
+			myTrace("in sync");
 			
 			if (!NetworkInfo.networkInfo.isReachable()) {
 				myTrace("network not reachable, calling BackGroundFetchService.callCompletionHandler although this wouldn't make any sense, no network, probably backgroundfetch is not waiting");
@@ -324,6 +330,11 @@ package services
 			if (syncRunning) {
 				myTrace("NightScoutService.as sync : sync running already, return");
 				return;
+			} else {
+				if (DexcomShareService.DexcomShareSyncRunning()) {
+					myTrace("NightScoutService.as sync : dexcom sync running already, return");
+					return;
+				}
 			}
 			
 			functionToCallAtUpOrDownloadSuccess = null;
@@ -402,9 +413,7 @@ package services
 				myTrace("uploading_events_with_id" + logString);
 				createAndLoadURLRequest(_nightScoutEventsUrl, URLRequestMethod.POST, null, JSON.stringify(listOfReadingsAsArray), nightScoutUploadSuccess, nightScoutUploadFailed);
 			} else {
-				myTrace("setting syncRunning = false");
 				BackGroundFetchService.callCompletionHandler(BackGroundFetchService.NO_DATA);
-				syncRunning = false;
 				syncFinished();
 			}
 		}
@@ -481,7 +490,7 @@ package services
 			myTrace("syncfinished");
 			myTrace("setting syncRunning = false");
 			syncRunning = false;
-			//DexcomShareService.sync();
+			DexcomShareService.sync();
 		}
 		
 	}
