@@ -299,9 +299,9 @@ package services
 				{
 					case ApplicationStateEvent.CODE_LOCK:
 					case ApplicationStateEvent.CODE_HOME:
-						myTrace("NotificationService.as, setting ModelLocator.isInForeground = false");
+						myTrace("in application_deactivateHandler setting ModelLocator.isInForeground = false");
 						ModelLocator.isInForeground = false;
-						myTrace("NotificationService.as, setting active window to Home screen");
+						myTrace("in application_deactivateHandler setting active window to Home screen");
 						(ModelLocator.navigator.parentNavigator as TabbedViewNavigator).selectedIndex = 0;
 						myTrace("in application_deactivateHandler, setting systemIdleMode = SystemIdleMode.NORMAL");
 						NativeApplication.nativeApplication.systemIdleMode = SystemIdleMode.NORMAL;
@@ -325,20 +325,24 @@ package services
 		}
 		
 		public static function updateBgNotification(be:Event = null):void {
-			myTrace("NotificationService.as in updateAllNotifications");
+			myTrace("in updateBgNotification");
 			Notifications.service.cancel(ID_FOR_BG_VALUE);
 			
 			//start with bgreading notification
 			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_ALWAYS_ON_NOTIFICATION) == "true" && !ModelLocator.isInForeground) {
+				myTrace("in updateBgNotification notificatoin always on and not in foreground");
 				if (Calibration.allForSensor().length >= 2) {
 					var lastBgReading:BgReading = BgReading.lastNoSensor(); 
 					var valueToShow:String = "";
+					myTrace("in updateBgNotification Calibration.allForSensor().length >= 2");
 					if (lastBgReading != null) {
+						myTrace("in updateBgNotification lastbgreading != null");
 						if (lastBgReading.calculatedValue != 0) {
 							if ((new Date().getTime()) - (60000 * 11) - lastBgReading.timestamp > 0) {
 								valueToShow = "---"
 							} else {
 								valueToShow = BgGraphBuilder.unitizedString(lastBgReading.calculatedValue, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true");
+								myTrace("in updateBgNotification value to show calculated");
 								if (!lastBgReading.hideSlope) {
 									valueToShow += " " + lastBgReading.slopeArrow();
 								}

@@ -174,30 +174,34 @@
 		 * For limitter and/or bluereaderw<br>
 		 * value 0 means level not known
 		  */
-		 public static const COMMON_SETTING_FSL_SENSOR_BATTERY_LEVEL:int = 35;
+		 public static const COMMON_SETTING_FSL_SENSOR_BATTERY_LEVEL:int = 36;
 		 /**
 		  * For limitter and/or bluereaderw<br>
 		  * value 0 means level not known
 		  */
-		 public static const COMMON_SETTING_BLUEREADER_BATTERY_LEVEL:int = 36;
+		 public static const COMMON_SETTING_BLUEREADER_BATTERY_LEVEL:int = 37;
 		 /**
 		  * For limitter and/or bluereaderw<br>
 		  * value 0 means level not known<br>
 		  * time in minutes
 		  */
-		 public static const COMMON_SETTING_FSL_SENSOR_AGE:int = 37;
+		 public static const COMMON_SETTING_FSL_SENSOR_AGE:int = 38;
 		 /**
 		  * For blukon<br>
 		  * value 0 means level not known
 		  */
-		 public static const COMMON_SETTING_BLUKON_BATTERY_LEVEL:int = 38;
+		 public static const COMMON_SETTING_BLUKON_BATTERY_LEVEL:int = 39;
 		 
-		 public static const COMMON_SETTING_TIME_STAMP_LAST_SENSOR_AGE_CHECK_IN_MS:int = 39;
+		 public static const COMMON_SETTING_TIME_STAMP_LAST_SENSOR_AGE_CHECK_IN_MS:int = 40;
 		 
 		 /**
 		 * dexcom receiver serial number
 		  */
-		 public static const COMMON_SETTING_RECEIVER_SN:int = 40;
+		 public static const COMMON_SETTING_DEXCOM_SHARE_SERIALNUMBER:int = 41;
+		 public static const COMMON_SETTING_DEXCOM_SHARE_ACCOUNTNAME:int = 42;
+		 public static const COMMON_SETTING_DEXCOM_SHARE_PASSWORD:int = 43;
+		 public static const COMMON_SETTING_DEXCOM_SHARE_ON:int = 44;
+		 public static const COMMON_SETTING_DEXCOM_SHARE_US_URL:int = 45;
 
 		 private static var commonSettings:Array = [
 			 "0",//COMMON_SETTING_CURRENT_SENSOR
@@ -241,7 +245,11 @@
 			 "0",//COMMON_SETTING_BLUKON_BATTERY_LEVEL
 			 "0",//COMMON_SETTING_TIME_STAMP_LAST_SENSOR_AGE_CHECK_IN_MS
 			 "0",//COMMON_SETTING_DEXCOMSHARE_SYNC_TIMESTAMP
-			 "SM00000000"//COMMON_SETTING_RECEIVER_SN
+			 "SM00000000",//COMMON_SETTING_DEXCOM_SHARE_SERIALNUMBER
+			 "account name",//COMMON_SETTING_DEXCOM_SHARE_ACCOUNTNAME
+			 "password",//COMMON_SETTING_DEXCOM_SHARE_PASSWORD
+			 "false",//COMMON_SETTING_DEXCOM_SHARE_ON
+			 "false"//COMMON_SETTING_DEXCOM_SHARE_US_URL
 		 ];
 		 
 		 public function CommonSettings()

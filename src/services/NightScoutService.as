@@ -74,6 +74,7 @@ package services
 		private static function set syncRunning(value:Boolean):void
 		{
 			_syncRunning = value;
+			myTrace("setting syncRunning = " + value);
 			lastSyncrunningChangeDate = (new Date()).valueOf();
 		}
 		
@@ -355,7 +356,6 @@ package services
 				syncFinished();
 			}
 			
-			myTrace("setting syncRunning = true");
 			syncRunning = true;
 			
 			var listOfReadingsAsArray:Array = [];
@@ -488,7 +488,6 @@ package services
 		
 		private static function syncFinished():void {
 			myTrace("syncfinished");
-			myTrace("setting syncRunning = false");
 			syncRunning = false;
 			DexcomShareService.sync();
 		}

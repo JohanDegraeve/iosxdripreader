@@ -4,7 +4,6 @@ package services
 	
 	import flash.events.EventDispatcher;
 	import flash.net.URLRequestMethod;
-	import flash.net.URLVariables;
 	
 	import Utilities.Trace;
 	
@@ -18,6 +17,8 @@ package services
 
 	public class DexcomShareService extends EventDispatcher
 	{
+		[ResourceBundle("dexcomshareservice")]
+		
 		private static const US_SHARE_BASE_URL:String = "https://share2.dexcom.com/ShareWebServices/Services/";
 		private static const NON_US_SHARE_BASE_URL:String = "https://shareous1.dexcom.com/ShareWebServices/Services/";
 
@@ -32,6 +33,10 @@ package services
 		private static var _syncRunning:Boolean = false;
 		private static var lastSyncrunningChangeDate:Number = (new Date()).valueOf();
 		private static const maxMinutesToKeepSyncRunningTrue:int = 1;
+		private static var timeStampOfLastSSO_AuthenticateMaxAttemptsExceeed:Number = 0;
+		private static const timeToWaitAfterSSO_AuthenticateMaxAttemptsExceeedInMinutes = 10;
+
+		private static var dexcomShareUrl:String = "";
 
 		public static function DexcomShareSyncRunning():Boolean {
 			return syncRunning;
@@ -55,7 +60,7 @@ package services
 			myTrace("set syncRunning to " + value);
 			_syncRunning = value;
 			lastSyncrunningChangeDate = (new Date()).valueOf();
-			if (syncRunning == false)
+			if (_syncRunning == false)
 				dexcomShareStatus = "";
 		}
 
@@ -85,12 +90,51 @@ package services
 		
 		public static function sync():void {
 			myTrace("in sync");
-			syncRunning = true;
+			if (syncRunning) {
+				myTrace("sync running already, return");
+				return;
+			} else if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_ON) == "false") {
+				myTrace("in sync, COMMON_SETTING_DEXCOM_SHARE_ON == false, return");
+				return;
+			} else if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_ACCOUNTNAME) == "account name") {
+				myTrace("in sync, COMMON_SETTING_DEXCOM_SHARE_ACCOUNTNAME == default value, return");
+				return;
+			} else if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_PASSWORD) == "password") {
+				myTrace("in sync, COMMON_SETTING_DEXCOM_SHARE_PASSWORD == default value, return");
+				return;
+			} else {
+				if (NightScoutService.NightScoutSyncRunning()) {
+					myTrace("nightscoutsync running already, return");
+					return;
+				}
+			}
 			
+			if ((new Date()).valueOf() - timeStampOfLastSSO_AuthenticateMaxAttemptsExceeed < timeToWaitAfterSSO_AuthenticateMaxAttemptsExceeedInMinutes * 60 * 1000) {
+				myTrace("in sync, SSO_AuthenticateMaxAttemptsExceeed was less than " + timeToWaitAfterSSO_AuthenticateMaxAttemptsExceeedInMinutes + " minutes ago, return");
+				return;
+			}
+
+			syncRunning = true;
+			dexcomShareUrl = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_US_URL) == "true" ?
+				US_SHARE_BASE_URL
+				:
+				NON_US_SHARE_BASE_URL;
+			
+			if (dexcomShareSessionId != "") {
+				myTrace("in sync, dexcomShareSessionId not empty calling uploadBGRecords"),
+				uploadBGRecords();
+			} else {
+				myTrace("in sync, dexcomShareSessionId empty trying to login");
+				login();
+			}
+		}
+		
+		private static function login():void {
+			myTrace("in login");
 			var authParameters:Object = new Object();
-			authParameters["accountName"] = "accountname";
+			authParameters["accountName"] = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_ACCOUNTNAME);
 			authParameters["applicationId"] = "d8665ade-9673-4e27-9ff6-92db4ce13d13";
-			authParameters["password"] = "accountpassword";
+			authParameters["password"] = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_PASSWORD);
 			BackGroundFetchService.createAndLoadUrlRequest(NON_US_SHARE_BASE_URL + "General/LoginPublisherAccountByName", URLRequestMethod.POST, null, JSON.stringify(authParameters), "application/json");
 			dexcomShareStatus = dexcomShareStatus_Waiting_LoginPublisherAccountByName;
 		}
@@ -102,21 +146,19 @@ package services
 				uploadBGRecords();
 			} else if (dexcomShareStatus == dexcomShareStatus_Waiting_PostReceiverEgvRecords) {
 				myTrace("in createAndLoadUrlRequestSuccess and dexcomShareStatus == dexcomShareStatus_Waiting_PostReceiverEgvRecords");
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_DEXCOMSHARE_SYNC_TIMESTAMP, (new Date()).valueOf().toString());
 				syncRunning = false;
 			} else if (dexcomShareStatus == dexcomShareStatus_Waiting_StartRemoteMonitoringSession) {
 				myTrace("in createAndLoadUrlRequestSuccess and dexcomShareStatus == dexcomShareStatus_Waiting_StartRemoteMonitoringSession");
 				uploadBGRecords();
-			} else if (dexcomShareStatus == dexcomShareStatus_Waiting_PostReceiverEgvRecords) {
-				myTrace("in createAndLoadUrlRequestSuccess and dexcomShareStatus == dexcomShareStatus_Waiting_PostReceiverEgvRecords");
-				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_DEXCOMSHARE_SYNC_TIMESTAMP, (new Date()).valueOf().toString());
-				syncRunning = false;
-			}
+			} 
 		}
 		
 		private static function uploadBGRecords():void {
 			dexcomShareStatus = dexcomShareStatus_Waiting_PostReceiverEgvRecords;
 			myTrace("in uploadBGRecords");
 			var lastSyncTimeStamp:Number = new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEXCOMSHARE_SYNC_TIMESTAMP));
+			var now:Number = (new Date()).valueOf();
 			var Egvs:Array = [];
 			
 			var cntr:int = ModelLocator.bgReadings.length - 1;
@@ -124,7 +166,7 @@ package services
 			
 			while (cntr > -1) {
 				var bgReading:BgReading = ModelLocator.bgReadings.getItemAt(cntr) as BgReading;
-				if (bgReading.timestamp > lastSyncTimeStamp) {
+				if (bgReading.timestamp > lastSyncTimeStamp && now - bgReading.timestamp < 24 * 3600 * 1000) {
 					if (bgReading.calculatedValue != 0) {
 						var newReading:Object = new Object();
 						newReading.Trend = bgReading.getSlopeOrdinal();
@@ -143,6 +185,7 @@ package services
 			}		
 			
 			if (Egvs.length > 0) {
+				myTrace("in uploadBGRecords, there are " + Egvs.length + " records to upload");
 				var uploaddata:Object = new Object();
 				uploaddata.Egvs = Egvs;
 				uploaddata.SN = getSerialNumber();
@@ -152,7 +195,6 @@ package services
 					URLRequestMethod.POST, 
 					JSON.stringify(uploaddata),
 					"sessionId", dexcomShareSessionId );
-				//createAndLoadURLRequest(NON_US_SHARE_BASE_URL + "General/LoginPublisherAccountByName", URLRequestMethod.POST, null, JSON.stringify(authParameters));
 			} else {
 				myTrace("in uploadBGRecords, no records to upload");
 				syncRunning = false;
@@ -167,11 +209,25 @@ package services
 			} else {
 				eventDataInformation = "";
 			}
+
+			var code:String = "";
+			if (eventDataInformation.length > 0) {
+				var eventAsJSONObject:Object = JSON.parse(event.data.information as String);
+				code = eventAsJSONObject.Code as String;
+				if (code == "SessionNotValid") {
+					myTrace("in createAndLoadUrlRequestFailed and code = " + code);
+					dexcomShareSessionId = "";
+					dexcomShareStatus = "";
+					login();
+					return;
+				}
+			}
+			
 			if (dexcomShareStatus == dexcomShareStatus_Waiting_PostReceiverEgvRecords) {
 				if (eventDataInformation.length > 0) {
 					try {
 						var eventAsJSONObject:Object = JSON.parse(event.data.information as String);
-						var code:String = eventAsJSONObject.Code as String;
+						code = eventAsJSONObject.Code as String;
 						myTrace("in createAndLoadUrlRequestFailed and dexcomShareStatus == dexcomShareStatus_Waiting_PostReceiverEgvRecords, code = " + code);
 						if (code == "MonitoringSessionNotActive") {
 							dexcomShareStatus == dexcomShareStatus_Waiting_StartRemoteMonitoringSession;
@@ -199,11 +255,35 @@ package services
 					syncRunning = false;
 				}
 			} else if (dexcomShareStatus == dexcomShareStatus_Waiting_LoginPublisherAccountByName) {
-				myTrace("in createAndLoadUrlRequestFailed and dexcomShareStatus == dexcomShareStatus_Waiting_LoginPublisherAccountByName, eventDataInformation = " + eventDataInformation);
+				myTrace("in createAndLoadUrlRequestFailed and dexcomShareStatus == dexcomShareStatus_Waiting_LoginPublisherAccountByName, code = " + code);
 				syncRunning = false;
+				if (code == "SSO_AuthenticateAccountNotFound") {
+					if (ModelLocator.isInForeground) {
+						DialogService.openSimpleDialog(ModelLocator.resourceManagerInstance.getString("dexcomshareservice","login_error"),
+							ModelLocator.resourceManagerInstance.getString("dexcomshareservice","account_name_not_found"),
+							60);
+					}
+				} else if (code == "SSO_AuthenticatePasswordInvalid") {
+					if (ModelLocator.isInForeground) {
+						DialogService.openSimpleDialog(ModelLocator.resourceManagerInstance.getString("dexcomshareservice","login_error"),
+							ModelLocator.resourceManagerInstance.getString("dexcomshareservice","invalid_password"),
+							60);
+					}
+				} else if (code == "SSO_AuthenticateMaxAttemptsExceeed") {
+					if (ModelLocator.isInForeground) {
+						DialogService.openSimpleDialog(ModelLocator.resourceManagerInstance.getString("dexcomshareservice","login_error"),
+							ModelLocator.resourceManagerInstance.getString("dexcomshareservice","max_login_attempts_excceded"),
+							60);
+						timeStampOfLastSSO_AuthenticateMaxAttemptsExceeed = (new Date()).valueOf();
+					}
+				} else {
+					myTrace("in createAndLoadUrlRequestFailed and dexcomShareStatus, code unknown, eventdatainformation = " + eventDataInformation);
+				}
 			} else if (dexcomShareStatus == dexcomShareStatus_Waiting_StartRemoteMonitoringSession) {
 				myTrace("in createAndLoadUrlRequestFailed and dexcomShareStatus == dexcomShareStatus_Waiting_StartRemoteMonitoringSession, eventDataInformation = " + eventDataInformation);
 				syncRunning = false;
+			} else {
+				myTrace("in createAndLoadUrlRequestFailed and dexcomShareStatus == " + dexcomShareStatus  + ", eventDataInformation = " + eventDataInformation);
 			}
 		}
 		
@@ -213,7 +293,7 @@ package services
 		}
 		
 		private static function getSerialNumber():String {
-			return (BlueToothDevice.isDexcomG5() ? CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID) : CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_RECEIVER_SN));
+			return (BlueToothDevice.isDexcomG5() ? CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID) : CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_SERIALNUMBER));
 		}
 		
 		private static function myTrace(log:String):void {

@@ -60,7 +60,19 @@
 			[Bindable]
 			private static var transmitterTypeText:String="";
 			[Bindable]
+			private static var dexcomShareAccountName:String="";
+			[Bindable]
+			private static var dexcomSharePassword:String="";
+			[Bindable]
+			private static var dexcomSharePasswordShownOnScreen:String="";
+			[Bindable]
+			private static var dexcomShareSerialNumber:String="";
+			[Bindable]
+			private static var dexcomShareOnOffText:String="";
+			[Bindable]
 			private static var versionText:String="";
+			[Bindable]
+			private static var dexcomShareURL:String="";
 			
 			private static var resetColorTimer:Timer;
 			
@@ -119,10 +131,37 @@
 					groupTransmitterId.alpha = 0.25;
 				}
 				
+				dexcomShareAccountName = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_ACCOUNTNAME);
+				dexcomSharePassword = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_PASSWORD);
+				dexcomSharePasswordShownOnScreen = replaceByStars(dexcomSharePassword);
+				dexcomShareSerialNumber = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_SERIALNUMBER);
+				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_ON) == "true") {
+					dexcomShareOnOffText = ModelLocator.resourceManagerInstance.getString('settingsview','on');
+					changeDexcomShareStatus();
+				} else {
+					dexcomShareOnOffText = ModelLocator.resourceManagerInstance.getString('settingsview','off');
+					changeDexcomShareStatus();
+				}
+				dexcomShareURL = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_US_URL) == "true" ?
+					ModelLocator.resourceManagerInstance.getString("settingsview","dexcom_us_url")
+					:
+					ModelLocator.resourceManagerInstance.getString('settingsview','dexcom_non_us_url');
+				changeDexcomShareStatus();
+				
 				LocalSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, settingChanged);
 				CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, settingChanged);
 				
 				versionText = ModelLocator.resourceManagerInstance.getString('general','version');
+			}
+			
+			private static function replaceByStars(input:String):String {
+				if (input == null)
+					return "****";
+				var returnValue:String = "";
+				for (var i:int =  0; i < input.length;i++) {
+					returnValue += "*";
+				}
+				return returnValue;
 			}
 			
 			private function settingChanged(event:SettingsServiceEvent):void {
@@ -135,7 +174,7 @@
 					} else {
 						groupTransmitterId.alpha = 0.25;
 					}
-
+					changeDexcomShareStatus();
 				}
 			}
 			
@@ -678,6 +717,174 @@
 				}
 			}
 			
+			private function dexcomShareAccountName_clickHandler(event:MouseEvent):void {
+				rect49.color = uint("0xD3D3D3");
+				rect50.color = uint("0xD3D3D3");
+				setResetColorTimer();
+				
+				var alert:DialogView = Dialog.service.create(
+					new AlertBuilder()
+					.setTitle(ModelLocator.resourceManagerInstance.getString("settingsview","enter_dexcom_share_account_name_title"))
+					.setMessage(ModelLocator.resourceManagerInstance.getString("settingsview","enter_dexcom_share_account_name_message"))
+					.addTextField(dexcomShareAccountName,"")
+					.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
+					.addOption(ModelLocator.resourceManagerInstance.getString("general","cancel"), DialogAction.STYLE_CANCEL, 1)
+					.build()
+				);
+				DialogService.addDialog(alert);
+				alert.addEventListener(DialogViewEvent.CLOSED, dexcomshareaccountentered);
+				
+				function dexcomshareaccountentered(event:DialogViewEvent):void {
+					if (event.index == 1) {
+						return;
+					}
+					
+					if (event.values.length < 1)
+						return;
+					
+					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_ACCOUNTNAME, event.values[0] as String);
+					dexcomShareAccountName = event.values[0] as String;
+				}
+			}
+			
+			private function dexcomSharePassword_clickHandler(event:MouseEvent):void {
+				rect51.color = uint("0xD3D3D3");
+				rect52.color = uint("0xD3D3D3");
+				setResetColorTimer();
+				
+				var alert:DialogView = Dialog.service.create(
+					new AlertBuilder()
+					.setTitle(ModelLocator.resourceManagerInstance.getString("settingsview","enter_dexcom_share_password_title"))
+					.setMessage(ModelLocator.resourceManagerInstance.getString("settingsview","enter_dexcom_share_password_message"))
+					.addTextField(dexcomSharePassword,"", true)
+					.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
+					.addOption(ModelLocator.resourceManagerInstance.getString("general","cancel"), DialogAction.STYLE_CANCEL, 1)
+					.build()
+				);
+				DialogService.addDialog(alert);
+				alert.addEventListener(DialogViewEvent.CLOSED, dexcomsharepasswordentered);
+				
+				function dexcomsharepasswordentered(event:DialogViewEvent):void {
+					if (event.index == 1) {
+						return;
+					}
+					
+					if (event.values.length < 1)
+						return;
+					
+					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_PASSWORD, event.values[0] as String);
+					dexcomSharePassword = event.values[0] as String;
+					dexcomSharePasswordShownOnScreen = replaceByStars(dexcomSharePassword);
+				}
+			}
+
+			private function dexcomShareSerialNumber_clickHandler(event:MouseEvent):void {
+				rect53.color = uint("0xD3D3D3");
+				rect54.color = uint("0xD3D3D3");
+				setResetColorTimer();
+				
+				var alert:DialogView = Dialog.service.create(
+					new AlertBuilder()
+					.setTitle(ModelLocator.resourceManagerInstance.getString("settingsview","enter_dexcom_share_serialnumber_title"))
+					.setMessage(ModelLocator.resourceManagerInstance.getString("settingsview","enter_dexcom_share_serialnumber_message"))
+					.addTextField(dexcomShareSerialNumber,"")
+					.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
+					.addOption(ModelLocator.resourceManagerInstance.getString("general","cancel"), DialogAction.STYLE_CANCEL, 1)
+					.build()
+				);
+				DialogService.addDialog(alert);
+				alert.addEventListener(DialogViewEvent.CLOSED, dexcomshareserialnumberentered);
+				
+				function dexcomshareserialnumberentered(event:DialogViewEvent):void {
+					if (event.index == 1) {
+						return;
+					}
+					
+					if (event.values.length < 1)
+						return;
+					
+					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_SERIALNUMBER, event.values[0] as String);
+					dexcomShareSerialNumber = event.values[0] as String;
+				}
+			}
+			
+			private function dexcomShareOnOff_clickHandler(event:MouseEvent):void {
+				rect55.color = uint("0xD3D3D3");
+				rect56.color = uint("0xD3D3D3");
+				setResetColorTimer();
+				
+				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_ON) == "true") {
+					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_ON, "false");
+					dexcomShareOnOffText = ModelLocator.resourceManagerInstance.getString('settingsview','off');
+					changeDexcomShareStatus();
+				} else {
+					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_ON, "true");
+					dexcomShareOnOffText = ModelLocator.resourceManagerInstance.getString('settingsview','on');
+					changeDexcomShareStatus();
+				}
+			}
+			
+			private function dexcomShareURL_clickHandler(event:MouseEvent):void {
+				rect57.color = uint("0xD3D3D3");
+				rect58.color = uint("0xD3D3D3");
+				setResetColorTimer();
+				
+				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_US_URL) == "true") {
+					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_US_URL, "false");
+					dexcomShareURL = ModelLocator.resourceManagerInstance.getString('settingsview','dexcom_non_us_url');
+				} else {
+					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_US_URL, "true");
+					dexcomShareURL = ModelLocator.resourceManagerInstance.getString('settingsview','dexcom_us_url');
+				}
+			}
+			
+			private function changeDexcomShareStatus():void {
+				var enabled:Boolean = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_ON) == "true";
+				if (enabled) {
+					dexcomShareAccountNameGroup.includeInLayout = true;
+					dexcomShareAccountNameGroup.visible = true;
+					dexcomShareAccountNameGroup.enabled = true;
+					dexcomSharePasswordGroup.includeInLayout = true;
+					dexcomSharePasswordGroup.enabled = true;
+					dexcomSharePasswordGroup.visible = true;
+					dexcomShareURLGroup.includeInLayout = true;
+					dexcomShareURLGroup.visible = true;
+					dexcomShareURLGroup.enabled = true;
+					dexcomshareline1.includeInLayout = true;dexcomshareline1.visible = true;
+					dexcomshareline3.includeInLayout = true;dexcomshareline3.visible = true;
+					dexcomshareline2.includeInLayout = true;dexcomshareline2.visible = true;
+
+					if (!BlueToothDevice.isDexcomG5()) {
+						dexcomShareSerialNumberGroup.includeInLayout = true;
+						dexcomShareSerialNumberGroup.enabled = true;
+						dexcomShareSerialNumberGroup.visible = true;
+						dexcomshareline4.includeInLayout = true;dexcomshareline4.visible = true;
+					} else {
+						dexcomShareSerialNumberGroup.includeInLayout = false;
+						dexcomShareSerialNumberGroup.enabled = false;
+						dexcomShareSerialNumberGroup.visible = false;
+						dexcomshareline4.includeInLayout = false;dexcomshareline4.visible = false;
+					}
+				} else {
+					dexcomShareAccountNameGroup.includeInLayout = false;
+					dexcomShareAccountNameGroup.visible = false;
+					dexcomShareAccountNameGroup.enabled = false;
+					dexcomSharePasswordGroup.includeInLayout = false;
+					dexcomSharePasswordGroup.enabled = false;
+					dexcomSharePasswordGroup.visible = false;
+					dexcomShareSerialNumberGroup.includeInLayout = false;
+					dexcomShareSerialNumberGroup.enabled = false;
+					dexcomShareSerialNumberGroup.visible = false;
+					dexcomShareURLGroup.includeInLayout = false;
+					dexcomShareURLGroup.visible = false;
+					dexcomShareURLGroup.enabled = false;
+					dexcomshareline1.includeInLayout = false;dexcomshareline1.visible = false;
+					dexcomshareline2.includeInLayout = false;dexcomshareline2.visible = false;
+					dexcomshareline3.includeInLayout = false;dexcomshareline3.visible = false;
+					dexcomshareline4.includeInLayout = false;dexcomshareline4.visible = false;
+				}
+			}
+			
 			private function setResetColorTimer():void {
 				if (resetColorTimer != null)
 					if (resetColorTimer.running) {
@@ -733,6 +940,16 @@
 					rect46.color = uint("0x212121");//very high
 					rect47.color = uint("0x212121");//healthkitstore
 					rect48.color = uint("0x212121");//healthkitstore
+					rect49.color = uint("0x212121");//dexcom share accountname
+					rect50.color = uint("0x212121");//dexcom share accountname
+					rect51.color = uint("0x212121");//dexcom share password
+					rect52.color = uint("0x212121");//dexcom share password
+					rect53.color = uint("0x212121");//dexcom share serial number
+					rect54.color = uint("0x212121");//dexcom share serial number
+					rect55.color = uint("0x212121");//dexcom share onoff
+					rect56.color = uint("0x212121");//dexcom share onoff
+					rect57.color = uint("0x212121");//dexcom share onoff
+					rect58.color = uint("0x212121");//dexcom share onoff
 				}
 			}
 			
@@ -1155,7 +1372,7 @@
 			<!-- Chapter Nightscout url and api secret --> 
 			<s:VGroup width="100%">
 				<!-- button to change url -->
-				<s:HGroup click="nightScoutUrl_clickHandler(event)" width="100%" verticalAlign="bottom" id="targetGroup">
+				<s:HGroup click="nightScoutUrl_clickHandler(event)" width="100%" verticalAlign="bottom">
 					<s:Rect height="100%" width="5" >
 						<s:fill>
 							<s:SolidColor color="#212121" id="rect1"/>
@@ -1190,6 +1407,126 @@
 					<s:Rect height="100%" width="5" >
 						<s:fill>
 							<s:SolidColor color="#212121" id="rect4"/>
+						</s:fill>
+					</s:Rect>
+				</s:HGroup>
+				<s:Line width="100%">
+					<s:stroke>
+						<s:SolidColorStroke color="#3B6999"  weight="3"/>
+					</s:stroke>
+				</s:Line>	
+			</s:VGroup>
+			
+			<!-- Chapter Dexcom Share -->
+			<s:Label text = "{ModelLocator.resourceManagerInstance.getString('settingsview','show_dexcomshare_title')}" textAlign="center" color="#3B6999" 
+					 width="100%" paddingLeft="3" paddingRight="0" fontSize="20" fontWeight="bold" paddingTop="10" paddingBottom ="10"/>
+			<s:Line width="100%">
+				<s:stroke>
+					<s:SolidColorStroke  color="#3B6999"  weight="3"/>
+				</s:stroke>
+			</s:Line>
+			
+			<!-- Chapter on/off button accountname, password and serial number --> 
+			<s:VGroup width="100%">
+				<!-- button to change dexcom share onoff -->
+				<s:HGroup click="dexcomShareOnOff_clickHandler(event)" width="100%" verticalAlign="bottom">
+					<s:Rect height="100%" width="5" >
+						<s:fill>
+							<s:SolidColor color="#212121" id="rect55"/>
+						</s:fill>
+					</s:Rect>
+					<s:Label text = "{ModelLocator.resourceManagerInstance.getString('settingsview','dexcomshareonoff')}" 
+							 width="100%" paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
+					<s:Label text = "{dexcomShareOnOffText}"  
+							 paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="14"/>
+					<s:Rect height="100%" width="5" >
+						<s:fill>
+							<s:SolidColor color="#212121" id="rect56"/>
+						</s:fill>
+					</s:Rect>
+				</s:HGroup>
+				<s:Line width="100%"  id = "dexcomshareline3">
+					<s:stroke>
+						<s:SolidColorStroke color="0xFFFFFF" weight="1" alpha="0.25"/>
+					</s:stroke>
+				</s:Line>
+				<s:HGroup click="dexcomShareAccountName_clickHandler(event)" width="100%" verticalAlign="bottom" id = "dexcomShareAccountNameGroup">
+					<s:Rect height="100%" width="5" >
+						<s:fill>
+							<s:SolidColor color="#212121" id="rect49"/>
+						</s:fill>
+					</s:Rect>
+					<s:Label text = "{ModelLocator.resourceManagerInstance.getString('settingsview','dexcomshareaccountname')}" 
+							 width="100%" paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
+					<s:Label text = "{dexcomShareAccountName}"  
+							 paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="14"/>
+					<s:Rect height="100%" width="5" >
+						<s:fill>
+							<s:SolidColor color="#212121" id="rect50"/>
+						</s:fill>
+					</s:Rect>
+				</s:HGroup>
+				<s:Line width="100%" id = "dexcomshareline1">
+					<s:stroke>
+						<s:SolidColorStroke color="0xFFFFFF" weight="1" alpha="0.25"/>
+					</s:stroke>
+				</s:Line>
+				<!-- button to change dexcom share password -->
+				<s:HGroup click="dexcomSharePassword_clickHandler(event)" width="100%" verticalAlign="bottom" id = "dexcomSharePasswordGroup">
+					<s:Rect height="100%" width="5" >
+						<s:fill>
+							<s:SolidColor color="#212121" id="rect51"/>
+						</s:fill>
+					</s:Rect>
+					<s:Label text = "{ModelLocator.resourceManagerInstance.getString('settingsview','dexcomsharepassword')}" 
+							 width="100%" paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
+					<s:Label text = "{dexcomSharePasswordShownOnScreen}"  
+							 paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="14"/>
+					<s:Rect height="100%" width="5" >
+						<s:fill>
+							<s:SolidColor color="#212121" id="rect52"/>
+						</s:fill>
+					</s:Rect>
+				</s:HGroup>
+				<s:Line width="100%" id = "dexcomshareline2">
+					<s:stroke>
+						<s:SolidColorStroke color="0xFFFFFF" weight="1" alpha="0.25"/>
+					</s:stroke>
+				</s:Line>
+				<!-- button to change dexcom share url -->
+				<s:HGroup click="dexcomShareURL_clickHandler(event)" width="100%" verticalAlign="bottom" id = "dexcomShareURLGroup">
+					<s:Rect height="100%" width="5" >
+						<s:fill>
+							<s:SolidColor color="#212121" id="rect57"/>
+						</s:fill>
+					</s:Rect>
+					<s:Label text = "{dexcomShareURL}" width="100%"
+							 paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
+					<s:Rect height="100%" width="5" >
+						<s:fill>
+							<s:SolidColor color="#212121" id="rect58"/>
+						</s:fill>
+					</s:Rect>
+				</s:HGroup>
+				<s:Line width="100%" id = "dexcomshareline4">
+					<s:stroke>
+						<s:SolidColorStroke color="0xFFFFFF" weight="1" alpha="0.25"/>
+					</s:stroke>
+				</s:Line>
+				<!-- button to change dexcom share serial number -->
+				<s:HGroup click="dexcomShareSerialNumber_clickHandler(event)" width="100%" verticalAlign="bottom" id = "dexcomShareSerialNumberGroup">
+					<s:Rect height="100%" width="5" >
+						<s:fill>
+							<s:SolidColor color="#212121" id="rect53"/>
+						</s:fill>
+					</s:Rect>
+					<s:Label text = "{ModelLocator.resourceManagerInstance.getString('settingsview','dexcomshareserialnumber')}" 
+							 width="100%" paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
+					<s:Label text = "{dexcomShareSerialNumber}"  
+							 paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="14"/>
+					<s:Rect height="100%" width="5" >
+						<s:fill>
+							<s:SolidColor color="#212121" id="rect54"/>
 						</s:fill>
 					</s:Rect>
 				</s:HGroup>
