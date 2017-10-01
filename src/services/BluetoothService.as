@@ -117,7 +117,7 @@ package services
 		private static const uuids_G5_Service:Vector.<String> = new <String>["F8083532-849E-531C-C594-30F1F86A4EA5"];
 		private static const uuids_BLUKON_Service:Vector.<String> = new <String>["436A62C0-082E-4CE8-A08B-01D81F195B24"];
 		private static const uuids_BlueReader_Service:Vector.<String> = new <String>[BlueReader_SERVICE];
-		private static const uuids_Bluereader_Advertisement:Vector.<String> = new <String>[""];
+		private static const uuids_Bluereader_Advertisement:Vector.<String> = new <String>[""];//00001530-1212-EFDE-1523-785FEABCD123", "7905F431-B5CE-4E99-A40F-4B1E122D00D0"];
 			
 		private static const uuids_G5_Advertisement:Vector.<String> = new <String>["0000FEBC-0000-1000-8000-00805F9B34FB"];
 		private static const uuids_G4_Characteristics:Vector.<String> = new <String>[HM_RX_TX_G4];
@@ -385,7 +385,12 @@ package services
 		
 		private static function central_peripheralDiscoveredHandler(event:PeripheralEvent):void {
 			myTrace("in central_peripheralDiscoveredHandler, stop scanning");
-			BluetoothLE.service.centralManager.stopScan();
+			if (BlueToothDevice.isBluKon()) {
+				//don't stop scanning - attempt to fix reconnect issue
+				BluetoothLE.service.centralManager.stopScan();
+			} else {
+				BluetoothLE.service.centralManager.stopScan();
+			}
 
 			discoveryTimeStamp = (new Date()).valueOf();
 			if (awaitingConnect && !(BlueToothDevice.alwaysScan())) {
@@ -475,7 +480,6 @@ package services
 		private static function central_peripheralConnectHandler(event:PeripheralEvent):void {
 			myTrace("in central_peripheralConnectHandler, setting peripheralConnected = true");
 			peripheralConnected = true;
-
 			
 			if (G4ScanTimer != null) {
 				if (G4ScanTimer.running) {
