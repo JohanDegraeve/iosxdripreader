@@ -305,7 +305,6 @@ package services
 			
 			if (!NetworkInfo.networkInfo.isReachable()) {
 				myTrace("network not reachable, calling BackGroundFetchService.callCompletionHandler although this wouldn't make any sense, no network, probably backgroundfetch is not waiting");
-				BackGroundFetchService.callCompletionHandler(BackGroundFetchService.NO_DATA);
 				syncFinished();
 			}
 
@@ -347,12 +346,10 @@ package services
 				CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_API_SECRET) == CommonSettings.DEFAULT_API_SECRET
 				||
 				CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_URL_AND_API_SECRET_TESTED) ==  "false") {
-				BackGroundFetchService.callCompletionHandler(BackGroundFetchService.NO_DATA);
 				syncFinished();
 			}
 			
 			if (Calibration.allForSensor().length < 2) {
-				BackGroundFetchService.callCompletionHandler(BackGroundFetchService.NO_DATA);
 				syncFinished();
 			}
 			
@@ -413,14 +410,12 @@ package services
 				myTrace("uploading_events_with_id" + logString);
 				createAndLoadURLRequest(_nightScoutEventsUrl, URLRequestMethod.POST, null, JSON.stringify(listOfReadingsAsArray), nightScoutUploadSuccess, nightScoutUploadFailed);
 			} else {
-				BackGroundFetchService.callCompletionHandler(BackGroundFetchService.NO_DATA);
 				syncFinished();
 			}
 		}
 		
 		private static function nightScoutUploadSuccess(event:Event):void {
 			myTrace("in nightScoutUploadSuccess");
-			BackGroundFetchService.callCompletionHandler(BackGroundFetchService.NEW_DATA);
 			
 			myTrace("upload_to_nightscout_successfull");
 			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_SYNC_TIMESTAMP, (new Date()).valueOf().toString());
@@ -429,7 +424,6 @@ package services
 		
 		private static function nightScoutUploadFailed(event:BackGroundFetchServiceEvent):void {
 			myTrace("in nightScoutUploadFailed");
-			BackGroundFetchService.callCompletionHandler(BackGroundFetchService.FETCH_FAILED);
 			
 			var errorMessage:String;
 			if (event.data) {
@@ -447,9 +441,6 @@ package services
 			if(functionToCallAtUpOrDownloadFailure != null) {
 				functionToCallAtUpOrDownloadFailure(event);
 			}
-			else {
-				BackGroundFetchService.callCompletionHandler(BackGroundFetchService.FETCH_FAILED);
-			}
 			
 			functionToCallAtUpOrDownloadSuccess = null;
 			functionToCallAtUpOrDownloadFailure = null;
@@ -457,9 +448,6 @@ package services
 		private static function defaultSuccessFunction(event:BackGroundFetchServiceEvent):void {
 			if(functionToCallAtUpOrDownloadSuccess != null) {
 				functionToCallAtUpOrDownloadSuccess(event);
-			}
-			else {
-				BackGroundFetchService.callCompletionHandler(BackGroundFetchService.NEW_DATA);
 			}
 			
 			functionToCallAtUpOrDownloadSuccess = null;
