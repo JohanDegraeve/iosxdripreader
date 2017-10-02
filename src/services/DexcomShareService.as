@@ -1,5 +1,6 @@
 package services
 {
+	import com.distriqt.extension.networkinfo.NetworkInfo;
 	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
 	
 	import flash.events.EventDispatcher;
@@ -12,8 +13,11 @@ package services
 	import databaseclasses.CommonSettings;
 	
 	import events.BackGroundFetchServiceEvent;
+	import events.SettingsServiceEvent;
 	
 	import model.ModelLocator;
+	
+	import views.SettingsView;
 
 	public class DexcomShareService extends EventDispatcher
 	{
@@ -86,10 +90,44 @@ package services
 			
 			BackGroundFetchService.instance.addEventListener(BackGroundFetchServiceEvent.LOAD_REQUEST_ERROR, createAndLoadUrlRequestFailed);
 			BackGroundFetchService.instance.addEventListener(BackGroundFetchServiceEvent.LOAD_REQUEST_RESULT, createAndLoadUrlRequestSuccess);
+			CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, settingChanged);
+		}
+		
+		private static function settingChanged(event:SettingsServiceEvent):void {
+			if (event.data == CommonSettings.COMMON_SETTING_DEXCOM_SHARE_ACCOUNTNAME 
+				|| 
+				event.data == CommonSettings.COMMON_SETTING_DEXCOM_SHARE_PASSWORD 
+				|| 
+				event.data == CommonSettings.COMMON_SETTING_DEXCOM_SHARE_US_URL) {
+				myTrace("in settingChanged, account name or password or url changed, resetting session id");
+				dexcomShareSessionId = "";
+			} 
+
+			if (event.data == CommonSettings.COMMON_SETTING_DEXCOM_SHARE_ACCOUNTNAME 
+				|| 
+				event.data == CommonSettings.COMMON_SETTING_DEXCOM_SHARE_PASSWORD 
+				|| 
+				event.data == CommonSettings.COMMON_SETTING_DEXCOM_SHARE_ON
+				|| 
+				event.data == CommonSettings.COMMON_SETTING_DEXCOM_SHARE_SERIALNUMBER
+				|| 
+				event.data == CommonSettings.COMMON_SETTING_DEXCOM_SHARE_US_URL) {
+				if (NetworkInfo.networkInfo.isReachable()) {
+					myTrace("in settingChanged, calling sync");
+					sync();
+				} else {
+					myTrace("in settingChanged, but network not reachable");
+				}
+			} 
 		}
 		
 		public static function sync():void {
 			myTrace("in sync");
+			if (!NetworkInfo.networkInfo.isReachable()) {
+				myTrace("network not reachable, return");
+				return;
+			}
+
 			if (syncRunning) {
 				myTrace("sync running already, return");
 				return;
@@ -202,6 +240,10 @@ package services
 		}
 
 		private static function createAndLoadUrlRequestFailed(event:BackGroundFetchServiceEvent):void {
+			if (dexcomShareStatus == "") {
+				myTrace("in createAndLoadUrlRequestFailed but dexcomShareStatus is empty, not interested, returning");
+				return;
+			}
 			var eventDataInformation:String;
 			if (event.data) {
 				if (event.data.information)
@@ -211,44 +253,64 @@ package services
 			}
 
 			var code:String = "";
-			if (eventDataInformation.length > 0) {
-				var eventAsJSONObject:Object = JSON.parse(event.data.information as String);
-				code = eventAsJSONObject.Code as String;
-				if (code == "SessionNotValid") {
-					myTrace("in createAndLoadUrlRequestFailed and code = " + code);
-					dexcomShareSessionId = "";
-					dexcomShareStatus = "";
-					login();
-					return;
-				}
-			}
-			
-			if (dexcomShareStatus == dexcomShareStatus_Waiting_PostReceiverEgvRecords) {
+			if (eventDataInformation != null) {
 				if (eventDataInformation.length > 0) {
 					try {
 						var eventAsJSONObject:Object = JSON.parse(event.data.information as String);
 						code = eventAsJSONObject.Code as String;
-						myTrace("in createAndLoadUrlRequestFailed and dexcomShareStatus == dexcomShareStatus_Waiting_PostReceiverEgvRecords, code = " + code);
-						if (code == "MonitoringSessionNotActive") {
-							dexcomShareStatus == dexcomShareStatus_Waiting_StartRemoteMonitoringSession;
-							BackGroundFetchService.createAndLoadUrlRequest(NON_US_SHARE_BASE_URL + "Publisher/StartRemoteMonitoringSession?sessionId=" + 
-								escape(dexcomShareSessionId) + "&serialNumber=" +
-								escape(getSerialNumber()),
-								URLRequestMethod.POST, 
-								null,
-								null,
-								"application/json");
-						} else if (code == "DuplicateEgvPosted") {
-							myTrace("code DuplicateEgvPosted, treated as successful and setting lastsynctimestamp to current data and time");
-							CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_DEXCOMSHARE_SYNC_TIMESTAMP, (new Date()).valueOf().toString());
-							syncRunning = false;
-						} else {
-							myTrace("unknown code");
-							syncRunning = false;
+						if (code == "SessionNotValid") {
+							myTrace("in createAndLoadUrlRequestFailed and code = " + code);
+							dexcomShareSessionId = "";
+							dexcomShareStatus = "";
+							login();
+							return;
 						}
 					} catch (error:Error) {
 						myTrace("in createAndLoadUrlRequestFailed, exception, error = " + error.message);
 						syncRunning = false
+					}
+				}
+			}
+			
+			if (dexcomShareStatus == dexcomShareStatus_Waiting_PostReceiverEgvRecords) {
+				if (eventDataInformation != null) {
+					if (eventDataInformation.length > 0) {
+						try {
+							var eventAsJSONObject:Object = JSON.parse(event.data.information as String);
+							code = eventAsJSONObject.Code as String;
+							myTrace("in createAndLoadUrlRequestFailed and dexcomShareStatus == dexcomShareStatus_Waiting_PostReceiverEgvRecords, code = " + code);
+							if (code == "MonitoringSessionNotActive") {
+								dexcomShareStatus == dexcomShareStatus_Waiting_StartRemoteMonitoringSession;
+								BackGroundFetchService.createAndLoadUrlRequest(NON_US_SHARE_BASE_URL + "Publisher/StartRemoteMonitoringSession?sessionId=" + 
+									escape(dexcomShareSessionId) + "&serialNumber=" +
+									escape(getSerialNumber()),
+									URLRequestMethod.POST, 
+									null,
+									null,
+									"application/json");
+							} else if (code == "DuplicateEgvPosted") {
+								myTrace("code DuplicateEgvPosted, treated as successful and setting lastsynctimestamp to current data and time");
+								CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_DEXCOMSHARE_SYNC_TIMESTAMP, (new Date()).valueOf().toString());
+								syncRunning = false;
+							} else if (code == "MonitoredReceiverSerialNumberDoesNotMatch") {
+								myTrace("code MonitoredReceiverSerialNumberDoesNotMatch");
+								if (ModelLocator.isInForeground) {
+									DialogService.openSimpleDialog(ModelLocator.resourceManagerInstance.getString("dexcomshareservice","upload_error"),
+										ModelLocator.resourceManagerInstance.getString("dexcomshareservice","monitored_receiver_sn_doesnotmatch"),
+										60);
+								}
+								syncRunning = false;
+							} else {
+								myTrace("unknown code");
+								syncRunning = false;
+							} 
+						} catch (error:Error) {
+							myTrace("in createAndLoadUrlRequestFailed, exception, error = " + error.message);
+							syncRunning = false
+						}
+					} else {
+						myTrace("in createAndLoadUrlRequestFailed, event.data.information not available");
+						syncRunning = false;
 					}
 				} else {
 					myTrace("in createAndLoadUrlRequestFailed, event.data.information not available");
