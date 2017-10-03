@@ -58,8 +58,8 @@ If you have an Apple Developer Account then you can do this yourself using this 
 The ipa file to download is here, take the latest release : https://github.com/JohanDegraeve/iosxdripreader/releases
 Regulary check for updates.
 
-If you don't have an Apple Developer Account, and you don't know anybody who can help you with this, you can ask me.
-Send my the UDID of your device in a mail please. (johan.degraeve@gmail.com).
+If you don't have an Apple Developer Account, or you don't succeed in resigning, then send my the UDID of your device in a mail please. (johan.degraeve@gmail.com).
+How to find UDID : https://www.innerfence.com/howto/find-iphone-unique-device-identifier-udid
 
 Once you have an IPA signed for UDID, you can install the app.
 Easist is if you have xCode on a Mac : Connect your iphone to your mac,
