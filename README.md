@@ -9,6 +9,7 @@ xdrip/xbridge/G5/Bluereader for iOS devices -
 * Always on notification (not really always but almost always) that allows to see the current value by just lifting up the phone (iOS 10).
 * Upload to Nightscout (works always for G5, for xDrip not recently tested since I don't use G4 anymore, there may be some delay in upload).
 * store values in HealthKit
+* upload to Dexcom share
 
 
 # Alerts
