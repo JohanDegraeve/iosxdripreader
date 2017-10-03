@@ -303,18 +303,22 @@
 				}
 				
 				var asNumber:Number = new Number((event.values[0] as String).replace(",","."));
+				
 				if (isNaN(asNumber)) {
 					DialogService.openSimpleDialog(ModelLocator.resourceManagerInstance.getString("settingsview","low_value"),
 						ModelLocator.resourceManagerInstance.getString("calibrationservice","value_should_be_numeric"));
-				} else if (asNumber > new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_HIGH_MARK))) {
-					DialogService.openSimpleDialog(ModelLocator.resourceManagerInstance.getString("settingsview","high_value"),
-						ModelLocator.resourceManagerInstance.getString("settingsview","low_value_should_be_lower_than_high_value"));
 				} else {
-					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_LOW_MARK,
-						CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true" ?
-						asNumber.toString() 
-						: ((Math.round(BgReading.mmolToMgdl(asNumber)) * 10) / 10).toString());
-					lowValueText = asNumber.toString();
+					var asNumberInMGDL:Number = asNumber;
+					if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) != "true") {
+						asNumberInMGDL = (Math.round(BgReading.mmolToMgdl(asNumber)) * 10) / 10;
+					}
+					if (asNumberInMGDL > new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_HIGH_MARK))) {
+						DialogService.openSimpleDialog(ModelLocator.resourceManagerInstance.getString("settingsview","low_value"),
+							ModelLocator.resourceManagerInstance.getString("settingsview","low_value_should_be_lower_than_high_value"));
+					} else {
+						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_LOW_MARK, asNumberInMGDL.toString());
+						lowValueText = asNumber.toString();
+					}
 				}
 			}
 			
@@ -341,18 +345,22 @@
 				}
 				
 				var asNumber:Number = new Number((event.values[0] as String).replace(",","."));
+				
 				if (isNaN(asNumber)) {
 					DialogService.openSimpleDialog(ModelLocator.resourceManagerInstance.getString("settingsview","high_value"),
 						ModelLocator.resourceManagerInstance.getString("calibrationservice","value_should_be_numeric"));
-				} else if (asNumber < new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_LOW_MARK))) {
-					DialogService.openSimpleDialog(ModelLocator.resourceManagerInstance.getString("settingsview","high_value"),
-						ModelLocator.resourceManagerInstance.getString("settingsview","high_value_should_be_higher_than_low_value"));
 				} else {
-					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_HIGH_MARK,
-						CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true" ?
-						asNumber.toString() 
-						: ((Math.round(BgReading.mmolToMgdl(asNumber)) * 10) / 10).toString());
-					highValueText = asNumber.toString();
+					var asNumberInMGDL:Number = asNumber;
+					if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) != "true") {
+						asNumberInMGDL = (Math.round(BgReading.mmolToMgdl(asNumber)) * 10) / 10;
+					}
+					if (asNumberInMGDL < new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_LOW_MARK))) {
+						DialogService.openSimpleDialog(ModelLocator.resourceManagerInstance.getString("settingsview","high_value"),
+							ModelLocator.resourceManagerInstance.getString("settingsview","high_value_should_be_higher_than_low_value"));
+					} else {
+						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_HIGH_MARK, asNumberInMGDL.toString());
+						highValueText = asNumber.toString();
+					}
 				}
 			}
 			
