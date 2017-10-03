@@ -767,7 +767,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 					dateFormatterForSensorStartWarning.useUTC = false;
 					dateFormatterForSensorStartWarning.setStyle("locale",Capabilities.language.substr(0,2));
 					var message:String;
-					if (timeOfCalibration > 0) {
+					if (timeOfCalibration > 0 && !BlueToothDevice.isTypeLimitter()) {
 						message = ModelLocator.resourceManagerInstance.getString('homeview',"sensor_started_wait_needed_1");
 						message += " " + dateFormatterForSensorStartWarning.format(new Date(actualTime + timeOfCalibration)) + " ";
 						message += ModelLocator.resourceManagerInstance.getString('homeview',"sensor_started_wait_needed_2");

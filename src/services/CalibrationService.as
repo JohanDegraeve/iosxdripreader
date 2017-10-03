@@ -17,6 +17,7 @@ package services
 	import Utilities.Trace;
 	
 	import databaseclasses.BgReading;
+	import databaseclasses.BlueToothDevice;
 	import databaseclasses.Calibration;
 	import databaseclasses.CommonSettings;
 	import databaseclasses.Sensor;
@@ -142,7 +143,7 @@ package services
 			//if there's already more than two calibrations, then there's no need anymore to request initial calibration
 			if (Calibration.allForSensor().length < 2) {
 				myTrace("Calibration.allForSensor().length < 2");
-				if ((new Date()).valueOf() - Sensor.getActiveSensor().startedAt < 2 * 3600 * 1000) {
+				if (((new Date()).valueOf() - Sensor.getActiveSensor().startedAt < 2 * 3600 * 1000) && !BlueToothDevice.isTypeLimitter()) {
 					myTrace("CalibrationService : bgreading received but sensor age < 2 hours, so ignoring");
 				} else {
 					//launch a notification
