@@ -76,6 +76,7 @@ package services
 				myTrace("in appInForeGround, app has fired a notification for initialcalibration, but app was opened before notification was received - or appInForeGround is triggered faster than the notification event");
 				initialCalibrationRequested = false;
 				requestInitialCalibration();
+				Notifications.service.cancel(NotificationService.ID_FOR_REQUEST_CALIBRATION);
 			}
 		}
 		
@@ -250,6 +251,8 @@ package services
 		 */
 		public static function calibrationOnRequest(override:Boolean = true, checklast30minutes:Boolean = true, addSnoozeOption:Boolean = false, snoozeFunction:Function = null):void {
 			myTrace(" in calibrationOnRequest");
+			//start with removing any calibration request notification that might be there
+			Notifications.service.cancel(NotificationService.ID_FOR_REQUEST_CALIBRATION);
 			//check if there's 2 readings the last 30 minutes
 			if (BgReading.last30Minutes().length < 2) {
 				myTrace(" in calibrationOnRequest, BgReading.last30Minutes().length < 2");
