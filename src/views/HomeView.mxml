@@ -34,9 +34,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			import com.distriqt.extension.dialog.Dialog;
 			import com.distriqt.extension.dialog.DialogType;
 			import com.distriqt.extension.dialog.DialogView;
+			import com.distriqt.extension.dialog.PickerDialogView;
 			import com.distriqt.extension.dialog.builders.ActionSheetBuilder;
 			import com.distriqt.extension.dialog.builders.AlertBuilder;
 			import com.distriqt.extension.dialog.builders.DateTimeDialogBuilder;
+			import com.distriqt.extension.dialog.builders.PickerDialogBuilder;
 			import com.distriqt.extension.dialog.events.DialogDateTimeEvent;
 			import com.distriqt.extension.dialog.events.DialogViewEvent;
 			import com.distriqt.extension.dialog.objects.DialogAction;
@@ -368,10 +370,45 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 				}
 
 				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_LICENSE_INFO_ACCEPTED,"true");
+
+				if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_SELECTION_UNIT_DONE) == "false") {
+					selectUnit();
+					LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_SELECTION_UNIT_DONE,"true");
+				} else {
+					if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_INITIAL_SELECTION_PERIPHERAL_TYPE_DONE) == "false") {
+						SettingsView.changeTransmitterType();
+						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_INITIAL_SELECTION_PERIPHERAL_TYPE_DONE,"true");
+					}
+				}
+			}
+			
+			private static function selectUnit():void {
+				var units:Array = new Array();
+				units.push(ModelLocator.resourceManagerInstance.getString('settingsview','mgdl'));
+				units.push(ModelLocator.resourceManagerInstance.getString('settingsview','mmol'));
+
+				var picker:PickerDialogView = Dialog.service.create(
+					new PickerDialogBuilder()
+					.setTitle(ModelLocator.resourceManagerInstance.getString('settingsview', 'select_unit'))
+					.setCancelLabel(ModelLocator.resourceManagerInstance.getString("general","cancel"))
+					.setAcceptLabel("Ok")
+					.addColumn(units)
+					.build()
+				);
 				
-				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_INITIAL_SELECTION_PERIPHERAL_TYPE_DONE) == "false") {
-					SettingsView.changeTransmitterType();
-					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_INITIAL_SELECTION_PERIPHERAL_TYPE_DONE,"true");
+				picker.addEventListener( DialogViewEvent.CLOSED, picker_closedHandler);
+				picker.show();
+				
+				function picker_closedHandler(event:DialogViewEvent): void {
+					if (event.values[0] == ModelLocator.resourceManagerInstance.getString('settingsview','mgdl')) {
+						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL, "true");
+					} else {
+						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL, "false");
+					}
+					if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_INITIAL_SELECTION_PERIPHERAL_TYPE_DONE) == "false") {
+						SettingsView.changeTransmitterType();
+						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_INITIAL_SELECTION_PERIPHERAL_TYPE_DONE,"true");
+					}
 				}
 			}
 			

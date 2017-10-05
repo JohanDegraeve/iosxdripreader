@@ -112,6 +112,7 @@ package databaseclasses
 		public static const LOCAL_SETTING_INFO_ABOUT_LONG_PRESS_IN_HOME_SCREEN_GIVEN:int = 21;
 		public static const LOCAL_SETTING_HEALTHKIT_STORE_ON:int = 22;
 		public static const LOCAL_SETTING_LICENSE_INFO_ACCEPTED:int = 23;
+		public static const LOCAL_SETTING_SELECTION_UNIT_DONE
 		
 		private static var localSettings:Array = [
 			"false",//LOCAL_SETTING_DETAILED_TRACING_ENABLED
@@ -137,7 +138,8 @@ package databaseclasses
 			"false",//LOCAL_SETTING_CHART_RANGE_INFO_GIVEN
 			"false",//LOCAL_SETTING_INFO_ABOUT_LONG_PRESS_IN_HOME_SCREEN_GIVEN
 			"false",//LOCAL_SETTING_HEALTHKIT_STORE_ON
-			"false"//LOCAL_SETTING_LICENSE_INFO_ACCEPTED
+			"false",//LOCAL_SETTING_LICENSE_INFO_ACCEPTED
+			"false"//LOCAL_SETTING_SELECTION_UNIT_DONE
 		];
 		
 		public function LocalSettings() {
