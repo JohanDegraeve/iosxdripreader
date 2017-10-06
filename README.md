@@ -58,6 +58,7 @@ The application is not available on iTunes and must be signed for your device.
 If you have an Apple Developer Account then you can do this yourself using this tool https://dantheman827.github.io/ios-app-signer/
 The ipa file to download is here, take the latest release : https://github.com/JohanDegraeve/iosxdripreader/releases
 Regulary check for updates.
+You should enable Healthkit and Push notification in the Apple Developer portal, although push notification is not used anymore in the app. It would probably work also without it.
 
 If you don't have an Apple Developer Account, or you don't succeed in resigning, then send my the UDID of your device in a mail please. (johan.degraeve@gmail.com).
 How to find UDID : https://www.innerfence.com/howto/find-iphone-unique-device-identifier-udid
