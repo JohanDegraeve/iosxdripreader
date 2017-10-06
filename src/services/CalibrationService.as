@@ -253,6 +253,7 @@ package services
 			myTrace(" in calibrationOnRequest");
 			//start with removing any calibration request notification that might be there
 			Notifications.service.cancel(NotificationService.ID_FOR_REQUEST_CALIBRATION);
+			Notifications.service.cancel(NotificationService.ID_FOR_CALIBRATION_REQUEST_ALERT);
 			//check if there's 2 readings the last 30 minutes
 			if (BgReading.last30Minutes().length < 2) {
 				myTrace(" in calibrationOnRequest, BgReading.last30Minutes().length < 2");
