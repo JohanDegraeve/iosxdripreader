@@ -25,6 +25,12 @@ package services
 	import com.distriqt.extension.bluetoothle.events.PeripheralEvent;
 	import com.distriqt.extension.bluetoothle.objects.Characteristic;
 	import com.distriqt.extension.bluetoothle.objects.Peripheral;
+	import com.distriqt.extension.dialog.Dialog;
+	import com.distriqt.extension.dialog.DialogView;
+	import com.distriqt.extension.dialog.builders.AlertBuilder;
+	import com.distriqt.extension.dialog.events.DialogViewEvent;
+	import com.distriqt.extension.dialog.objects.DialogAction;
+	import com.distriqt.extension.message.Message;
 	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
 	
 	import flash.events.Event;
@@ -51,12 +57,14 @@ package services
 	
 	import databaseclasses.BlueToothDevice;
 	import databaseclasses.CommonSettings;
+	import databaseclasses.LocalSettings;
 	
 	import distriqtkey.DistriqtKey;
 	
 	import events.BlueToothServiceEvent;
 	import events.SettingsServiceEvent;
 	
+	import model.ModelLocator;
 	import model.TransmitterDataBluKonPacket;
 	import model.TransmitterDataBlueReaderBatteryPacket;
 	import model.TransmitterDataBlueReaderPacket;
@@ -64,6 +72,8 @@ package services
 	import model.TransmitterDataXBridgeBeaconPacket;
 	import model.TransmitterDataXBridgeDataPacket;
 	import model.TransmitterDataXdripDataPacket;
+	
+	import views.SettingsView;
 	
 	/**
 	 * all functionality related to bluetooth connectivity<br>
@@ -75,6 +85,7 @@ package services
 	 */
 	public class BluetoothService extends EventDispatcher
 	{
+		[ResourceBundle("bluetoothservice")]
 		
 		private static var _instance:BluetoothService = new BluetoothService();
 		
@@ -138,6 +149,10 @@ package services
 		
 		private static var timeStampOfLastG5Reading:Number = 0;
 		
+		private static var timeStampOfLastWarningUnknownG4Command:Number = 0;
+		//list of packet types seen in logs for xdrips from xdripkit.co.uk
+		private static var listOfSeenInvalidPacketTypes:Array = [49, 50, 51, 52, 53, 54, 55, 56, 57, 84];
+
 		/**
 		 * for blukon protocol
 		 */
@@ -157,6 +172,7 @@ package services
 		private static var GET_SENSOR_AGE_DELAY_IN_SECONDS:int =  3 * 3600;
 		private static var m_getNowGlucoseDataCommand:Boolean = false;// to be sure we wait for a GlucoseData Block and not using another block
 		private static var FSLSensorAGe:Number;
+		private static var unsupportedPacketType:int = 0;
 
 		private static function set activeBluetoothPeripheral(value:Peripheral):void
 		{
@@ -1448,8 +1464,54 @@ package services
 					break;
 				default:
 					myTrace("processG4TransmitterData unknown packetType received : " + packetType);
+					warnUnknownG4PacketType(packetType);
 			}
 		}
+		
+		public static function warnUnknownG4PacketType(packetType:int):void {
+			if (!ModelLocator.isInForeground) {
+				return;
+			}
+			if ((new Date()).valueOf() - new Number(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_TIMESTAMP_SINCE_LAST_INFO_UKNOWN_PACKET_TYPE)) < 30 * 60 * 1000)
+				return;
+			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_DONTASKAGAIN_ABOUT_UNKNOWN_PACKET_TYPE) ==  "true") {
+				return;
+			}
+			if (listOfSeenInvalidPacketTypes.indexOf(packetType) > -1) {
+				unsupportedPacketType = packetType;
+				var alert:DialogView = Dialog.service.create(
+					new AlertBuilder()
+					.setTitle("xDrip Alert")
+					.setMessage(ModelLocator.resourceManagerInstance.getString('bluetoothservice', "unknownpackettypeinfo"))
+					.addOption(ModelLocator.resourceManagerInstance.getString('bluetoothservice', "sendemail"), DialogAction.STYLE_POSITIVE, 0)
+					.addOption(ModelLocator.resourceManagerInstance.getString('bluetoothservice', "notnow"), DialogAction.STYLE_POSITIVE, 2)
+					.addOption(ModelLocator.resourceManagerInstance.getString('bluetoothservice', "dontaskagain"), DialogAction.STYLE_POSITIVE, 3)
+					.addOption(ModelLocator.resourceManagerInstance.getString("general","cancel"), DialogAction.STYLE_CANCEL, 1)
+					.build()
+				);
+				alert.addEventListener(DialogViewEvent.CLOSED, sendemail);
+				DialogService.addDialog(alert);
+			}
+		}
+		
+		private static function sendemail(ev:DialogViewEvent):void {
+			if (ev != null) {
+				if (ev.index == 1) {
+					return;
+				} else if (ev.index == 2) {
+					LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_TIMESTAMP_SINCE_LAST_INFO_UKNOWN_PACKET_TYPE, (new Date()).valueOf().toString());
+					return;
+				} else if (ev.index == 3) {
+					LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_DONTASKAGAIN_ABOUT_UNKNOWN_PACKET_TYPE, "true");
+					return;
+				}
+			}
+			
+			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_TIMESTAMP_SINCE_LAST_INFO_UKNOWN_PACKET_TYPE, (new Date()).valueOf().toString());
+			var body:String = "Hi,\n\nRequest for support wxl. Unsupported packetType =  " + unsupportedPacketType + ".\n\nregards.";
+			Message.service.sendMailWithOptions("Request for supported wxl", body, "johan.degraeve@gmail.com","","",null,false);
+		}
+
 		
 		private static function myTrace(log:String):void {
 			Trace.myTrace("BluetoothService.as", log);
