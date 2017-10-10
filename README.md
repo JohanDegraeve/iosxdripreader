@@ -61,6 +61,7 @@ Regulary check for updates.
 You should enable Healthkit and Push notification in the Apple Developer portal, although push notification is not used anymore in the app. It would probably work also without it.
 
 If you don't have an Apple Developer Account, or you don't succeed in resigning, then send my the UDID of your device in a mail please. (johan.degraeve@gmail.com).
+
 How to find UDID : https://www.innerfence.com/howto/find-iphone-unique-device-identifier-udid
 
 Once you have an IPA signed for UDID, you can install the app.
@@ -72,6 +73,8 @@ Alternative for Mac is "Apple 2 Configurator". Download from Apple store, instal
 Also working on Mac is http://www.i-funbox.com/en_download.html. Install, connect your iphone and chose "Install App"
 
 On Windows, try http://www.i-funbox.com/en_download.html, I haven't used it myself on PC.
+
+There is also a gitter room https://gitter.im/nightscout/iosxdripreader
 
 # To compile (only if you want to develop):
 - install Flash Builder 4.7 with FLex SDK 4.15.0, AIR 22.0 en_US
