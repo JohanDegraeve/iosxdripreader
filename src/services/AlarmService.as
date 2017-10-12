@@ -280,148 +280,177 @@ package services
 				var notificationEvent:NotificationEvent = event.data as NotificationEvent;
 				myTrace("in notificationReceived, event != null, id = " + NotificationService.notificationIdToText(notificationEvent.id));
 				if (notificationEvent.id == NotificationService.ID_FOR_LOW_ALERT) {
-					listOfAlerts = FromtimeAndValueArrayCollection.createList(
-						CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_LOW_ALERT), true);
-					alertName = listOfAlerts.getAlarmName(Number.NaN, "", new Date());
-					alertType = Database.getAlertType(alertName);
-					myTrace("in notificationReceived with id = ID_FOR_LOW_ALERT, cancelling notification");
-					myTrace("cancel any existing alert for ID_FOR_LOW_ALERT");
-					Notifications.service.cancel(NotificationService.ID_FOR_LOW_ALERT);
-					index = 0;
-					for (var cntr:int = 0;cntr < snoozeValueMinutes.length;cntr++) {
-						if ((snoozeValueMinutes[cntr]) >= alertType.defaultSnoozePeriodInMinutes) {
-							index = cntr;
-							break;
+					var now:Date = new Date();
+					if ((now.valueOf() - _lowAlertLatestSnoozeTimeInMs) > _lowAlertSnoozePeriodInMinutes * 60 * 1000
+						||
+						isNaN(_lowAlertLatestSnoozeTimeInMs)) {
+						listOfAlerts = FromtimeAndValueArrayCollection.createList(
+							CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_LOW_ALERT), true);
+						alertName = listOfAlerts.getAlarmName(Number.NaN, "", new Date());
+						alertType = Database.getAlertType(alertName);
+						myTrace("in notificationReceived with id = ID_FOR_LOW_ALERT, cancelling notification");
+						myTrace("cancel any existing alert for ID_FOR_LOW_ALERT");
+						Notifications.service.cancel(NotificationService.ID_FOR_LOW_ALERT);
+						index = 0;
+						for (var cntr:int = 0;cntr < snoozeValueMinutes.length;cntr++) {
+							if ((snoozeValueMinutes[cntr]) >= alertType.defaultSnoozePeriodInMinutes) {
+								index = cntr;
+								break;
+							}
 						}
-					}
-					if (notificationEvent.identifier == null) {
-						var snoozePeriodPicker1:DialogView;
-						snoozePeriodPicker1 = Dialog.service.create(
-							new PickerDialogBuilder()
-							.setTitle("")
-							.setCancelLabel(ModelLocator.resourceManagerInstance.getString("general","cancel"))
-							.setAcceptLabel("Ok")
-							.addColumn( snoozeValueStrings, index )
-							.build()
-						);
-						snoozePeriodPicker1.addEventListener( DialogViewEvent.CLOSED, lowSnoozePicker_closedHandler );
-						var dataToSend:Object = new Object();
-						dataToSend.picker = snoozePeriodPicker1;
-						dataToSend.pickertext = ModelLocator.resourceManagerInstance.getString("alarmservice","snooze_text_low_alert");
-						myTrace("adding PickerView");
-						ModelLocator.navigator.pushView(PickerView, dataToSend, null, flipTrans);
-					} else if (notificationEvent.identifier == NotificationService.ID_FOR_LOW_ALERT_SNOOZE_IDENTIFIER) {
-						_lowAlertSnoozePeriodInMinutes = alertType.defaultSnoozePeriodInMinutes;
-						myTrace("in notificationReceived with id = ID_FOR_LOW_ALERT, snoozing the notification for " + _lowAlertSnoozePeriodInMinutes + " minutes");
-						_lowAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
+						if (notificationEvent.identifier == null) {
+							var snoozePeriodPicker1:DialogView;
+							snoozePeriodPicker1 = Dialog.service.create(
+								new PickerDialogBuilder()
+								.setTitle("")
+								.setCancelLabel(ModelLocator.resourceManagerInstance.getString("general","cancel"))
+								.setAcceptLabel("Ok")
+								.addColumn( snoozeValueStrings, index )
+								.build()
+							);
+							snoozePeriodPicker1.addEventListener( DialogViewEvent.CLOSED, lowSnoozePicker_closedHandler );
+							var dataToSend:Object = new Object();
+							dataToSend.picker = snoozePeriodPicker1;
+							dataToSend.pickertext = ModelLocator.resourceManagerInstance.getString("alarmservice","snooze_text_low_alert");
+							myTrace("adding PickerView");
+							ModelLocator.navigator.pushView(PickerView, dataToSend, null, flipTrans);
+						} else if (notificationEvent.identifier == NotificationService.ID_FOR_LOW_ALERT_SNOOZE_IDENTIFIER) {
+							_lowAlertSnoozePeriodInMinutes = alertType.defaultSnoozePeriodInMinutes;
+							myTrace("in notificationReceived with id = ID_FOR_LOW_ALERT, snoozing the notification for " + _lowAlertSnoozePeriodInMinutes + " minutes");
+							_lowAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
+						}
+					} else {
+						myTrace("in checkAlarms, alarm snoozed, _lowAlertLatestSnoozeTime = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date(_lowAlertLatestSnoozeTimeInMs)) + ", _lowAlertSnoozePeriodInMinutes = " + _lowAlertSnoozePeriodInMinutes + ", actual time = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date()));
 					}
 				} else if (notificationEvent.id == NotificationService.ID_FOR_HIGH_ALERT) {
-					listOfAlerts = FromtimeAndValueArrayCollection.createList(
-						CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_HIGH_ALERT), true);
-					alertName = listOfAlerts.getAlarmName(Number.NaN, "", new Date());
-					alertType = Database.getAlertType(alertName);
-					myTrace("in notificationReceived with id = ID_FOR_HIGH_ALERT, cancelling notification");
-					myTrace("cancel any existing alert for ID_FOR_HIGH_ALERT");
-					Notifications.service.cancel(NotificationService.ID_FOR_HIGH_ALERT);
-					index = 0;
-					for (var cntr:int = 0;cntr < snoozeValueMinutes.length;cntr++) {
-						if ((snoozeValueMinutes[cntr]) >= alertType.defaultSnoozePeriodInMinutes) {
-							index = cntr;
-							break;
+					var now:Date = new Date();
+					if ((now.valueOf() - _highAlertLatestSnoozeTimeInMs) > _highAlertSnoozePeriodInMinutes * 60 * 1000
+						||
+						isNaN(_highAlertLatestSnoozeTimeInMs)) {
+						listOfAlerts = FromtimeAndValueArrayCollection.createList(
+							CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_HIGH_ALERT), true);
+						alertName = listOfAlerts.getAlarmName(Number.NaN, "", new Date());
+						alertType = Database.getAlertType(alertName);
+						myTrace("in notificationReceived with id = ID_FOR_HIGH_ALERT, cancelling notification");
+						myTrace("cancel any existing alert for ID_FOR_HIGH_ALERT");
+						Notifications.service.cancel(NotificationService.ID_FOR_HIGH_ALERT);
+						index = 0;
+						for (var cntr:int = 0;cntr < snoozeValueMinutes.length;cntr++) {
+							if ((snoozeValueMinutes[cntr]) >= alertType.defaultSnoozePeriodInMinutes) {
+								index = cntr;
+								break;
+							}
 						}
-					}
-					if (notificationEvent.identifier == null) {
-						var snoozePeriodPicker2:DialogView;
-						snoozePeriodPicker2 = Dialog.service.create(
-							new PickerDialogBuilder()
-							.setTitle("")
-							.setCancelLabel(ModelLocator.resourceManagerInstance.getString("general","cancel"))
-							.setAcceptLabel("Ok")
-							.addColumn( snoozeValueStrings, index )
-							.build()
-						);
-						snoozePeriodPicker2.addEventListener( DialogViewEvent.CLOSED, highSnoozePicker_closedHandler );
-						var dataToSend:Object = new Object();
-						dataToSend.picker = snoozePeriodPicker2;
-						dataToSend.pickertext = ModelLocator.resourceManagerInstance.getString("alarmservice","snooze_text_high_alert");
-						ModelLocator.navigator.pushView(PickerView, dataToSend, null, flipTrans);
-					} else if (notificationEvent.identifier == NotificationService.ID_FOR_HIGH_ALERT_SNOOZE_IDENTIFIER) {
-						_highAlertSnoozePeriodInMinutes = alertType.defaultSnoozePeriodInMinutes;
-						myTrace("in notificationReceived with id = ID_FOR_HIGH_ALERT, snoozing the notification for " + _highAlertSnoozePeriodInMinutes + " minutes");
-						_highAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
+						if (notificationEvent.identifier == null) {
+							var snoozePeriodPicker2:DialogView;
+							snoozePeriodPicker2 = Dialog.service.create(
+								new PickerDialogBuilder()
+								.setTitle("")
+								.setCancelLabel(ModelLocator.resourceManagerInstance.getString("general","cancel"))
+								.setAcceptLabel("Ok")
+								.addColumn( snoozeValueStrings, index )
+								.build()
+							);
+							snoozePeriodPicker2.addEventListener( DialogViewEvent.CLOSED, highSnoozePicker_closedHandler );
+							var dataToSend:Object = new Object();
+							dataToSend.picker = snoozePeriodPicker2;
+							dataToSend.pickertext = ModelLocator.resourceManagerInstance.getString("alarmservice","snooze_text_high_alert");
+							ModelLocator.navigator.pushView(PickerView, dataToSend, null, flipTrans);
+						} else if (notificationEvent.identifier == NotificationService.ID_FOR_HIGH_ALERT_SNOOZE_IDENTIFIER) {
+							_highAlertSnoozePeriodInMinutes = alertType.defaultSnoozePeriodInMinutes;
+							myTrace("in notificationReceived with id = ID_FOR_HIGH_ALERT, snoozing the notification for " + _highAlertSnoozePeriodInMinutes + " minutes");
+							_highAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
+						}
+					} else {
+						myTrace("in checkAlarms, alarm snoozed, _highAlertLatestSnoozeTime = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date(_highAlertLatestSnoozeTimeInMs)) + ", _highAlertSnoozePeriodInMinutes = " + _highAlertSnoozePeriodInMinutes + ", actual time = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date()));
 					}
 				} else if (notificationEvent.id == NotificationService.ID_FOR_VERY_LOW_ALERT) {
-					listOfAlerts = FromtimeAndValueArrayCollection.createList(
-						CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_VERY_LOW_ALERT), true);
-					alertName = listOfAlerts.getAlarmName(Number.NaN, "", new Date());
-					alertType = Database.getAlertType(alertName);
-					myTrace("in notificationReceived with id = ID_FOR_VERY_LOW_ALERT, cancelling notification");
-					myTrace("cancel any existing alert for ID_FOR_VERY_LOW_ALERT");
-					Notifications.service.cancel(NotificationService.ID_FOR_VERY_LOW_ALERT);
-					index = 0;
-					for (var cntr:int = 0;cntr < snoozeValueMinutes.length;cntr++) {
-						if ((snoozeValueMinutes[cntr]) >= alertType.defaultSnoozePeriodInMinutes) {
-							index = cntr;
-							break;
+					var now:Date = new Date();
+					if ((now.valueOf() - _veryLowAlertLatestSnoozeTimeInMs) > _veryLowAlertSnoozePeriodInMinutes * 60 * 1000
+						||
+						isNaN(_veryLowAlertLatestSnoozeTimeInMs)) {
+						listOfAlerts = FromtimeAndValueArrayCollection.createList(
+							CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_VERY_LOW_ALERT), true);
+						alertName = listOfAlerts.getAlarmName(Number.NaN, "", new Date());
+						alertType = Database.getAlertType(alertName);
+						myTrace("in notificationReceived with id = ID_FOR_VERY_LOW_ALERT, cancelling notification");
+						myTrace("cancel any existing alert for ID_FOR_VERY_LOW_ALERT");
+						Notifications.service.cancel(NotificationService.ID_FOR_VERY_LOW_ALERT);
+						index = 0;
+						for (var cntr:int = 0;cntr < snoozeValueMinutes.length;cntr++) {
+							if ((snoozeValueMinutes[cntr]) >= alertType.defaultSnoozePeriodInMinutes) {
+								index = cntr;
+								break;
+							}
 						}
-					}
-					if (notificationEvent.identifier == null) {
-						var snoozePeriodPicker7:DialogView;
-						snoozePeriodPicker7 = Dialog.service.create(
-							new PickerDialogBuilder()
-							.setTitle("")
-							.setCancelLabel(ModelLocator.resourceManagerInstance.getString("general","cancel"))
-							.setAcceptLabel("Ok")
-							.addColumn( snoozeValueStrings, index )
-							.build()
-						);
-						snoozePeriodPicker7.addEventListener( DialogViewEvent.CLOSED, veryLowSnoozePicker_closedHandler );
-						var dataToSend:Object = new Object();
-						dataToSend.picker = snoozePeriodPicker7;
-						dataToSend.pickertext = ModelLocator.resourceManagerInstance.getString("alarmservice","snooze_text_very_low_alert");
-						myTrace("adding PickerView");
-						ModelLocator.navigator.pushView(PickerView, dataToSend, null, flipTrans);
-					} else if (notificationEvent.identifier == NotificationService.ID_FOR_VERY_LOW_ALERT_SNOOZE_IDENTIFIER) {
-						_veryLowAlertSnoozePeriodInMinutes = alertType.defaultSnoozePeriodInMinutes;
-						myTrace("in notificationReceived with id = ID_FOR_VERY_LOW_ALERT, snoozing the notification for " + _veryLowAlertSnoozePeriodInMinutes + " minutes");
-						_veryLowAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
+						if (notificationEvent.identifier == null) {
+							var snoozePeriodPicker7:DialogView;
+							snoozePeriodPicker7 = Dialog.service.create(
+								new PickerDialogBuilder()
+								.setTitle("")
+								.setCancelLabel(ModelLocator.resourceManagerInstance.getString("general","cancel"))
+								.setAcceptLabel("Ok")
+								.addColumn( snoozeValueStrings, index )
+								.build()
+							);
+							snoozePeriodPicker7.addEventListener( DialogViewEvent.CLOSED, veryLowSnoozePicker_closedHandler );
+							var dataToSend:Object = new Object();
+							dataToSend.picker = snoozePeriodPicker7;
+							dataToSend.pickertext = ModelLocator.resourceManagerInstance.getString("alarmservice","snooze_text_very_low_alert");
+							myTrace("adding PickerView");
+							ModelLocator.navigator.pushView(PickerView, dataToSend, null, flipTrans);
+						} else if (notificationEvent.identifier == NotificationService.ID_FOR_VERY_LOW_ALERT_SNOOZE_IDENTIFIER) {
+							_veryLowAlertSnoozePeriodInMinutes = alertType.defaultSnoozePeriodInMinutes;
+							myTrace("in notificationReceived with id = ID_FOR_VERY_LOW_ALERT, snoozing the notification for " + _veryLowAlertSnoozePeriodInMinutes + " minutes");
+							_veryLowAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
+						}
+					} else {
+						myTrace("in checkAlarms, alarm snoozed, _veryLowAlertLatestSnoozeTime = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date(_veryLowAlertLatestSnoozeTimeInMs)) + ", _veryLowAlertSnoozePeriodInMinutes = " + _veryLowAlertSnoozePeriodInMinutes + ", actual time = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date()));
 					}
 				} else if (notificationEvent.id == NotificationService.ID_FOR_VERY_HIGH_ALERT) {
-					listOfAlerts = FromtimeAndValueArrayCollection.createList(
-						CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_VERY_HIGH_ALERT), true);
-					alertName = listOfAlerts.getAlarmName(Number.NaN, "", new Date());
-					alertType = Database.getAlertType(alertName);
-					myTrace("in notificationReceived with id = ID_FOR_VERY_HIGH_ALERT, cancelling notification");
-					myTrace("cancel any existing alert for ID_FOR_VERY_HIGH_ALERT");
-					Notifications.service.cancel(NotificationService.ID_FOR_VERY_HIGH_ALERT);
-					index = 0;
-					for (var cntr:int = 0;cntr < snoozeValueMinutes.length;cntr++) {
-						if ((snoozeValueMinutes[cntr]) >= alertType.defaultSnoozePeriodInMinutes) {
-							index = cntr;
-							break;
+					var now:Date = new Date();
+					if ((now.valueOf() - _veryHighAlertLatestSnoozeTimeInMs) > _veryHighAlertSnoozePeriodInMinutes * 60 * 1000
+						||
+						isNaN(_veryHighAlertLatestSnoozeTimeInMs)) {
+						listOfAlerts = FromtimeAndValueArrayCollection.createList(
+							CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_VERY_HIGH_ALERT), true);
+						alertName = listOfAlerts.getAlarmName(Number.NaN, "", new Date());
+						alertType = Database.getAlertType(alertName);
+						myTrace("in notificationReceived with id = ID_FOR_VERY_HIGH_ALERT, cancelling notification");
+						myTrace("cancel any existing alert for ID_FOR_VERY_HIGH_ALERT");
+						Notifications.service.cancel(NotificationService.ID_FOR_VERY_HIGH_ALERT);
+						index = 0;
+						for (var cntr:int = 0;cntr < snoozeValueMinutes.length;cntr++) {
+							if ((snoozeValueMinutes[cntr]) >= alertType.defaultSnoozePeriodInMinutes) {
+								index = cntr;
+								break;
+							}
 						}
-					}
-					if (notificationEvent.identifier == null) {
-						var snoozePeriodPicker8:DialogView;
-						snoozePeriodPicker8 = Dialog.service.create(
-							new PickerDialogBuilder()
-							.setTitle("")
-							.setCancelLabel(ModelLocator.resourceManagerInstance.getString("general","cancel"))
-							.setAcceptLabel("Ok")
-							.addColumn( snoozeValueStrings, index )
-							.build()
-						);
-						snoozePeriodPicker8.addEventListener( DialogViewEvent.CLOSED, veryHighSnoozePicker_closedHandler );
-						var dataToSend:Object = new Object();
-						dataToSend.picker = snoozePeriodPicker8;
-						dataToSend.pickertext = ModelLocator.resourceManagerInstance.getString("alarmservice","snooze_text_very_high_alert");
-						ModelLocator.navigator.pushView(PickerView, dataToSend, null, flipTrans);
-					} else if (notificationEvent.identifier == NotificationService.ID_FOR_VERY_HIGH_ALERT_SNOOZE_IDENTIFIER) {
-						_veryHighAlertSnoozePeriodInMinutes = alertType.defaultSnoozePeriodInMinutes;
-						myTrace("in notificationReceived with id = ID_FOR_VERY_HIGH_ALERT, snoozing the notification for " + _veryHighAlertSnoozePeriodInMinutes + " minutes");
-						_veryHighAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
+						if (notificationEvent.identifier == null) {
+							var snoozePeriodPicker8:DialogView;
+							snoozePeriodPicker8 = Dialog.service.create(
+								new PickerDialogBuilder()
+								.setTitle("")
+								.setCancelLabel(ModelLocator.resourceManagerInstance.getString("general","cancel"))
+								.setAcceptLabel("Ok")
+								.addColumn( snoozeValueStrings, index )
+								.build()
+							);
+							snoozePeriodPicker8.addEventListener( DialogViewEvent.CLOSED, veryHighSnoozePicker_closedHandler );
+							var dataToSend:Object = new Object();
+							dataToSend.picker = snoozePeriodPicker8;
+							dataToSend.pickertext = ModelLocator.resourceManagerInstance.getString("alarmservice","snooze_text_very_high_alert");
+							ModelLocator.navigator.pushView(PickerView, dataToSend, null, flipTrans);
+						} else if (notificationEvent.identifier == NotificationService.ID_FOR_VERY_HIGH_ALERT_SNOOZE_IDENTIFIER) {
+							_veryHighAlertSnoozePeriodInMinutes = alertType.defaultSnoozePeriodInMinutes;
+							myTrace("in notificationReceived with id = ID_FOR_VERY_HIGH_ALERT, snoozing the notification for " + _veryHighAlertSnoozePeriodInMinutes + " minutes");
+							_veryHighAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
+						}
+					} else {
+						myTrace("in checkAlarms, alarm snoozed, _veryHighAlertLatestSnoozeTime = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date(_veryHighAlertLatestSnoozeTimeInMs)) + ", _veryHighAlertSnoozePeriodInMinutes = " + _veryHighAlertSnoozePeriodInMinutes + ", actual time = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date()));
 					}
 				} else if (notificationEvent.id == NotificationService.ID_FOR_MISSED_READING_ALERT) {
+					
 					listOfAlerts = FromtimeAndValueArrayCollection.createList(
 						CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_MISSED_READING_ALERT), false);
 					alertName = listOfAlerts.getAlarmName(Number.NaN, "", new Date());
@@ -456,96 +485,117 @@ package services
 						missedReadingSnoozePickerOpen = true;
 					}
 				} else if (notificationEvent.id == NotificationService.ID_FOR_PHONEMUTED_ALERT) {
-					listOfAlerts = FromtimeAndValueArrayCollection.createList(
-						CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PHONE_MUTED_ALERT), false);
-					alertName = listOfAlerts.getAlarmName(Number.NaN, "", new Date());
-					alertType = Database.getAlertType(alertName);
-					myTrace("in notificationReceived with id = ID_FOR_PHONEMUTED_ALERT, cancelling notification");
-					myTrace("cancel any existing alert for ID_FOR_PHONEMUTED_ALERT");
-					Notifications.service.cancel(NotificationService.ID_FOR_PHONEMUTED_ALERT);
-					index = 0;
-					for (var cntr:int = 0;cntr < snoozeValueMinutes.length;cntr++) {
-						if ((snoozeValueMinutes[cntr]) >= alertType.defaultSnoozePeriodInMinutes) {
-							index = cntr;
-							break;
+					var now:Date = new Date();
+					if ((now.valueOf() - _phoneMutedAlertLatestSnoozeTimeInMs) > _phoneMutedAlertSnoozePeriodInMinutes * 60 * 1000
+						||
+						isNaN(_phoneMutedAlertLatestSnoozeTimeInMs)) {
+						listOfAlerts = FromtimeAndValueArrayCollection.createList(
+							CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PHONE_MUTED_ALERT), false);
+						alertName = listOfAlerts.getAlarmName(Number.NaN, "", new Date());
+						alertType = Database.getAlertType(alertName);
+						myTrace("in notificationReceived with id = ID_FOR_PHONEMUTED_ALERT, cancelling notification");
+						myTrace("cancel any existing alert for ID_FOR_PHONEMUTED_ALERT");
+						Notifications.service.cancel(NotificationService.ID_FOR_PHONEMUTED_ALERT);
+						index = 0;
+						for (var cntr:int = 0;cntr < snoozeValueMinutes.length;cntr++) {
+							if ((snoozeValueMinutes[cntr]) >= alertType.defaultSnoozePeriodInMinutes) {
+								index = cntr;
+								break;
+							}
 						}
-					}
-					if (notificationEvent.identifier == null) {
-						var snoozePeriodPicker4:DialogView;
-						snoozePeriodPicker4 = Dialog.service.create(
-							new PickerDialogBuilder()
-							.setTitle("")
-							.setCancelLabel(ModelLocator.resourceManagerInstance.getString("general","cancel"))
-							.setAcceptLabel("Ok")
-							.addColumn( snoozeValueStrings, index )
-							.build()
-						);
-						snoozePeriodPicker4.addEventListener( DialogViewEvent.CLOSED, phoneMutedSnoozePicker_closedHandler );
-						var dataToSend:Object = new Object();
-						dataToSend.picker = snoozePeriodPicker4;
-						dataToSend.pickertext = ModelLocator.resourceManagerInstance.getString("alarmservice","snooze_text_phone_muted_alert");
-						ModelLocator.navigator.pushView(PickerView, dataToSend, null, flipTrans);
-					} else if (notificationEvent.identifier == NotificationService.ID_FOR_PHONE_MUTED_SNOOZE_IDENTIFIER) {
-						_phoneMutedAlertSnoozePeriodInMinutes = alertType.defaultSnoozePeriodInMinutes;
-						myTrace("in notificationReceived with id = ID_FOR_PHONEMUTED_ALERT, snoozing the notification for " + _phoneMutedAlertSnoozePeriodInMinutes + " minutes");
-						_phoneMutedAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
+						if (notificationEvent.identifier == null) {
+							var snoozePeriodPicker4:DialogView;
+							snoozePeriodPicker4 = Dialog.service.create(
+								new PickerDialogBuilder()
+								.setTitle("")
+								.setCancelLabel(ModelLocator.resourceManagerInstance.getString("general","cancel"))
+								.setAcceptLabel("Ok")
+								.addColumn( snoozeValueStrings, index )
+								.build()
+							);
+							snoozePeriodPicker4.addEventListener( DialogViewEvent.CLOSED, phoneMutedSnoozePicker_closedHandler );
+							var dataToSend:Object = new Object();
+							dataToSend.picker = snoozePeriodPicker4;
+							dataToSend.pickertext = ModelLocator.resourceManagerInstance.getString("alarmservice","snooze_text_phone_muted_alert");
+							ModelLocator.navigator.pushView(PickerView, dataToSend, null, flipTrans);
+						} else if (notificationEvent.identifier == NotificationService.ID_FOR_PHONE_MUTED_SNOOZE_IDENTIFIER) {
+							_phoneMutedAlertSnoozePeriodInMinutes = alertType.defaultSnoozePeriodInMinutes;
+							myTrace("in notificationReceived with id = ID_FOR_PHONEMUTED_ALERT, snoozing the notification for " + _phoneMutedAlertSnoozePeriodInMinutes + " minutes");
+							_phoneMutedAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
+						}
+					} else {
+						myTrace("in checkAlarms, alarm snoozed, _phoneMutedAlertLatestSnoozeTimeInMs = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date(_phoneMutedAlertLatestSnoozeTimeInMs)) + ", _phoneMutedAlertSnoozePeriodInMinutes = " + _phoneMutedAlertSnoozePeriodInMinutes + ", actual time = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date()));
 					}
 				} else if (notificationEvent.id == NotificationService.ID_FOR_BATTERY_ALERT) {
-					listOfAlerts = FromtimeAndValueArrayCollection.createList(
-						CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BATTERY_ALERT), false);
-					alertName = listOfAlerts.getAlarmName(Number.NaN, "", new Date());
-					alertType = Database.getAlertType(alertName);
-					myTrace("in notificationReceived with id = ID_FOR_BATTERY_ALERT, cancelling notification");
-					myTrace("cancel any existing alert for ID_FOR_BATTERY_ALERT");
-					Notifications.service.cancel(NotificationService.ID_FOR_BATTERY_ALERT);
-					index = 0;
-					for (var cntr:int = 0;cntr < snoozeValueMinutes.length;cntr++) {
-						if ((snoozeValueMinutes[cntr]) >= alertType.defaultSnoozePeriodInMinutes) {
-							index = cntr;
-							break;
+					var now:Date = new Date();
+					if ((now.valueOf() - _batteryLevelAlertLatestSnoozeTimeInMs) > _batteryLevelAlertSnoozePeriodInMinutes * 60 * 1000
+						||
+						isNaN(_batteryLevelAlertLatestSnoozeTimeInMs)) {
+						listOfAlerts = FromtimeAndValueArrayCollection.createList(
+							CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BATTERY_ALERT), false);
+						alertName = listOfAlerts.getAlarmName(Number.NaN, "", new Date());
+						alertType = Database.getAlertType(alertName);
+						myTrace("in notificationReceived with id = ID_FOR_BATTERY_ALERT, cancelling notification");
+						myTrace("cancel any existing alert for ID_FOR_BATTERY_ALERT");
+						Notifications.service.cancel(NotificationService.ID_FOR_BATTERY_ALERT);
+						index = 0;
+						for (var cntr:int = 0;cntr < snoozeValueMinutes.length;cntr++) {
+							if ((snoozeValueMinutes[cntr]) >= alertType.defaultSnoozePeriodInMinutes) {
+								index = cntr;
+								break;
+							}
 						}
-					}
-					if (notificationEvent.identifier == null) {
-						var snoozePeriodPicker4:DialogView;
-						snoozePeriodPicker4 = Dialog.service.create(
-							new PickerDialogBuilder()
-							.setTitle("")
-							.setCancelLabel(ModelLocator.resourceManagerInstance.getString("general","cancel"))
-							.setAcceptLabel("Ok")
-							.addColumn( snoozeValueStrings, index )
-							.build()
-						);
-						snoozePeriodPicker4.addEventListener( DialogViewEvent.CLOSED, batteryLevelSnoozePicker_closedHandler );
-						var dataToSend:Object = new Object();
-						dataToSend.picker = snoozePeriodPicker4;
-						dataToSend.pickertext = ModelLocator.resourceManagerInstance.getString("alarmservice","snooze_text_battery_alert");
-						ModelLocator.navigator.pushView(PickerView, dataToSend, null, flipTrans);
-					} else if (notificationEvent.identifier == NotificationService.ID_FOR_BATTERY_LEVEL_ALERT_SNOOZE_IDENTIFIER) {
-						_batteryLevelAlertSnoozePeriodInMinutes = alertType.defaultSnoozePeriodInMinutes;
-						myTrace("in notificationReceived with id = ID_FOR_BATTERY_ALERT, snoozing the notification for " + _batteryLevelAlertSnoozePeriodInMinutes + " minutes");
-						_batteryLevelAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
+						if (notificationEvent.identifier == null) {
+							var snoozePeriodPicker4:DialogView;
+							snoozePeriodPicker4 = Dialog.service.create(
+								new PickerDialogBuilder()
+								.setTitle("")
+								.setCancelLabel(ModelLocator.resourceManagerInstance.getString("general","cancel"))
+								.setAcceptLabel("Ok")
+								.addColumn( snoozeValueStrings, index )
+								.build()
+							);
+							snoozePeriodPicker4.addEventListener( DialogViewEvent.CLOSED, batteryLevelSnoozePicker_closedHandler );
+							var dataToSend:Object = new Object();
+							dataToSend.picker = snoozePeriodPicker4;
+							dataToSend.pickertext = ModelLocator.resourceManagerInstance.getString("alarmservice","snooze_text_battery_alert");
+							ModelLocator.navigator.pushView(PickerView, dataToSend, null, flipTrans);
+						} else if (notificationEvent.identifier == NotificationService.ID_FOR_BATTERY_LEVEL_ALERT_SNOOZE_IDENTIFIER) {
+							_batteryLevelAlertSnoozePeriodInMinutes = alertType.defaultSnoozePeriodInMinutes;
+							myTrace("in notificationReceived with id = ID_FOR_BATTERY_ALERT, snoozing the notification for " + _batteryLevelAlertSnoozePeriodInMinutes + " minutes");
+							_batteryLevelAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
+						}
+					} else {
+						myTrace("in checkAlarms, alarm snoozed, _batteryLevelAlertLatestSnoozeTime = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date(_batteryLevelAlertLatestSnoozeTimeInMs)) + ", _batteryLevelAlertSnoozePeriodInMinutes = " + _batteryLevelAlertSnoozePeriodInMinutes + ", actual time = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date()));
 					}
 				} else if (notificationEvent.id == NotificationService.ID_FOR_CALIBRATION_REQUEST_ALERT) {
-					listOfAlerts = FromtimeAndValueArrayCollection.createList(
-						CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CALIBRATION_REQUEST_ALERT), false);
-					alertName = listOfAlerts.getAlarmName(Number.NaN, "", new Date());
-					alertType = Database.getAlertType(alertName);
-					myTrace("in notificationReceived with id = ID_FOR_CALIBRATION_REQUEST_ALERT, cancelling notification");
-					myTrace("cancel any existing alert for ID_FOR_CALIBRATION_REQUEST_ALERT");
-					Notifications.service.cancel(NotificationService.ID_FOR_CALIBRATION_REQUEST_ALERT);
-					index = 0;
-					for (var cntr:int = 0;cntr < snoozeValueMinutes.length;cntr++) {
-						if ((snoozeValueMinutes[cntr]) >= alertType.defaultSnoozePeriodInMinutes) {
-							index = cntr;
-							break;
+					var now:Date = new Date();
+					if ((now.valueOf() - _calibrationRequestLatestSnoozeTimeInMs) > _calibrationRequestSnoozePeriodInMinutes * 60 * 1000
+						||
+						isNaN(_calibrationRequestLatestSnoozeTimeInMs)) {
+						listOfAlerts = FromtimeAndValueArrayCollection.createList(
+							CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CALIBRATION_REQUEST_ALERT), false);
+						alertName = listOfAlerts.getAlarmName(Number.NaN, "", new Date());
+						alertType = Database.getAlertType(alertName);
+						myTrace("in notificationReceived with id = ID_FOR_CALIBRATION_REQUEST_ALERT, cancelling notification");
+						myTrace("cancel any existing alert for ID_FOR_CALIBRATION_REQUEST_ALERT");
+						Notifications.service.cancel(NotificationService.ID_FOR_CALIBRATION_REQUEST_ALERT);
+						index = 0;
+						for (var cntr:int = 0;cntr < snoozeValueMinutes.length;cntr++) {
+							if ((snoozeValueMinutes[cntr]) >= alertType.defaultSnoozePeriodInMinutes) {
+								index = cntr;
+								break;
+							}
 						}
-					}
-					if (notificationEvent.identifier == null) {
-						CalibrationService.calibrationOnRequest(false, false, true, snoozeCalibrationRequest);
-					} else if (notificationEvent.identifier == NotificationService.ID_FOR_CALIBRATION_REQUEST_ALERT_SNOOZE_IDENTIFIER) {
-						_calibrationRequestSnoozePeriodInMinutes = alertType.defaultSnoozePeriodInMinutes;
-						myTrace("in notificationReceived with id = ID_FOR_CALIBRATION_REQUEST_ALERT, snoozing the notification for " + _calibrationRequestSnoozePeriodInMinutes + " minutes");
-						_calibrationRequestLatestSnoozeTimeInMs = (new Date()).valueOf();
+						if (notificationEvent.identifier == null) {
+							CalibrationService.calibrationOnRequest(false, false, true, snoozeCalibrationRequest);
+						} else if (notificationEvent.identifier == NotificationService.ID_FOR_CALIBRATION_REQUEST_ALERT_SNOOZE_IDENTIFIER) {
+							_calibrationRequestSnoozePeriodInMinutes = alertType.defaultSnoozePeriodInMinutes;
+							myTrace("in notificationReceived with id = ID_FOR_CALIBRATION_REQUEST_ALERT, snoozing the notification for " + _calibrationRequestSnoozePeriodInMinutes + " minutes");
+							_calibrationRequestLatestSnoozeTimeInMs = (new Date()).valueOf();
+						}
+					} else {
+						myTrace("in checkAlarms, alarm snoozed, _calibrationRequestLatestSnoozeTime = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date(_calibrationRequestLatestSnoozeTimeInMs)) + ", _calibrationRequestSnoozePeriodInMinutes = " + _calibrationRequestSnoozePeriodInMinutes + ", actual time = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date()));
 					}
 				}
 			}
