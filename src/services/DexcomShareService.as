@@ -268,6 +268,8 @@ package services
 				uploaddata.SN = getSerialNumber();
 				uploaddata.TA = -5;
 				dexcomShareStatus = dexcomShareStatus_Waiting_PostReceiverEgvRecords;
+				myTrace("dexcomShareUrl = " + dexcomShareUrl);
+				myTrace("uploaddata = " + JSON.stringify(uploaddata));
 				BackgroundFetch.createAndLoadDexWithJSONDataUrlRequest(dexcomShareUrl + "Publisher/PostReceiverEgvRecords",  
 					URLRequestMethod.POST, 
 					JSON.stringify(uploaddata),
