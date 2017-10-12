@@ -308,19 +308,6 @@ package databaseclasses
 			return 0;
 		}
 		
-		public static function activePrediction():Number {
-			var bgReading:BgReading = lastNoSensor();
-			if (bgReading != null) {
-				var currentTime:Number = (new Date()).valueOf();
-				if (currentTime >=  bgReading.timestamp + (60000 * 7))  { 
-					currentTime = bgReading.timestamp + (60000 * 7); 
-				}
-				var time:Number = currentTime + BESTOFFSET;
-				return ((bgReading.a * time * time) + (bgReading.b * time) + bgReading.c);
-			}
-			return 0;
-		}
-		
 		/**
 		 * returnvalue is an array of two objects, the first beging a Number, the second a Boolean 
 		 */
