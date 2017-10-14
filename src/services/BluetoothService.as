@@ -153,6 +153,7 @@ package services
 		//list of packet types seen in logs for xdrips from xdripkit.co.uk
 		private static var listOfSeenInvalidPacketTypes:Array = [49, 50, 51, 52, 53, 54, 55, 56, 57, 84];
 
+		private static var timeStampOfLastDeviceNotPairedForBlukon:Number = 0;
 		/**
 		 * for blukon protocol
 		 */
@@ -934,6 +935,19 @@ package services
 			myTrace("peripheral_characteristic_subscribeErrorHandler: " + getCharacteristicName(event.characteristic.uuid));
 			myTrace("event.error = " + event.error);
 			myTrace("event.errorcode  = " + event.errorCode);
+			if ((new Date()).valueOf() - timeStampOfLastDeviceNotPairedForBlukon > 4.75 * 60 * 1000) {
+				if (BlueToothDevice.isBluKon()) {
+					if (event.characteristic.uuid.toUpperCase() == BC_desiredReceiveCharacteristicUUID.toUpperCase()
+						&&
+						event.errorCode == 15 
+					) {
+						myTrace("blukon not bonded, dispatching DEVICE_NOT_PAIRED event");
+						var blueToothServiceEvent:BlueToothServiceEvent = new BlueToothServiceEvent(BlueToothServiceEvent.DEVICE_NOT_PAIRED);
+						_instance.dispatchEvent(blueToothServiceEvent);
+						timeStampOfLastDeviceNotPairedForBlukon = (new Date()).valueOf();
+					}
+				}
+			}
 		}
 		
 		private static function peripheral_characteristic_unsubscribeHandler(event:CharacteristicEvent):void {
