@@ -359,6 +359,11 @@ package services
 				connectionAttemptTimeStamp = (new Date()).valueOf();
 				BluetoothLE.service.centralManager.connect(activeBluetoothPeripheral);
 				myTrace("Trying to connect to known device.");
+			} else if (activeBluetoothPeripheral != null && BlueToothDevice.isBluKon()) {
+				awaitingConnect = true;
+				connectionAttemptTimeStamp = (new Date()).valueOf();
+				BluetoothLE.service.centralManager.connect(activeBluetoothPeripheral);
+				myTrace("Trying to connect to blukon.");
 			} else if (BlueToothDevice.known() || (BlueToothDevice.alwaysScan() && BlueToothDevice.transmitterIdKnown())) {
 				myTrace("call startScanning");
 				startScanning();
@@ -528,11 +533,15 @@ package services
 			myTrace("connected to peripheral");
 			if (activeBluetoothPeripheral == null)
 				activeBluetoothPeripheral = event.peripheral;
+			
+			if (BlueToothDevice.isBluKon())
+				activeBluetoothPeripheral = event.peripheral;
 
 			if (BlueToothDevice.isBluKon()) {
 				myTrace("it's a blukon, setting state to BLUKON_COMMAND_initialState " + "");
 				blukonCurrentCommand = "";
 			}
+			
 			discoverServices();
 		}
 		
@@ -581,11 +590,20 @@ package services
 		}
 		
 		private static function central_peripheralDisconnectHandler(event:Event = null):void {
-			myTrace('Disconnected from device or attempt to reconnect failed, setting peripheralConnected = false');
-			peripheralConnected = false;
-			awaitingConnect = false;
-			forgetActiveBluetoothPeripheral();
-			startRescan(null);
+			myTrace('Disconnected from device or attempt to reconnect failed');
+			if (BlueToothDevice.isBluKon()) {
+				myTrace('it is a blukon');
+				myTrace('setting peripheralConnected = false');
+				peripheralConnected = false;
+				awaitingConnect = false;
+				tryReconnect();
+			} else {
+				myTrace('setting peripheralConnected = false');
+				peripheralConnected = false;
+				awaitingConnect = false;
+				forgetActiveBluetoothPeripheral();
+				startRescan(null);
+			}
 		}
 		
 		private static function tryReconnect(event:Event = null):void {
@@ -932,7 +950,6 @@ package services
 			
 			BluetoothLE.service.centralManager.disconnect(activeBluetoothPeripheral);
 			activeBluetoothPeripheral = null;
-			
 			myTrace("bluetooth device forgotten");
 		}
 		

@@ -159,7 +159,7 @@ package databaseclasses
 		}
 		
 		/**
-		 * if true, then scanning can start as soon as transmitter id is chosen. For the moment this is only the case for Dexcom G5<br>
+		 * if true, then scanning can start as soon as transmitter id is chosen. For the moment this is only the case for Dexcom G5 and Blukon<br>
 		 * For others like xdrip, bluereader, etc... scanning can only start if user initiates it 
 		 */
 		public static function alwaysScan():Boolean {
