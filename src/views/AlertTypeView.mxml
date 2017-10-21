@@ -32,6 +32,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			import com.distriqt.extension.dialog.builders.PickerDialogBuilder;
 			import com.distriqt.extension.dialog.events.DialogViewEvent;
 			import com.distriqt.extension.dialog.objects.DialogAction;
+			import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
 			
 			import mx.collections.ArrayCollection;
 			import mx.events.FlexEvent;
@@ -277,13 +278,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 				rect12.color = uint("0xD3D3D3");
 				setResetColorTimer();
 
+				var soundsAsStoredInAssets:String = ModelLocator.resourceManagerInstance.getString("alerttypeview","sound_names_as_in_assets_no_translation_needed_comma_seperated");
+				var soundsAsStoredInAssetsSplitted:Array = soundsAsStoredInAssets.split(',');
+
 				var selectedSound:int = 0;
 				var soundNames:Array = new Array();
-				var sounds:String = ModelLocator.resourceManagerInstance.getString("alerttypeview","sound_names_as_displayed_can_be_translated_must_match_above_list");
-				var soundsSplitted:Array = sounds.split(',');
+				var soundsAsDisplayed:String = ModelLocator.resourceManagerInstance.getString("alerttypeview","sound_names_as_displayed_can_be_translated_must_match_above_list");
+				var soundsAsDisplayedSplitted:Array = soundsAsDisplayed.split(',');
 				soundNames.push(ModelLocator.resourceManagerInstance.getString("alerttypeview","no_sound"));
-				for (var cntr:int = 0;cntr < soundsSplitted.length;cntr++) {
-					var newSound:String = soundsSplitted[cntr];
+				for (var cntr:int = 0;cntr < soundsAsDisplayedSplitted.length;cntr++) {
+					var newSound:String = soundsAsDisplayedSplitted[cntr];
 					if (newSound.length > 0) {
 						soundNames.push(newSound);
 						if (newSound.toUpperCase() == soundName.toUpperCase())
@@ -301,9 +305,34 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 				);
 				
 				picker.addEventListener( DialogViewEvent.CLOSED, picker_closedHandler );
+				picker.addEventListener(DialogViewEvent.CHANGED, picker_changedHandler);
+				picker.addEventListener(DialogViewEvent.CANCELLED, picker_canceledHandler);
 				picker.show();
 				
+				function picker_canceledHandler(event:DialogViewEvent):void {
+					BackgroundFetch.stopPlayingSound();
+				}
+				
+				function picker_changedHandler(event:DialogViewEvent):void {
+					var newSoundName:String = event.values[0];
+					var soundInList:String;
+					if (newSoundName == ModelLocator.resourceManagerInstance.getString("alerttypeview","no_sound")) {
+						// no sound to play						
+					} else if (newSoundName == ModelLocator.resourceManagerInstance.getString("alerttypeview","default_sound_as_displayed")) {
+						// no sound to play						
+					} else {
+						for (var cntr:int = 0;cntr < soundsAsDisplayedSplitted.length;cntr++) {
+							soundInList = soundsAsDisplayedSplitted[cntr];
+							if (soundInList == newSoundName) {
+								BackgroundFetch.playSound(soundsAsStoredInAssetsSplitted[cntr]);
+								break;
+							}
+						}
+					}
+				}
+				
 				function picker_closedHandler(event:DialogViewEvent): void {
+					BackgroundFetch.stopPlayingSound();
 					var newSoundName:String = event.values[0];
 					if (soundName == newSoundName)
 						return;
