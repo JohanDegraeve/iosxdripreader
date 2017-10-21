@@ -226,11 +226,10 @@ package services
 			parameters[0] = url;
 			parameters[1] = requestMethod;
 			parameters[2] = urlVariables;
-			parameters[3] = ModelLocator.isInForeground;
-			parameters[4] = data;
-			parameters[5] = contentType;
+			parameters[3] = data;
+			parameters[4] = contentType;
 			for (var i:int = 0;i < args.length;i++) {
-				parameters[6 + i] = args[i];
+				parameters[5 + i] = args[i];
 			}
 			BackgroundFetch.createAndLoadUrlRequest.apply(null, parameters);
 		}
