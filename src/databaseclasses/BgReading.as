@@ -787,7 +787,7 @@ package databaseclasses
 
 		public static function slopeToArrowSymbol(slope:Number):String {
 			if (slope <= (-3.5)) {
-				return "\u21ca";
+				return "\u2193\u2193";
 			} else if (slope <= (-2)) {
 				return "\u2193";
 			} else if (slope <= (-1)) {
@@ -799,7 +799,7 @@ package databaseclasses
 			} else if (slope <= (3.5)) {
 				return "\u2191";
 			} else {
-				return "\u21c8";
+				return "\u2191\u2191";
 			}
 		}
 		
