@@ -687,10 +687,7 @@
 					transmitterIdText = "00000";
 					//transmitterTypeText = newTransmitterType;	
 					resetAllTransmitterBatteryLevels();
-					if (BlueToothDevice.isBluKon()) {
-						DialogService.openSimpleDialog("Warning",
-							"Blukon is still under development, please change to another transmittertype");
-					} else if (BlueToothDevice.isLimitter()) {
+					if (BlueToothDevice.isLimitter()) {
 						DialogService.openSimpleDialog("Warning",
 							"Limitter is not yet tested, if you want to support testing, please send me an e-mail");
 					} 
