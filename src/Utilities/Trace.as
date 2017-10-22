@@ -130,7 +130,7 @@ package Utilities
 				if (Sensor.getActiveSensor() != null) {
 					additionalInfoToWrite += "Numer of calibrations for this sensor = " + Calibration.allForSensor().length + ".\n";
 					if (Calibration.allForSensor().length > 0) {
-						additionalInfoToWrite += "Last calibration = " + dateFormatter.format(new Date((Calibration.allForSensor().getItemAt(Calibration.allForSensor().length - 1) as Calibration).timestamp))  + ".\n";
+						additionalInfoToWrite += "Last calibration = " + dateFormatter.format(new Date(Calibration.last().timestamp))  + ".\n";
 					}
 				}
 				additionalInfoToWrite += "Battery alert = " + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BATTERY_ALERT) + "\n";
