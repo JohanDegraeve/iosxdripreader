@@ -342,7 +342,22 @@ package services
 										60);
 								}
 								syncRunning = false;
-							} else {
+							} else if (code == "MonitoredReceiverNotAssigned") {
+								myTrace("code MonitoredReceiverNotAssigned");
+								if (ModelLocator.isInForeground) {
+									var message:String =
+										ModelLocator.resourceManagerInstance.getString("dexcomshareservice","monitored_receiver_not_assigned_1") +
+										" " + (BlueToothDevice.isDexcomG4() ? CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_SERIALNUMBER)
+											:  CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID)) + " " +
+										ModelLocator.resourceManagerInstance.getString("dexcomshareservice","monitored_receiver_not_assigned_2") +
+										" " + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_ACCOUNTNAME) + ". " +
+										ModelLocator.resourceManagerInstance.getString("dexcomshareservice","monitored_receiver_not_assigned_3");
+									DialogService.openSimpleDialog(ModelLocator.resourceManagerInstance.getString("dexcomshareservice","upload_error"),
+										message,
+										60);
+								}
+								syncRunning = false;
+							}  else {
 								myTrace("unknown code");
 								syncRunning = false;
 							} 
