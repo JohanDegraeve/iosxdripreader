@@ -229,8 +229,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 						}
 						if (BlueToothDevice.alwaysScan()) {
 							scanningWasUserInitiated = false;
-							if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_INFO_SCREEN_SHOWN) == "false") {
-								showG5InfoScreen();
+							if (BlueToothDevice.isDexcomG5()) {
+								if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_INFO_SCREEN_SHOWN) == "false") {
+									showG5InfoScreen();
+								}
+							} else if (BlueToothDevice.isBluKon()) {
+								if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BLUKON_INFO_SCREEN_SHOWN) == "false") {
+									showBluKonInfoScreen();
+								}
 							}
 						} else {
 							if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G4_INFO_SCREEN_SHOWN) == "false") {
@@ -342,6 +348,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 					DialogService.openSimpleDialog(ModelLocator.resourceManagerInstance.getString('homeview',"info"),
 						message);
 					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_G5_INFO_SCREEN_SHOWN,"true");
+				}
+			}
+			
+			private static function showBluKonInfoScreen():void {
+				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BLUKON_INFO_SCREEN_SHOWN) == "false") {
+					var message:String = ModelLocator.resourceManagerInstance.getString('homeview',"info_screen_blukon");
+					if (Sensor.getActiveSensor() == null) {
+						message += "\n\n" + ModelLocator.resourceManagerInstance.getString('homeview',"info_screen_2_start_sensor");
+					}
+					DialogService.openSimpleDialog(ModelLocator.resourceManagerInstance.getString('homeview',"info"),
+						message);
+					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_BLUKON_INFO_SCREEN_SHOWN,"true");
 				}
 			}
 			

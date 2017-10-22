@@ -202,6 +202,7 @@
 		 public static const COMMON_SETTING_DEXCOM_SHARE_PASSWORD:int = 43;
 		 public static const COMMON_SETTING_DEXCOM_SHARE_ON:int = 44;
 		 public static const COMMON_SETTING_DEXCOM_SHARE_US_URL:int = 45;
+		 public static const COMMON_SETTING_BLUKON_INFO_SCREEN_SHOWN:int = 46;
 
 		 private static var commonSettings:Array = [
 			 "0",//COMMON_SETTING_CURRENT_SENSOR
@@ -249,7 +250,8 @@
 			 "account name",//COMMON_SETTING_DEXCOM_SHARE_ACCOUNTNAME
 			 "password",//COMMON_SETTING_DEXCOM_SHARE_PASSWORD
 			 "false",//COMMON_SETTING_DEXCOM_SHARE_ON
-			 "false"//COMMON_SETTING_DEXCOM_SHARE_US_URL
+			 "false",//COMMON_SETTING_DEXCOM_SHARE_US_URL
+			 "false"//COMMON_SETTING_BLUKON_INFO_SCREEN_SHOWN
 		 ];
 		 
 		 public function CommonSettings()
