@@ -365,6 +365,11 @@ package services
 				connectionAttemptTimeStamp = (new Date()).valueOf();
 				BluetoothLE.service.centralManager.connect(activeBluetoothPeripheral);
 				myTrace("Trying to connect to blukon.");
+			} else if (activeBluetoothPeripheral != null && BlueToothDevice.isBlueReader()) {
+				awaitingConnect = true;
+				connectionAttemptTimeStamp = (new Date()).valueOf();
+				BluetoothLE.service.centralManager.connect(activeBluetoothPeripheral);
+				myTrace("Trying to connect to bluereader.");
 			} else if (BlueToothDevice.known() || (BlueToothDevice.alwaysScan() && BlueToothDevice.transmitterIdKnown())) {
 				myTrace("call startScanning");
 				startScanning();
@@ -535,7 +540,7 @@ package services
 			if (activeBluetoothPeripheral == null)
 				activeBluetoothPeripheral = event.peripheral;
 			
-			if (BlueToothDevice.isBluKon())
+			if (BlueToothDevice.isBluKon() || BlueToothDevice.isBlueReader())
 				activeBluetoothPeripheral = event.peripheral;
 
 			if (BlueToothDevice.isBluKon()) {
@@ -594,6 +599,12 @@ package services
 			myTrace('Disconnected from device or attempt to reconnect failed');
 			if (BlueToothDevice.isBluKon()) {
 				myTrace('it is a blukon');
+				myTrace('setting peripheralConnected = false');
+				peripheralConnected = false;
+				awaitingConnect = false;
+				tryReconnect();
+			} if (BlueToothDevice.isBlueReader()) {
+				myTrace('it is a bluereader');
 				myTrace('setting peripheralConnected = false');
 				peripheralConnected = false;
 				awaitingConnect = false;
