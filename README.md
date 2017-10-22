@@ -1,15 +1,15 @@
-# connects to xDrip, G5 and BlueReader
+# connects to xDrip, G5, BluKon and BlueReader
 
 
 
-xdrip/xbridge/G5/Bluereader for iOS devices - 
+xdrip/xbridge/G5/Bluereader/BLukon for iOS devices - 
 
 * Alerts
 * Chart
-* Always on notification (not really always but almost always) that allows to see the current value by just lifting up the phone (iOS 10).
-* Upload to Nightscout (works always for G5, for xDrip not recently tested since I don't use G4 anymore, there may be some delay in upload).
+* Always on notification (not really always but almost always) that allows to see the current value by just lifting up the phone.
+* Upload to Nightscout
 * store values in HealthKit
-* upload to Dexcom share
+* upload to Dexcom Share
 
 
 # Alerts
