@@ -574,7 +574,7 @@
 				} else if (BlueToothDevice.isDexcomG5()) {
 					message += " (6 characters)";
 				} else if (BlueToothDevice.isBluKon()) {
-					message += " (BLUxxxxx)";
+					message += " (BLUxxxxx) " + "\n" + ModelLocator.resourceManagerInstance.getString("transmitterservice","blukon_xxxxx_explanation");
 				} 
 				var alert:DialogView = Dialog.service.create(
 					new AlertBuilder()
@@ -611,7 +611,8 @@
 					if (BlueToothDevice.isBluKon()) {
 						if (((event.values[0] as String).length != 8) || ((event.values[0] as String).toUpperCase().indexOf("BLU") < 0)) {
 							var alertMessage:String =
-								(ModelLocator.resourceManagerInstance.getString("transmitterservice","blukon_transmitter_id_should_be_five_chars"));
+								(ModelLocator.resourceManagerInstance.getString("transmitterservice","blukon_transmitter_id_should_be_five_chars")) + "\n" +
+								(ModelLocator.resourceManagerInstance.getString("transmitterservice","blukon_xxxxx_explanation"));
 							if (calledFromHomeView) {
 								alertMessage += " " + (ModelLocator.resourceManagerInstance.getString("transmitterservice","set_transmitter_id_in_settings"));
 							}
