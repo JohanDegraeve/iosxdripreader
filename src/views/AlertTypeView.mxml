@@ -37,7 +37,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			import mx.collections.ArrayCollection;
 			import mx.events.FlexEvent;
 			
+			import Utilities.FromtimeAndValueArrayCollection;
+			
 			import databaseclasses.AlertType;
+			import databaseclasses.CommonSettings;
 			import databaseclasses.Database;
 			
 			import model.ModelLocator;
@@ -200,6 +203,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 					}
 					if (alarmName != (event.values[0] as String)) {
 						alertTypeChanged = true;
+						AlertType.alertTypeUsed(alarmName, event.values[0] as String);
 						alarmName = event.values[0] as String;
 					}
 				}
