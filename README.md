@@ -55,7 +55,7 @@ Alert Types can be re-used for different types of alerts.
 # To Install the app.
 
 The application is not available on iTunes and must be signed for your device.
-If you have an Apple Developer Account then you can do this yourself using this tool https://dantheman827.github.io/ios-app-signer/
+If you have an Apple Developer Account then you can do this yourself using this tool as described here by Daniel Harrelson : https://gist.github.com/danielharrelson/3e66c8c76cdb8465981d0548b121b053
 The ipa file to download is here, take the latest release : https://github.com/JohanDegraeve/iosxdripreader/releases
 Regulary check for updates.
 You should enable Healthkit and Push notification in the Apple Developer portal, although push notification is not used anymore in the app. It would probably work also without it.
