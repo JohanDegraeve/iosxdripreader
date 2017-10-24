@@ -368,7 +368,10 @@
 			 return commonSettings[commonSettingId];
 		 }
 		 
-		 public static function setCommonSetting(commonSettingId:int, newValue:String, updateDatabase:Boolean = true):void {
+		 /**
+		  * if  updateDatabase = true and dispatchSettingChangedEvent = true, then SETTING_CHANGED will be dispatched
+		  */
+		 public static function setCommonSetting(commonSettingId:int, newValue:String, updateDatabase:Boolean = true, dispatchSettingChangedEvent:Boolean = true):void {
 			 if (commonSettings[commonSettingId] != newValue) {
 				 if (commonSettingId == COMMON_SETTING_TRANSMITTER_ID) {
 					 newValue = newValue.toUpperCase();
@@ -379,9 +382,11 @@
 				 commonSettings[commonSettingId] = newValue;
 				 if (updateDatabase) {
 					 Database.updateCommonSetting(commonSettingId, newValue);
-					 var settingChangedEvent:SettingsServiceEvent = new SettingsServiceEvent(SettingsServiceEvent.SETTING_CHANGED);
-					 settingChangedEvent.data = commonSettingId;
-					 _instance.dispatchEvent(settingChangedEvent);
+					 if (dispatchSettingChangedEvent) {
+						 var settingChangedEvent:SettingsServiceEvent = new SettingsServiceEvent(SettingsServiceEvent.SETTING_CHANGED);
+						 settingChangedEvent.data = commonSettingId;
+						 _instance.dispatchEvent(settingChangedEvent);
+					 }
 				 }
 			 }
 		 }
