@@ -222,7 +222,7 @@ package services
 		 * args parameter is to pass additional header name value pairs, must always be by two.<br>
 		 */
 		public static function createAndLoadUrlRequest(url: String, requestMethod:String, urlVariables:URLVariables, data:String, contentType:String, ... args): void {
-			var parameters:Array = new Array(6 + args.length);
+			var parameters:Array = new Array(5 + args.length);
 			parameters[0] = url;
 			parameters[1] = requestMethod;
 			parameters[2] = urlVariables;
