@@ -67,6 +67,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			private var resetColorTimer:Timer;
 			private var alertTypeChanged:Boolean;
 			private var selectedIndex:int;
+			private var previousAlertTypeName:String;
 			
 			/**
 			 * this is the default value for 5 minutes, to be used as repeat interval<br>
@@ -203,7 +204,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 					}
 					if (alarmName != (event.values[0] as String)) {
 						alertTypeChanged = true;
-						AlertType.alertTypeUsed(alarmName, event.values[0] as String);
+						previousAlertTypeName = alarmName;
 						alarmName = event.values[0] as String;
 					}
 				}
@@ -435,6 +436,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 						repeatInMinutes);
 					Database.insertAlertTypeSychronous(neworExistingAlertType);
 				}
+				if (previousAlertTypeName != "") {
+					if (previousAlertTypeName != alarmName) {
+						AlertType.alertTypeUsed(previousAlertTypeName, alarmName);
+						previousAlertTypeName  = "";
+					}
+				}
+
 				navigator.popView();
 			}
 		]]>

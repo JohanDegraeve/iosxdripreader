@@ -156,14 +156,19 @@ package databaseclasses
 			return localSettings[localSettingId];
 		}
 
-		public static function setLocalSetting(localSettingId:int, newValue:String, updateDatabase:Boolean = true):void {
+		/**
+		 * if  updateDatabase = true and dispatchSettingChangedEvent = true, then SETTING_CHANGED will be dispatched
+		 */
+		public static function setLocalSetting(localSettingId:int, newValue:String, updateDatabase:Boolean = true, dispatchSettingChangedEvent:Boolean = true):void {
 			if (localSettings[localSettingId] != newValue) {
 				localSettings[localSettingId] = newValue;
 				if (updateDatabase) {
 					Database.updateLocalSetting(localSettingId, newValue);
-					var settingChangedEvent:SettingsServiceEvent = new SettingsServiceEvent(SettingsServiceEvent.SETTING_CHANGED);
-					settingChangedEvent.data = localSettingId;
-					_instance.dispatchEvent(settingChangedEvent);
+					if (dispatchSettingChangedEvent) {
+						var settingChangedEvent:SettingsServiceEvent = new SettingsServiceEvent(SettingsServiceEvent.SETTING_CHANGED);
+						settingChangedEvent.data = localSettingId;
+						_instance.dispatchEvent(settingChangedEvent);
+					}
 				}
 			}
 		}

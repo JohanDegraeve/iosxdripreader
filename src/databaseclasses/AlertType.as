@@ -160,7 +160,7 @@ package databaseclasses
 								}
 							}
 							if (newSetting.length > 0) {
-								CommonSettings.setCommonSetting(cntr2, newSetting);
+								CommonSettings.setCommonSetting(cntr2, newSetting, true, false);
 							}
 						}
 					}
