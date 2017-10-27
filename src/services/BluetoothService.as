@@ -355,7 +355,12 @@ package services
 		}
 		
 		private static function bluetoothStatusIsOn():void {
-			if (activeBluetoothPeripheral != null && !(BlueToothDevice.alwaysScan())) {//do we ever pass here, activebluetoothperipheral is set to null after disconnect
+			if (activeBluetoothPeripheral != null && BlueToothDevice.isDexcomG5()) {
+				awaitingConnect = true;
+				connectionAttemptTimeStamp = (new Date()).valueOf();
+				BluetoothLE.service.centralManager.connect(activeBluetoothPeripheral);
+				myTrace("Trying to connect to G5.");
+			} else if (activeBluetoothPeripheral != null && !(BlueToothDevice.alwaysScan())) {//do we ever pass here, activebluetoothperipheral is set to null after disconnect
 				awaitingConnect = true;
 				connectionAttemptTimeStamp = (new Date()).valueOf();
 				BluetoothLE.service.centralManager.connect(activeBluetoothPeripheral);
@@ -508,6 +513,16 @@ package services
 			myTrace("in central_peripheralConnectHandler, setting peripheralConnected = true");
 			peripheralConnected = true;
 			
+			if (BlueToothDevice.isDexcomG5()) {
+				if ((new Date()).valueOf() - timeStampOfLastG5Reading < 60 * 1000) {
+					myTrace("G5 but last reading was less than 1 minute ago, disconnecting");
+					if (!BluetoothLE.service.centralManager.disconnect(activeBluetoothPeripheral)) {
+						myTrace("doDisconnectMessageG5 failed");
+					}
+					return;
+				}
+			}
+			
 			if (G4ScanTimer != null) {
 				if (G4ScanTimer.running) {
 					myTrace("in central_peripheralConnectHandler, stopping scanTimer");
@@ -540,7 +555,7 @@ package services
 			if (activeBluetoothPeripheral == null)
 				activeBluetoothPeripheral = event.peripheral;
 			
-			if (BlueToothDevice.isBluKon() || BlueToothDevice.isBlueReader())
+			if (BlueToothDevice.isBluKon() || BlueToothDevice.isBlueReader() || BlueToothDevice.isDexcomG5())
 				activeBluetoothPeripheral = event.peripheral;
 
 			if (BlueToothDevice.isBluKon()) {
@@ -605,6 +620,12 @@ package services
 				tryReconnect();
 			} else if (BlueToothDevice.isBlueReader()) {
 				myTrace('it is a bluereader');
+				myTrace('setting peripheralConnected = false');
+				peripheralConnected = false;
+				awaitingConnect = false;
+				tryReconnect();
+			}  else if (BlueToothDevice.isDexcomG5()) {
+				myTrace('it is a G5');
 				myTrace('setting peripheralConnected = false');
 				peripheralConnected = false;
 				awaitingConnect = false;
@@ -1108,7 +1129,7 @@ package services
 					myTrace("doDisconnectMessageG5 failed");
 				}
 			}
-			forgetActiveBluetoothPeripheral();
+			//forgetActiveBluetoothPeripheral();
 			myTrace("doDisconnectMessageG5 finished");
 		}
 		
