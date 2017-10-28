@@ -67,7 +67,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			private var resetColorTimer:Timer;
 			private var alertTypeChanged:Boolean;
 			private var selectedIndex:int;
-			private var previousAlertTypeName:String;
+			private var previousAlertTypeName:String = "";
 			
 			/**
 			 * this is the default value for 5 minutes, to be used as repeat interval<br>

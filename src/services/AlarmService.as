@@ -309,6 +309,8 @@ package services
 								.build()
 							);
 							snoozePeriodPicker1.addEventListener( DialogViewEvent.CLOSED, lowSnoozePicker_closedHandler );
+							snoozePeriodPicker1.addEventListener( DialogViewEvent.CHANGED, snoozePickerChangedOrCanceledHandler );
+							snoozePeriodPicker1.addEventListener( DialogViewEvent.CANCELLED, snoozePickerChangedOrCanceledHandler );
 							var dataToSend:Object = new Object();
 							dataToSend.picker = snoozePeriodPicker1;
 							dataToSend.pickertext = ModelLocator.resourceManagerInstance.getString("alarmservice","snooze_text_low_alert");
@@ -352,6 +354,8 @@ package services
 								.build()
 							);
 							snoozePeriodPicker2.addEventListener( DialogViewEvent.CLOSED, highSnoozePicker_closedHandler );
+							snoozePeriodPicker2.addEventListener( DialogViewEvent.CHANGED, snoozePickerChangedOrCanceledHandler );
+							snoozePeriodPicker2.addEventListener( DialogViewEvent.CANCELLED, snoozePickerChangedOrCanceledHandler );
 							var dataToSend:Object = new Object();
 							dataToSend.picker = snoozePeriodPicker2;
 							dataToSend.pickertext = ModelLocator.resourceManagerInstance.getString("alarmservice","snooze_text_high_alert");
@@ -394,6 +398,8 @@ package services
 								.build()
 							);
 							snoozePeriodPicker7.addEventListener( DialogViewEvent.CLOSED, veryLowSnoozePicker_closedHandler );
+							snoozePeriodPicker7.addEventListener( DialogViewEvent.CHANGED, snoozePickerChangedOrCanceledHandler );
+							snoozePeriodPicker7.addEventListener( DialogViewEvent.CANCELLED, snoozePickerChangedOrCanceledHandler );
 							var dataToSend:Object = new Object();
 							dataToSend.picker = snoozePeriodPicker7;
 							dataToSend.pickertext = ModelLocator.resourceManagerInstance.getString("alarmservice","snooze_text_very_low_alert");
@@ -437,6 +443,8 @@ package services
 								.build()
 							);
 							snoozePeriodPicker8.addEventListener( DialogViewEvent.CLOSED, veryHighSnoozePicker_closedHandler );
+							snoozePeriodPicker8.addEventListener( DialogViewEvent.CHANGED, snoozePickerChangedOrCanceledHandler );
+							snoozePeriodPicker8.addEventListener( DialogViewEvent.CANCELLED, snoozePickerChangedOrCanceledHandler );
 							var dataToSend:Object = new Object();
 							dataToSend.picker = snoozePeriodPicker8;
 							dataToSend.pickertext = ModelLocator.resourceManagerInstance.getString("alarmservice","snooze_text_very_high_alert");
@@ -476,6 +484,8 @@ package services
 							.build()
 						);
 						snoozePeriodPicker3.addEventListener( DialogViewEvent.CLOSED, missedReadingSnoozePicker_closedHandler );
+						snoozePeriodPicker3.addEventListener( DialogViewEvent.CHANGED, snoozePickerChangedOrCanceledHandler );
+						snoozePeriodPicker3.addEventListener( DialogViewEvent.CANCELLED, snoozePickerChangedOrCanceledHandler );
 						//also interested when user cancels the snooze picker because in that case the missed reading alert needs to be replanned
 						snoozePeriodPicker3.addEventListener( DialogViewEvent.CANCELLED, missedReadingSnoozePicker_canceledHandler );
 						var dataToSend:Object = new Object();
@@ -514,6 +524,8 @@ package services
 								.build()
 							);
 							snoozePeriodPicker4.addEventListener( DialogViewEvent.CLOSED, phoneMutedSnoozePicker_closedHandler );
+							snoozePeriodPicker4.addEventListener( DialogViewEvent.CHANGED, snoozePickerChangedOrCanceledHandler );
+							snoozePeriodPicker4.addEventListener( DialogViewEvent.CANCELLED, snoozePickerChangedOrCanceledHandler );
 							var dataToSend:Object = new Object();
 							dataToSend.picker = snoozePeriodPicker4;
 							dataToSend.pickertext = ModelLocator.resourceManagerInstance.getString("alarmservice","snooze_text_phone_muted_alert");
@@ -556,6 +568,8 @@ package services
 								.build()
 							);
 							snoozePeriodPicker4.addEventListener( DialogViewEvent.CLOSED, batteryLevelSnoozePicker_closedHandler );
+							snoozePeriodPicker4.addEventListener( DialogViewEvent.CHANGED, snoozePickerChangedOrCanceledHandler );
+							snoozePeriodPicker4.addEventListener( DialogViewEvent.CANCELLED, snoozePickerChangedOrCanceledHandler );
 							var dataToSend:Object = new Object();
 							dataToSend.picker = snoozePeriodPicker4;
 							dataToSend.pickertext = ModelLocator.resourceManagerInstance.getString("alarmservice","snooze_text_battery_alert");
@@ -612,6 +626,8 @@ package services
 					.build()
 				);
 				snoozePeriodPicker5.addEventListener( DialogViewEvent.CLOSED, calibrationRequestSnoozePicker_closedHandler );
+				snoozePeriodPicker5.addEventListener( DialogViewEvent.CHANGED, snoozePickerChangedOrCanceledHandler );
+				snoozePeriodPicker5.addEventListener( DialogViewEvent.CANCELLED, snoozePickerChangedOrCanceledHandler );
 				var dataToSend:Object = new Object();
 				dataToSend.picker = snoozePeriodPicker5;
 				dataToSend.pickertext = ModelLocator.resourceManagerInstance.getString("alarmservice","snooze_text_calibration_alert");
@@ -619,24 +635,28 @@ package services
 			}
 			
 			function calibrationRequestSnoozePicker_closedHandler(event:DialogViewEvent): void {
+				BackgroundFetch.stopPlayingSound();
 				myTrace("in calibrationRequestSnoozePicker_closedHandler snoozing the notification for " + snoozeValueStrings[event.indexes[0]] + " minutes");
 				_calibrationRequestSnoozePeriodInMinutes = snoozeValueMinutes[event.indexes[0]];
 				_calibrationRequestLatestSnoozeTimeInMs = (new Date()).valueOf();
 			}
 			
 			function batteryLevelSnoozePicker_closedHandler(event:DialogViewEvent): void {
+				BackgroundFetch.stopPlayingSound();
 				myTrace("in batteryLevelSnoozePicker_closedHandler snoozing the notification for " + snoozeValueStrings[event.indexes[0]] + " minutes");
 				_batteryLevelAlertSnoozePeriodInMinutes = snoozeValueMinutes[event.indexes[0]];
 				_batteryLevelAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
 			}
 			
 			function phoneMutedSnoozePicker_closedHandler(event:DialogViewEvent): void {
+				BackgroundFetch.stopPlayingSound();
 				myTrace("in phoneMutedSnoozePicker_closedHandler snoozing the notification for " + snoozeValueStrings[event.indexes[0]] + " minutes");
 				_phoneMutedAlertSnoozePeriodInMinutes = snoozeValueMinutes[event.indexes[0]];
 				_phoneMutedAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
 			}
 			
 			function missedReadingSnoozePicker_canceledHandler(event:DialogViewEvent):void {
+				BackgroundFetch.stopPlayingSound();
 				missedReadingSnoozePickerOpen = false;
 				myTrace("in missedReadingSnoozePicker_canceledHandler");
 				//first cancelling any existing because it may already have been set while app came in foreground
@@ -663,6 +683,7 @@ package services
 			function missedReadingSnoozePicker_closedHandler(event:DialogViewEvent): void {
 				missedReadingSnoozePickerOpen = false;
 				myTrace("in missedReadingSnoozePicker_closedHandler snoozing the notification for " + snoozeValueStrings[event.indexes[0]] + " minutes");
+				BackgroundFetch.stopPlayingSound();
 				//first cancelling any existing because it may already have been set while app came in foreground
 				myTrace("cancel any existing alert for ID_FOR_MISSED_READING_ALERT");
 				Notifications.service.cancel(NotificationService.ID_FOR_MISSED_READING_ALERT);
@@ -686,26 +707,34 @@ package services
 			
 			function lowSnoozePicker_closedHandler(event:DialogViewEvent): void {
 				myTrace("in lowSnoozePicker_closedHandler snoozing the notification for " + snoozeValueStrings[event.indexes[0]]);
+				BackgroundFetch.stopPlayingSound();
 				_lowAlertSnoozePeriodInMinutes = snoozeValueMinutes[event.indexes[0]];
 				_lowAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
 			}
 			
 			function highSnoozePicker_closedHandler(event:DialogViewEvent): void {
 				myTrace("in highSnoozePicker_closedHandler snoozing the notification for " + snoozeValueStrings[event.indexes[0]]);
+				BackgroundFetch.stopPlayingSound();
 				_highAlertSnoozePeriodInMinutes = snoozeValueMinutes[event.indexes[0]];
 				_highAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
 			}
 			
 			function veryHighSnoozePicker_closedHandler(event:DialogViewEvent): void {
 				myTrace("in veryHighSnoozePicker_closedHandler snoozing the notification for " + snoozeValueStrings[event.indexes[0]]);
+				BackgroundFetch.stopPlayingSound();
 				_veryHighAlertSnoozePeriodInMinutes = snoozeValueMinutes[event.indexes[0]];
 				_veryHighAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
 			}
 			
 			function veryLowSnoozePicker_closedHandler(event:DialogViewEvent): void {
 				myTrace("in veryLowSnoozePicker_closedHandler snoozing the notification for " + snoozeValueStrings[event.indexes[0]]);
+				BackgroundFetch.stopPlayingSound();
 				_veryLowAlertSnoozePeriodInMinutes = snoozeValueMinutes[event.indexes[0]];
 				_veryLowAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
+			}
+			
+			function snoozePickerChangedOrCanceledHandler(event:DialogViewEvent): void {
+				BackgroundFetch.stopPlayingSound();
 			}
 		}
 		
@@ -816,6 +845,7 @@ package services
 			var soundsAsStoredInAssetsSplitted:Array = soundsAsStoredInAssets.split(',');
 			var notificationBuilder:NotificationBuilder;
 			var newSound:String;
+			var soundToSet:String = "";
 			
 			notificationBuilder = new NotificationBuilder()
 				.setId(notificationId)
@@ -832,9 +862,9 @@ package services
 				notificationBuilder.setDelay(delay);
 			}
 			if (alertType.sound == "no_sound" && enableVibration) {
-				notificationBuilder.setSound("../assets/silence-1sec.aif");
+				soundToSet = "../assets/silence-1sec.aif";
 			} else 	if (alertType.sound == "no_sound" && !enableVibration) {
-				notificationBuilder.setSound("");
+				soundToSet = "";
 			} else {
 				if (alertType.sound == "default") {
 					//it's the default sound, nothing to do
@@ -842,11 +872,16 @@ package services
 					for (var cntr:int = 0;cntr < soundsAsDisplayedSplitted.length;cntr++) {
 						newSound = soundsAsDisplayedSplitted[cntr];
 						if (newSound == alertType.sound) {
-							notificationBuilder.setSound(soundsAsStoredInAssetsSplitted[cntr]);
+							soundToSet = soundsAsStoredInAssetsSplitted[cntr];
 							break;
 						}
 					}
 				}
+			}
+			if (ModelLocator.isInForeground && delay == 0) {
+				BackgroundFetch.playSound(soundToSet);		
+			} else {
+				notificationBuilder.setSound(soundToSet);
 			}
 			Notifications.service.notify(notificationBuilder.build());
 		}
