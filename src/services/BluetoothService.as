@@ -1175,6 +1175,7 @@ package services
 			buffer.endian = Endian.LITTLE_ENDIAN;
 			var strRecCmd:String = Utilities.UniqueId.bytesToHex(buffer).toLowerCase();
 			buffer.position = 0;
+			var blueToothServiceEvent:BlueToothServiceEvent  = null;
 			
 			////////code copied form xdripplus, commit 05c51872b19c643eb5146e5c5d86844d03d4baf4
 			var cmdFound:int = 0;
@@ -1323,10 +1324,8 @@ package services
 				
 				myTrace("in processBLUKONTransmitterData, *****************got getNowGlucoseData = " + currentGlucose);
 				
-				myTrace("in processBlukonTransmitterData, dispatching transmitter data");
-				var blueToothServiceEvent:BlueToothServiceEvent = new BlueToothServiceEvent(BlueToothServiceEvent.TRANSMITTER_DATA);
+				blueToothServiceEvent = new BlueToothServiceEvent(BlueToothServiceEvent.TRANSMITTER_DATA);
 				blueToothServiceEvent.data = new TransmitterDataBluKonPacket(currentGlucose, 0, 0, FSLSensorAGe, (new Date()).valueOf());
-				_instance.dispatchEvent(blueToothServiceEvent);
 				FSLSensorAGe = Number.NaN;
 				
 				blukonCurrentCommand = "010c0e00";
@@ -1350,6 +1349,11 @@ package services
 					myTrace("in processBLUKONTransmitterData, ************COMMAND NOT FOUND! -> " + strRecCmd + " on currentCmd=" + blukonCurrentCommand);
 					blukonCurrentCommand = "";
 				}
+			}
+			
+			if (blueToothServiceEvent != null) {
+				myTrace("in processBlukonTransmitterData, dispatching transmitter data");
+				_instance.dispatchEvent(blueToothServiceEvent);
 			}
 		}
 		
