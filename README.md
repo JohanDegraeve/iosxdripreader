@@ -2,7 +2,7 @@
 
 
 
-xdrip/xbridge/G5/Bluereader/BLukon for iOS devices - 
+xdrip/xbridge/G5/Bluereader/Blukon for iOS devices - 
 
 * Alerts
 * Chart
@@ -11,6 +11,7 @@ xdrip/xbridge/G5/Bluereader/BLukon for iOS devices -
 * store values in HealthKit
 * upload to Dexcom Share
 
+Nice video about steps to take : https://youtu.be/sNqj-Pvz53A
 
 # Alerts
 
