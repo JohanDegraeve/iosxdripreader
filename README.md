@@ -11,7 +11,7 @@ xdrip/xbridge/G5/Bluereader/Blukon for iOS devices -
 * store values in HealthKit
 * upload to Dexcom Share
 
-Nice video about steps to take : https://youtu.be/sNqj-Pvz53A
+Nice video about steps to take, created by Kamil Armacki : https://youtu.be/sNqj-Pvz53A
 
 # Alerts
 
