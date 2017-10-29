@@ -284,7 +284,7 @@ package services
 						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_FSL_SENSOR_AGE, transmitterDataBluKonPacket.sensorAge.toString());
 					}
 					BgReading.
-						create(transmitterDataBluKonPacket.bgvalue, transmitterDataBluKonPacket.bgvalue)
+						create(transmitterDataBluKonPacket.bgvalue, transmitterDataBluKonPacket.bgvalue, transmitterDataBluKonPacket.timeStamp)
 						.saveToDatabaseSynchronous();
 					
 					//dispatch the event that there's new data

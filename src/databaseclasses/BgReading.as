@@ -585,13 +585,16 @@ package databaseclasses
 		/**
 		 * stores in ModelLocator but not in database ! 
 		 */
-		public static function create(rawData:Number, filteredData:Number):BgReading {
-			myTrace("start of create bgreading with rawdata = " + rawData + ", and filtereddata = " + filteredData);
+		public static function create(rawData:Number, filteredData:Number, timeStamp:Number = Number.NaN):BgReading {
+			var timestamp:Number = timeStamp;
+			if (isNaN(timeStamp)) {
+				timestamp = (new Date()).valueOf();
+			}
+			
+			myTrace("start of create bgreading with rawdata = " + rawData + ", and filtereddata = " + filteredData + ", timestamp = " + (new Date(timestamp)).toString());
 			var sensor:Sensor = Sensor.getActiveSensor();
 			var calibration:Calibration = Calibration.last();
 
-			var timestamp:Number = (new Date()).valueOf();
-			
 			var bgReading:BgReading = (new BgReading(
 				timestamp,
 				sensor,//sensor

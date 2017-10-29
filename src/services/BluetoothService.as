@@ -40,6 +40,8 @@ package services
 	import flash.utils.Endian;
 	import flash.utils.Timer;
 	
+	import mx.collections.ArrayCollection;
+	
 	import G5Model.AuthChallengeRxMessage;
 	import G5Model.AuthChallengeTxMessage;
 	import G5Model.AuthRequestTxMessage;
@@ -55,6 +57,7 @@ package services
 	
 	import avmplus.FLASH10_FLAGS;
 	
+	import databaseclasses.BgReading;
 	import databaseclasses.BlueToothDevice;
 	import databaseclasses.CommonSettings;
 	import databaseclasses.LocalSettings;
@@ -86,6 +89,7 @@ package services
 	public class BluetoothService extends EventDispatcher
 	{
 		[ResourceBundle("bluetoothservice")]
+		[ResourceBundle("settingsview")]
 		
 		private static var _instance:BluetoothService = new BluetoothService();
 		
@@ -171,7 +175,12 @@ package services
 		private static var m_getNowGlucoseDataIndexCommand:Boolean = false;
 		private static var m_gotOneTimeUnknownCmd:Boolean = false;
 		private static var GET_SENSOR_AGE_DELAY_IN_SECONDS:int =  3 * 3600;
+		private static var BLUKON_GETSENSORAGE_TIMER:String = "blukon-getSensorAge-timer";
 		private static var m_getNowGlucoseDataCommand:Boolean = false;// to be sure we wait for a GlucoseData Block and not using another block
+		private static var m_timeLastBg:Number = 0;
+		private static var m_persistentTimeLastBg:Number;
+		private static var m_blockNumber:int = 0;
+		private static var m_full_data:ByteArray = new ByteArray();
 		private static var FSLSensorAGe:Number;
 		private static var unsupportedPacketType:int = 0;
 
@@ -224,6 +233,14 @@ package services
 		private static var BlueReader_RX_Characteristic:Characteristic;
 		
 		private static var BlueReader_TX_Characteristic:Characteristic;
+		
+		//blukon global vars for backfill processing
+		private static var m_currentTrendIndex:int;
+		private static var m_currentBlockNumber:String = "";
+		private static var m_currentOffset:int = 0;
+		private static var m_minutesDiffToLastReading:int = 0;
+		private static var m_minutesBack:int;
+		private static var m_getOlderReading:Boolean = false;
 
 		public function BluetoothService()
 		{
@@ -243,7 +260,19 @@ package services
 				initialStart = false;
 			
 			peripheralConnected = false;
+			
 			CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, settingChanged);
+			
+			//blukon
+			m_gotOneTimeUnknownCmd = false;
+			m_getNowGlucoseDataCommand = false;
+			m_getNowGlucoseDataIndexCommand = false;
+			m_getOlderReading = false;
+			m_blockNumber = 0;
+			if (BlueToothDevice.isBluKon()) {
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_BLUKON_BATTERY_LEVEL, "0");
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_FSL_SENSOR_AGE, "0");
+			}
 			
 			BluetoothLE.init(DistriqtKey.distriqtKey);
 			if (BluetoothLE.isSupported) {
@@ -1177,8 +1206,9 @@ package services
 			var strRecCmd:String = Utilities.UniqueId.bytesToHex(buffer).toLowerCase();
 			buffer.position = 0;
 			var blueToothServiceEvent:BlueToothServiceEvent  = null;
+			var gotLowBat:Boolean = false;
 			
-			////////code copied form xdripplus, commit 05c51872b19c643eb5146e5c5d86844d03d4baf4
+			////////code copied form xdripplus, commit e429b3db0bcd059cd8bb517bf15cabe705436ed2
 			var cmdFound:int = 0;
 			
 			//BluKon code by gregorybel
@@ -1210,9 +1240,15 @@ package services
 							blukonCurrentCommand = "010d0e0127";
 							myTrace("in processBLUKONTransmitterData, getSensorAge");
 						} else {
-							blukonCurrentCommand = "010d0e0103";
-							m_getNowGlucoseDataIndexCommand = true;//to avoid issue when gotNowDataIndex cmd could be same as getNowGlucoseData (case block=3)
-							myTrace("in processBLUKONTransmitterData, getNowGlucoseDataIndexCommand");
+							if (true) {
+								myTrace("in processBLUKONTransmitterData, getHistoricData (1)");
+								blukonCurrentCommand = "010d0f02002b";
+								m_blockNumber = 0;
+							} else {
+								blukonCurrentCommand = "010d0e0103"; 
+								m_getNowGlucoseDataIndexCommand = true;//to avoid issue when gotNowDataIndex cmd could be same as getNowGlucoseData (case block=3)
+								myTrace("in processBLUKONTransmitterData, getNowGlucoseDataIndexCommand");
+							}
 						}
 					}
 					
@@ -1235,10 +1271,14 @@ package services
 				}
 				
 				if (strRecCmd.indexOf("8b1a020011") == 0) {
-					myTrace("in processBLUKONTransmitterData, Patch read error.. please check the connectivity and re-initiate...");
+					myTrace("in processBLUKONTransmitterData, Patch read error.. please check the connectivity and re-initiate... or maybe battery is low?");
+					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_BLUKON_BATTERY_LEVEL, "1");
+					gotLowBat = true;
 				}
 
 				m_gotOneTimeUnknownCmd = false;
+				m_getNowGlucoseDataCommand = false;
+				m_getNowGlucoseDataIndexCommand = false;
 				blukonCurrentCommand = "";
 				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_TIME_STAMP_LAST_SENSOR_AGE_CHECK_IN_MS, "0");// set to 0  to force timer to be set back
 			}
@@ -1253,8 +1293,20 @@ package services
 			} else if (blukonCurrentCommand.indexOf("010d0900") == 0 /*getPatchInfo*/ && strRecCmd.indexOf("8bd9") == 0) {
 				cmdFound = 1;
 				myTrace("in processBLUKONTransmitterData, Patch Info received");
-				blukonCurrentCommand = "810a00";
-				myTrace("in processBLUKONTransmitterData, Send ACK");
+				
+				//decodeSerialNumber(buffer);
+				buffer.position = 0;
+				for (var i:int = 0; i <= 17 && i < buffer.length; i++) {
+					buffer.readByte();
+				}
+				
+				if (isSensorReady(buffer.readByte())) {
+					blukonCurrentCommand = "810a00";
+					myTrace("in processBLUKONTransmitterData, Send ACK");
+				} else {
+					blukonCurrentCommand = "";
+					myTrace("in processBLUKONTransmitterData, Sensor is not ready, stop!");
+				}
 			} else if (blukonCurrentCommand.indexOf("010d0b00") == 0 /*getUnknownCmd1*/ && strRecCmd.indexOf("8bdb") == 0) {
 				cmdFound = 1;
 				myTrace("in processBLUKONTransmitterData, gotUnknownCmd1 (010d0b00): "+strRecCmd);
@@ -1275,19 +1327,25 @@ package services
 				}
 				if (strRecCmd == "8bda02") {
 					myTrace("in processBLUKONTransmitterData, gotUnknownCmd2: is maybe battery low????");
+					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_TIME_STAMP_LAST_SENSOR_AGE_CHECK_IN_MS, "5");
+					gotLowBat = true;
 				}
-				//saw one time:  battery status????
 				
 				//try asking each time m_gotOneTimeUnknownCmd = true;
 				if ((new Date()).valueOf() - new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TIME_STAMP_LAST_SENSOR_AGE_CHECK_IN_MS)) > GET_SENSOR_AGE_DELAY_IN_SECONDS * 1000) {
 					blukonCurrentCommand = "010d0e0127";
 					myTrace("in processBLUKONTransmitterData, getSensorAge");
 				} else {
-					blukonCurrentCommand = "010d0e0103";
-					m_getNowGlucoseDataIndexCommand = true;//to avoid issue when gotNowDataIndex cmd could be same as getNowGlucoseData (case block=3)
-					myTrace("in processBLUKONTransmitterData, getNowGlucoseDataIndexCommand");
+					if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BLUKON_EXTERNAL_ALGORITHM) == "true") {
+						myTrace("in processBLUKONTransmitterData, getHistoricData (2)");
+						blukonCurrentCommand = "010d0f02002b";
+						m_blockNumber = 0;
+					} else {
+						blukonCurrentCommand = "010d0e0103";
+						m_getNowGlucoseDataIndexCommand = true;//to avoid issue when gotNowDataIndex cmd could be same as getNowGlucoseData (case block=3)
+						myTrace("in processBLUKONTransmitterData, getNowGlucoseDataIndexCommand");
+					}
 				}
-				
 			} else if (blukonCurrentCommand.indexOf("010d0e0127") == 0 /*getSensorAge*/ && strRecCmd.indexOf("8bde") == 0) {
 				cmdFound = 1;
 				myTrace("in processBLUKONTransmitterData, SensorAge received");
@@ -1301,46 +1359,119 @@ package services
 					FSLSensorAGe = Number.NaN;
 				}
 				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_TIME_STAMP_LAST_SENSOR_AGE_CHECK_IN_MS, (new Date()).valueOf().toString());
-				blukonCurrentCommand = "010d0e0103";
-				m_getNowGlucoseDataIndexCommand = true;//to avoid issue when gotNowDataIndex cmd could be same as getNowGlucoseData (case block=3)
-				myTrace("in processBLUKONTransmitterData, getNowGlucoseDataIndexCommand");
-				
+				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BLUKON_EXTERNAL_ALGORITHM) == "true") {
+					myTrace("in processBLUKONTransmitterData, getHistoricData (3)");
+					blukonCurrentCommand = "010d0f02002b";
+					m_blockNumber = 0;
+				} else {
+					blukonCurrentCommand = "010d0e0103";
+					m_getNowGlucoseDataIndexCommand = true;//to avoid issue when gotNowDataIndex cmd could be same as getNowGlucoseData (case block=3)
+					myTrace("in processBLUKONTransmitterData, getNowGlucoseDataIndexCommand");
+				}
 			} else if (blukonCurrentCommand.indexOf("010d0e0103") == 0 /*getNowDataIndex*/ && m_getNowGlucoseDataIndexCommand && strRecCmd.indexOf("8bde") == 0) {
 				cmdFound = 1;
 				myTrace("in processBLUKONTransmitterData, gotNowDataIndex");
 				
-				var blockNumber:String = blockNumberForNowGlucoseData(buffer);
-				myTrace("in processBLUKONTransmitterData, block Number is "+ blockNumber);
+				// calculate time delta to last valid BG reading
+				var bgReadings:ArrayCollection = BgReading.latest(1);
+				if (bgReadings.length > 0) {
+					var bgReading:BgReading = (BgReading.latest(1))[0]  as BgReading;
+					m_persistentTimeLastBg = bgReading.timestamp;
+				} else {
+					m_persistentTimeLastBg = 0;
+				}
+				m_minutesDiffToLastReading = ((((new Date()).valueOf() - m_persistentTimeLastBg)/1000)+30)/60;
+				myTrace("in processBLUKONTransmitterData, m_minutesDiffToLastReading=" + m_minutesDiffToLastReading + ", last reading: " + (new Date(m_persistentTimeLastBg)).toString());
 				
-				blukonCurrentCommand = "010d0e010"+ blockNumber;//getNowGlucoseData
+				// check time range for valid backfilling
+				if ( (m_minutesDiffToLastReading > 7) && (m_minutesDiffToLastReading < (8*60))  ) {
+					myTrace("in processBLUKONTransmitterData, start backfilling");
+					m_getOlderReading = true;
+				} else {
+					m_getOlderReading = false;
+				}
+				// get index to current BG reading
+				m_currentBlockNumber = blockNumberForNowGlucoseData(buffer);
+				m_currentOffset = nowGlucoseOffset;
+				// time diff must be > 5,5 min and less than the complete trend buffer
+				if ( !m_getOlderReading ) {
+					blukonCurrentCommand = "010d0e010" + m_currentBlockNumber;//getNowGlucoseData
+					nowGlucoseOffset = m_currentOffset;
+					myTrace("in processBLUKONTransmitterData, getNowGlucoseData");
+				}
+				else {
+					m_minutesBack = m_minutesDiffToLastReading;
+					var delayedTrendIndex:int = m_currentTrendIndex;
+					// ensure to have min 3 mins distance to last reading to avoid doible draws (even if they are distict)
+					if ( m_minutesBack > 17 ) {
+						m_minutesBack = 15;
+					} else if ( m_minutesBack > 12 ) {
+						m_minutesBack = 10;
+					} else if ( m_minutesBack > 7 ) {
+						m_minutesBack = 5;
+					}
+					myTrace("in processBLUKONTransmitterData, read " + m_minutesBack + " mins old trend data");
+					for ( var i:int = 0 ; i < m_minutesBack ; i++ ) {
+						if ( --delayedTrendIndex < 0)
+							delayedTrendIndex = 15;
+					}
+					var delayedBlockNumber:String = blockNumberForNowGlucoseDataDelayed(delayedTrendIndex);
+					blukonCurrentCommand = "010d0e010" + delayedBlockNumber;//getNowGlucoseData
+					myTrace("in processBLUKONTransmitterData, getNowGlucoseData backfilling");
+				}
 				m_getNowGlucoseDataIndexCommand = false;
 				m_getNowGlucoseDataCommand = true;
-				
-				myTrace("in processBLUKONTransmitterData, getNowGlucoseData");
-				
-				
 			} else if (blukonCurrentCommand.indexOf("010d0e01") == 0 /*getNowGlucoseData*/ && m_getNowGlucoseDataCommand && strRecCmd.indexOf("8bde") == 0) {
 				cmdFound = 1;
 				var currentGlucose:Number = nowGetGlucoseValue(buffer);
-				
 				myTrace("in processBLUKONTransmitterData, *****************got getNowGlucoseData = " + currentGlucose);
 				
-				blueToothServiceEvent = new BlueToothServiceEvent(BlueToothServiceEvent.TRANSMITTER_DATA);
-				blueToothServiceEvent.data = new TransmitterDataBluKonPacket(currentGlucose, 0, 0, FSLSensorAGe, (new Date()).valueOf());
-				FSLSensorAGe = Number.NaN;
-				
-				blukonCurrentCommand = "010c0e00";
-				myTrace("in processBLUKONTransmitterData, Send sleep cmd");
-				m_getNowGlucoseDataCommand = false;
-			}  else if (strRecCmd.indexOf("cb020000") == 0) {
+				if (!m_getOlderReading) {
+					blueToothServiceEvent = new BlueToothServiceEvent(BlueToothServiceEvent.TRANSMITTER_DATA);
+					blueToothServiceEvent.data = new TransmitterDataBluKonPacket(currentGlucose, 0, 0, FSLSensorAGe, (new Date()).valueOf());
+					FSLSensorAGe = Number.NaN;
+					
+					blukonCurrentCommand = "010c0e00";
+					myTrace("in processBLUKONTransmitterData, Send sleep cmd");
+					m_getNowGlucoseDataCommand = false;
+				} else {
+					myTrace("in processBLUKONTransmitterData, bf: processNewTransmitterData with delayed timestamp of " + m_minutesBack + " min");
+					blueToothServiceEvent = new BlueToothServiceEvent(BlueToothServiceEvent.TRANSMITTER_DATA);
+					blueToothServiceEvent.data = new TransmitterDataBluKonPacket(currentGlucose, 0, 0, 0 /*battery level force to 0 as unknown*/, (new Date()).valueOf() - (m_minutesBack*60*1000));
+					m_minutesBack -= 5;
+					if ( m_minutesBack < 5 ) {
+						m_getOlderReading = false;
+					}
+					myTrace("in processBLUKONTransmitterData,bf: calculate next trend buffer with " + m_minutesBack + " min timestamp");
+					var delayedTrendIndex:int = m_currentTrendIndex;
+					for ( var i:int = 0 ; i < m_minutesBack ; i++ ) {
+						if ( --delayedTrendIndex < 0)
+							delayedTrendIndex = 15;
+					}
+					var delayedBlockNumber:String = blockNumberForNowGlucoseDataDelayed(delayedTrendIndex);
+					blukonCurrentCommand = "010d0e010" + delayedBlockNumber;//getNowGlucoseData
+					myTrace("in processBLUKONTransmitterData, bf: read next block: " + blukonCurrentCommand);
+				}
+			} else if ((blukonCurrentCommand.indexOf("010d0f02002b") == 0 || (blukonCurrentCommand == "" && m_blockNumber > 0)) && strRecCmd.indexOf("8bdf") == 0) {
+				cmdFound = 1;
+				buffer.position = 0;
+				handlegetHistoricDataResponse(buffer);
+			} else if (strRecCmd.indexOf("cb020000") == 0) {
 				cmdFound = 1;
 				myTrace("in processBLUKONTransmitterData, is bridge battery low????!");
-				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_BLUKON_BATTERY_LEVEL, "50");
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_BLUKON_BATTERY_LEVEL, "3");
+				gotLowBat = true;
 			} else if (strRecCmd.indexOf("cbdb0000") == 0) {
 				cmdFound = 1;
 				myTrace("in processBLUKONTransmitterData, is bridge battery really low????!");
-				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_BLUKON_BATTERY_LEVEL, "25");
-			}
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_BLUKON_BATTERY_LEVEL, "2");
+				gotLowBat = true;
+			} 
+			
+			if (!gotLowBat) {
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_BLUKON_BATTERY_LEVEL, "100");
+			}	
+			
 			
 			if (blukonCurrentCommand.length > 0 && cmdFound == 1) {
 				myTrace("in processBLUKONTransmitterData, Sending reply: " + blukonCurrentCommand);
@@ -1355,6 +1486,44 @@ package services
 			if (blueToothServiceEvent != null) {
 				myTrace("in processBlukonTransmitterData, dispatching transmitter data");
 				_instance.dispatchEvent(blueToothServiceEvent);
+			}
+		}
+		
+		private static function handlegetHistoricDataResponse(buffer:ByteArray):void {
+			myTrace("in processBlukonTransmitterData, recieved historic data, m_block_number = " + m_blockNumber);
+			// We are looking for 43 blocks of 8 bytes.
+			// The bluekon will send them as 21 blocks of 16 bytes, and the last one of 8 bytes. 
+			// The packet will look like "0x8b 0xdf 0xblocknumber 0x02 DATA" (so data starts at place 4)
+			if(m_blockNumber > 42) {
+				myTrace("in processBlukonTransmitterData, recieved historic data, but block number is too big " + m_blockNumber);
+				return;
+			}
+			
+			var len:int = buffer.length - 4;
+			buffer.position = 2;
+			var buffer_at_2:int = buffer.readByte();
+			myTrace("in processBlukonTransmitterData, len = " + len +" " + len + " blocknum " + buffer_at_2);
+			
+			if(buffer_at_2 != m_blockNumber) {
+				myTrace("in processBlukonTransmitterData, We have recieved a bad block number buffer[2] = " + buffer_at_2 + " m_blockNumber = " + m_blockNumber);
+				return;
+			}
+			if(8 * m_blockNumber + len > m_full_data.length) {
+				myTrace("in processBlukonTransmitterData, We have recieved too much data  m_blockNumber = " + m_blockNumber + " len = " + len + 
+					" m_full_data.length = " + m_full_data.length);        	
+				return;
+			}
+			
+			buffer.position = 4;
+			buffer.readBytes(m_full_data, 8 * m_blockNumber, len);
+			m_blockNumber += len / 8;
+			
+			if(m_blockNumber >= 43) {
+				blukonCurrentCommand = "010c0e00";
+				myTrace("in processBlukonTransmitterData, Send sleep cmd");
+				myTrace("in processBlukonTransmitterData, Full data that was recieved is " + Utilities.UniqueId.bytesToHex(m_full_data));
+			} else {
+				blukonCurrentCommand = "";
 			}
 		}
 		
@@ -1399,6 +1568,30 @@ package services
 			return nowGlucoseDataAsHexString;
 		}
 		
+		private static function blockNumberForNowGlucoseDataDelayed(delayedIndex:int):String
+		{
+			var i:int;
+			var ngi2:int;
+			var ngi3:int;
+			
+			// calculate byte offset in libre FRAM
+			ngi2 = (delayedIndex * 6) + 4;
+			
+			ngi2 -= 6;
+			if (ngi2 < 4)
+				ngi2 = ngi2 + 96;
+			
+			// calculate the block number where to get the BG reading
+			ngi3 = 3 + (ngi2/8);
+			
+			// calculate the offset in the block
+			nowGlucoseOffset = ngi2 % 8;
+			myTrace("in blockNumberForNowGlucoseDataDelayed, ++++++++backfillingTrendData: index " + delayedIndex + ", block " + ngi3.toString(16) + ", offset " + nowGlucoseOffset);
+			
+			return(ngi3.toString(16));
+		}
+		
+
 		private static function getGlucose(rawGlucose:Number):Number {
 			//LIBRE_MULTIPLIER
 			return (rawGlucose * 117.64705);
@@ -1664,5 +1857,48 @@ package services
 			} 
 			return uuid + ", unknown characteristic uuid";
 		}
+		
+		private static function isSensorReady(sensorStatusByte:int):Boolean {
+			return true;
+			var sensorStatusString:String = "";
+			var ret:Boolean = false;
+			
+			switch (sensorStatusByte) {
+				case 1:
+					sensorStatusString = "not yet started";
+					break;
+				case 2:
+					sensorStatusString = "starting";
+					break;
+				case 3:
+					sensorStatusString = "ready";
+					ret = true;
+					break;
+				case 4:
+					sensorStatusString = "expired";
+					ret = true;
+					break;
+				case 5:
+					sensorStatusString = "shutdown";
+					break;
+				case 6:
+					sensorStatusString = "in failure";
+					break;
+				default:
+					sensorStatusString = "in an unknown state";
+					break;
+			}
+			
+			myTrace("in isSensorReady, sensor status is: " + sensorStatusString);
+			
+			if (!ret) {
+				DialogService.openSimpleDialog(ModelLocator.resourceManagerInstance.getString("settingsview","warning"),
+					ModelLocator.resourceManagerInstance.getString("bluetoothservice","cantusesensor") + " " + sensorStatusString,
+					60);
+			}
+			return ret;
+		}
+		
+
 	}
 }

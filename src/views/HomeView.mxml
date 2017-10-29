@@ -680,7 +680,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 							batteryLevel = ModelLocator.resourceManagerInstance.getString('homeview','unknown');
 							message += " " + batteryLevel;
 						} else {
-							message += G4Model.TransmitterStatus.getBatteryLevel(new Number(batteryLevel));
+							message += " " + G4Model.TransmitterStatus.getBatteryLevel(new Number(batteryLevel));
 						}
 					} else if (BlueToothDevice.isBlueReader()) {
 						message += ModelLocator.resourceManagerInstance.getString('homeview','battery_level');
@@ -689,7 +689,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 							batteryLevel = ModelLocator.resourceManagerInstance.getString('homeview','unknown');
 							message += " " + batteryLevel;
 						} else {
-							message += (new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BLUEREADER_BATTERY_LEVEL)))/1000;
+							message += " " + (new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BLUEREADER_BATTERY_LEVEL)))/1000;
 						}
 						
 					} else if (BlueToothDevice.isBluKon()) {
@@ -699,7 +699,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 							batteryLevel = ModelLocator.resourceManagerInstance.getString('homeview','unknown');
 							message += " " + batteryLevel;
 						} else {
-							message += (new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BLUKON_BATTERY_LEVEL)))/1000;
+							message += " " + new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BLUKON_BATTERY_LEVEL)) + " %";
 						}
 					}
 					
@@ -712,7 +712,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 							message += " " + sensorAge;
 						} else {
 							var sensorAgeInDays:int = (new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FSL_SENSOR_AGE)))/1440;
-							message += " "+ sensorAgeInDays + " " + ModelLocator.resourceManagerInstance.getString('homeview','days');
+							message += " " + sensorAgeInDays + " " + ModelLocator.resourceManagerInstance.getString('homeview','days');
 						}
 					}
 					
