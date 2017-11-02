@@ -40,6 +40,7 @@ package services
 		private static const maxMinutesToKeepSyncRunningTrue:int = 1;
 		private static var timeStampOfLastSSO_AuthenticateMaxAttemptsExceeed:Number = 0;
 		private static const timeToWaitAfterSSO_AuthenticateMaxAttemptsExceeedInMinutes = 10;
+		private static var timeStampOfLastLoginAttemptSinceDOCTYPEReceived:Number = 0;
 
 		private static var dexcomShareUrl:String = "";
 
@@ -309,8 +310,24 @@ package services
 				eventAsJSONObject = JSON.parse(eventDataInformation);
 			} catch (error:Error) {
 				myTrace("in createAndLoadUrlRequestFailed, exception while json parsing, error = " + error.message);
-				syncRunning = false;
-				return;
+				if (eventDataInformation.indexOf("DOCTYPE") > -1) {
+					myTrace("in createAndLoadUrlRequestFailed, response contains the word DOCTYPE");
+					if ((new Date()).valueOf() - timeStampOfLastLoginAttemptSinceDOCTYPEReceived > 4.5 * 60 * 1000) {
+						myTrace("in createAndLoadUrlRequestFailed, trying new login");
+						timeStampOfLastLoginAttemptSinceDOCTYPEReceived = (new Date()).valueOf();
+						dexcomShareSessionId = "";
+						syncRunning = true;
+						login();
+						return;
+					} else {
+						myTrace("in createAndLoadUrlRequestFailed, not trying new login");
+						syncRunning = false;
+						return;
+					}
+				} else {
+					syncRunning = false;
+					return;
+				}
 			}
 			
 			if (!eventAsJSONObject.Code) {
@@ -324,7 +341,7 @@ package services
 
 			if (code == "SessionNotValid" || code == "SessionIdNotFound") {
 				dexcomShareSessionId = "";
-				syncRunning = false;
+				syncRunning = true;
 				login();
 				return;
 			}
