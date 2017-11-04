@@ -40,7 +40,7 @@ package services
 		private static const maxMinutesToKeepSyncRunningTrue:int = 1;
 		private static var timeStampOfLastSSO_AuthenticateMaxAttemptsExceeed:Number = 0;
 		private static const timeToWaitAfterSSO_AuthenticateMaxAttemptsExceeedInMinutes = 10;
-		private static var timeStampOfLastLoginAttemptSinceDOCTYPEReceived:Number = 0;
+		private static var timeStampOfLastLoginAttemptSinceJSONParsingErrorReceived:Number = 0;
 
 		private static var dexcomShareUrl:String = "";
 
@@ -310,11 +310,11 @@ package services
 				eventAsJSONObject = JSON.parse(eventDataInformation);
 			} catch (error:Error) {
 				myTrace("in createAndLoadUrlRequestFailed, exception while json parsing, error = " + error.message);
-				if (eventDataInformation.indexOf("DOCTYPE") > -1) {
-					myTrace("in createAndLoadUrlRequestFailed, response contains the word DOCTYPE");
-					if ((new Date()).valueOf() - timeStampOfLastLoginAttemptSinceDOCTYPEReceived > 4.5 * 60 * 1000) {
+				if (eventDataInformation.indexOf("DOCTYPE") > -1 || (error.message as String).toUpperCase().indexOf("JSON PARSE INPUT") > -1) {
+					myTrace("in createAndLoadUrlRequestFailed, response contains the word DOCTYPE or Json parsing error");
+					if ((new Date()).valueOf() - timeStampOfLastLoginAttemptSinceJSONParsingErrorReceived > 4.5 * 60 * 1000) {
 						myTrace("in createAndLoadUrlRequestFailed, trying new login");
-						timeStampOfLastLoginAttemptSinceDOCTYPEReceived = (new Date()).valueOf();
+						timeStampOfLastLoginAttemptSinceJSONParsingErrorReceived = (new Date()).valueOf();
 						dexcomShareSessionId = "";
 						syncRunning = true;
 						login();
