@@ -347,6 +347,7 @@ package services
 									valueToShow += " " + lastBgReading.slopeArrow();
 								}
 							}
+							valueToShow += "      " + BgGraphBuilder.unitizedDeltaString(true, true);
 						}
 					} else {
 						valueToShow = "---"
