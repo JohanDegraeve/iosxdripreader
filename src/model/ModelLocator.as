@@ -20,6 +20,7 @@ package model
 	import com.distriqt.extension.application.Application;
 	import com.distriqt.extension.message.Message;
 	import com.distriqt.extension.networkinfo.NetworkInfo;
+	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
 	
 	import flash.events.Event;
 	import flash.events.EventDispatcher;
@@ -52,6 +53,7 @@ package model
 	import services.BluetoothService;
 	import services.CalibrationService;
 	import services.DexcomShareService;
+	import services.DialogService;
 	import services.HealthKitService;
 	import services.NightScoutService;
 	import services.NotificationService;
@@ -222,6 +224,8 @@ package model
 							DexcomShareService.init();
 							NightScoutService.init();
 							
+							checkApplicationVersion();
+							
 							//test blockNumberForNowGlucoseData
 							/*var bufferasstring:String = "8BDE03423F07115203C8A0";
 							var bufferasbytearray:ByteArray = Utilities.UniqueId.hexStringToByteArray(bufferasstring);
@@ -281,6 +285,36 @@ package model
 					break;
 				firstBGReading = _bgReadings.getItemAt(0) as BgReading;
 			}
+		}
+		
+		private static function checkApplicationVersion(event:Event = null):void {
+			var newVersion:String = BackgroundFetch.getAppVersion();
+			var currentVersion:String = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_APPLICATION_VERSION);
+			if (versionAIsSmallerThanB(currentVersion, newVersion)) {
+				if (currentVersion != "0.0.0") {
+					if (versionAIsSmallerThanB(currentVersion, '0.0.46')) {
+						DialogService.openSimpleDialog(ModelLocator.resourceManagerInstance.getString('homeview',"info"),
+							ModelLocator.resourceManagerInstance.getString('homeview',"info_additional_calibration_request_alert"));
+					}
+					if (versionAIsSmallerThanB(currentVersion, '0.0.53')) {
+						DialogService.openSimpleDialog(ModelLocator.resourceManagerInstance.getString('homeview',"info"),
+							ModelLocator.resourceManagerInstance.getString('homeview',"info_app_not_always_on_anymore"));
+					}
+				}
+				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_APPLICATION_VERSION, newVersion); 
+			}
+		}
+		
+		private static function versionAIsSmallerThanB(versionA:String, versionB:String):Boolean {
+			var versionaSplitted:Array = versionA.split(".");
+			var versionbSplitted:Array = versionB.split(".");
+			if (new Number(versionaSplitted[0]) < new Number(versionbSplitted[0]))
+				return true;
+			if (new Number(versionaSplitted[1]) < new Number(versionbSplitted[1]))
+				return true;
+			if (new Number(versionaSplitted[2]) < new Number(versionbSplitted[2]))
+				return true;
+			return false;
 		}
 	}
 }

@@ -305,10 +305,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 				NotificationService.updateBgNotification(null);
 				if (DialogService.isInitiated) {
 					dialogServiceInitiated(null);
-					checkApplicationVersion(null);
 				} else {
 					DialogService.instance.addEventListener(DialogServiceEvent.DIALOG_SERVICE_INITIATED_EVENT, dialogServiceInitiated);
-					DialogService.instance.addEventListener(DialogServiceEvent.DIALOG_SERVICE_INITIATED_EVENT, checkApplicationVersion);
 				}
 			}
 						
@@ -851,22 +849,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 						.build()
 					);
 					DialogService.addDialog(alert, 30);			
-				}
-			}
-			
-			private static function checkApplicationVersion(event:Event = null):void {
-				var newVersion:String = ModelLocator.resourceManagerInstance.getString('general',"version");
-				var currentVersion:String = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_APPLICATION_VERSION);
-				if (currentVersion < newVersion) {
-					if (currentVersion <= '0.0.46') {
-						DialogService.openSimpleDialog(ModelLocator.resourceManagerInstance.getString('homeview',"info"),
-							ModelLocator.resourceManagerInstance.getString('homeview',"info_additional_calibration_request_alert"));
-					}
-					if (currentVersion <= '0.0.53') {
-						DialogService.openSimpleDialog(ModelLocator.resourceManagerInstance.getString('homeview',"info"),
-							ModelLocator.resourceManagerInstance.getString('homeview',"info_app_not_always_on_anymore"));
-					}
-					LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_APPLICATION_VERSION, newVersion); 
 				}
 			}
 			

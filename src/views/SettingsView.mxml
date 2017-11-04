@@ -151,7 +151,7 @@
 				LocalSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, settingChanged);
 				CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, settingChanged);
 				
-				versionText = ModelLocator.resourceManagerInstance.getString('general','version');
+				versionText = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_APPLICATION_VERSION);
 			}
 			
 			private static function replaceByStars(input:String):String {
