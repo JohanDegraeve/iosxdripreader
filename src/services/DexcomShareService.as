@@ -310,21 +310,15 @@ package services
 				eventAsJSONObject = JSON.parse(eventDataInformation);
 			} catch (error:Error) {
 				myTrace("in createAndLoadUrlRequestFailed, exception while json parsing, error = " + error.message);
-				if (eventDataInformation.indexOf("DOCTYPE") > -1 || (error.message as String).toUpperCase().indexOf("JSON PARSE INPUT") > -1) {
-					myTrace("in createAndLoadUrlRequestFailed, response contains the word DOCTYPE or Json parsing error");
-					if ((new Date()).valueOf() - timeStampOfLastLoginAttemptSinceJSONParsingErrorReceived > 4.5 * 60 * 1000) {
-						myTrace("in createAndLoadUrlRequestFailed, trying new login");
-						timeStampOfLastLoginAttemptSinceJSONParsingErrorReceived = (new Date()).valueOf();
-						dexcomShareSessionId = "";
-						syncRunning = true;
-						login();
-						return;
-					} else {
-						myTrace("in createAndLoadUrlRequestFailed, not trying new login");
-						syncRunning = false;
-						return;
-					}
+				if ((new Date()).valueOf() - timeStampOfLastLoginAttemptSinceJSONParsingErrorReceived > 4.5 * 60 * 1000) {
+					myTrace("in createAndLoadUrlRequestFailed, trying new login");
+					timeStampOfLastLoginAttemptSinceJSONParsingErrorReceived = (new Date()).valueOf();
+					dexcomShareSessionId = "";
+					syncRunning = true;
+					login();
+					return;
 				} else {
+					myTrace("in createAndLoadUrlRequestFailed, not trying new login");
 					syncRunning = false;
 					return;
 				}
