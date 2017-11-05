@@ -467,6 +467,7 @@ package services
 						|| (event.peripheral.name as String).toUpperCase().indexOf("LIMITIX") > -1
 						|| (event.peripheral.name as String).toUpperCase().indexOf("LIMITTER") > -1
 						|| (event.peripheral.name as String).toUpperCase().indexOf("BLUEREADER") > -1
+						|| (event.peripheral.name as String).toUpperCase().indexOf("DINANTRONICS") > -1
 					)
 				) 
 				||
@@ -1576,7 +1577,7 @@ package services
 			
 			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_TIMESTAMP_SINCE_LAST_INFO_UKNOWN_PACKET_TYPE, (new Date()).valueOf().toString());
 			var body:String = "Hi,\n\nRequest for support wxl. Unsupported packetType =  " + unsupportedPacketType + ".\n\nregards.";
-			Message.service.sendMailWithOptions("Request for supported wxl", body, "johan.degraeve@gmail.com","","",null,false);
+			Message.service.sendMailWithOptions("Request for supported wxl", body, "xdrip@proximus.be","","",null,false);
 		}
 
 		
