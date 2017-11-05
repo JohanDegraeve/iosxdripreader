@@ -310,10 +310,16 @@ package model
 			var versionbSplitted:Array = versionB.split(".");
 			if (new Number(versionaSplitted[0]) < new Number(versionbSplitted[0]))
 				return true;
+			if (new Number(versionaSplitted[0]) > new Number(versionbSplitted[0]))
+				return false;
 			if (new Number(versionaSplitted[1]) < new Number(versionbSplitted[1]))
 				return true;
+			if (new Number(versionaSplitted[1]) > new Number(versionbSplitted[1]))
+				return false;
 			if (new Number(versionaSplitted[2]) < new Number(versionbSplitted[2]))
 				return true;
+			if (new Number(versionaSplitted[2]) > new Number(versionbSplitted[2]))
+				return false;
 			return false;
 		}
 	}
