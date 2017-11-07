@@ -1082,6 +1082,11 @@ package services
 		/**
 		 * returns true of alarm fired
 		 */private static function checkBatteryLowAlert(now:Date):Boolean {
+			 if (BlueToothDevice.isTypeLimitter()) {
+				 myTrace("in checkAlarms, checkBatteryLowAlert, device is of typelimitter, battery value not yet supported/tested for any of blukon, bluereader, limitter");
+				 return false;
+			 }
+			 
 			 var listOfAlerts:FromtimeAndValueArrayCollection;
 			 var alertValue:Number;
 			 var alertName:String;

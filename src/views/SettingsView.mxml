@@ -152,6 +152,12 @@
 				CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, settingChanged);
 				
 				versionText = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_APPLICATION_VERSION);
+				
+				if (BlueToothDevice.isTypeLimitter()) {
+					batteryalertgroup.visible = false;
+					batteryalertgroup.enabled = false;
+					batteryalertgroup.includeInLayout = false;
+				}
 			}
 			
 			private static function replaceByStars(input:String):String {
@@ -175,6 +181,15 @@
 						groupTransmitterId.alpha = 0.25;
 					}
 					changeDexcomShareStatus();
+					if (BlueToothDevice.isTypeLimitter()) {
+						batteryalertgroup.visible = false;
+						batteryalertgroup.enabled = false;
+						batteryalertgroup.includeInLayout = false;
+					} else {
+						batteryalertgroup.visible = true;
+						batteryalertgroup.enabled = true;
+						batteryalertgroup.includeInLayout = true;
+					}
 				}
 			}
 			
@@ -1321,7 +1336,7 @@
 			</s:VGroup>
 
 			<!-- Chapter Alerts Subsection Battery low -->
-			<s:VGroup click="batteryLowAlert_clickHandler(event)" width="100%">
+			<s:VGroup click="batteryLowAlert_clickHandler(event)" width="100%" id="batteryalertgroup">
 				<s:HGroup width="100%">
 					<s:Rect height="100%" width="5" >
 						<s:fill>
