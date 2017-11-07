@@ -306,6 +306,7 @@ package services
 			if (!NetworkInfo.networkInfo.isReachable()) {
 				myTrace("network not reachable, calling BackGroundFetchService.callCompletionHandler although this wouldn't make any sense, no network, probably backgroundfetch is not waiting");
 				syncFinished();
+				return;
 			}
 
 			//myTrace("LOCAL_SETTING_DEVICE_TOKEN_ID = " + LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_DEVICE_TOKEN_ID));
@@ -347,10 +348,12 @@ package services
 				||
 				CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_URL_AND_API_SECRET_TESTED) ==  "false") {
 				syncFinished();
+				return;
 			}
 			
 			if (Calibration.allForSensor().length < 2) {
 				syncFinished();
+				return;
 			}
 			
 			syncRunning = true;
@@ -411,6 +414,7 @@ package services
 				createAndLoadURLRequest(_nightScoutEventsUrl, URLRequestMethod.POST, null, JSON.stringify(listOfReadingsAsArray), nightScoutUploadSuccess, nightScoutUploadFailed);
 			} else {
 				syncFinished();
+				return;
 			}
 		}
 		
