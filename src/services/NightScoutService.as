@@ -379,8 +379,8 @@ package services
 						newReading["sgv"] = Math.round(bgReading.calculatedValue);
 						newReading["direction"] = bgReading.slopeName();
 						newReading["type"] = "sgv";
-						newReading["filtered"] = bgReading.ageAdjustedFiltered() * 1000;
-						newReading["unfiltered"] = bgReading.usedRaw() * 1000;
+						newReading["filtered"] = Math.round(bgReading.ageAdjustedFiltered() * 1000);
+						newReading["unfiltered"] = Math.round(bgReading.usedRaw() * 1000);
 						newReading["rssi"] = 100;
 						newReading["noise"] = bgReading.noiseValue();
 						newReading["xDrip_filtered_calculated_value"] = bgReading.filteredCalculatedValue;
