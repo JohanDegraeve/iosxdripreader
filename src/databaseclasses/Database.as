@@ -1316,6 +1316,7 @@ package databaseclasses
 				insertRequest.execute();
 				conn.commit();
 				conn.close();
+				myTrace("in insertCalibrationSynchronous, insert committed");
 			} catch (error:SQLError) {
 				if (conn.connected) {
 					conn.rollback();

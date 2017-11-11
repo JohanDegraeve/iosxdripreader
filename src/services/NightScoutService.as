@@ -53,6 +53,7 @@ package services
 		private static var _syncRunning:Boolean = false;
 		private static var lastSyncrunningChangeDate:Number = (new Date()).valueOf();
 		private static const maxMinutesToKeepSyncRunningTrue:int = 1;
+		private static var lastCalibrationSyncTimeStamp:Number = 0;
 		
 		public static function NightScoutSyncRunning():Boolean {
 			return syncRunning;
@@ -111,12 +112,12 @@ package services
 			
 			CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, settingChanged);
 			TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, bgreadingEventReceived);
-			CalibrationService.instance.addEventListener(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT, initialCalibrationReceived);
-			NetworkInfo.networkInfo.addEventListener(NetworkInfoEvent.CHANGE, networkChanged);
+			CalibrationService.instance.addEventListener(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT, calibrationReceived);
+			CalibrationService.instance.addEventListener(CalibrationServiceEvent.NEW_CALIBRATION_EVENT, calibrationReceived);
 			BackGroundFetchService.instance.addEventListener(BackGroundFetchServiceEvent.LOAD_REQUEST_ERROR, defaultErrorFunction);
 			BackGroundFetchService.instance.addEventListener(BackGroundFetchServiceEvent.LOAD_REQUEST_RESULT, defaultSuccessFunction);
 			BackGroundFetchService.instance.addEventListener(BackGroundFetchServiceEvent.PERFORM_FETCH, performFetch);
-			iosxdripreader.instance.addEventListener(IosXdripReaderEvent.APP_IN_FOREGROUND, sync);
+			iosxdripreader.instance.addEventListener(IosXdripReaderEvent.APP_IN_FOREGROUND, appInForeGround);
 
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME) != CommonSettings.DEFAULT_SITE_NAME
 				&&
@@ -125,49 +126,27 @@ package services
 				CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_URL_AND_API_SECRET_TESTED) == "false"
 			) {
 				testNightScoutUrlAndSecret();
-			} else if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME) != CommonSettings.DEFAULT_SITE_NAME
-				&&
-				CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_API_SECRET) != CommonSettings.DEFAULT_API_SECRET
-				&&
-				CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_URL_AND_API_SECRET_TESTED) == "true"
-			) {
+			} 
+			
+			function appInForeGround(event:Event = null):void {
+				myTrace("in appInForeGround");
 				sync();
-			} else {
-				syncFinished();
 			}
 			
-			function initialCalibrationReceived(event:CalibrationServiceEvent):void {
+			function calibrationReceived(event:CalibrationServiceEvent):void {
+				myTrace("in initialCalibrationReceived");
 				sync();
 			}
 			
 			function performFetch(event:BackGroundFetchServiceEvent):void {
-				myTrace("sync : performfetch");
+				myTrace("in performfetch");
 				sync();
 			}
 			
 			function bgreadingEventReceived(event:TransmitterServiceEvent):void {
+				myTrace("in bgreadingEventReceived");
 				calculateTag();
 				sync();
-			}
-			
-			function networkChanged(event:NetworkInfoEvent):void {
-				if (NetworkInfo.networkInfo.isReachable()) {
-					if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME) != CommonSettings.DEFAULT_SITE_NAME
-						&&
-						CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_API_SECRET) != CommonSettings.DEFAULT_API_SECRET
-						&&
-						CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_URL_AND_API_SECRET_TESTED) == "false"
-					) {
-						testNightScoutUrlAndSecret();
-					} else if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME) != CommonSettings.DEFAULT_SITE_NAME
-						&&
-						CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_API_SECRET) != CommonSettings.DEFAULT_API_SECRET
-						&&
-						CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_URL_AND_API_SECRET_TESTED) == "true"
-					) {
-						sync();
-					}
-				} 
 			}
 			
 			function settingChanged(event:SettingsServiceEvent):void {
@@ -359,7 +338,7 @@ package services
 			syncRunning = true;
 			
 			var listOfReadingsAsArray:Array = [];
-			var lastSyncTimeStamp:Number = new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_SYNC_TIMESTAMP));
+			var lastSyncTimeStamp:Number = new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_UPLOAD_BGREADING_TIMESTAMP));
 			var formatter:DateTimeFormatter = new DateTimeFormatter();
 			formatter.dateTimePattern = "yyyy-MM-dd'T'HH:mm:ss.SSSZ";
 			formatter.setStyle("locale", "en_US");
@@ -411,22 +390,21 @@ package services
 				logString += " " + listOfReadingsAsArray[cntr2]["_id"] + ",";
 				}*/
 				myTrace("uploading_events_with_id" + logString);
-				createAndLoadURLRequest(_nightScoutEventsUrl, URLRequestMethod.POST, null, JSON.stringify(listOfReadingsAsArray), nightScoutUploadSuccess, nightScoutUploadFailed);
+				createAndLoadURLRequest(_nightScoutEventsUrl, URLRequestMethod.POST, null, JSON.stringify(listOfReadingsAsArray), bgReadingToNSUploadSuccess, bgReadingToNSUploadFailed);
 			} else {
-				syncFinished();
+				uploadCalibrations();
 				return;
 			}
 		}
 		
-		private static function nightScoutUploadSuccess(event:Event):void {
-			myTrace("in nightScoutUploadSuccess");
-			
+		private static function bgReadingToNSUploadSuccess(event:Event):void {
+			myTrace("in bgReadingToNSUploadSuccess");
 			myTrace("upload_to_nightscout_successfull");
-			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_SYNC_TIMESTAMP, (new Date()).valueOf().toString());
-			syncFinished();
+			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_UPLOAD_BGREADING_TIMESTAMP, (new Date()).valueOf().toString());
+			uploadCalibrations();
 		}
 		
-		private static function nightScoutUploadFailed(event:BackGroundFetchServiceEvent):void {
+		private static function bgReadingToNSUploadFailed(event:BackGroundFetchServiceEvent):void {
 			myTrace("in nightScoutUploadFailed");
 			
 			var errorMessage:String;
@@ -484,5 +462,76 @@ package services
 			DexcomShareService.sync();
 		}
 		
+		private static function uploadCalibrations():void {
+			var listOfCalibrationsToUploadAsArray:Array = [];
+			var lastSyncTimeStamp:Number = new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_UPLOAD_CALIBRATION_TIMESTAMP));
+			var formatter:DateTimeFormatter = new DateTimeFormatter();
+			formatter.dateTimePattern = "yyyy-MM-dd'T'HH:mm:ss.SSSZ";
+			formatter.setStyle("locale", "en_US");
+			formatter.useUTC = false;
+			
+			myTrace("in uploadcalibrations");
+			var calibrations:ArrayCollection = Calibration.allForSensor();
+			var cntr:int = calibrations.length - 1;
+			var arrayCntr:int = 0;
+			lastCalibrationSyncTimeStamp = 0;
+			
+			while (cntr > -1) {
+				var calibration:Calibration = calibrations.getItemAt(cntr) as Calibration;
+				if (calibration.timestamp > lastSyncTimeStamp && calibration.slope != 0) {
+					var newCalibration:Object = new Object();
+					newCalibration["device"] = BlueToothDevice.name;
+					newCalibration["type"] = "cal";
+					newCalibration["date"] = calibration.timestamp;
+					newCalibration["dateString"] = formatter.format(calibration.timestamp);
+					if (calibration.checkIn) {
+						newCalibration["slope"] = calibration.slope;
+						newCalibration["intercept"] = calibration.firstIntercept;
+						newCalibration["scale"] = calibration.firstScale;
+					} else {
+						newCalibration["slope"] = 1000/calibration.slope;
+						newCalibration["intercept"] = calibration.intercept * -1000 / calibration.slope;
+						newCalibration["scale"] = 1;
+					}
+					//newCalibration["sysTime"] = formatter.format(calibration.timestamp);
+					listOfCalibrationsToUploadAsArray[arrayCntr] = newCalibration;
+					arrayCntr++;
+					if (calibration.timestamp > lastCalibrationSyncTimeStamp) {
+						lastCalibrationSyncTimeStamp = calibration.timestamp;
+					}
+				}
+				cntr--;
+			}			
+			if (listOfCalibrationsToUploadAsArray.length > 0) {
+				myTrace("listOfCalibrationsToUploadAsArray.length > 0");
+				createAndLoadURLRequest(_nightScoutEventsUrl, URLRequestMethod.POST, null, JSON.stringify(listOfCalibrationsToUploadAsArray), calibrationToNSUploadSuccess, calibrationToNSUploadFailed);
+			} else {
+				syncFinished();
+				return;
+			}
+		}
+		
+		private static function calibrationToNSUploadSuccess(event:Event):void {
+			myTrace("in calibrationToNSUploadSuccess");
+			myTrace("upload to ns successfull");
+			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_UPLOAD_CALIBRATION_TIMESTAMP, lastCalibrationSyncTimeStamp.toString());
+			syncFinished();
+		}
+		
+		private static function calibrationToNSUploadFailed(event:BackGroundFetchServiceEvent):void {
+			myTrace("in calibrationToNSUploadFailed");
+			myTrace("upload to ns failed");
+			
+			var errorMessage:String;
+			if (event.data) {
+				if (event.data.information)
+					errorMessage = event.data.information;
+			} else {
+				errorMessage = "";
+			}
+			
+			myTrace("upload_to_nightscout_unsuccessfull" + errorMessage);
+			syncFinished();
+		}
 	}
 }
