@@ -47,6 +47,7 @@ package services
 		private static var initialStart:Boolean = true;
 		private static var loader:URLLoader;
 		private static var _nightScoutEventsUrl:String = "";
+		private static var _nightScoutTreatmentsUrl:String = "";
 		private static var testUniqueId:String;
 		private static var hash:SHA1 = new SHA1();
 		
@@ -54,6 +55,9 @@ package services
 		private static var lastSyncrunningChangeDate:Number = (new Date()).valueOf();
 		private static const maxMinutesToKeepSyncRunningTrue:int = 1;
 		private static var lastCalibrationSyncTimeStamp:Number = 0;
+		
+		//Holder for visual calibrations data
+		private static var listOfVisualCalibrationsToUploadAsArray:Array = [];
 		
 		public static function NightScoutSyncRunning():Boolean {
 			return syncRunning;
@@ -104,12 +108,22 @@ package services
 			else
 				initialStart = false;
 			
+			//Get Hashed API secret from user
 			_hashedAPISecret = Hex.fromArray(hash.hash(Hex.toArray(Hex.fromString(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_API_SECRET)))));
+			
+			//Define URL for uploading calibrations
 			_nightScoutEventsUrl = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME) + "/api/v1/entries";
 			if (_nightScoutEventsUrl.indexOf('http') == -1) {
 				_nightScoutEventsUrl = "https://" + _nightScoutEventsUrl;
 			}
 			
+			//Define URL for uploading treatment (visual representation of the calibration)
+			_nightScoutTreatmentsUrl = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME) + "/api/v1/treatments";
+			if (_nightScoutTreatmentsUrl.indexOf('http') == -1) {
+				_nightScoutTreatmentsUrl = "https://" + _nightScoutTreatmentsUrl;
+			}
+			
+			//Define event listeners
 			CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, settingChanged);
 			TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, bgreadingEventReceived);
 			CalibrationService.instance.addEventListener(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT, calibrationReceived);
@@ -118,7 +132,7 @@ package services
 			BackGroundFetchService.instance.addEventListener(BackGroundFetchServiceEvent.LOAD_REQUEST_RESULT, defaultSuccessFunction);
 			BackGroundFetchService.instance.addEventListener(BackGroundFetchServiceEvent.PERFORM_FETCH, performFetch);
 			iosxdripreader.instance.addEventListener(IosXdripReaderEvent.APP_IN_FOREGROUND, appInForeGround);
-
+			
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME) != CommonSettings.DEFAULT_SITE_NAME
 				&&
 				CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_API_SECRET) != CommonSettings.DEFAULT_API_SECRET
@@ -160,7 +174,7 @@ package services
 					if (_nightScoutEventsUrl.indexOf('http') == -1) {
 						_nightScoutEventsUrl = "https://" + _nightScoutEventsUrl;
 					}
-
+					
 					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_URL_AND_API_SECRET_TESTED,"false");
 				}
 				
@@ -215,7 +229,7 @@ package services
 				
 			}
 		}
-
+		
 		private static function testNightScoutUrlAndSecret():void {
 			//test if network is available
 			if (NetworkInfo.networkInfo.isReachable()) {
@@ -229,7 +243,7 @@ package services
 				if (nightScoutTreatmentsUrl.indexOf('http') == -1) {
 					nightScoutTreatmentsUrl = "https://" + nightScoutTreatmentsUrl;
 				}
-
+				
 				myTrace("call_to_nightscout_to_verify_url_and_secret");
 				createAndLoadURLRequest(nightScoutTreatmentsUrl, URLRequestMethod.PUT,null,JSON.stringify(testEvent), nightScoutUrlTestSuccess, nightScoutUrlTestError);
 			} else {
@@ -246,7 +260,7 @@ package services
 			myTrace("nightscout_test_result_ok");
 			var nightScoutTreatmentsUrl:String = "https://" + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME) + "/api/v1/treatments";
 			createAndLoadURLRequest(nightScoutTreatmentsUrl + "/" + testUniqueId, URLRequestMethod.DELETE, null, null,sync, null);
-
+			
 			myTrace(ModelLocator.resourceManagerInstance.getString("nightscoutservice","nightscout_test_result_ok"));
 			
 			if (ModelLocator.isInForeground) {
@@ -260,7 +274,7 @@ package services
 			myTrace("nightScoutUrlTestError with information =  " + event.data.information as String);
 			functionToCallAtUpOrDownloadSuccess = null;
 			functionToCallAtUpOrDownloadFailure = null;
-
+			
 			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_WARNING_THAT_NIGHTSCOUT_URL_AND_SECRET_IS_NOT_OK_ALREADY_GIVEN) == "false" && ModelLocator.isInForeground) {
 				var errorMessage:String = ModelLocator.resourceManagerInstance.getString("nightscoutservice","nightscout_test_result_nok");
 				errorMessage += "\n" + event.data.information;
@@ -287,7 +301,7 @@ package services
 				syncFinished();
 				return;
 			}
-
+			
 			//myTrace("LOCAL_SETTING_DEVICE_TOKEN_ID = " + LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_DEVICE_TOKEN_ID));
 			//myTrace("LOCAL_SETTING_SUBSCRIBED_TO_PUSH_NOTIFICATIONS = " + LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_SUBSCRIBED_TO_PUSH_NOTIFICATIONS));
 			//myTrace("LOCAL_SETTING_WISHED_QBLOX_SUBSCRIPTION_TAG = " + LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_WISHED_QBLOX_SUBSCRIPTION_TAG));
@@ -297,15 +311,15 @@ package services
 				ModelLocator.isInForeground//registerpushnotification is using loadeer, which only works when app is in foreground
 				&&
 				(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_SUBSCRIBED_TO_PUSH_NOTIFICATIONS) == "false"
-				||
-				(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_WISHED_QBLOX_SUBSCRIPTION_TAG)
-					!=
-				LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_ACTUAL_QBLOX_SUBSCRIPTION_TAG)))
+					||
+					(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_WISHED_QBLOX_SUBSCRIPTION_TAG)
+						!=
+						LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_ACTUAL_QBLOX_SUBSCRIPTION_TAG)))
 			) {
 				myTrace("sync, url and secret tested, device token not empty and not subscribed, calling BackGroundFetchService.registerPushNotification");
 				BackGroundFetchService.registerPushNotification(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_WISHED_QBLOX_SUBSCRIPTION_TAG));
 			}
-				
+			
 			
 			if (syncRunning) {
 				myTrace("NightScoutService.as sync : sync running already, return");
@@ -494,7 +508,22 @@ package services
 						newCalibration["scale"] = 1;
 					}
 					//newCalibration["sysTime"] = formatter.format(calibration.timestamp);
+					
 					listOfCalibrationsToUploadAsArray[arrayCntr] = newCalibration;
+					
+					//Create holder for visual calibration
+					var newVisualCalibration:Object = new Object();
+					newVisualCalibration["eventType"] = "BG Check";	
+					newVisualCalibration["created_at"] = formatter.format(calibration.timestamp);
+					newVisualCalibration["enteredBy"] = "xDrip iOS";	
+					newVisualCalibration["glucose"] = calibration.bg;
+					newVisualCalibration["glucoseType"] = "Finger";
+					newVisualCalibration["notes"] = "Sensor Calibration";
+					newVisualCalibration["created_at"] = formatter.format(calibration.timestamp);
+					
+					//Push visual calibration to list for further processing
+					listOfVisualCalibrationsToUploadAsArray[arrayCntr] = newVisualCalibration;
+					
 					arrayCntr++;
 					if (calibration.timestamp > lastCalibrationSyncTimeStamp) {
 						lastCalibrationSyncTimeStamp = calibration.timestamp;
@@ -515,12 +544,21 @@ package services
 			myTrace("in calibrationToNSUploadSuccess");
 			myTrace("upload to ns successfull");
 			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_UPLOAD_CALIBRATION_TIMESTAMP, lastCalibrationSyncTimeStamp.toString());
-			syncFinished();
+			
+			if(listOfVisualCalibrationsToUploadAsArray.length > 0) {
+				//Upload visual calibrations
+				myTrace("listOfVisualCalibrationsToUploadAsArray.length > 0");
+				myTrace("Uploading visual calibrations");
+				createAndLoadURLRequest(_nightScoutTreatmentsUrl, URLRequestMethod.POST, null, JSON.stringify(listOfVisualCalibrationsToUploadAsArray), visualCalibrationToNSUploadSuccess, visualCalibrationToNSUploadFailed);
+			} else {
+				//Finish Sync
+				syncFinished();
+			}
 		}
 		
 		private static function calibrationToNSUploadFailed(event:BackGroundFetchServiceEvent):void {
 			myTrace("in calibrationToNSUploadFailed");
-			myTrace("upload to ns failed");
+			myTrace("upload to ns failed, visual calibrations will not be uploaded as well");
 			
 			var errorMessage:String;
 			if (event.data) {
@@ -531,6 +569,38 @@ package services
 			}
 			
 			myTrace("upload_to_nightscout_unsuccessfull" + errorMessage);
+			syncFinished();
+		}
+		
+		private static function visualCalibrationToNSUploadSuccess(event:Event):void {
+			myTrace("in visualCalibrationToNSUploadSuccess");
+			myTrace("visual calibration upload to ns successfull");
+			
+			//Destroy list of visual calibrations to free up memory
+			listOfVisualCalibrationsToUploadAsArray.length = 0;
+			
+			//Finish Sync
+			syncFinished();
+		}
+		
+		private static function visualCalibrationToNSUploadFailed(event:BackGroundFetchServiceEvent):void {
+			myTrace("in visualCalibrationToNSUploadFailed");
+			myTrace("visual calibration upload to ns failed");
+			
+			var errorMessage:String;
+			if (event.data) {
+				if (event.data.information)
+					errorMessage = event.data.information;
+			} else {
+				errorMessage = "";
+			}
+			
+			myTrace("visual_calibration_upload_to_nightscout_unsuccessfull" + errorMessage);
+			
+			//Destroy list of visual calibrations to free up memory
+			listOfVisualCalibrationsToUploadAsArray.length = 0;
+			
+			//Finish Sync
 			syncFinished();
 		}
 	}
