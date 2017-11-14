@@ -1859,7 +1859,6 @@ package services
 		}
 		
 		private static function isSensorReady(sensorStatusByte:int):Boolean {
-			return true;
 			var sensorStatusString:String = "";
 			var ret:Boolean = false;
 			
