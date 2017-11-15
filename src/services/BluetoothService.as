@@ -1271,9 +1271,11 @@ package services
 				}
 				
 				if (strRecCmd.indexOf("8b1a020011") == 0) {
-					myTrace("in processBLUKONTransmitterData, Patch read error.. please check the connectivity and re-initiate... or maybe battery is low?");
+					myTrace("in processBLUKONTransmitterData, Patch read error.. please check the connectivity and re-initiate... or maybe battery is low?, dispatching GLUCOSE_PATCH_READ_ERROR event");
 					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_BLUKON_BATTERY_LEVEL, "1");
 					gotLowBat = true;
+					blueToothServiceEvent = new BlueToothServiceEvent(BlueToothServiceEvent.GLUCOSE_PATCH_READ_ERROR);
+					_instance.dispatchEvent(blueToothServiceEvent);
 				}
 
 				m_gotOneTimeUnknownCmd = false;

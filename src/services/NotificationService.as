@@ -107,6 +107,7 @@ package services
 		public static const ID_FOR_CALIBRATION_REQUEST_ALERT:int = 11;
 		public static const ID_FOR_VERY_LOW_ALERT:int = 12;
 		public static const ID_FOR_VERY_HIGH_ALERT:int = 13;
+		public static const ID_FOR_PATCH_READ_ERROR_BLUKON:int = 14;
 		
 		public static const ID_FOR_ALERT_LOW_CATEGORY:String = "LOW_ALERT_CATEGORY";
 		public static const ID_FOR_ALERT_HIGH_CATEGORY:String = "HIGH_ALERT_CATEGORY";
@@ -123,6 +124,8 @@ package services
 		public static const ID_FOR_CALIBRATION_REQUEST_ALERT_SNOOZE_IDENTIFIER:String = "CALIBRATION_REQUEST_SNOOZE_IDENTIFIER";
 		public static const ID_FOR_VERY_LOW_ALERT_SNOOZE_IDENTIFIER:String = "VERY_LOW_ALERT_SNOOZE_IDENTIFIER";
 		public static const ID_FOR_VERY_HIGH_ALERT_SNOOZE_IDENTIFIER:String = "VERY_HIGH_ALERT_SNOOZE_IDENTIFIER";
+		
+		private static var timeStampSinceLastNotifForPatchReadError:Number = 0;
 		
 		public function NotificationService()
 		{
@@ -146,6 +149,25 @@ package services
 				.enableLights(true)
 				.enableVibration(true)
 				.build());
+		}
+		
+		private static function glucosePatchReadError(event:Event):void {
+			var titleText:String = ModelLocator.resourceManagerInstance.getString("notificationservice","glucose_patch_read_error_notification_title");
+			var bodyText:String = ModelLocator.resourceManagerInstance.getString("notificationservice","glucose_patch_read_error_body_text");
+			if ((new Date()).valueOf() - timeStampSinceLastNotifForPatchReadError > 5 * 60 * 1000) {
+				
+			} else {
+				timeStampSinceLastNotifForPatchReadError = (new Date()).valueOf();
+				Notifications.service.notify(
+					new NotificationBuilder()
+					.setId(ID_FOR_PATCH_READ_ERROR_BLUKON)
+					.setAlert("Blukon Error")
+					.setTitle(titleText)
+					.setBody(bodyText)
+					.enableLights(true)
+					.enableVibration(true)
+					.build());
+			}
 		}
 		
 		public static function init():void {
@@ -244,6 +266,7 @@ package services
 			Notifications.service.setup(service);
 			
 			BluetoothService.instance.addEventListener(BlueToothServiceEvent.DEVICE_NOT_PAIRED, deviceNotPaired);
+			BluetoothService.instance.addEventListener(BlueToothServiceEvent.GLUCOSE_PATCH_READ_ERROR, glucosePatchReadError);
 			
 			//var object:Object = Notifications.service.authorisationStatus();
 			switch (Notifications.service.authorisationStatus())
