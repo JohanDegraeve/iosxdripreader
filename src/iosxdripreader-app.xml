@@ -8,7 +8,7 @@
 	See the GNU General Public License for more details. You should have received 
 	a copy of the GNU General Public License along with this program. If not, 
 	see <http://www.gnu.org/licenses/gpl.txt>. -->
-<application xmlns="http://ns.adobe.com/air/application/27.0">
+<application xmlns="http://ns.adobe.com/air/application/25.0">
 
 	<!-- Adobe AIR Application Descriptor File Template. Specifies parameters 
 		for identifying, installing, and launching AIR applications. xmlns - The 
@@ -35,7 +35,7 @@
 		An updated version of application must have a versionNumber value higher 
 		than the previous version. Required for namespace >= 2.5 . For iOS Apps, 
 		this represents build number. -->
-	<versionNumber>1.1.15</versionNumber>
+	<versionNumber>1.1.14</versionNumber>
 	<!-- A string value (such as "v1", "2.5", or "Alpha 1") that represents 
 		the version of the application, as it should be shown to users. For iOS Apps, 
 		this represents application version number and format should be (<0-999>.<0-999>.<0-999>). 
@@ -357,5 +357,6 @@
 		<extensionID>net.johandegraeve.iosfetchinterval</extensionID>
 		
 	<extensionID>com.freshplanet.AirBackgroundFetch</extensionID>
+    <extensionID>com.fabricemontfort.air.ezSpeech</extensionID>
     </extensions>
 </application>

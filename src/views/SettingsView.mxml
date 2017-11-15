@@ -70,6 +70,10 @@
 			[Bindable]
 			private static var dexcomShareOnOffText:String="";
 			[Bindable]
+			private static var speakReadingsOnOffText:String="";
+			[Bindable]
+			private static var speakReadingsIntervalValue:String="";
+			[Bindable]
 			private static var versionText:String="";
 			[Bindable]
 			private static var dexcomShareURL:String="";
@@ -148,6 +152,15 @@
 					ModelLocator.resourceManagerInstance.getString('settingsview','dexcom_non_us_url');
 				changeDexcomShareStatus();
 				
+				speakReadingsIntervalValue = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_READINGS_INTERVAL);
+				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_READINGS_ON) == "true") {
+					speakReadingsOnOffText = ModelLocator.resourceManagerInstance.getString('settingsview','on');
+					changeSpeakReadingsStatus();
+				} else {
+					speakReadingsOnOffText = ModelLocator.resourceManagerInstance.getString('settingsview','off');
+					changeSpeakReadingsStatus();
+				}
+				
 				LocalSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, settingChanged);
 				CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, settingChanged);
 				
@@ -181,6 +194,7 @@
 						groupTransmitterId.alpha = 0.25;
 					}
 					changeDexcomShareStatus();
+					changeSpeakReadingsStatus();
 					if (BlueToothDevice.isTypeLimitter()) {
 						batteryalertgroup.visible = false;
 						batteryalertgroup.enabled = false;
@@ -907,6 +921,72 @@
 				}
 			}
 			
+			private function speakReadingsOnOff_clickHandler(event:MouseEvent):void {
+				rect61.color = uint("0xD3D3D3");
+				rect62.color = uint("0xD3D3D3");
+				setResetColorTimer();
+				
+				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_READINGS_ON) == "true") {
+					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_READINGS_ON, "false");
+					speakReadingsOnOffText = ModelLocator.resourceManagerInstance.getString('settingsview','off');
+					changeSpeakReadingsStatus();
+				} else {
+					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_READINGS_ON, "true");
+					speakReadingsOnOffText = ModelLocator.resourceManagerInstance.getString('settingsview','on');
+					changeSpeakReadingsStatus();
+				}
+			}
+			
+			private function speakReadingsInterval_clickHandler(event:MouseEvent):void {
+				rect59.color = uint("0xD3D3D3");
+				rect60.color = uint("0xD3D3D3");
+				setResetColorTimer();
+				
+				var alert:DialogView = Dialog.service.create(
+					new AlertBuilder()
+					.setTitle(ModelLocator.resourceManagerInstance.getString("settingsview","enter_speak_readings_interval_title"))
+					.setMessage(ModelLocator.resourceManagerInstance.getString("settingsview","enter_speak_readings_interval_message"))
+					.addTextField(speakReadingsIntervalValue,"")
+					.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
+					.addOption(ModelLocator.resourceManagerInstance.getString("general","cancel"), DialogAction.STYLE_CANCEL, 1)
+					.build()
+				);
+				DialogService.addDialog(alert);
+				alert.addEventListener(DialogViewEvent.CLOSED, speakreadingsintervalentered);
+				
+				function speakreadingsintervalentered(event:DialogViewEvent):void {
+					if (event.index == 1) {
+						return;
+					}
+					
+					if (event.values.length < 1)
+						return;
+					
+					speakReadingsIntervalValue = event.values[0] as String;
+					
+					//Set interval to 1 in case the user sets it to 0 by mistake
+					if(speakReadingsIntervalValue == "0")
+						speakReadingsIntervalValue == "1";
+					
+					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_READINGS_INTERVAL, speakReadingsIntervalValue as String);
+				}
+			}
+			
+			private function changeSpeakReadingsStatus():void {
+				var enabled:Boolean = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_READINGS_ON) == "true";
+				if (enabled) {
+					speakReadingsNameGroup.includeInLayout = true;
+					speakReadingsNameGroup.visible = true;
+					speakReadingsNameGroup.enabled = true;
+					speakreadingsline1.includeInLayout = true;speakreadingsline1.visible = true;
+				} else {
+					speakReadingsNameGroup.includeInLayout = false;
+					speakReadingsNameGroup.visible = false;
+					speakReadingsNameGroup.enabled = false;
+					speakreadingsline1.includeInLayout = false;speakreadingsline1.visible = false;
+				}
+			}
+			
 			private function setResetColorTimer():void {
 				if (resetColorTimer != null)
 					if (resetColorTimer.running) {
@@ -972,6 +1052,10 @@
 					rect56.color = uint("0x212121");//dexcom share onoff
 					rect57.color = uint("0x212121");//dexcom share onoff
 					rect58.color = uint("0x212121");//dexcom share onoff
+					rect59.color = uint("0x212121");//speech onoff
+					rect60.color = uint("0x212121");//speech onoff
+					rect61.color = uint("0x212121");//speech onoff
+					rect62.color = uint("0x212121");//speech onoff
 				}
 			}
 			
@@ -1557,6 +1641,62 @@
 						<s:SolidColorStroke color="#3B6999"  weight="3"/>
 					</s:stroke>
 				</s:Line>	
+			</s:VGroup>
+			
+			<!-- Chapter Speech -->
+			<s:Label text = "{ModelLocator.resourceManagerInstance.getString('settingsview','show_speak_readings_title')}" textAlign="center" color="#3B6999" 
+					 width="100%" paddingLeft="3" paddingRight="0" fontSize="20" fontWeight="bold" paddingTop="10" paddingBottom ="10"/>
+			<s:Line width="100%">
+				<s:stroke>
+					<s:SolidColorStroke  color="#3B6999"  weight="3"/>
+				</s:stroke>
+			</s:Line>
+			
+			<!-- Chapter on/off button and interval --> 
+			<s:VGroup width="100%">
+				<!-- button to change speak readings onoff -->
+				<s:HGroup click="speakReadingsOnOff_clickHandler(event)" width="100%" verticalAlign="bottom">
+					<s:Rect height="100%" width="5" >
+						<s:fill>
+							<s:SolidColor color="#212121" id="rect59"/>
+						</s:fill>
+					</s:Rect>
+					<s:Label text = "{ModelLocator.resourceManagerInstance.getString('settingsview','speakreadingsonoff')}" 
+							 width="100%" paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
+					<s:Label text = "{speakReadingsOnOffText}"  
+							 paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="14"/>
+					<s:Rect height="100%" width="5" >
+						<s:fill>
+							<s:SolidColor color="#212121" id="rect60"/>
+						</s:fill>
+					</s:Rect>
+				</s:HGroup>
+				<s:Line width="100%"  id = "speakreadingsline1">
+					<s:stroke>
+						<s:SolidColorStroke color="0xFFFFFF" weight="1" alpha="0.25"/>
+					</s:stroke>
+				</s:Line>
+				<s:HGroup click="speakReadingsInterval_clickHandler(event)" width="100%" verticalAlign="bottom" id = "speakReadingsNameGroup">
+					<s:Rect height="100%" width="5" >
+						<s:fill>
+							<s:SolidColor color="#212121" id="rect61"/>
+						</s:fill>
+					</s:Rect>
+					<s:Label text = "{ModelLocator.resourceManagerInstance.getString('settingsview','speakreadingsinterval')}" 
+							 width="100%" paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
+					<s:Label text = "{speakReadingsIntervalValue}"  
+							 paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="14"/>
+					<s:Rect height="100%" width="5" >
+						<s:fill>
+							<s:SolidColor color="#212121" id="rect62"/>
+						</s:fill>
+					</s:Rect>
+				</s:HGroup>
+				<s:Line width="100%">
+					<s:stroke>
+						<s:SolidColorStroke color="#3B6999"  weight="3"/>
+					</s:stroke>
+				</s:Line>
 			</s:VGroup>
 			
 			<!-- Chapter Version info --> 
