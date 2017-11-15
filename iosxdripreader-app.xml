@@ -338,7 +338,7 @@
 		<manifest android:installLocation="auto"> </manifest> ]]></manifestAdditions> 
 		</android> -->
 	
-<extensions>
+	<extensions>
         <extensionID>com.distriqt.BluetoothLE</extensionID>
         <extensionID>com.distriqt.Notifications</extensionID>
         <extensionID>com.distriqt.Core</extensionID>

@@ -351,12 +351,9 @@
 		<extensionID>com.distriqt.AndroidSupport</extensionID>
 		<extensionID>com.distriqt.Application</extensionID>
 		<extensionID>com.distriqt.Message</extensionID>
-
 		<extensionID>com.distriqt.NetworkInfo</extensionID>
-
 		<extensionID>net.johandegraeve.iosfetchinterval</extensionID>
-		
-	<extensionID>com.freshplanet.AirBackgroundFetch</extensionID>
-    <extensionID>com.fabricemontfort.air.ezSpeech</extensionID>
+		<extensionID>com.freshplanet.AirBackgroundFetch</extensionID>
+    	<extensionID>com.fabricemontfort.air.ezSpeech</extensionID>
     </extensions>
 </application>
