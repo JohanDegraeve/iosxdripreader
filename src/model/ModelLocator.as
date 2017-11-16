@@ -36,6 +36,7 @@ package model
 	import spark.components.ViewNavigator;
 	import spark.core.ContentCache;
 	
+	import Utilities.Trace;
 	import Utilities.UniqueId;
 	
 	import databaseclasses.BgReading;
@@ -57,6 +58,7 @@ package model
 	import services.HealthKitService;
 	import services.NightScoutService;
 	import services.NotificationService;
+	import services.TextToSpeech;
 	import services.TransmitterService;
 	
 	import views.HomeView;
@@ -223,6 +225,7 @@ package model
 							
 							DexcomShareService.init();
 							NightScoutService.init();
+							TextToSpeech.init();
 							
 							checkApplicationVersion();
 							
