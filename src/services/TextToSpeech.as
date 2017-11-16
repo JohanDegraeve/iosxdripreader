@@ -20,8 +20,7 @@
 
 package services
 {
-	import com.fabricemontfort.air.ezSpeech;
-	import com.fabricemontfort.air.ezspeech.languages;
+	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
 	
 	import flash.errors.IllegalOperationError;
 	import flash.events.Event;
@@ -44,18 +43,11 @@ package services
 	 */
 	public class TextToSpeech
 	{
-		//Define objects
-		private static var tts:ezSpeech;
-		
 		//Define variables
 		private static var initiated:Boolean = false;
 		private static var lockEnabled:Boolean = false;
 		private static var speakInterval:int = 1;
 		private static var receivedReadings:int = 0;
-		
-		//Define constants
-		private static const VOICE_PITCH:Number = 1;
-		private static const VOICE_SPEED:Number = 0.51;
 		
 		public function TextToSpeech()
 		{
@@ -69,7 +61,6 @@ package services
 			{
 				//Instantiate objects and variables
 				initiated = true;
-				tts = ezSpeech.instance;
 				speakInterval = int(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_READINGS_INTERVAL));
 				
 				//Register event listener for changed settings
@@ -93,29 +84,17 @@ package services
 			myTrace("Text to speak: " + text);
 			
 			//Check if text to speech is enabled and device is supported
-			if (tts != null && tts.isSupported() /*&& !ModelLocator.isInForeground*/)
+			if (true/*&& !ModelLocator.isInForeground*/)
 			{
-				//Define text to speech parameters
-				//tts.debug = false;
-				tts.setSpeed(VOICE_SPEED);
-				tts.setPitch(VOICE_PITCH);
-				tts.setLanguage(languages.US);
-				//tts.forceLanguage("en_US");
-				
 				//Speak text
-				tts.say(text);
+				BackgroundFetch.say(text, "en-US");
 				
 				//Tracing
 				myTrace("Text spoken!");
 			}
 			else
 			{
-				if (!tts.isSupported())
-				{
-					//Tracing
-					myTrace("Can't speak. Device not supported");
-				}
-				else if (ModelLocator.isInForeground)
+				if (ModelLocator.isInForeground)
 				{
 					//Tracing
 					myTrace("Can't speak. Device is in foreground");
@@ -123,16 +102,6 @@ package services
 					
 			}
 				
-		}
-		
-		public static function isSpeaking():Boolean 
-		{
-			return tts.isSpeaking() as Boolean;
-		}
-		
-		public static function stopSpeaking():void
-		{
-			tts.stop();
 		}
 		
 		/*

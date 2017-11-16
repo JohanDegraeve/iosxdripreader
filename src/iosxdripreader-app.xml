@@ -242,6 +242,7 @@
 					<string>fetch</string>
 					<string>remote-notification</string>
 					<string>audio</string>
+					<string>airplay</string>
 				</array>
 				<key>NSAppTransportSecurity</key>
       				<dict>
@@ -354,6 +355,6 @@
 		<extensionID>com.distriqt.NetworkInfo</extensionID>
 		<extensionID>net.johandegraeve.iosfetchinterval</extensionID>
 		<extensionID>com.freshplanet.AirBackgroundFetch</extensionID>
-    	<extensionID>com.fabricemontfort.air.ezSpeech</extensionID>
+    	
     </extensions>
 </application>
