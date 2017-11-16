@@ -194,6 +194,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 				ModelLocator.navigator = navigator;
 				//navigator.addEventListener(ElementExistenceEvent.ELEMENT_ADD )
 				if (initialStart) {
+					Trace.init();
 					Database.instance.addEventListener(DatabaseEvent.DATABASE_INIT_FINISHED_EVENT,onInitResult);
 					Database.instance.addEventListener(DatabaseEvent.ERROR_EVENT,onInitError);
 					//need to know when modellocator is populated, then we can also update display
