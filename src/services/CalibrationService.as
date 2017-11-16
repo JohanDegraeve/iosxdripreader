@@ -137,6 +137,22 @@ package services
 		private static function bgReadingReceived(be:TransmitterServiceEvent):void {
 			myTrace("in bgReadingReceived");
 
+			//if ((new Date()).valueOf() - latestReading.timestamp > MAXIMUM_WAIT_FOR_CALIBRATION_IN_SECONDS * 1000) {
+			var latestReadings:ArrayCollection = BgReading.latestBySize(1);
+			if (latestReadings.length == 0) {
+				//should never happen
+				myTrace("in bgReadingReceived but latestReadings.length == 0, looks like an error");
+				return;
+			}
+			var latestReading:BgReading = (latestReadings.getItemAt(0)) as BgReading;
+			if ((new Date()).valueOf() - latestReading.timestamp > MAXIMUM_WAIT_FOR_CALIBRATION_IN_SECONDS * 1000) {
+				//this can happen for example in case of blucon, if historical data is read which contains readings > 2 minutes old
+				myTrace("in bgReadingReceived, reading is more than " + MAXIMUM_WAIT_FOR_CALIBRATION_IN_SECONDS + " seconds old, no further processing");
+				return;
+			}
+			
+
+			
 			if (Sensor.getActiveSensor() == null) {
 				myTrace("bgReadingReceived, but sensor is null, returning");
 				return;
