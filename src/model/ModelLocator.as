@@ -58,6 +58,7 @@ package model
 	import services.NightScoutService;
 	import services.NotificationService;
 	import services.TransmitterService;
+	import services.UpdateService;
 	
 	import views.HomeView;
 
@@ -223,6 +224,7 @@ package model
 							
 							DexcomShareService.init();
 							NightScoutService.init();
+							UpdateService.init();
 							
 							checkApplicationVersion();
 							
