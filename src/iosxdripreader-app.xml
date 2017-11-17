@@ -8,7 +8,7 @@
 	See the GNU General Public License for more details. You should have received 
 	a copy of the GNU General Public License along with this program. If not, 
 	see <http://www.gnu.org/licenses/gpl.txt>. -->
-<application xmlns="http://ns.adobe.com/air/application/25.0">
+<application xmlns="http://ns.adobe.com/air/application/27.0">
 
 	<!-- Adobe AIR Application Descriptor File Template. Specifies parameters 
 		for identifying, installing, and launching AIR applications. xmlns - The 
@@ -242,6 +242,7 @@
 					<string>fetch</string>
 					<string>remote-notification</string>
 					<string>audio</string>
+					<string>airplay</string>
 				</array>
 				<key>NSAppTransportSecurity</key>
       				<dict>
@@ -354,6 +355,6 @@
 		<extensionID>com.distriqt.NetworkInfo</extensionID>
 		<extensionID>net.johandegraeve.iosfetchinterval</extensionID>
 		<extensionID>com.freshplanet.AirBackgroundFetch</extensionID>
-    	<extensionID>com.fabricemontfort.air.ezSpeech</extensionID>
+    	
     </extensions>
 </application>
