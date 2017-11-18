@@ -125,6 +125,8 @@ package services
 		public static const ID_FOR_VERY_LOW_ALERT_SNOOZE_IDENTIFIER:String = "VERY_LOW_ALERT_SNOOZE_IDENTIFIER";
 		public static const ID_FOR_VERY_HIGH_ALERT_SNOOZE_IDENTIFIER:String = "VERY_HIGH_ALERT_SNOOZE_IDENTIFIER";
 		
+		public static const ID_FOR_APP_UPDATE_IDENTIFIER:String = "APP_UPDATE_IDENTIFIER";
+		
 		private static var timeStampSinceLastNotifForPatchReadError:Number = 0;
 		
 		public function NotificationService()
