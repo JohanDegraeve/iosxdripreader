@@ -307,7 +307,7 @@ package model
 			}
 		}
 		
-		private static function versionAIsSmallerThanB(versionA:String, versionB:String):Boolean {
+		public static function versionAIsSmallerThanB(versionA:String, versionB:String):Boolean {
 			var versionaSplitted:Array = versionA.split(".");
 			var versionbSplitted:Array = versionB.split(".");
 			if (new Number(versionaSplitted[0]) < new Number(versionbSplitted[0]))
