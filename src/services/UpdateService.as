@@ -1,7 +1,12 @@
 package services
 {
-	import com.distriqt.extension.notifications.Notifications;
-	import com.distriqt.extension.notifications.builders.NotificationBuilder;
+	import com.distriqt.extension.application.Application;
+	import com.distriqt.extension.application.events.ApplicationStateEvent;
+	import com.distriqt.extension.dialog.Dialog;
+	import com.distriqt.extension.dialog.DialogView;
+	import com.distriqt.extension.dialog.builders.AlertBuilder;
+	import com.distriqt.extension.dialog.events.DialogViewEvent;
+	import com.distriqt.extension.dialog.objects.DialogAction;
 	
 	import flash.events.Event;
 	import flash.events.EventDispatcher;
@@ -10,23 +15,29 @@ package services
 	import flash.net.URLLoaderDataFormat;
 	import flash.net.URLRequest;
 	import flash.net.URLRequestMethod;
+	import flash.net.navigateToURL;
 	
 	import databaseclasses.LocalSettings;
 	
-	import events.BackGroundFetchServiceEvent;
+	import events.IosXdripReaderEvent;
 	
 	import model.ModelLocator;
+	
+	[ResourceBundle('updateservice')]
 	
 	public class UpdateService extends EventDispatcher
 	{
 		//Instance
 		private static var _instance:UpdateService = new UpdateService();
 		
-		//Function events for load url requests
-		private static var functionToCallAtUpOrDownloadSuccess:Function = null;
-		private static var functionToCallAtUpOrDownloadFailure:Function = null;
+		//Variables 
+		private static var updateURL:String = ""; 
 		
+		//Constants
 		private static const GITHUB_REPO_API_URL:String = "https://api.github.com/repos/JohanDegraeve/iosxdripreader/releases/latest";
+		private static const IGNORE_UPDATE:int = 0;
+		private static const GO_TO_GITHUB:int = 1;
+		private static const REMIND_LATER:int = 2;
 		
 		public static function get instance():UpdateService {
 			return _instance;
@@ -41,11 +52,8 @@ package services
 		
 		public static function init():void
 		{
-			/*BackGroundFetchService.instance.addEventListener(BackGroundFetchServiceEvent.LOAD_REQUEST_ERROR, defaultErrorFunction);
-			BackGroundFetchService.instance.addEventListener(BackGroundFetchServiceEvent.LOAD_REQUEST_RESULT, defaultSuccessFunction);
-			BackGroundFetchService.createAndLoadUrlRequest(GITHUB_REPO_API_URL, URLRequestMethod.GET, null, null, null); */
-			
 			checkUpdate();
+			createEventListeners();
 		}
 		
 		private static function checkUpdate():void
@@ -66,6 +74,11 @@ package services
 			{
 				trace("Unable to load GitHub repo API: " + error);
 			}
+		}
+		
+		private static function createEventListeners():void
+		{
+			iosxdripreader.instance.addEventListener(IosXdripReaderEvent.APP_IN_FOREGROUND, onApplicationActivated);
 		}
 		
 		protected static function onLoadSuccess(event:Event):void
@@ -113,6 +126,7 @@ package services
 								if(userGroup == ipaGroup)
 								{
 									userUpdateAvailable = true;
+									updateURL = data.html_url;
 									break;
 								}
 							}
@@ -123,6 +137,7 @@ package services
 								{
 									//The user has no group associated so and update is available
 									userUpdateAvailable = true;
+									updateURL = data.html_url;
 									break;
 								}
 							}
@@ -132,37 +147,60 @@ package services
 					//If there's an update available to the user, display a notification
 					if(userUpdateAvailable)
 					{
-						trace("App update is available for user's group. Sending notification");
-						
-						//Send a notification to the user
-						Notifications.service.cancel(NotificationService.ID_FOR_APP_UPDATE);
-						Notifications.service.notify(
-							new NotificationBuilder()
-							.setId(NotificationService.ID_FOR_APP_UPDATE)
-							.setAlert("Update Available")
-							.setTitle("Update Available")
-							.setBody("Version " + latestAppVersion + " is available for download. Please visit GitHub to install.")
-							.enableLights(true)
-							.enableVibration(true)
-							.build());
+						trace("App update is available for user's group. Sending notification at " + (new Date()).toLocaleTimeString());
+						//Warn User
+						var title:String = ModelLocator.resourceManagerInstance.getString('updateservice', "update_dialog_title");
+						var message:String = ModelLocator.resourceManagerInstance.getString('updateservice', "update_dialog_preversion_message") + " " + latestAppVersion + ". " + ModelLocator.resourceManagerInstance.getString('updateservice', "update_dialog_postversion_message") + "."; 
+						var ignore:String = ModelLocator.resourceManagerInstance.getString('updateservice', "update_dialog_ignore_update");
+						var goToGitHub:String = ModelLocator.resourceManagerInstance.getString('updateservice', "update_dialog_goto_github");
+						var remind:String = ModelLocator.resourceManagerInstance.getString('updateservice', "update_dialog_remind_later");
+						var alert:DialogView = Dialog.service.create(
+							new AlertBuilder()
+							.setTitle(title)
+							.setMessage(message)
+							.addOption(ignore, DialogAction.STYLE_POSITIVE, 0)
+							.addOption(goToGitHub, DialogAction.STYLE_POSITIVE, 1)
+							.addOption(remind, DialogAction.STYLE_POSITIVE, 2)
+							.build()
+						);
+						alert.addEventListener(DialogViewEvent.CLOSED, onDialogClosed);
+						DialogService.addDialog(alert);
 					}
 					else
-						trace("App update is available but not ipa for user's group is ready for download");
+					{
+						trace("App update is available but no ipa for user's group is ready for download");
+						updateURL = "";
+					}
 				}
 			}
-		}	
-		
-		/*protected static function defaultSuccessFunction(event:BackGroundFetchServiceEvent):void
-		{
-			trace("------ LOAD SUCCESS ------");
-			trace("------ DATA: " + event.data.information + " ------");
-			
 		}
 		
-		protected static function defaultErrorFunction(event:BackGroundFetchServiceEvent):void
+		private static function onDialogClosed(event:DialogViewEvent):void 
 		{
-			trace("------ LOAD ERROR ------");
-			
-		}*/
+			var selectedOption:int = int(event.index);
+			if (selectedOption == IGNORE_UPDATE)
+			{
+				trace("IGNORE UPDATE");
+			}
+			else if (selectedOption == GO_TO_GITHUB)
+			{
+				trace("GO TO GITHUB");
+				if (updateURL != "")
+				{
+					navigateToURL(new URLRequest(updateURL));
+					updateURL = "";
+					trace("user directed to update page");
+				}
+			}
+			else if (selectedOption == REMIND_LATER)
+			{
+				trace("REMIND LATER");
+			}
+		}
+		
+		protected static function onApplicationActivated(event:Event = null):void
+		{
+			trace("Update service is in foreground");
+		}
 	}
 }
