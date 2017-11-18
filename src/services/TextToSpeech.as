@@ -71,6 +71,11 @@ package services
 				//Register event listener for new blood glucose readings
 				TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, onBgReadingReceived);
 				
+				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_READINGS_ON) == "true") {
+					BackgroundFetch.setAvAudioSessionCategory(true);
+				} else {
+					BackgroundFetch.setAvAudioSessionCategory(false);
+				}
 				//Tracing
 				myTrace("TextToSpeech Initiated. BG readings enabled: " + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_READINGS_ON) + " | BG readings interval: " + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_READINGS_INTERVAL));
 			}
@@ -194,6 +199,13 @@ package services
 				receivedReadings = 0;
 			}
 			
+			if (event.data == CommonSettings.COMMON_SETTING_SPEAK_READINGS_ON) {
+				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_READINGS_ON) == "true") {
+					BackgroundFetch.setAvAudioSessionCategory(true);
+				} else {
+					BackgroundFetch.setAvAudioSessionCategory(false);
+				}
+			}
 		}
 	}
 }
