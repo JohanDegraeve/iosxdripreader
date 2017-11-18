@@ -150,7 +150,7 @@ package services
 						trace("App update is available for user's group. Sending notification at " + (new Date()).toLocaleTimeString());
 						//Warn User
 						var title:String = ModelLocator.resourceManagerInstance.getString('updateservice', "update_dialog_title");
-						var message:String = ModelLocator.resourceManagerInstance.getString('updateservice', "update_dialog_preversion_message") + " " + latestAppVersion + ". " + ModelLocator.resourceManagerInstance.getString('updateservice', "update_dialog_postversion_message") + "."; 
+						var message:String = ModelLocator.resourceManagerInstance.getString('updateservice', "update_dialog_preversion_message") + " " + latestAppVersion + " " + ModelLocator.resourceManagerInstance.getString('updateservice', "update_dialog_postversion_message") + "."; 
 						var ignore:String = ModelLocator.resourceManagerInstance.getString('updateservice', "update_dialog_ignore_update");
 						var goToGitHub:String = ModelLocator.resourceManagerInstance.getString('updateservice', "update_dialog_goto_github");
 						var remind:String = ModelLocator.resourceManagerInstance.getString('updateservice', "update_dialog_remind_later");
