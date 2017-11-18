@@ -44,6 +44,11 @@
 		 public static const DEFAULT_SITE_NAME:String = "YOUR_SITE.azurewebsites.net";
 		 public static const DEFAULT_API_SECRET:String = "API_SECRET";
 		 
+		 /**
+		  * GitHub Update API
+		  */
+		 public static const GITHUB_REPO_API_URL:String = "https://api.github.com/repos/JohanDegraeve/iosxdripreader/releases/latest";
+		 
 		 //LIST OF SETTINGID's
 		 /**
 		  * Unique Id of the currently active sensor<br>
