@@ -242,7 +242,6 @@
 					<string>fetch</string>
 					<string>remote-notification</string>
 					<string>audio</string>
-					<string>airplay</string>
 				</array>
 				<key>NSAppTransportSecurity</key>
       				<dict>

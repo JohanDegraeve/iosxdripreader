@@ -130,14 +130,18 @@ package services
 		}
 		
 		private static function central_peripheralDiscoveredHandler(be:PeripheralEvent):void {
-			if (BlueToothDevice.alwaysScan()) {
-				if ((new Date()).valueOf() - timeStampOfLastDeviceDiscovery < 60 * 1000) {
-					
-				} else {
-					timeStampOfLastDeviceDiscovery = (new Date()).valueOf();
-					BackgroundFetch.checkMuted();
-				}
-			}				
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_READINGS_ON) == "true") {
+				myTrace("in central_peripheralDiscoveredHandler, not calling checkmuted, because readings overrides muted status");
+			} else {
+				if (BlueToothDevice.alwaysScan()) {
+					if ((new Date()).valueOf() - timeStampOfLastDeviceDiscovery < 60 * 1000) {
+						
+					} else {
+						timeStampOfLastDeviceDiscovery = (new Date()).valueOf();
+						BackgroundFetch.checkMuted();
+					}
+				}				
+			}
 		}
 		
 		public static function callCompletionHandler(result:String):void {

@@ -259,8 +259,12 @@ package services
 		}
 		
 		private static function characteristicUpdate(event:Event):void {
-			if (!BlueToothDevice.alwaysScan())
-				BackgroundFetch.checkMuted();
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_READINGS_ON) == "true") {
+				myTrace("in characteristicUpdate, not calling checkmuted, because readings overrides muted status");
+			} else {
+				if (!BlueToothDevice.alwaysScan())
+					BackgroundFetch.checkMuted();
+			}
 		}
 		
 		

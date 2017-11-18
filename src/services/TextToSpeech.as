@@ -25,6 +25,8 @@ package services
 	import flash.errors.IllegalOperationError;
 	import flash.events.Event;
 	
+	import mx.collections.ArrayCollection;
+	
 	import Utilities.BgGraphBuilder;
 	import Utilities.Trace;
 	
@@ -69,6 +71,11 @@ package services
 				//Register event listener for new blood glucose readings
 				TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, onBgReadingReceived);
 				
+				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_READINGS_ON) == "true") {
+					BackgroundFetch.setAvAudioSessionCategory(true);
+				} else {
+					BackgroundFetch.setAvAudioSessionCategory(false);
+				}
 				//Tracing
 				myTrace("TextToSpeech Initiated. BG readings enabled: " + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_READINGS_ON) + " | BG readings interval: " + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_READINGS_INTERVAL));
 			}
@@ -129,46 +136,49 @@ package services
 				if (/*!ModelLocator.isInForeground &&*/ ((receivedReadings - 1) % speakInterval == 0))
 				{	
 					//Get current bg reading and format it 
-					var currentBgReading:BgReading = BgReading.lastNoSensor();
-					var currentBgReadingFormatted:String = BgGraphBuilder.unitizedString(currentBgReading.calculatedValue, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true");
-					
-					//Get current delta
-					var currentDelta:String = BgGraphBuilder.unitizedDeltaString(false, true);
-					
-					//format delta in case of anomalies
-					if (currentDelta == "0.0")
-						currentDelta = "0";
-					
-					//Get trend (slope)
-					var currentTrend:String = currentBgReading.slopeName() as String;
-					
-					//Format trend (slope)
-					if (currentTrend == "NONE" || currentTrend == "NON COMPUTABLE")
-						currentTrend = "non computable";
-					else if (currentTrend == "DoubleDown")
-						currentTrend = "dramatically downward";
-					else if (currentTrend == "SingleDown")
-						currentTrend = "significantly downward";
-					else if (currentTrend == "FortyFiveDown")
-						currentTrend = "down";
-					else if (currentTrend == "Flat")
-						currentTrend = "flat";
-					else if (currentTrend == "FortyFiveUp")
-						currentTrend = "up";
-					else if (currentTrend == "SingleUp")
-						currentTrend = "significantly upward";
-					else if (currentTrend == "DoubleUp")
-						currentTrend = "dramatically upward";
-					
-					//Format current delta in case of anomalies
-					if (currentDelta == "ERR" || currentDelta == "???")
-						currentDelta = "non computable";
-					
-					//Create output text
-					var currentBgReadingOutput:String = "Current blood glucose is " + currentBgReadingFormatted + ". It's trending " + currentTrend + ". Difference from last reading is " + currentDelta + ".";
-					
-					//Send output to TTS
-					sayText(currentBgReadingOutput);
+					var currentBgReadingList:ArrayCollection = BgReading.latestBySize(1);
+					if (currentBgReadingList.length > 0) {
+						var currentBgReading:BgReading = currentBgReadingList.getItemAt(0) as BgReading;
+						var currentBgReadingFormatted:String = BgGraphBuilder.unitizedString(currentBgReading.calculatedValue, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true");
+						
+						//Get current delta
+						var currentDelta:String = BgGraphBuilder.unitizedDeltaString(false, true);
+						
+						//format delta in case of anomalies
+						if (currentDelta == "0.0")
+							currentDelta = "0";
+						
+						//Get trend (slope)
+						var currentTrend:String = currentBgReading.slopeName() as String;
+						
+						//Format trend (slope)
+						if (currentTrend == "NONE" || currentTrend == "NON COMPUTABLE")
+							currentTrend = "non computable";
+						else if (currentTrend == "DoubleDown")
+							currentTrend = "dramatically downward";
+						else if (currentTrend == "SingleDown")
+							currentTrend = "significantly downward";
+						else if (currentTrend == "FortyFiveDown")
+							currentTrend = "down";
+						else if (currentTrend == "Flat")
+							currentTrend = "flat";
+						else if (currentTrend == "FortyFiveUp")
+							currentTrend = "up";
+						else if (currentTrend == "SingleUp")
+							currentTrend = "significantly upward";
+						else if (currentTrend == "DoubleUp")
+							currentTrend = "dramatically upward";
+						
+						//Format current delta in case of anomalies
+						if (currentDelta == "ERR" || currentDelta == "???")
+							currentDelta = "non computable";
+						
+						//Create output text
+						var currentBgReadingOutput:String = "Current blood glucose is " + currentBgReadingFormatted + ". It's trending " + currentTrend + ". Difference from last reading is " + currentDelta + ".";
+						
+						//Send output to TTS
+						sayText(currentBgReadingOutput);
+					}
 				}
 			} else {
 				myTrace("in onBgReadingReceived, SPEAK_READINGS is off");
@@ -189,6 +199,13 @@ package services
 				receivedReadings = 0;
 			}
 			
+			if (event.data == CommonSettings.COMMON_SETTING_SPEAK_READINGS_ON) {
+				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_READINGS_ON) == "true") {
+					BackgroundFetch.setAvAudioSessionCategory(true);
+				} else {
+					BackgroundFetch.setAvAudioSessionCategory(false);
+				}
+			}
 		}
 	}
 }
