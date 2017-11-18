@@ -17,6 +17,7 @@ package services
 	import flash.net.URLRequestMethod;
 	import flash.net.navigateToURL;
 	
+	import databaseclasses.CommonSettings;
 	import databaseclasses.LocalSettings;
 	
 	import events.IosXdripReaderEvent;
@@ -29,20 +30,15 @@ package services
 	{
 		//Instance
 		private static var _instance:UpdateService = new UpdateService();
-		private static var latestAppVersion:String = "";
 		
 		//Variables 
-		private static var updateURL:String = ""; 
+		private static var updateURL:String = "";
+		private static var latestAppVersion:String = "";
 		
 		//Constants
-		private static const GITHUB_REPO_API_URL:String = "https://api.github.com/repos/JohanDegraeve/iosxdripreader/releases/latest";
-		private static const IGNORE_UPDATE:int = 0;
-		private static const GO_TO_GITHUB:int = 1;
-		private static const REMIND_LATER:int = 2;
-		
-		public static function get instance():UpdateService {
-			return _instance;
-		}
+		private static const IGNORE_UPDATE_BUTTON:int = 0;
+		private static const GO_TO_GITHUB_BUTTON:int = 1;
+		private static const REMIND_LATER_BUTTON:int = 2;
 		
 		public function UpdateService(target:IEventDispatcher=null)
 		{
@@ -51,30 +47,36 @@ package services
 			}
 		}
 		
+		//Start Engine
 		public static function init():void
 		{
-			checkUpdate();
+			//Setup Event Listeners
 			createEventListeners();
-		}
-		
-		private static function checkTimeBetweenLastUpdateCheck(previousUpdateStamp:Number, currentStamp:Number):Number
-		{
-			//var oneDay:Number = 1000 * 60 * 60 * 24;
-			var oneDay:Number = 1000 * 60;
-			var differenceMilliseconds:Number = Math.abs(previousUpdateStamp - currentStamp);
-			var daysAgo:Number =  Math.round(differenceMilliseconds/oneDay);
 			
-			return daysAgo;
+			//Check App Update
+			if(canDoUpdate())
+				getUpdate();
 		}
 		
-		private static function checkUpdate():void
+		//Getters/Setters
+		public static function get instance():UpdateService {
+			return _instance;
+		}
+		
+		//Functionality Functions
+		private static function createEventListeners():void
 		{
-			//Create and configure loader and request
-			var request:URLRequest = new URLRequest(GITHUB_REPO_API_URL);
+			iosxdripreader.instance.addEventListener(IosXdripReaderEvent.APP_IN_FOREGROUND, onApplicationActivated);
+		}
+		
+		private static function getUpdate():void
+		{
+			//Create and configure loader and url request
+			var request:URLRequest = new URLRequest(CommonSettings.GITHUB_REPO_API_URL);
 			request.method = URLRequestMethod.GET;
 			var loader:URLLoader = new URLLoader(); 
 			loader.dataFormat = URLLoaderDataFormat.TEXT;
-				
+			
 			//Make connection and define listener
 			loader.addEventListener(Event.COMPLETE, onLoadSuccess);
 			try 
@@ -87,11 +89,39 @@ package services
 			}
 		}
 		
-		private static function createEventListeners():void
+		//Utility functions
+		private static function checkTimeBetweenLastUpdateCheck(previousUpdateStamp:Number, currentStamp:Number):Number
 		{
-			iosxdripreader.instance.addEventListener(IosXdripReaderEvent.APP_IN_FOREGROUND, onApplicationActivated);
+			//var oneDay:Number = 1000 * 60 * 60 * 24;
+			var oneDay:Number = 1000 * 60;
+			var differenceMilliseconds:Number = Math.abs(previousUpdateStamp - currentStamp);
+			var daysAgo:Number =  Math.round(differenceMilliseconds/oneDay);
+			
+			return daysAgo;
 		}
 		
+		private static function canDoUpdate():Boolean
+		{
+			var lastUpdateCheckStamp:Number = 1511014007853;
+			var currentDate:Date = new Date();
+			var currentTime:String = (new Date()).toLocaleTimeString();
+			var currentTimeStamp:Number = currentDate.valueOf();
+			//var currentTimeStamp:Number = (new Date()).valueOf();
+			var daysSinceLastUpdateCheck:Number = checkTimeBetweenLastUpdateCheck(lastUpdateCheckStamp, currentTimeStamp);
+			
+			trace("currentTime: " + currentTime);
+			trace("currentTimeStamp: " + currentTimeStamp);
+			trace("time between last update: " + daysSinceLastUpdateCheck);
+			if(daysSinceLastUpdateCheck > 25)
+			{
+				trace("Checking for new app update");
+				return true;
+			}
+			
+			return false;
+		}
+		
+		//Event Listeners
 		protected static function onLoadSuccess(event:Event):void
 		{
 			//Parse response
@@ -189,7 +219,7 @@ package services
 		private static function onDialogClosed(event:DialogViewEvent):void 
 		{
 			var selectedOption:int = int(event.index);
-			if (selectedOption == IGNORE_UPDATE)
+			if (selectedOption == IGNORE_UPDATE_BUTTON)
 			{
 				trace("IGNORE UPDATE");
 				var ignoredUpdate:String = latestAppVersion;
@@ -197,7 +227,7 @@ package services
 				//Add ignored version to database settings
 				
 			}
-			else if (selectedOption == GO_TO_GITHUB)
+			else if (selectedOption == GO_TO_GITHUB_BUTTON)
 			{
 				trace("GO TO GITHUB");
 				if (updateURL != "")
@@ -207,7 +237,7 @@ package services
 					trace("user directed to update page");
 				}
 			}
-			else if (selectedOption == REMIND_LATER)
+			else if (selectedOption == REMIND_LATER_BUTTON)
 			{
 				trace("REMIND LATER");
 				
@@ -222,21 +252,9 @@ package services
 		protected static function onApplicationActivated(event:Event = null):void
 		{
 			trace("Update service is in foreground");
-			var lastUpdateCheckStamp:Number = 1511014007853;
-			var currentDate:Date = new Date();
-			var currentTime:String = (new Date()).toLocaleTimeString();
-			var currentTimeStamp:Number = currentDate.valueOf();
-			//var currentTimeStamp:Number = (new Date()).valueOf();
-			var daysSinceLastUpdateCheck:Number = checkTimeBetweenLastUpdateCheck(lastUpdateCheckStamp, currentTimeStamp);
 			
-			trace("currentTime: " + currentTime);
-			trace("currentTimeStamp: " + currentTimeStamp);
-			trace("time between last update: " + daysSinceLastUpdateCheck);
-			if(daysSinceLastUpdateCheck > 25)
-			{
-				trace("Checking for new app update");
-				checkUpdate();
-			}
+			if(canDoUpdate())
+				getUpdate();
 		}
 	}
 }
