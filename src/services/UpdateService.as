@@ -29,6 +29,7 @@ package services
 	{
 		//Instance
 		private static var _instance:UpdateService = new UpdateService();
+		private static var latestAppVersion:String = "";
 		
 		//Variables 
 		private static var updateURL:String = ""; 
@@ -54,6 +55,16 @@ package services
 		{
 			checkUpdate();
 			createEventListeners();
+		}
+		
+		private static function checkTimeBetweenLastUpdateCheck(previousUpdateStamp:Number, currentStamp:Number):Number
+		{
+			//var oneDay:Number = 1000 * 60 * 60 * 24;
+			var oneDay:Number = 1000 * 60;
+			var differenceMilliseconds:Number = Math.abs(previousUpdateStamp - currentStamp);
+			var daysAgo:Number =  Math.round(differenceMilliseconds/oneDay);
+			
+			return daysAgo;
 		}
 		
 		private static function checkUpdate():void
@@ -89,8 +100,8 @@ package services
 			
 			//Handle App Version
 			//var currentAppVersion:String = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_APPLICATION_VERSION);
+			latestAppVersion = data.tag_name;
 			var currentAppVersion:String = "0.5";
-			var latestAppVersion:String = data.tag_name;
 			var updateAvailable:Boolean = ModelLocator.versionAIsSmallerThanB(currentAppVersion, latestAppVersion);
 			
 			//Handle User Update
@@ -181,6 +192,10 @@ package services
 			if (selectedOption == IGNORE_UPDATE)
 			{
 				trace("IGNORE UPDATE");
+				var ignoredUpdate:String = latestAppVersion;
+				
+				//Add ignored version to database settings
+				
 			}
 			else if (selectedOption == GO_TO_GITHUB)
 			{
@@ -195,12 +210,33 @@ package services
 			else if (selectedOption == REMIND_LATER)
 			{
 				trace("REMIND LATER");
+				
+				var currentDate:Date = new Date();
+				var currentTimeStamp:Number = currentDate.valueOf();
+				
+				//Update last check time in database
+				
 			}
 		}
 		
 		protected static function onApplicationActivated(event:Event = null):void
 		{
 			trace("Update service is in foreground");
+			var lastUpdateCheckStamp:Number = 1511014007853;
+			var currentDate:Date = new Date();
+			var currentTime:String = (new Date()).toLocaleTimeString();
+			var currentTimeStamp:Number = currentDate.valueOf();
+			//var currentTimeStamp:Number = (new Date()).valueOf();
+			var daysSinceLastUpdateCheck:Number = checkTimeBetweenLastUpdateCheck(lastUpdateCheckStamp, currentTimeStamp);
+			
+			trace("currentTime: " + currentTime);
+			trace("currentTimeStamp: " + currentTimeStamp);
+			trace("time between last update: " + daysSinceLastUpdateCheck);
+			if(daysSinceLastUpdateCheck > 25)
+			{
+				trace("Checking for new app update");
+				checkUpdate();
+			}
 		}
 	}
 }
