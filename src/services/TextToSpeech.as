@@ -38,6 +38,8 @@ package services
 	import events.SettingsServiceEvent;
 	import events.TransmitterServiceEvent;
 	
+	import model.ModelLocator;
+	
 	import services.TransmitterService;
 	
 	/**
@@ -187,10 +189,13 @@ package services
 		
 		protected static function onDeepSleepTimer(event:TimerEvent):void
 		{
-			trace("in TTS onDeepSleepTimer, playing 1ms of silence to avoid deep sleep");
-			
-			//Play a silence audio file of 1 millisecond to avoid deep sleep
-			BackgroundFetch.playSound("../assets/1-millisecond-of-silence.mp3");
+			if(!ModelLocator.isInForeground)
+			{
+				trace("in TTS onDeepSleepTimer, playing 1ms of silence to avoid deep sleep");
+				
+				//Play a silence audio file of 1 millisecond to avoid deep sleep
+				BackgroundFetch.playSound("../assets/1-millisecond-of-silence.mp3");
+			}
 		}
 		
 		//Event fired when app settings are changed
