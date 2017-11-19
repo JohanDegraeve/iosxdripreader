@@ -24,8 +24,8 @@ package services
 	
 	import flash.errors.IllegalOperationError;
 	import flash.events.Event;
-	import flash.events.TimerEvent;
-	import flash.utils.Timer;
+	//import flash.events.TimerEvent;
+	//import flash.utils.Timer;
 	
 	import mx.collections.ArrayCollection;
 	
@@ -38,7 +38,7 @@ package services
 	import events.SettingsServiceEvent;
 	import events.TransmitterServiceEvent;
 	
-	import model.ModelLocator;
+	//import model.ModelLocator;
 	
 	import services.TransmitterService;
 	
@@ -53,7 +53,7 @@ package services
 		private static var speakInterval:int = 1;
 		private static var receivedReadings:int = 0;
 
-		private static var deepSleepTimer:Timer;
+		//private static var deepSleepTimer:Timer;
 		
 		public function TextToSpeech()
 		{
@@ -63,8 +63,10 @@ package services
 		
 		public static function init():void
 		{
+			trace("tts init called");
 			if (!initiated) 
 			{
+				trace("1");
 				//Instantiate objects and variables
 				initiated = true;
 				speakInterval = int(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_READINGS_INTERVAL));
@@ -76,10 +78,23 @@ package services
 				//Register event listener for new blood glucose readings
 				TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, onBgReadingReceived);
 				
-				//Enable/Disable Audio Session Category for BackgroundFetch
-				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_READINGS_ON) == "true") {
+				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_READINGS_ON) == "true") 
+				{
+					//Enable Audio Session Category for BackgroundFetch
 					BackgroundFetch.setAvAudioSessionCategory(true);
-				} else {
+					
+					//Manage and Start Deep Sleep Timer
+					/*if(deepSleepTimer == null)
+					{	
+						//Start and configure deep sleep timer
+						deepSleepTimer = new Timer(10000, 0);
+						deepSleepTimer.addEventListener(TimerEvent.TIMER, onDeepSleepTimer);
+						deepSleepTimer.start();
+					}*/
+				} 
+				else 
+				{
+					//Disable Audio Session Category for BackgroundFetch
 					BackgroundFetch.setAvAudioSessionCategory(false);
 				}
 				
@@ -107,7 +122,7 @@ package services
 			receivedReadings += 1;
 			
 			//Only speak blood glucose reading if app is in the background or phone is locked
-			if (/*!ModelLocator.isInForeground &&*/ ((receivedReadings - 1) % speakInterval == 0))
+			if (((receivedReadings - 1) % speakInterval == 0))
 			{	
 				//Get current bg reading and format it 
 				var currentBgReadingList:ArrayCollection = BgReading.latestBySize(1);
@@ -187,31 +202,22 @@ package services
 		private static function onBgReadingReceived(event:Event = null):void 
 		{
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_READINGS_ON) == "true") 
-			{
-				//Manage Deep Sleep Timer
-				if(deepSleepTimer == null)
-				{					
-					//Start and configure deep sleep timer
-					deepSleepTimer = new Timer(10000, 0);
-					deepSleepTimer.addEventListener(TimerEvent.TIMER, onDeepSleepTimer);
-					deepSleepTimer.start();
-				}
-				
+			{	
 				//Speak BG Reading
 				speakReading();
 			} 
 		}
 		
-		protected static function onDeepSleepTimer(event:TimerEvent):void
+		/*protected static function onDeepSleepTimer(event:TimerEvent):void
 		{
 			if(!ModelLocator.isInForeground)
 			{
 				trace("in TTS onDeepSleepTimer, playing 1ms of silence to avoid deep sleep");
 				
 				//Play a silence audio file of 1 millisecond to avoid deep sleep
-				BackgroundFetch.playSound("../assets/1-millisecond-of-silence.mp3");
+				//BackgroundFetch.playSound("../assets/1-millisecond-of-silence.mp3");
 			}
-		}
+		}*/
 		
 		//Event fired when app settings are changed
 		private static function onSettingsChanged(event:SettingsServiceEvent):void 
@@ -237,9 +243,9 @@ package services
 					BackgroundFetch.setAvAudioSessionCategory(true);
 					
 					//Create, configure and start the deep sleep timer
-					deepSleepTimer = new Timer(10000, 0); //10 seconds
+					/*deepSleepTimer = new Timer(10000, 0); //10 seconds
 					deepSleepTimer.addEventListener(TimerEvent.TIMER, onDeepSleepTimer);
-					deepSleepTimer.start();
+					deepSleepTimer.start();*/
 				} 
 				else 
 				{
@@ -247,11 +253,11 @@ package services
 					BackgroundFetch.setAvAudioSessionCategory(false);
 					
 					//Stop and Destroy the Deep Sleep timer
-					if(deepSleepTimer != null)
+					/*if(deepSleepTimer != null)
 					{
 						deepSleepTimer.stop();
 						deepSleepTimer = null;
-					}
+					}*/
 				}
 			}
 		}
