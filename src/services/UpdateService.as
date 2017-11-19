@@ -1,7 +1,5 @@
 package services
 {
-	import com.distriqt.extension.application.Application;
-	import com.distriqt.extension.application.events.ApplicationStateEvent;
 	import com.distriqt.extension.dialog.Dialog;
 	import com.distriqt.extension.dialog.DialogView;
 	import com.distriqt.extension.dialog.builders.AlertBuilder;
@@ -17,10 +15,12 @@ package services
 	import flash.net.URLRequestMethod;
 	import flash.net.navigateToURL;
 	
+	import Utilities.Trace;
+	
 	import databaseclasses.CommonSettings;
-	import databaseclasses.LocalSettings;
 	
 	import events.IosXdripReaderEvent;
+	import events.SettingsServiceEvent;
 	
 	import model.ModelLocator;
 	
@@ -53,9 +53,14 @@ package services
 			//Setup Event Listeners
 			createEventListeners();
 			
+			//Register event listener for changed settings
+			CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, onSettingsChanged);
+			
 			//Check App Update
-			if(canDoUpdate())
+			if(canDoUpdate() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_APP_UPDATE_NOTIFICATIONS_ON) == "true")
 				getUpdate();
+			else
+				trace("Update app setting is off");
 		}
 		
 		//Getters/Setters
@@ -90,10 +95,9 @@ package services
 		}
 		
 		//Utility functions
-		private static function checkTimeBetweenLastUpdateCheck(previousUpdateStamp:Number, currentStamp:Number):Number
+		private static function checkDaysBetweenLastUpdateCheck(previousUpdateStamp:Number, currentStamp:Number):Number
 		{
-			//var oneDay:Number = 1000 * 60 * 60 * 24;
-			var oneDay:Number = 1000 * 60;
+			var oneDay:Number = 1000 * 60 * 60 * 24;
 			var differenceMilliseconds:Number = Math.abs(previousUpdateStamp - currentStamp);
 			var daysAgo:Number =  Math.round(differenceMilliseconds/oneDay);
 			
@@ -102,23 +106,30 @@ package services
 		
 		private static function canDoUpdate():Boolean
 		{
-			var lastUpdateCheckStamp:Number = 1511014007853;
+			//var lastUpdateCheckStamp:Number = 1511014007853;
+			var lastUpdateCheckStamp:Number = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_APP_UPDATE_LAST_UPDATE_CHECK) as Number;
 			var currentDate:Date = new Date();
 			var currentTime:String = (new Date()).toLocaleTimeString();
 			var currentTimeStamp:Number = currentDate.valueOf();
-			//var currentTimeStamp:Number = (new Date()).valueOf();
-			var daysSinceLastUpdateCheck:Number = checkTimeBetweenLastUpdateCheck(lastUpdateCheckStamp, currentTimeStamp);
+			var daysSinceLastUpdateCheck:Number = checkDaysBetweenLastUpdateCheck(lastUpdateCheckStamp, currentTimeStamp);
 			
 			trace("currentTime: " + currentTime);
 			trace("currentTimeStamp: " + currentTimeStamp);
 			trace("time between last update: " + daysSinceLastUpdateCheck);
-			if(daysSinceLastUpdateCheck > 25)
+			
+			//If it has been more than 1 days since the last check for updates or it's the first time the app checks for updates
+			if(daysSinceLastUpdateCheck > 1 || CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_APP_UPDATE_LAST_UPDATE_CHECK) == "")
 			{
 				trace("Checking for new app update");
 				return true;
 			}
 			
 			return false;
+		}
+		
+		private static function myTrace(log:String):void 
+		{
+			Trace.myTrace("TextToSpeech.as", log);
 		}
 		
 		//Event Listeners
@@ -135,7 +146,7 @@ package services
 			var updateAvailable:Boolean = ModelLocator.versionAIsSmallerThanB(currentAppVersion, latestAppVersion);
 			
 			//Handle User Update
-			if(updateAvailable)
+			if(updateAvailable && latestAppVersion != CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_APP_UPDATE_IGNORE_UPDATE))
 			{
 				//Check if assets are available for download
 				var assets:Array = data.assets as Array;
@@ -143,7 +154,8 @@ package services
 				{
 					//Assets are available
 					//Define variables
-					var userGroup:int = int("2");
+					//var userGroup:int = int("2");
+					var userGroup:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_APP_UPDATE_USER_GROUP);
 					var userUpdateAvailable:Boolean = false;
 					
 					//Check if there is an update available for the current user's group
@@ -161,7 +173,7 @@ package services
 								//Get group
 								var firstIndex:int = fileName.indexOf("group") + 5;
 								var lastIndex:int = fileName.indexOf(".ipa");
-								var ipaGroup:int = int(fileName.slice(firstIndex, lastIndex));
+								var ipaGroup:String = fileName.slice(firstIndex, lastIndex);
 								
 								//Does the ipa group match the user group?
 								if(userGroup == ipaGroup)
@@ -174,7 +186,7 @@ package services
 							else
 							{
 								//No group associated. This is the main ipa
-								if(userGroup == 0)
+								if(userGroup == "0" || userGroup == "")
 								{
 									//The user has no group associated so and update is available
 									userUpdateAvailable = true;
@@ -222,19 +234,21 @@ package services
 			if (selectedOption == IGNORE_UPDATE_BUTTON)
 			{
 				trace("IGNORE UPDATE");
-				var ignoredUpdate:String = latestAppVersion;
 				
 				//Add ignored version to database settings
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_APP_UPDATE_IGNORE_UPDATE, latestAppVersion as String);
 				
+				//Update last check time in database
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_APP_UPDATE_LAST_UPDATE_CHECK, currentTimeStamp as String);
 			}
 			else if (selectedOption == GO_TO_GITHUB_BUTTON)
 			{
 				trace("GO TO GITHUB");
+				
 				if (updateURL != "")
 				{
 					navigateToURL(new URLRequest(updateURL));
 					updateURL = "";
-					trace("user directed to update page");
 				}
 			}
 			else if (selectedOption == REMIND_LATER_BUTTON)
@@ -245,7 +259,23 @@ package services
 				var currentTimeStamp:Number = currentDate.valueOf();
 				
 				//Update last check time in database
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_APP_UPDATE_LAST_UPDATE_CHECK, currentTimeStamp as String);
+			}
+		}
+		
+		//Event fired when app settings are changed
+		private static function onSettingsChanged(event:SettingsServiceEvent):void 
+		{
+			//Check if an update check can be made
+			if (event.data == CommonSettings.COMMON_SETTING_APP_UPDATE_NOTIFICATIONS_ON) 
+			{
+				myTrace("Settings changed! App update checker is now " + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_APP_UPDATE_NOTIFICATIONS_ON));
 				
+				if(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_APP_UPDATE_NOTIFICATIONS_ON) == "true")
+				{
+					if(canDoUpdate())
+						getUpdate();
+				}
 			}
 		}
 		
@@ -253,7 +283,7 @@ package services
 		{
 			trace("Update service is in foreground");
 			
-			if(canDoUpdate())
+			if(canDoUpdate() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_APP_UPDATE_NOTIFICATIONS_ON) == "true")
 				getUpdate();
 		}
 	}

@@ -38,16 +38,13 @@
 			 return _instance;
 		 }
 		 
+		 public static const GITHUB_REPO_API_URL:String = "https://api.github.com/repos/JohanDegraeve/iosxdripreader/releases/latest";
+		 
 		 /**
 		 * Witout https:// and without /api/v1/treatments<br>
 		  */
 		 public static const DEFAULT_SITE_NAME:String = "YOUR_SITE.azurewebsites.net";
 		 public static const DEFAULT_API_SECRET:String = "API_SECRET";
-		 
-		 /**
-		  * GitHub Update API
-		  */
-		 public static const GITHUB_REPO_API_URL:String = "https://api.github.com/repos/JohanDegraeve/iosxdripreader/releases/latest";
 		 
 		 //LIST OF SETTINGID's
 		 /**
@@ -210,6 +207,14 @@
 		 public static const COMMON_SETTING_BLUKON_INFO_SCREEN_SHOWN:int = 46;
 		 public static const COMMON_SETTING_NIGHTSCOUT_UPLOAD_CALIBRATION_TIMESTAMP:int = 47;
 		 public static const COMMON_SETTING_BLUKON_EXTERNAL_ALGORITHM:int = 48;
+		 public static const COMMON_SETTING_SPEAK_READINGS_ON:int = 49;
+		 public static const COMMON_SETTING_SPEAK_READINGS_INTERVAL:int = 50;
+		 public static const COMMON_SETTING_SPEAK_TREND_ON:int = 51;
+		 public static const COMMON_SETTING_SPEAK_DELTA_ON:int = 52;
+		 public static const COMMON_SETTING_APP_UPDATE_NOTIFICATIONS_ON:int = 53;
+		 public static const COMMON_SETTING_APP_UPDATE_LAST_UPDATE_CHECK:int = 54;
+		 public static const COMMON_SETTING_APP_UPDATE_IGNORE_UPDATE:int = 55;
+		 public static const COMMON_SETTING_APP_UPDATE_USER_GROUP:int = 56;
 
 		 private static var commonSettings:Array = [
 			 "0",//COMMON_SETTING_CURRENT_SENSOR
@@ -260,7 +265,15 @@
 			 "false",//COMMON_SETTING_DEXCOM_SHARE_US_URL
 			 "false",//COMMON_SETTING_BLUKON_INFO_SCREEN_SHOWN
 			 "0",//COMMON_SETTING_NIGHTSCOUT_UPLOAD_CALIBRATION_TIMESTAMP
-			 "false"//COMMON_SETTING_BLUKON_EXTERNAL_ALGORITHM
+			 "false",//COMMON_SETTING_BLUKON_EXTERNAL_ALGORITHM
+			 "false",//COMMON_SETTING_SPEAK_READINGS_ON
+			 "1",//COMMON_SETTING_SPEAK_READINGS_INTERVAL
+			 "false",//COMMON_SETTING_SPEAK_TREND_ON
+			 "false",//COMMON_SETTING_SPEAK_DELTA_ON
+			 "true",//COMMON_SETTING_APP_UPDATE_NOTIFICATIONS_ON
+			 "",//COMMON_SETTING_APP_UPDATE_LAST_UPDATE_CHECK
+			 "",//COMMON_SETTING_APP_UPDATE_IGNORE_UPDATE
+			 ""//COMMON_SETTING_APP_UPDATE_USER_GROUP
 		 ];
 		 
 		 public function CommonSettings()
