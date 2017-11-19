@@ -115,40 +115,55 @@ package services
 					var currentBgReading:BgReading = currentBgReadingList.getItemAt(0) as BgReading;
 					var currentBgReadingFormatted:String = BgGraphBuilder.unitizedString(currentBgReading.calculatedValue, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true");
 					
-					//Get current delta
-					var currentDelta:String = BgGraphBuilder.unitizedDeltaString(false, true);
+					//If user wants trend to be spoken...
+					if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_TREND_ON) == "true")
+					{
+						//Get trend (slope)
+						var currentTrend:String = currentBgReading.slopeName() as String;
+						
+						//Format trend (slope)
+						if (currentTrend == "NONE" || currentTrend == "NON COMPUTABLE")
+							currentTrend = "non computable";
+						else if (currentTrend == "DoubleDown")
+							currentTrend = "dramatically downward";
+						else if (currentTrend == "SingleDown")
+							currentTrend = "significantly downward";
+						else if (currentTrend == "FortyFiveDown")
+							currentTrend = "down";
+						else if (currentTrend == "Flat")
+							currentTrend = "flat";
+						else if (currentTrend == "FortyFiveUp")
+							currentTrend = "up";
+						else if (currentTrend == "SingleUp")
+							currentTrend = "significantly upward";
+						else if (currentTrend == "DoubleUp")
+							currentTrend = "dramatically upward";
+					}
 					
-					//format delta in case of anomalies
-					if (currentDelta == "0.0")
-						currentDelta = "0";
-					
-					//Get trend (slope)
-					var currentTrend:String = currentBgReading.slopeName() as String;
-					
-					//Format trend (slope)
-					if (currentTrend == "NONE" || currentTrend == "NON COMPUTABLE")
-						currentTrend = "non computable";
-					else if (currentTrend == "DoubleDown")
-						currentTrend = "dramatically downward";
-					else if (currentTrend == "SingleDown")
-						currentTrend = "significantly downward";
-					else if (currentTrend == "FortyFiveDown")
-						currentTrend = "down";
-					else if (currentTrend == "Flat")
-						currentTrend = "flat";
-					else if (currentTrend == "FortyFiveUp")
-						currentTrend = "up";
-					else if (currentTrend == "SingleUp")
-						currentTrend = "significantly upward";
-					else if (currentTrend == "DoubleUp")
-						currentTrend = "dramatically upward";
-					
-					//Format current delta in case of anomalies
-					if (currentDelta == "ERR" || currentDelta == "???")
-						currentDelta = "non computable";
+					//If user wants delta to be spoken...
+					if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_DELTA_ON) == "true")
+					{
+						//Get current delta
+						var currentDelta:String = BgGraphBuilder.unitizedDeltaString(false, true);
+						
+						//Format current delta in case of anomalies
+						if (currentDelta == "ERR" || currentDelta == "???")
+							currentDelta = "non computable";
+						
+						if (currentDelta == "0.0")
+							currentDelta = "0";
+					}
 					
 					//Create output text
-					var currentBgReadingOutput:String = "Current blood glucose is " + currentBgReadingFormatted + ". It's trending " + currentTrend + ". Difference from last reading is " + currentDelta + ".";
+					var currentBgReadingOutput:String = "Current blood glucose is " + currentBgReadingFormatted + ". ";
+					
+					//If user wants trend to be spoken...
+					if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_TREND_ON) == "true")
+						currentBgReadingOutput += "It's trending " + currentTrend + ". ";
+					
+					//If user wants delta to be spoken...
+					if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_DELTA_ON) == "true")
+						currentBgReadingOutput += "Difference from last reading is " + currentDelta + ".";
 					
 					//Send output to TTS
 					sayText(currentBgReadingOutput);
@@ -232,8 +247,11 @@ package services
 					BackgroundFetch.setAvAudioSessionCategory(false);
 					
 					//Stop and Destroy the Deep Sleep timer
-					deepSleepTimer.stop();
-					deepSleepTimer = null;
+					if(deepSleepTimer != null)
+					{
+						deepSleepTimer.stop();
+						deepSleepTimer = null;
+					}
 				}
 			}
 		}

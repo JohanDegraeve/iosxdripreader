@@ -207,6 +207,8 @@
 		 public static const COMMON_SETTING_BLUKON_EXTERNAL_ALGORITHM:int = 48;
 		 public static const COMMON_SETTING_SPEAK_READINGS_ON:int = 49;
 		 public static const COMMON_SETTING_SPEAK_READINGS_INTERVAL:int = 50;
+		 public static const COMMON_SETTING_SPEAK_TREND_ON:int = 51;
+		 public static const COMMON_SETTING_SPEAK_DELTA_ON:int = 52;
 
 		 private static var commonSettings:Array = [
 			 "0",//COMMON_SETTING_CURRENT_SENSOR
@@ -259,7 +261,9 @@
 			 "0",//COMMON_SETTING_NIGHTSCOUT_UPLOAD_CALIBRATION_TIMESTAMP
 			 "false",//COMMON_SETTING_BLUKON_EXTERNAL_ALGORITHM
 			 "false",//COMMON_SETTING_SPEAK_READINGS_ON
-			 "1"//COMMON_SETTING_SPEAK_READINGS_INTERVAL
+			 "1",//COMMON_SETTING_SPEAK_READINGS_INTERVAL
+			 "false",//COMMON_SETTING_SPEAK_TREND_ON
+			 "false"//COMMON_SETTING_SPEAK_DELTA_ON
 		 ];
 		 
 		 public function CommonSettings()

@@ -74,6 +74,10 @@
 			[Bindable]
 			private static var speakReadingsIntervalValue:String="";
 			[Bindable]
+			private static var speakReadingsTrendOnOffText:String="";
+			[Bindable]
+			private static var speakReadingsDeltaOnOffText:String="";
+			[Bindable]
 			private static var versionText:String="";
 			[Bindable]
 			private static var dexcomShareURL:String="";
@@ -159,6 +163,20 @@
 				} else {
 					speakReadingsOnOffText = ModelLocator.resourceManagerInstance.getString('settingsview','off');
 					changeSpeakReadingsStatus();
+				}
+				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_TREND_ON) == "true") {
+					speakReadingsTrendOnOffText = ModelLocator.resourceManagerInstance.getString('settingsview','on');
+					//changeSpeakReadingsStatus();
+				} else {
+					speakReadingsTrendOnOffText = ModelLocator.resourceManagerInstance.getString('settingsview','off');
+					//changeSpeakReadingsStatus();
+				}
+				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_DELTA_ON) == "true") {
+					speakReadingsDeltaOnOffText = ModelLocator.resourceManagerInstance.getString('settingsview','on');
+					//changeSpeakReadingsStatus();
+				} else {
+					speakReadingsDeltaOnOffText = ModelLocator.resourceManagerInstance.getString('settingsview','off');
+					//changeSpeakReadingsStatus();
 				}
 				
 				LocalSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, settingChanged);
@@ -972,8 +990,71 @@
 				}
 			}
 			
+			private function speakReadingsTrendOnOff_clickHandler(event:MouseEvent):void {
+				rect63.color = uint("0xD3D3D3");
+				rect64.color = uint("0xD3D3D3");
+				setResetColorTimer();
+				
+				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_TREND_ON) == "true") {
+					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_TREND_ON, "false");
+					speakReadingsTrendOnOffText = ModelLocator.resourceManagerInstance.getString('settingsview','off');
+					//changeSpeakTrendStatus();
+				} else {
+					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_TREND_ON, "true");
+					speakReadingsTrendOnOffText = ModelLocator.resourceManagerInstance.getString('settingsview','on');
+					//changeSpeakTrendStatus();
+				}
+			}
+			
+			private function speakReadingsDeltaOnOff_clickHandler(event:MouseEvent):void {
+				rect65.color = uint("0xD3D3D3");
+				rect66.color = uint("0xD3D3D3");
+				setResetColorTimer();
+				
+				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_DELTA_ON) == "true") {
+					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_DELTA_ON, "false");
+					speakReadingsDeltaOnOffText = ModelLocator.resourceManagerInstance.getString('settingsview','off');
+					//changeSpeakTrendStatus();
+				} else {
+					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_DELTA_ON, "true");
+					speakReadingsDeltaOnOffText = ModelLocator.resourceManagerInstance.getString('settingsview','on');
+					//changeSpeakTrendStatus();
+				}
+			}
+			
 			private function changeSpeakReadingsStatus():void {
 				var enabled:Boolean = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_READINGS_ON) == "true";
+				if (enabled) {
+					speakReadingsNameGroup.includeInLayout = true;
+					speakReadingsNameGroup.visible = true;
+					speakReadingsNameGroup.enabled = true;
+					speakreadingsline1.includeInLayout = true;speakreadingsline1.visible = true;
+					speakTrendNameGroup.includeInLayout = true;
+					speakTrendNameGroup.visible = true;
+					speakTrendNameGroup.enabled = true;
+					speakreadingsline3.includeInLayout = true;speakreadingsline3.visible = true;
+					speakDeltaNameGroup.includeInLayout = true;
+					speakDeltaNameGroup.visible = true;
+					speakDeltaNameGroup.enabled = true;
+					speakreadingsline4.includeInLayout = true;speakreadingsline4.visible = true;
+				} else {
+					speakReadingsNameGroup.includeInLayout = false;
+					speakReadingsNameGroup.visible = false;
+					speakReadingsNameGroup.enabled = false;
+					speakreadingsline1.includeInLayout = false;speakreadingsline1.visible = false;
+					speakTrendNameGroup.includeInLayout = false;
+					speakTrendNameGroup.visible = false;
+					speakTrendNameGroup.enabled = false;
+					speakreadingsline3.includeInLayout = false;speakreadingsline3.visible = false;
+					speakDeltaNameGroup.includeInLayout = false;
+					speakDeltaNameGroup.visible = false;
+					speakDeltaNameGroup.enabled = false;
+					speakreadingsline4.includeInLayout = false;speakreadingsline4.visible = false;
+				}
+			}
+			
+			/*private function changeSpeakTrendStatus():void {
+				var enabled:Boolean = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_TREND_ON) == "true";
 				if (enabled) {
 					speakReadingsNameGroup.includeInLayout = true;
 					speakReadingsNameGroup.visible = true;
@@ -985,7 +1066,7 @@
 					speakReadingsNameGroup.enabled = false;
 					speakreadingsline1.includeInLayout = false;speakreadingsline1.visible = false;
 				}
-			}
+			}*/
 			
 			private function setResetColorTimer():void {
 				if (resetColorTimer != null)
@@ -1056,6 +1137,10 @@
 					rect60.color = uint("0x212121");//speech onoff
 					rect61.color = uint("0x212121");//speech onoff
 					rect62.color = uint("0x212121");//speech onoff
+					rect63.color = uint("0x212121");//speech onoff
+					rect64.color = uint("0x212121");//speech onoff
+					rect65.color = uint("0x212121");//speech onoff
+					rect66.color = uint("0x212121");//speech onoff
 				}
 			}
 			
@@ -1652,7 +1737,7 @@
 				</s:stroke>
 			</s:Line>
 			
-			<!-- Chapter on/off button and interval --> 
+			<!-- Chapter on/off button, interval, trend and delta --> 
 			<s:VGroup width="100%">
 				<!-- button to change speak readings onoff -->
 				<s:HGroup click="speakReadingsOnOff_clickHandler(event)" width="100%" verticalAlign="bottom">
@@ -1672,6 +1757,48 @@
 					</s:Rect>
 				</s:HGroup>
 				<s:Line width="100%"  id = "speakreadingsline1">
+					<s:stroke>
+						<s:SolidColorStroke color="0xFFFFFF" weight="1" alpha="0.25"/>
+					</s:stroke>
+				</s:Line>
+				<s:HGroup click="speakReadingsTrendOnOff_clickHandler(event)" width="100%" verticalAlign="bottom" id="speakTrendNameGroup">
+					<s:Rect height="100%" width="5" >
+						<s:fill>
+							<s:SolidColor color="#212121" id="rect63"/>
+						</s:fill>
+					</s:Rect>
+					<s:Label text = "{ModelLocator.resourceManagerInstance.getString('settingsview','speakreadingstrendonoff')}" 
+							 width="100%" paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
+					<s:Label text = "{speakReadingsTrendOnOffText}"  
+							 paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="14"/>
+					<s:Rect height="100%" width="5" >
+						<s:fill>
+							<s:SolidColor color="#212121" id="rect64"/>
+						</s:fill>
+					</s:Rect>
+				</s:HGroup>
+				<s:Line width="100%"  id = "speakreadingsline3">
+					<s:stroke>
+						<s:SolidColorStroke color="0xFFFFFF" weight="1" alpha="0.25"/>
+					</s:stroke>
+				</s:Line>
+				<s:HGroup click="speakReadingsDeltaOnOff_clickHandler(event)" width="100%" verticalAlign="bottom"  id = "speakDeltaNameGroup">
+					<s:Rect height="100%" width="5" >
+						<s:fill>
+							<s:SolidColor color="#212121" id="rect65"/>
+						</s:fill>
+					</s:Rect>
+					<s:Label text = "{ModelLocator.resourceManagerInstance.getString('settingsview','speakreadingsdeltaonoff')}" 
+							 width="100%" paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
+					<s:Label text = "{speakReadingsDeltaOnOffText}"  
+							 paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="14"/>
+					<s:Rect height="100%" width="5" >
+						<s:fill>
+							<s:SolidColor color="#212121" id="rect66"/>
+						</s:fill>
+					</s:Rect>
+				</s:HGroup>
+				<s:Line width="100%"  id = "speakreadingsline4">
 					<s:stroke>
 						<s:SolidColorStroke color="0xFFFFFF" weight="1" alpha="0.25"/>
 					</s:stroke>
