@@ -1069,6 +1069,35 @@
 					speakReadingsOnOffText = ModelLocator.resourceManagerInstance.getString('settingsview','on');
 					changeSpeakReadingsStatus();
 				}
+				
+				trace("aqui1");
+				trace("COMMON_SETTING_SPEAK_READINGS_ON: " + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_READINGS_ON));
+				trace("LOCAL_SETTING_SPEECH_INSTRUCTIONS_ACCEPTED: " + LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_SPEECH_INSTRUCTIONS_ACCEPTED));
+				//Show initial popup with instructions
+				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_READINGS_ON) == "true" && LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_SPEECH_INSTRUCTIONS_ACCEPTED) == "false") {
+					trace("aqui 2");
+					var alert:DialogView = Dialog.service.create(
+						new AlertBuilder()
+						.setTitle("Speech")
+						.setMessage(ModelLocator.resourceManagerInstance.getString('settingsview', "speakreadingsinstructions"))
+						.addOption(ModelLocator.resourceManagerInstance.getString('general', "ok"), DialogAction.STYLE_POSITIVE, 0)
+						.addOption(ModelLocator.resourceManagerInstance.getString('general', "dont_show_again"), DialogAction.STYLE_CANCEL, 1)
+						.build()
+					);
+					alert.addEventListener(DialogViewEvent.CLOSED, speechInstructionsShowed);
+					DialogService.addDialog(alert);
+				}
+			}
+			
+			private static function speechInstructionsShowed(ev:DialogViewEvent):void 
+			{
+				if (ev != null) {
+					if (ev.index == 1) 
+					{
+						//Don't warn the user again
+						LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_SPEECH_INSTRUCTIONS_ACCEPTED, "true");
+					}
+				}
 			}
 			
 			private function speakReadingsInterval_clickHandler(event:MouseEvent):void {
