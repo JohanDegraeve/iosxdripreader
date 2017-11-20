@@ -36,6 +36,7 @@
 			[ResourceBundle("settingsview")]
 			[ResourceBundle("calibrationservice")]
 			[ResourceBundle("alarmservice")]
+			[ResourceBundle("texttospeech")]
 						
 			[Bindable]
 			private static var detailedTracingOnOrOffText:String = "";
@@ -181,50 +182,21 @@
 					speakReadingsDeltaOnOffText = ModelLocator.resourceManagerInstance.getString('settingsview','off');
 				}
 				
+				//Set previously selected language
 				var languageCode:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEECH_LANGUAGE);
-				if (languageCode == "nl-BE") {
-					speakReadingsLanguageText = "Dutch (Belgium)";
-				} 
-				else if (languageCode == "nl-NL") {
-					speakReadingsLanguageText = "Dutch (Netherlands)";
-				} 
-				else if (languageCode == "en-AU") {
-					speakReadingsLanguageText = "English (Australia)";
-				} 
-				else if (languageCode == "en-IE") {
-					speakReadingsLanguageText = "English (Ireland)";
-				} 
-				else if (languageCode == "en-ZA") {
-					speakReadingsLanguageText = "English (South Africa)";
-				} 
-				else if (languageCode == "en-GB") {
-					speakReadingsLanguageText = "English (UK)";
-				} 
-				else if (languageCode == "en-US") {
-					speakReadingsLanguageText = "English (US)";
-				} 
-				else if (languageCode == "fr-CA") {
-					speakReadingsLanguageText = "French (Canada)";
-				} 
-				else if (languageCode == "fr-FR") {
-					speakReadingsLanguageText = "French (France)";
-				} 
-				else if (languageCode == "de-DE") {
-					speakReadingsLanguageText = "German (Germany)";
-				} 
-				else if (languageCode == "pt-BR") {
-					speakReadingsLanguageText = "Portuguese (Brazil)";
-				} 
-				else if (languageCode == "pt-PT") {
-					speakReadingsLanguageText = "Portuguese (Portugal)";
-				} 
-				else if (languageCode == "es-MX") {
-					speakReadingsLanguageText = "Spanish (Mexico)";
-				} 
-				else if (languageCode == "es-ES") {
-					speakReadingsLanguageText = "Spanish (Spain)";
-				}  
+				var languagePackCodes:Array = (ModelLocator.resourceManagerInstance.getString('texttospeech','ttslanguagelistcodes') as String).split(",");
+				var languagePackDescriptions:Array = (ModelLocator.resourceManagerInstance.getString('texttospeech','ttslanguagelistdescription') as String).split(",");
 				
+				for(var i:int = 0; i < languagePackCodes.length; i++)
+				{
+					if(languagePackCodes[i] == languageCode)
+					{
+						speakReadingsLanguageText = languagePackDescriptions[i];
+						break;
+					}
+				}
+				
+				//Set App Updates related states
 				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_APP_UPDATE_NOTIFICATIONS_ON) == "true") {
 					checkUpdatesOnOffText = ModelLocator.resourceManagerInstance.getString('settingsview','on');
 					changeAppUpdateStatus();
@@ -1070,12 +1042,8 @@
 					changeSpeakReadingsStatus();
 				}
 				
-				trace("aqui1");
-				trace("COMMON_SETTING_SPEAK_READINGS_ON: " + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_READINGS_ON));
-				trace("LOCAL_SETTING_SPEECH_INSTRUCTIONS_ACCEPTED: " + LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_SPEECH_INSTRUCTIONS_ACCEPTED));
 				//Show initial popup with instructions
 				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_READINGS_ON) == "true" && LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_SPEECH_INSTRUCTIONS_ACCEPTED) == "false") {
-					trace("aqui 2");
 					var alert:DialogView = Dialog.service.create(
 						new AlertBuilder()
 						.setTitle("Speech")
@@ -1140,73 +1108,28 @@
 				rectSpeechLanguage1.color = uint("0xD3D3D3");
 				setResetColorTimer();
 				
-				var selectedLanguage:int;
+				var selectedLanguage:int = 0;
 				var currentLanguage:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEECH_LANGUAGE);
-				if (currentLanguage.toUpperCase() == "NL-BE") {
-					selectedLanguage = 0;
-				} 
-				else if (currentLanguage.toUpperCase() == "NL-NL") {
-					selectedLanguage = 1;
-				} 
-				else if (currentLanguage.toUpperCase() == "EN-AU") {
-					selectedLanguage = 2;
-				}  
-				else if (currentLanguage.toUpperCase() == "EN-IE") {
-					selectedLanguage = 3;
-				}
-				else if (currentLanguage.toUpperCase() == "EN-ZA") {
-					selectedLanguage = 4;
-				}
-				else if (currentLanguage.toUpperCase() == "EN-GB") {
-					selectedLanguage = 5;
-				}
-				else if (currentLanguage.toUpperCase() == "EN-US") {
-					selectedLanguage = 6;
-				}
-				else if (currentLanguage.toUpperCase() == "FR-CA") {
-					selectedLanguage = 7;
-				}
-				else if (currentLanguage.toUpperCase() == "FR-FR") {
-					selectedLanguage = 8;
-				}
-				else if (currentLanguage.toUpperCase() == "DE-DE") {
-					selectedLanguage = 9;
-				}
-				else if (currentLanguage.toUpperCase() == "PT-BR") {
-					selectedLanguage = 10;
-				}
-				else if (currentLanguage.toUpperCase() == "PT-PT") {
-					selectedLanguage = 11;
-				}
-				else if (currentLanguage.toUpperCase() == "ES-MX") {
-					selectedLanguage = 12;
-				}
-				else if (currentLanguage.toUpperCase() == "ES-ES") {
-					selectedLanguage = 13;
+				var languagePackDesc:Array = (ModelLocator.resourceManagerInstance.getString("texttospeech","ttslanguagelistdescription") as String).split(",");
+				var languagePackCodes:Array = (ModelLocator.resourceManagerInstance.getString("texttospeech","ttslanguagelistcodes") as String).split(",");
+				
+				//Try to put the language picker in the corresponding position depending on the already previously selected language
+				for(var i:int = 0; i < languagePackCodes.length; i++)
+				{
+					if(languagePackCodes[i] == currentLanguage)
+					{
+						selectedLanguage = i;
+						break;
+					}
 				}
 				
-				var languagesNames:Array = new Array();
-				languagesNames.push("Dutch (Belgium)", 
-									"Dutch (Netherlands)", 
-									"English (Australia)", 
-									"English (Ireland)", 
-									"English (South Africa)",
-									"English (UK)",
-									"English (US)",
-									"French (Canada)",
-									"French (France)",
-									"German (Germany)",
-									"Portuguese (Brazil)",
-									"Portuguese (Portugal)",
-									"Spanish (Mexico)",
-									"Spanish (Spain)");
-				
+				//Create picker with language descriptions
 				var picker:PickerDialogView = Dialog.service.create(
 					new PickerDialogBuilder()
 					.setTitle(ModelLocator.resourceManagerInstance.getString('settingsview', 'speakreadingslanguagepickertitle'))
 					.setCancelLabel(ModelLocator.resourceManagerInstance.getString("general","cancel"))
 					.setAcceptLabel("Ok")
-					.addColumn(languagesNames, selectedLanguage)
+					.addColumn(languagePackDesc, selectedLanguage)
 					.build()
 				);
 				
@@ -1215,58 +1138,27 @@
 				
 				function picker_closedHandler(event:DialogViewEvent): void 
 				{
-					var newLanguageName:String = event.values[0];
-					var newLanguageCode:String
+					//Get new language selected
+					var newLanguageDesc:String = event.values[0];
+					var newLanguageCode:String;
 					
-					if (newLanguageName == "Dutch (Belgium)") {
-						newLanguageCode = "nl-BE";
-					} 
-					else if (newLanguageName == "Dutch (Netherlands)") {
-						newLanguageCode = "nl-NL";
-					} 
-					else if (newLanguageName == "English (Australia)") {
-						newLanguageCode = "en-AU";
-					} 
-					else if (newLanguageName == "English (Ireland)") {
-						newLanguageCode = "en-IE";
-					} 
-					else if (newLanguageName == "English (South Africa)") {
-						newLanguageCode = "en-ZA";
-					} 
-					else if (newLanguageName == "English (UK)") {
-						newLanguageCode = "en-GB";
-					} 
-					else if (newLanguageName == "English (US)") {
-						newLanguageCode = "en-US";
-					} 
-					else if (newLanguageName == "French (Canada)") {
-						newLanguageCode = "fr-CA";
-					} 
-					else if (newLanguageName == "French (France)") {
-						newLanguageCode = "fr-FR";
-					} 
-					else if (newLanguageName == "German (Germany)") {
-						newLanguageCode = "de-DE";
-					} 
-					else if (newLanguageName == "Portuguese (Brazil)") {
-						newLanguageCode = "pt-BR";
-					} 
-					else if (newLanguageName == "Portuguese (Portugal)") {
-						newLanguageCode = "pt-PT";
-					} 
-					else if (newLanguageName == "Spanish (Mexico)") {
-						newLanguageCode = "es-MX";
-					} 
-					else if (newLanguageName == "Spanish (Spain)") {
-						newLanguageCode = "es-ES";
-					}  
+					//Find corresponding language code
+					for(var i:int = 0; i < languagePackDesc.length; i++)
+					{
+						if(languagePackDesc[i] == newLanguageDesc)
+						{
+							//Found match, get corresponding language code
+							newLanguageCode = languagePackCodes[i];
+						}
+					}
 					
-					
+					//If user selected the same language as he had previously, then do nothing
 					if (currentLanguage.toUpperCase() == newLanguageCode.toUpperCase())
 						return;
 					
+					//Update selected language in text field and database
 					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_SPEECH_LANGUAGE, newLanguageCode);
-					speakReadingsLanguageText = newLanguageName;
+					speakReadingsLanguageText = newLanguageDesc;
 				}
 			}
 			
