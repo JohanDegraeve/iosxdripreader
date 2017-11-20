@@ -24,8 +24,6 @@ package services
 	
 	import flash.errors.IllegalOperationError;
 	import flash.events.Event;
-	//import flash.events.TimerEvent;
-	//import flash.utils.Timer;
 	
 	import mx.collections.ArrayCollection;
 	
@@ -37,8 +35,6 @@ package services
 	
 	import events.SettingsServiceEvent;
 	import events.TransmitterServiceEvent;
-	
-	//import model.ModelLocator;
 	
 	import services.TransmitterService;
 	
@@ -52,6 +48,7 @@ package services
 		private static var lockEnabled:Boolean = false;
 		private static var speakInterval:int = 1;
 		private static var receivedReadings:int = 0;
+		private static var speechLanguageCode:String;
 
 		//private static var deepSleepTimer:Timer;
 		
@@ -63,10 +60,8 @@ package services
 		
 		public static function init():void
 		{
-			trace("tts init called");
 			if (!initiated) 
 			{
-				trace("1");
 				//Instantiate objects and variables
 				initiated = true;
 				speakInterval = int(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_READINGS_INTERVAL));
@@ -98,8 +93,11 @@ package services
 					BackgroundFetch.setAvAudioSessionCategory(false);
 				}
 				
+				//Set speech language
+				speechLanguageCode = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEECH_LANGUAGE);
+				
 				//Tracing
-				myTrace("TextToSpeech Initiated. BG readings enabled: " + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_READINGS_ON) + " | BG readings interval: " + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_READINGS_INTERVAL));
+				myTrace("TextToSpeech started. Enabled: " + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_READINGS_ON) + " | Interval: " + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_READINGS_INTERVAL) + " | Language: " + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEECH_LANGUAGE));
 			}
 		}
 		
@@ -130,58 +128,181 @@ package services
 					var currentBgReading:BgReading = currentBgReadingList.getItemAt(0) as BgReading;
 					var currentBgReadingFormatted:String = BgGraphBuilder.unitizedString(currentBgReading.calculatedValue, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true");
 					
-					//If user wants trend to be spoken...
-					if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_TREND_ON) == "true")
+					//Speech Output
+					var currentBgReadingOutput:String;
+						
+					//Get trend (slope)
+					var currentTrend:String = currentBgReading.slopeName() as String;
+						
+					//Get current delta
+					var currentDelta:String = BgGraphBuilder.unitizedDeltaString(false, true);
+						
+					if(speechLanguageCode == "en-GB" || 
+						speechLanguageCode == "en-US" || 
+						speechLanguageCode == "en-ZA" || 
+						speechLanguageCode == "en-IE" || 
+						speechLanguageCode == "en-AU")
 					{
-						//Get trend (slope)
-						var currentTrend:String = currentBgReading.slopeName() as String;
+						//If user wants trend to be spoken...
+						if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_TREND_ON) == "true")
+						{
+							//Format trend (slope)
+							if (currentTrend == "NONE" || currentTrend == "NON COMPUTABLE")
+								currentTrend = "non computable";
+							else if (currentTrend == "DoubleDown")
+								currentTrend = "dramatically downward";
+							else if (currentTrend == "SingleDown")
+								currentTrend = "significantly downward";
+							else if (currentTrend == "FortyFiveDown")
+								currentTrend = "down";
+							else if (currentTrend == "Flat")
+								currentTrend = "flat";
+							else if (currentTrend == "FortyFiveUp")
+								currentTrend = "up";
+							else if (currentTrend == "SingleUp")
+								currentTrend = "significantly upward";
+							else if (currentTrend == "DoubleUp")
+								currentTrend = "dramatically upward";
+						}
+							
+						//If user wants delta to be spoken...
+						if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_DELTA_ON) == "true")
+						{	
+							//Format current delta in case of anomalies
+							if (currentDelta == "ERR" || currentDelta == "???")
+								currentDelta = "non computable";
+								
+							if (currentDelta == "0.0")
+								currentDelta = "0";
+						}
+							
+						//Create output text
+						currentBgReadingOutput = "Current blood glucose is " + currentBgReadingFormatted + ". ";
 						
-						//Format trend (slope)
-						if (currentTrend == "NONE" || currentTrend == "NON COMPUTABLE")
-							currentTrend = "non computable";
-						else if (currentTrend == "DoubleDown")
-							currentTrend = "dramatically downward";
-						else if (currentTrend == "SingleDown")
-							currentTrend = "significantly downward";
-						else if (currentTrend == "FortyFiveDown")
-							currentTrend = "down";
-						else if (currentTrend == "Flat")
-							currentTrend = "flat";
-						else if (currentTrend == "FortyFiveUp")
-							currentTrend = "up";
-						else if (currentTrend == "SingleUp")
-							currentTrend = "significantly upward";
-						else if (currentTrend == "DoubleUp")
-							currentTrend = "dramatically upward";
+						//If user wants trend to be spoken...
+						if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_TREND_ON) == "true")
+							currentBgReadingOutput += "It's trending " + currentTrend + ". ";
+						
+						//If user wants delta to be spoken...
+						if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_DELTA_ON) == "true")
+							currentBgReadingOutput += "Difference from last reading is " + currentDelta + ".";
 					}
-					
-					//If user wants delta to be spoken...
-					if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_DELTA_ON) == "true")
+					else if(speechLanguageCode == "pt-PT" || 
+							speechLanguageCode == "pt-BR")
 					{
-						//Get current delta
-						var currentDelta:String = BgGraphBuilder.unitizedDeltaString(false, true);
 						
-						//Format current delta in case of anomalies
-						if (currentDelta == "ERR" || currentDelta == "???")
-							currentDelta = "non computable";
-						
-						if (currentDelta == "0.0")
-							currentDelta = "0";
+						//If user wants trend to be spoken...
+						if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_TREND_ON) == "true")
+							{
+							//Format trend (slope)
+							if (currentTrend == "NONE" || currentTrend == "NON COMPUTABLE")
+								currentTrend = "de forma não computável";
+							else if (currentTrend == "DoubleDown")
+								currentTrend = "para baixo de forma acentuada";
+							else if (currentTrend == "SingleDown")
+								currentTrend = "para baixo de forma significativa";
+							else if (currentTrend == "FortyFiveDown")
+								currentTrend = "para baixo";
+							else if (currentTrend == "Flat")
+							{
+								if(speechLanguageCode == "pt-PT")
+									currentTrend = "a recto";
+								else if(speechLanguageCode == "pt-BR")
+									currentTrend = "a reto";
+							}
+							else if (currentTrend == "FortyFiveUp")
+								currentTrend = "para cima";
+							else if (currentTrend == "SingleUp")
+								currentTrend = "para cima de forma significativa";
+							else if (currentTrend == "DoubleUp")
+								currentTrend = "para cirma de forma acentuada";
+						}
+							
+						//If user wants delta to be spoken...
+						if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_DELTA_ON) == "true")
+						{
+							//Format current delta in case of anomalies
+							if (currentDelta == "ERR" || currentDelta == "???")
+								currentDelta = "não cumputável";
+							
+							if (currentDelta == "0.0")
+								currentDelta = "0";
+						}
+							
+						//Create output text
+						if(speechLanguageCode == "pt-PT")
+							currentBgReadingOutput = "A tua glicose actual é " + currentBgReadingFormatted + ". ";
+						else if(speechLanguageCode == "pt-BR")
+							currentBgReadingOutput = "A sua glicose atual é " + currentBgReadingFormatted + ". ";
+							
+						//If user wants trend to be spoken...
+						if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_TREND_ON) == "true")
+						{
+							if(speechLanguageCode == "pt-PT")
+								currentBgReadingOutput += "Está a tender " + currentTrend + ". ";
+							else if(speechLanguageCode == "pt-BR")
+								currentBgReadingOutput += "Está tendendo " + currentTrend + ". ";
+						}
+							
+						//If user wants delta to be spoken...
+						if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_DELTA_ON) == "true")
+							currentBgReadingOutput += "A diferença desde a última leitura é de " + currentDelta + ".";
 					}
-					
-					//Create output text
-					var currentBgReadingOutput:String = "Current blood glucose is " + currentBgReadingFormatted + ". ";
-					
-					//If user wants trend to be spoken...
-					if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_TREND_ON) == "true")
-						currentBgReadingOutput += "It's trending " + currentTrend + ". ";
-					
-					//If user wants delta to be spoken...
-					if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_DELTA_ON) == "true")
-						currentBgReadingOutput += "Difference from last reading is " + currentDelta + ".";
-					
+					else if(speechLanguageCode == "es-ES" || 
+						speechLanguageCode == "es-MX")
+					{
+						//If user wants trend to be spoken...
+						if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_TREND_ON) == "true")
+						{
+							//Format trend (slope)
+							if (currentTrend == "NONE" || currentTrend == "NON COMPUTABLE")
+								currentTrend = "de forma no calculable";
+							else if (currentTrend == "DoubleDown")
+								currentTrend = "hacia abajo de forma acentuada";
+							else if (currentTrend == "SingleDown")
+								currentTrend = "hacia abajo de forma significativa";
+							else if (currentTrend == "FortyFiveDown")
+								currentTrend = "hacia abajo";
+							else if (currentTrend == "Flat")
+								currentTrend = "a recto";
+							else if (currentTrend == "FortyFiveUp")
+								currentTrend = "hacia arriba";
+							else if (currentTrend == "SingleUp")
+								currentTrend = "hacia arriba de forma significativa";
+							else if (currentTrend == "DoubleUp")
+								currentTrend = "hacia arriba de forma acentuada";
+						}
+						
+						//If user wants delta to be spoken...
+						if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_DELTA_ON) == "true")
+						{
+							//Format current delta in case of anomalies
+							if (currentDelta == "ERR" || currentDelta == "???")
+								currentDelta = "no calculable";
+							
+							if (currentDelta == "0.0")
+								currentDelta = "0";
+						}
+						
+						//Create output text
+						if(speechLanguageCode == "es-ES")
+							currentBgReadingOutput = "Tu glucosa actual es " + currentBgReadingFormatted + ". ";
+						else if(speechLanguageCode == "es-MX")
+							currentBgReadingOutput = "Su glucose actual es " + currentBgReadingFormatted + ". ";
+						
+						//If user wants trend to be spoken...
+						if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_TREND_ON) == "true")
+						{
+							currentBgReadingOutput += "Está tendiendo " + currentTrend + ". ";
+						}
+						
+						//If user wants delta to be spoken...
+						if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_DELTA_ON) == "true")
+							currentBgReadingOutput += "La diferencia desde la última lectura es de " + currentDelta + ".";
+					}
+			
 					//Send output to TTS
-					sayText(currentBgReadingOutput);
+					sayText(currentBgReadingOutput, speechLanguageCode);
 				}
 			}
 		}
@@ -232,10 +353,9 @@ package services
 				//Reset glucose readings
 				receivedReadings = 0;
 			}
-			
-			if (event.data == CommonSettings.COMMON_SETTING_SPEAK_READINGS_ON) 
+			else if (event.data == CommonSettings.COMMON_SETTING_SPEAK_READINGS_ON) 
 			{
-				myTrace("Settings changed! Speak readings interval is now " + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_READINGS_ON));
+				myTrace("Settings changed! Speak readings feature is now " + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_READINGS_ON));
 				
 				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_READINGS_ON) == "true") 
 				{
@@ -259,6 +379,12 @@ package services
 						deepSleepTimer = null;
 					}*/
 				}
+			}
+			else if (event.data == CommonSettings.COMMON_SETTING_SPEECH_LANGUAGE) 
+			{
+				myTrace("Settings changed! Speak readings language is now " + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEECH_LANGUAGE));
+				
+				speechLanguageCode = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEECH_LANGUAGE);
 			}
 		}
 	}
