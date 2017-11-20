@@ -36,7 +36,11 @@ package services
 	import events.SettingsServiceEvent;
 	import events.TransmitterServiceEvent;
 	
+	import model.ModelLocator;
+	
 	import services.TransmitterService;
+	
+	[ResourceBundle("texttospeech")]
 	
 	/**
 	 * Class responsible for managing text to speak functionallity. 
@@ -124,182 +128,97 @@ package services
 			{	
 				//Get current bg reading and format it 
 				var currentBgReadingList:ArrayCollection = BgReading.latestBySize(1);
-				if (currentBgReadingList.length > 0) {
-					var currentBgReading:BgReading = currentBgReadingList.getItemAt(0) as BgReading;
-					var currentBgReadingFormatted:String = BgGraphBuilder.unitizedString(currentBgReading.calculatedValue, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true");
-					
+				if (currentBgReadingList.length > 0) 
+				
+				{
 					//Speech Output
 					var currentBgReadingOutput:String;
+					
+					//Get current glucose
+					var currentBgReading:BgReading = currentBgReadingList.getItemAt(0) as BgReading;
+					var currentBgReadingFormatted:String = BgGraphBuilder.unitizedString(currentBgReading.calculatedValue, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true");
 						
 					//Get trend (slope)
 					var currentTrend:String = currentBgReading.slopeName() as String;
 						
 					//Get current delta
 					var currentDelta:String = BgGraphBuilder.unitizedDeltaString(false, true);
-						
+					
+					//Define locales and fallbacks
 					if(speechLanguageCode == "en-GB" || 
 						speechLanguageCode == "en-US" || 
 						speechLanguageCode == "en-ZA" || 
 						speechLanguageCode == "en-IE" || 
 						speechLanguageCode == "en-AU")
 					{
-						//If user wants trend to be spoken...
-						if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_TREND_ON) == "true")
-						{
-							//Format trend (slope)
-							if (currentTrend == "NONE" || currentTrend == "NON COMPUTABLE")
-								currentTrend = "non computable";
-							else if (currentTrend == "DoubleDown")
-								currentTrend = "dramatically downward";
-							else if (currentTrend == "SingleDown")
-								currentTrend = "significantly downward";
-							else if (currentTrend == "FortyFiveDown")
-								currentTrend = "down";
-							else if (currentTrend == "Flat")
-								currentTrend = "flat";
-							else if (currentTrend == "FortyFiveUp")
-								currentTrend = "up";
-							else if (currentTrend == "SingleUp")
-								currentTrend = "significantly upward";
-							else if (currentTrend == "DoubleUp")
-								currentTrend = "dramatically upward";
-						}
-							
-						//If user wants delta to be spoken...
-						if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_DELTA_ON) == "true")
-						{	
-							//Format current delta in case of anomalies
-							if (currentDelta == "ERR" || currentDelta == "???")
-								currentDelta = "non computable";
-								
-							if (currentDelta == "0.0")
-								currentDelta = "0";
-						}
-							
-						//Create output text
-						currentBgReadingOutput = "Current blood glucose is " + currentBgReadingFormatted + ". ";
 						
-						//If user wants trend to be spoken...
-						if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_TREND_ON) == "true")
-							currentBgReadingOutput += "It's trending " + currentTrend + ". ";
-						
-						//If user wants delta to be spoken...
-						if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_DELTA_ON) == "true")
-							currentBgReadingOutput += "Difference from last reading is " + currentDelta + ".";
+						ModelLocator.resourceManagerInstance.localeChain = ["en_US"];
 					}
-					else if(speechLanguageCode == "pt-PT" || 
-							speechLanguageCode == "pt-BR")
+					else if(speechLanguageCode == "es-ES")
 					{
-						
-						//If user wants trend to be spoken...
-						if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_TREND_ON) == "true")
-							{
-							//Format trend (slope)
-							if (currentTrend == "NONE" || currentTrend == "NON COMPUTABLE")
-								currentTrend = "de forma não computável";
-							else if (currentTrend == "DoubleDown")
-								currentTrend = "para baixo de forma acentuada";
-							else if (currentTrend == "SingleDown")
-								currentTrend = "para baixo de forma significativa";
-							else if (currentTrend == "FortyFiveDown")
-								currentTrend = "para baixo";
-							else if (currentTrend == "Flat")
-							{
-								if(speechLanguageCode == "pt-PT")
-									currentTrend = "a recto";
-								else if(speechLanguageCode == "pt-BR")
-									currentTrend = "a reto";
-							}
-							else if (currentTrend == "FortyFiveUp")
-								currentTrend = "para cima";
-							else if (currentTrend == "SingleUp")
-								currentTrend = "para cima de forma significativa";
-							else if (currentTrend == "DoubleUp")
-								currentTrend = "para cirma de forma acentuada";
-						}
-							
-						//If user wants delta to be spoken...
-						if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_DELTA_ON) == "true")
-						{
-							//Format current delta in case of anomalies
-							if (currentDelta == "ERR" || currentDelta == "???")
-								currentDelta = "não cumputável";
-							
-							if (currentDelta == "0.0")
-								currentDelta = "0";
-						}
-							
-						//Create output text
-						if(speechLanguageCode == "pt-PT")
-							currentBgReadingOutput = "A tua glicose actual é " + currentBgReadingFormatted + ". ";
-						else if(speechLanguageCode == "pt-BR")
-							currentBgReadingOutput = "A sua glicose atual é " + currentBgReadingFormatted + ". ";
-							
-						//If user wants trend to be spoken...
-						if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_TREND_ON) == "true")
-						{
-							if(speechLanguageCode == "pt-PT")
-								currentBgReadingOutput += "Está a tender " + currentTrend + ". ";
-							else if(speechLanguageCode == "pt-BR")
-								currentBgReadingOutput += "Está tendendo " + currentTrend + ". ";
-						}
-							
-						//If user wants delta to be spoken...
-						if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_DELTA_ON) == "true")
-							currentBgReadingOutput += "A diferença desde a última leitura é de " + currentDelta + ".";
+						ModelLocator.resourceManagerInstance.localeChain = ["es_ES","es_MX","en_US"];
 					}
-					else if(speechLanguageCode == "es-ES" || 
-						speechLanguageCode == "es-MX")
+					else if(speechLanguageCode == "es-MX")
 					{
-						//If user wants trend to be spoken...
-						if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_TREND_ON) == "true")
-						{
-							//Format trend (slope)
-							if (currentTrend == "NONE" || currentTrend == "NON COMPUTABLE")
-								currentTrend = "de forma no calculable";
-							else if (currentTrend == "DoubleDown")
-								currentTrend = "hacia abajo de forma acentuada";
-							else if (currentTrend == "SingleDown")
-								currentTrend = "hacia abajo de forma significativa";
-							else if (currentTrend == "FortyFiveDown")
-								currentTrend = "hacia abajo";
-							else if (currentTrend == "Flat")
-								currentTrend = "a recto";
-							else if (currentTrend == "FortyFiveUp")
-								currentTrend = "hacia arriba";
-							else if (currentTrend == "SingleUp")
-								currentTrend = "hacia arriba de forma significativa";
-							else if (currentTrend == "DoubleUp")
-								currentTrend = "hacia arriba de forma acentuada";
-						}
-						
-						//If user wants delta to be spoken...
-						if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_DELTA_ON) == "true")
-						{
-							//Format current delta in case of anomalies
-							if (currentDelta == "ERR" || currentDelta == "???")
-								currentDelta = "no calculable";
-							
-							if (currentDelta == "0.0")
-								currentDelta = "0";
-						}
-						
-						//Create output text
-						if(speechLanguageCode == "es-ES")
-							currentBgReadingOutput = "Tu glucosa actual es " + currentBgReadingFormatted + ". ";
-						else if(speechLanguageCode == "es-MX")
-							currentBgReadingOutput = "Su glucose actual es " + currentBgReadingFormatted + ". ";
-						
-						//If user wants trend to be spoken...
-						if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_TREND_ON) == "true")
-						{
-							currentBgReadingOutput += "Está tendiendo " + currentTrend + ". ";
-						}
-						
-						//If user wants delta to be spoken...
-						if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_DELTA_ON) == "true")
-							currentBgReadingOutput += "La diferencia desde la última lectura es de " + currentDelta + ".";
+						ModelLocator.resourceManagerInstance.localeChain = ["es_MX","es_ES","en_US"];
 					}
+					else if(speechLanguageCode == "pt-PT")
+					{
+						ModelLocator.resourceManagerInstance.localeChain = ["pt_PT","pt_BR","en_US"];
+					}
+					else if(speechLanguageCode == "pt-BR")
+					{
+						ModelLocator.resourceManagerInstance.localeChain = ["pt_BR","pt_PT","en_US"];
+					}
+					
+					//If user wants trend to be spoken...
+					if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_TREND_ON) == "true")
+					{
+						//Format trend (slope)
+						if (currentTrend == "NONE" || currentTrend == "NON COMPUTABLE")
+							currentTrend = ModelLocator.resourceManagerInstance.getString('texttospeech','trendnoncomputable');
+						else if (currentTrend == "DoubleDown")
+							currentTrend = ModelLocator.resourceManagerInstance.getString('texttospeech','trenddoubledown');
+						else if (currentTrend == "SingleDown")
+							currentTrend = ModelLocator.resourceManagerInstance.getString('texttospeech','trendsingledown');
+						else if (currentTrend == "FortyFiveDown")
+							currentTrend = ModelLocator.resourceManagerInstance.getString('texttospeech','trendfortyfivedown');
+						else if (currentTrend == "Flat")
+							currentTrend = ModelLocator.resourceManagerInstance.getString('texttospeech','trendflat');
+						else if (currentTrend == "FortyFiveUp")
+							currentTrend = ModelLocator.resourceManagerInstance.getString('texttospeech','trendfortyfiveup');
+						else if (currentTrend == "SingleUp")
+							currentTrend = ModelLocator.resourceManagerInstance.getString('texttospeech','trendsingleup');
+						else if (currentTrend == "DoubleUp")
+							currentTrend = ModelLocator.resourceManagerInstance.getString('texttospeech','trenddoubleup');
+					}
+					
+					//If user wants delta to be spoken...
+					if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_DELTA_ON) == "true")
+					{	
+						//Format current delta in case of anomalies
+						if (currentDelta == "ERR" || currentDelta == "???")
+							currentDelta = ModelLocator.resourceManagerInstance.getString('texttospeech','deltanoncomputable');
+						
+						if (currentDelta == "0.0")
+							currentDelta = "0";
+					}
+					
+					//Create output text
+					var currentBgPrefix:String = ModelLocator.resourceManagerInstance.getString('texttospeech','currentglucose');
+					var currentTrendPrefix:String = ModelLocator.resourceManagerInstance.getString('texttospeech','currenttrend');
+					var currentDeltaPrefix:String = ModelLocator.resourceManagerInstance.getString('texttospeech','currentdelta');
+					
+					//Glucose
+					currentBgReadingOutput = currentBgPrefix + " " + currentBgReadingFormatted + ". ";
+					
+					//If user wants trend to be spoken...
+					if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_TREND_ON) == "true")
+						currentBgReadingOutput += currentTrendPrefix + " " + currentTrend + ". ";
+					
+					//If user wants delta to be spoken...
+					if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_DELTA_ON) == "true")
+						currentBgReadingOutput += currentDeltaPrefix + " " + currentDelta + ".";
 			
 					//Send output to TTS
 					sayText(currentBgReadingOutput, speechLanguageCode);
