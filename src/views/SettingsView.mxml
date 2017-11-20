@@ -82,6 +82,8 @@
 			[Bindable]
 			private static var speakReadingsDeltaOnOffText:String="";
 			[Bindable]
+			private static var speakReadingsLanguageText:String="en-US";
+			[Bindable]
 			private static var versionText:String="";
 			[Bindable]
 			private static var dexcomShareURL:String="";
@@ -178,6 +180,50 @@
 				} else {
 					speakReadingsDeltaOnOffText = ModelLocator.resourceManagerInstance.getString('settingsview','off');
 				}
+				
+				var languageCode:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEECH_LANGUAGE);
+				if (languageCode == "nl-BE") {
+					speakReadingsLanguageText = "Dutch (Belgium)";
+				} 
+				else if (languageCode == "nl-NL") {
+					speakReadingsLanguageText = "Dutch (Netherlands)";
+				} 
+				else if (languageCode == "en-AU") {
+					speakReadingsLanguageText = "English (Australia)";
+				} 
+				else if (languageCode == "en-IE") {
+					speakReadingsLanguageText = "English (Ireland)";
+				} 
+				else if (languageCode == "en-ZA") {
+					speakReadingsLanguageText = "English (South Africa)";
+				} 
+				else if (languageCode == "en-GB") {
+					speakReadingsLanguageText = "English (UK)";
+				} 
+				else if (languageCode == "en-US") {
+					speakReadingsLanguageText = "English (US)";
+				} 
+				else if (languageCode == "fr-CA") {
+					speakReadingsLanguageText = "French (Canada)";
+				} 
+				else if (languageCode == "fr-FR") {
+					speakReadingsLanguageText = "French (France)";
+				} 
+				else if (languageCode == "de-DE") {
+					speakReadingsLanguageText = "German (Germany)";
+				} 
+				else if (languageCode == "pt-BR") {
+					speakReadingsLanguageText = "Portuguese (Brazil)";
+				} 
+				else if (languageCode == "pt-PT") {
+					speakReadingsLanguageText = "Portuguese (Portugal)";
+				} 
+				else if (languageCode == "es-MX") {
+					speakReadingsLanguageText = "Spanish (Mexico)";
+				} 
+				else if (languageCode == "es-ES") {
+					speakReadingsLanguageText = "Spanish (Spain)";
+				}  
 				
 				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_APP_UPDATE_NOTIFICATIONS_ON) == "true") {
 					checkUpdatesOnOffText = ModelLocator.resourceManagerInstance.getString('settingsview','on');
@@ -1060,6 +1106,141 @@
 				}
 			}
 			
+			private function changeSpeechLanguage_clickHandler(event:MouseEvent):void {
+				rectSpeechLanguage1.color = uint("0xD3D3D3");
+				rectSpeechLanguage1.color = uint("0xD3D3D3");
+				setResetColorTimer();
+				
+				var selectedLanguage:int;
+				var currentLanguage:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEECH_LANGUAGE);
+				if (currentLanguage.toUpperCase() == "NL-BE") {
+					selectedLanguage = 0;
+				} 
+				else if (currentLanguage.toUpperCase() == "NL-NL") {
+					selectedLanguage = 1;
+				} 
+				else if (currentLanguage.toUpperCase() == "EN-AU") {
+					selectedLanguage = 2;
+				}  
+				else if (currentLanguage.toUpperCase() == "EN-IE") {
+					selectedLanguage = 3;
+				}
+				else if (currentLanguage.toUpperCase() == "EN-ZA") {
+					selectedLanguage = 4;
+				}
+				else if (currentLanguage.toUpperCase() == "EN-GB") {
+					selectedLanguage = 5;
+				}
+				else if (currentLanguage.toUpperCase() == "EN-US") {
+					selectedLanguage = 6;
+				}
+				else if (currentLanguage.toUpperCase() == "FR-CA") {
+					selectedLanguage = 7;
+				}
+				else if (currentLanguage.toUpperCase() == "FR-FR") {
+					selectedLanguage = 8;
+				}
+				else if (currentLanguage.toUpperCase() == "DE-DE") {
+					selectedLanguage = 9;
+				}
+				else if (currentLanguage.toUpperCase() == "PT-BR") {
+					selectedLanguage = 10;
+				}
+				else if (currentLanguage.toUpperCase() == "PT-PT") {
+					selectedLanguage = 11;
+				}
+				else if (currentLanguage.toUpperCase() == "ES-MX") {
+					selectedLanguage = 12;
+				}
+				else if (currentLanguage.toUpperCase() == "ES-ES") {
+					selectedLanguage = 13;
+				}
+				
+				var languagesNames:Array = new Array();
+				languagesNames.push("Dutch (Belgium)", 
+									"Dutch (Netherlands)", 
+									"English (Australia)", 
+									"English (Ireland)", 
+									"English (South Africa)",
+									"English (UK)",
+									"English (US)",
+									"French (Canada)",
+									"French (France)",
+									"German (Germany)",
+									"Portuguese (Brazil)",
+									"Portuguese (Portugal)",
+									"Spanish (Mexico)",
+									"Spanish (Spain)");
+				
+				var picker:PickerDialogView = Dialog.service.create(
+					new PickerDialogBuilder()
+					.setTitle(ModelLocator.resourceManagerInstance.getString('settingsview', 'speakreadingslanguagepickertitle'))
+					.setCancelLabel(ModelLocator.resourceManagerInstance.getString("general","cancel"))
+					.setAcceptLabel("Ok")
+					.addColumn(languagesNames, selectedLanguage)
+					.build()
+				);
+				
+				picker.addEventListener( DialogViewEvent.CLOSED, picker_closedHandler );
+				picker.show();
+				
+				function picker_closedHandler(event:DialogViewEvent): void 
+				{
+					var newLanguageName:String = event.values[0];
+					var newLanguageCode:String
+					
+					if (newLanguageName == "Dutch (Belgium)") {
+						newLanguageCode = "nl-BE";
+					} 
+					else if (newLanguageName == "Dutch (Netherlands)") {
+						newLanguageCode = "nl-NL";
+					} 
+					else if (newLanguageName == "English (Australia)") {
+						newLanguageCode = "en-AU";
+					} 
+					else if (newLanguageName == "English (Ireland)") {
+						newLanguageCode = "en-IE";
+					} 
+					else if (newLanguageName == "English (South Africa)") {
+						newLanguageCode = "en-ZA";
+					} 
+					else if (newLanguageName == "English (UK)") {
+						newLanguageCode = "en-GB";
+					} 
+					else if (newLanguageName == "English (US)") {
+						newLanguageCode = "en-US";
+					} 
+					else if (newLanguageName == "French (Canada)") {
+						newLanguageCode = "fr-CA";
+					} 
+					else if (newLanguageName == "French (France)") {
+						newLanguageCode = "fr-FR";
+					} 
+					else if (newLanguageName == "German (Germany)") {
+						newLanguageCode = "de-DE";
+					} 
+					else if (newLanguageName == "Portuguese (Brazil)") {
+						newLanguageCode = "pt-BR";
+					} 
+					else if (newLanguageName == "Portuguese (Portugal)") {
+						newLanguageCode = "pt-PT";
+					} 
+					else if (newLanguageName == "Spanish (Mexico)") {
+						newLanguageCode = "es-MX";
+					} 
+					else if (newLanguageName == "Spanish (Spain)") {
+						newLanguageCode = "es-ES";
+					}  
+					
+					
+					if (currentLanguage.toUpperCase() == newLanguageCode.toUpperCase())
+						return;
+					
+					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_SPEECH_LANGUAGE, newLanguageCode);
+					speakReadingsLanguageText = newLanguageName;
+				}
+			}
+			
 			private function speakReadingsTrendOnOff_clickHandler(event:MouseEvent):void {
 				rect63.color = uint("0xD3D3D3");
 				rect64.color = uint("0xD3D3D3");
@@ -1091,9 +1272,9 @@
 			private function changeSpeakReadingsStatus():void {
 				var enabled:Boolean = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_READINGS_ON) == "true";
 				if (enabled) {
-					speakReadingsNameGroup.includeInLayout = true;
-					speakReadingsNameGroup.visible = true;
-					speakReadingsNameGroup.enabled = true;
+					speakIntervalNameGroup.includeInLayout = true;
+					speakIntervalNameGroup.visible = true;
+					speakIntervalNameGroup.enabled = true;
 					speakreadingsline1.includeInLayout = true;speakreadingsline1.visible = true;
 					speakTrendNameGroup.includeInLayout = true;
 					speakTrendNameGroup.visible = true;
@@ -1103,10 +1284,14 @@
 					speakDeltaNameGroup.visible = true;
 					speakDeltaNameGroup.enabled = true;
 					speakreadingsline4.includeInLayout = true;speakreadingsline4.visible = true;
+					speakLanguageNameGroup.includeInLayout = true;
+					speakLanguageNameGroup.visible = true;
+					speakLanguageNameGroup.enabled = true;
+					speakreadingsline5.includeInLayout = true;speakreadingsline5.visible = true;
 				} else {
-					speakReadingsNameGroup.includeInLayout = false;
-					speakReadingsNameGroup.visible = false;
-					speakReadingsNameGroup.enabled = false;
+					speakIntervalNameGroup.includeInLayout = false;
+					speakIntervalNameGroup.visible = false;
+					speakIntervalNameGroup.enabled = false;
 					speakreadingsline1.includeInLayout = false;speakreadingsline1.visible = false;
 					speakTrendNameGroup.includeInLayout = false;
 					speakTrendNameGroup.visible = false;
@@ -1116,6 +1301,10 @@
 					speakDeltaNameGroup.visible = false;
 					speakDeltaNameGroup.enabled = false;
 					speakreadingsline4.includeInLayout = false;speakreadingsline4.visible = false;
+					speakLanguageNameGroup.includeInLayout = false;
+					speakLanguageNameGroup.visible = false;
+					speakLanguageNameGroup.enabled = false;
+					speakreadingsline5.includeInLayout = false;speakreadingsline5.visible = false;
 				}
 			}
 			
@@ -1203,10 +1392,12 @@
 					rect60.color = uint("0x212121");//speech onoff
 					rect61.color = uint("0x212121");//speech onoff
 					rect62.color = uint("0x212121");//speech onoff
-					rect63.color = uint("0x212121");//speech onoff
-					rect64.color = uint("0x212121");//speech onoff
-					rect65.color = uint("0x212121");//speech onoff
-					rect66.color = uint("0x212121");//speech onoff
+					rect63.color = uint("0x212121");//speech trend
+					rect64.color = uint("0x212121");//speech trend
+					rect65.color = uint("0x212121");//speech delta
+					rect66.color = uint("0x212121");//speech delta
+					rectSpeechLanguage1.color = uint("0x212121");//speech language
+					rectSpeechLanguage2.color = uint("0x212121");//speech language
 					rectAppUpdate1.color = uint("0x212121");//updates onoff
 					rectAppUpdate2.color = uint("0x212121");//updates onoff
 					rectAppUpdate3.color = uint("0x212121");//updates onoff
@@ -1919,7 +2110,7 @@
 						<s:SolidColorStroke color="0xFFFFFF" weight="1" alpha="0.25"/>
 					</s:stroke>
 				</s:Line>
-				<s:HGroup click="speakReadingsInterval_clickHandler(event)" width="100%" verticalAlign="bottom" id = "speakReadingsNameGroup">
+				<s:HGroup click="speakReadingsInterval_clickHandler(event)" width="100%" verticalAlign="bottom" id = "speakIntervalNameGroup">
 					<s:Rect height="100%" width="5" >
 						<s:fill>
 							<s:SolidColor color="#212121" id="rect61"/>
@@ -1932,6 +2123,27 @@
 					<s:Rect height="100%" width="5" >
 						<s:fill>
 							<s:SolidColor color="#212121" id="rect62"/>
+						</s:fill>
+					</s:Rect>
+				</s:HGroup>
+				<s:Line width="100%"  id = "speakreadingsline5">
+					<s:stroke>
+						<s:SolidColorStroke color="0xFFFFFF" weight="1" alpha="0.25"/>
+					</s:stroke>
+				</s:Line>
+				<s:HGroup click="changeSpeechLanguage_clickHandler(event)" width="100%" id = "speakLanguageNameGroup">
+					<s:Rect height="100%" width="5" >
+						<s:fill>
+							<s:SolidColor color="#212121" id="rectSpeechLanguage1"/>
+						</s:fill>
+					</s:Rect>
+					<s:Label text = "{ModelLocator.resourceManagerInstance.getString('settingsview','speakreadingslanguagetitle')}"
+							 width="100%" paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
+					<s:Label text = "{speakReadingsLanguageText}"  
+							 paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
+					<s:Rect height="100%" width="5" >
+						<s:fill>
+							<s:SolidColor color="#212121" id="rectSpeechLanguage2"/>
 						</s:fill>
 					</s:Rect>
 				</s:HGroup>
