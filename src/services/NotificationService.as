@@ -111,6 +111,7 @@ package services
 		public static const ID_FOR_VERY_LOW_ALERT:int = 12;
 		public static const ID_FOR_VERY_HIGH_ALERT:int = 13;
 		public static const ID_FOR_PATCH_READ_ERROR_BLUKON:int = 14;
+		public static const ID_FOR_APP_UPDATE:int = 15;
 		
 		public static const ID_FOR_ALERT_LOW_CATEGORY:String = "LOW_ALERT_CATEGORY";
 		public static const ID_FOR_ALERT_HIGH_CATEGORY:String = "HIGH_ALERT_CATEGORY";
