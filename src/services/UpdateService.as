@@ -53,14 +53,9 @@ package services
 			//Setup Event Listeners
 			createEventListeners();
 			
-			//Register event listener for changed settings
-			CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, onSettingsChanged);
-			
 			//Check App Update
-			if(canDoUpdate() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_APP_UPDATE_NOTIFICATIONS_ON) == "true")
+			if(canDoUpdate())
 				getUpdate();
-			else
-				trace("Update app setting is off");
 		}
 		
 		//Getters/Setters
@@ -71,7 +66,11 @@ package services
 		//Functionality Functions
 		private static function createEventListeners():void
 		{
+			//Register event listener for app in foreground
 			iosxdripreader.instance.addEventListener(IosXdripReaderEvent.APP_IN_FOREGROUND, onApplicationActivated);
+			
+			//Register event listener for changed settings
+			CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, onSettingsChanged);
 		}
 		
 		private static function getUpdate():void
@@ -106,8 +105,12 @@ package services
 		
 		private static function canDoUpdate():Boolean
 		{
-			//var lastUpdateCheckStamp:Number = 1511014007853;
-			var lastUpdateCheckStamp:Number = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_APP_UPDATE_LAST_UPDATE_CHECK) as Number;
+			/**
+			 * Uncomment next line and comment the other one in production environment. 
+			 * We are hardcoding a timestamp of more than 1 day ago for testing purposes otherwise the update popup wont fire 
+			 */
+			var lastUpdateCheckStamp:Number = 1511014007853;
+			//var lastUpdateCheckStamp:Number = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_APP_UPDATE_LAST_UPDATE_CHECK) as Number;
 			var currentDate:Date = new Date();
 			var currentTime:String = (new Date()).toLocaleTimeString();
 			var currentTimeStamp:Number = currentDate.valueOf();
@@ -117,10 +120,10 @@ package services
 			trace("currentTimeStamp: " + currentTimeStamp);
 			trace("time between last update: " + daysSinceLastUpdateCheck);
 			
-			//If it has been more than 1 days since the last check for updates or it's the first time the app checks for updates
-			if(daysSinceLastUpdateCheck > 1 || CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_APP_UPDATE_LAST_UPDATE_CHECK) == "")
+			//If it has been more than 1 day since the last check for updates or it's the first time the app checks for updates and app updates are enebled in the settings
+			if((daysSinceLastUpdateCheck > 1 || CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_APP_UPDATE_LAST_UPDATE_CHECK) == "") && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_APP_UPDATE_NOTIFICATIONS_ON) == "true")
 			{
-				trace("Checking for new app update");
+				trace("App can check for new updates");
 				return true;
 			}
 			
@@ -140,14 +143,19 @@ package services
 			var data:Object = JSON.parse(loader.data as String);
 			
 			//Handle App Version
+			/**
+			* Uncomment next line and comment the other one in production environment. 
+			* We are hardcoding a lower app version for testing purposes otherwise the update popup wont fire 
+			*/
 			//var currentAppVersion:String = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_APPLICATION_VERSION);
-			latestAppVersion = data.tag_name;
 			var currentAppVersion:String = "0.5";
+			latestAppVersion = data.tag_name;
 			var updateAvailable:Boolean = ModelLocator.versionAIsSmallerThanB(currentAppVersion, latestAppVersion);
 			
 			//Handle User Update
 			if(updateAvailable && latestAppVersion != CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_APP_UPDATE_IGNORE_UPDATE))
 			{
+				//We are here because the lastest GitHub version is higher than the one installed and the user hasn't chosen to ignore this new version
 				//Check if assets are available for download
 				var assets:Array = data.assets as Array;
 				if(assets.length > 0)
@@ -200,7 +208,6 @@ package services
 					//If there's an update available to the user, display a notification
 					if(userUpdateAvailable)
 					{
-						trace("App update is available for user's group. Sending notification at " + (new Date()).toLocaleTimeString());
 						//Warn User
 						var title:String = ModelLocator.resourceManagerInstance.getString('updateservice', "update_dialog_title");
 						var message:String = ModelLocator.resourceManagerInstance.getString('updateservice', "update_dialog_preversion_message") + " " + latestAppVersion + " " + ModelLocator.resourceManagerInstance.getString('updateservice', "update_dialog_postversion_message") + "."; 
@@ -221,7 +228,7 @@ package services
 					}
 					else
 					{
-						trace("App update is available but no ipa for user's group is ready for download");
+						//App update is available but no ipa for user's group is ready for download
 						updateURL = "";
 					}
 				}
@@ -233,8 +240,6 @@ package services
 			var selectedOption:int = int(event.index);
 			if (selectedOption == IGNORE_UPDATE_BUTTON)
 			{
-				trace("IGNORE UPDATE");
-				
 				//Add ignored version to database settings
 				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_APP_UPDATE_IGNORE_UPDATE, latestAppVersion as String);
 				
@@ -243,8 +248,7 @@ package services
 			}
 			else if (selectedOption == GO_TO_GITHUB_BUTTON)
 			{
-				trace("GO TO GITHUB");
-				
+				//Go to github release page
 				if (updateURL != "")
 				{
 					navigateToURL(new URLRequest(updateURL));
@@ -253,8 +257,7 @@ package services
 			}
 			else if (selectedOption == REMIND_LATER_BUTTON)
 			{
-				trace("REMIND LATER");
-				
+				//User wants to be reminded later (next day)
 				var currentDate:Date = new Date();
 				var currentTimeStamp:Number = currentDate.valueOf();
 				
@@ -271,19 +274,16 @@ package services
 			{
 				myTrace("Settings changed! App update checker is now " + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_APP_UPDATE_NOTIFICATIONS_ON));
 				
-				if(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_APP_UPDATE_NOTIFICATIONS_ON) == "true")
-				{
-					if(canDoUpdate())
-						getUpdate();
-				}
+				//Let's see if we can make an update
+				if(canDoUpdate())
+					getUpdate();
 			}
 		}
 		
 		protected static function onApplicationActivated(event:Event = null):void
 		{
-			trace("Update service is in foreground");
-			
-			if(canDoUpdate() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_APP_UPDATE_NOTIFICATIONS_ON) == "true")
+			//App is in foreground. Let's see if we can make an update
+			if(canDoUpdate())
 				getUpdate();
 		}
 	}
