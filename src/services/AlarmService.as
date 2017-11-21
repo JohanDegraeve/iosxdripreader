@@ -181,6 +181,7 @@ package services
 		private static var lastAlarmCheckTimeStamp:Number;
 		private static var lastPhoneMuteAlarmCheckTimeStamp:Number;
 		private static var latestAlertTypeUsedInMissedReadingNotification:AlertType;
+		public static var latestAlarmFiredTimestamp:Number;
 		
 		public static function get instance():AlarmService {
 			return _instance;
@@ -850,6 +851,8 @@ package services
 			var notificationBuilder:NotificationBuilder;
 			var newSound:String;
 			var soundToSet:String = "";
+			//Set time of the alarm to now
+			latestAlarmFiredTimestamp = (new Date()).valueOf();
 			
 			notificationBuilder = new NotificationBuilder()
 				.setId(notificationId)
@@ -864,6 +867,8 @@ package services
 				notificationBuilder.setRepeatInterval(NotificationRepeatInterval.REPEAT_MINUTE);
 			if (delay != 0) {
 				notificationBuilder.setDelay(delay);
+				//Add the delay to better reflect when the alarm will be fired
+				latestAlarmFiredTimestamp += delay * 1000;
 			}
 			if (alertType.sound == "no_sound" && enableVibration) {
 				soundToSet = "../assets/silence-1sec.aif";
