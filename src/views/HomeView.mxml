@@ -281,6 +281,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 					
 					CalibrationService.instance.addEventListener(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT, initialCalibrationEventReceived);
 					CalibrationService.instance.addEventListener(CalibrationServiceEvent.NEW_CALIBRATION_EVENT, newCalibrationEventReceived);
+					
 				}
 				
 				function onInitError(event:Event):void

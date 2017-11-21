@@ -28,11 +28,14 @@ package services
 	import com.distriqt.extension.notifications.builders.NotificationBuilder;
 	import com.distriqt.extension.notifications.events.AuthorisationEvent;
 	import com.distriqt.extension.notifications.events.NotificationEvent;
+	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
 	
 	import flash.desktop.NativeApplication;
 	import flash.desktop.SystemIdleMode;
 	import flash.events.Event;
 	import flash.events.EventDispatcher;
+	import flash.events.TimerEvent;
+	import flash.utils.Timer;
 	
 	import spark.components.TabbedViewNavigator;
 	
@@ -126,6 +129,7 @@ package services
 		public static const ID_FOR_VERY_HIGH_ALERT_SNOOZE_IDENTIFIER:String = "VERY_HIGH_ALERT_SNOOZE_IDENTIFIER";
 		
 		private static var timeStampSinceLastNotifForPatchReadError:Number = 0;
+		public static var testTextToSpeechTimer:Timer;
 		
 		public function NotificationService()
 		{
@@ -328,6 +332,10 @@ package services
 						(ModelLocator.navigator.parentNavigator as TabbedViewNavigator).selectedIndex = 0;
 						myTrace("in application_deactivateHandler, setting systemIdleMode = SystemIdleMode.NORMAL");
 						NativeApplication.nativeApplication.systemIdleMode = SystemIdleMode.NORMAL;
+						
+						/*testTextToSpeechTimer = new Timer(10000);
+						testTextToSpeechTimer.addEventListener(TimerEvent.TIMER, listener);
+						testTextToSpeechTimer.start();*/
 					break;
 				}
 			}
@@ -338,6 +346,13 @@ package services
 				notificationServiceEvent.data = event;
 				_instance.dispatchEvent(notificationServiceEvent);
 			}
+			
+			function listener(event:Event):void {
+				myTrace("in listener");
+				BackgroundFetch.say("Hello there, how are you. I'm fine thanks", "en-US");
+			}
+			
+
 		}
 		
 		private static function dispatchInformation(information:String):void {
