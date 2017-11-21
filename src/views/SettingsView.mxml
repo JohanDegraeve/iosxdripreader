@@ -36,6 +36,7 @@
 			[ResourceBundle("settingsview")]
 			[ResourceBundle("calibrationservice")]
 			[ResourceBundle("alarmservice")]
+			[ResourceBundle("texttospeech")]
 						
 			[Bindable]
 			private static var detailedTracingOnOrOffText:String = "";
@@ -81,6 +82,8 @@
 			private static var speakReadingsTrendOnOffText:String="";
 			[Bindable]
 			private static var speakReadingsDeltaOnOffText:String="";
+			[Bindable]
+			private static var speakReadingsLanguageText:String="en-US";
 			[Bindable]
 			private static var versionText:String="";
 			[Bindable]
@@ -179,6 +182,21 @@
 					speakReadingsDeltaOnOffText = ModelLocator.resourceManagerInstance.getString('settingsview','off');
 				}
 				
+				//Set previously selected language
+				var languageCode:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEECH_LANGUAGE);
+				var languagePackCodes:Array = (ModelLocator.resourceManagerInstance.getString('texttospeech','ttslanguagelistcodes') as String).split(",");
+				var languagePackDescriptions:Array = (ModelLocator.resourceManagerInstance.getString('texttospeech','ttslanguagelistdescription') as String).split(",");
+				
+				for(var i:int = 0; i < languagePackCodes.length; i++)
+				{
+					if(languagePackCodes[i] == languageCode)
+					{
+						speakReadingsLanguageText = languagePackDescriptions[i];
+						break;
+					}
+				}
+				
+				//Set App Updates related states
 				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_APP_UPDATE_NOTIFICATIONS_ON) == "true") {
 					checkUpdatesOnOffText = ModelLocator.resourceManagerInstance.getString('settingsview','on');
 					changeAppUpdateStatus();
@@ -1023,6 +1041,31 @@
 					speakReadingsOnOffText = ModelLocator.resourceManagerInstance.getString('settingsview','on');
 					changeSpeakReadingsStatus();
 				}
+				
+				//Show initial popup with instructions
+				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_READINGS_ON) == "true" && LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_SPEECH_INSTRUCTIONS_ACCEPTED) == "false") {
+					var alert:DialogView = Dialog.service.create(
+						new AlertBuilder()
+						.setTitle("Speech")
+						.setMessage(ModelLocator.resourceManagerInstance.getString('settingsview', "speakreadingsinstructions"))
+						.addOption(ModelLocator.resourceManagerInstance.getString('general', "ok"), DialogAction.STYLE_POSITIVE, 0)
+						.addOption(ModelLocator.resourceManagerInstance.getString('general', "dont_show_again"), DialogAction.STYLE_CANCEL, 1)
+						.build()
+					);
+					alert.addEventListener(DialogViewEvent.CLOSED, speechInstructionsShowed);
+					DialogService.addDialog(alert);
+				}
+			}
+			
+			private static function speechInstructionsShowed(ev:DialogViewEvent):void 
+			{
+				if (ev != null) {
+					if (ev.index == 1) 
+					{
+						//Don't warn the user again
+						LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_SPEECH_INSTRUCTIONS_ACCEPTED, "true");
+					}
+				}
 			}
 			
 			private function speakReadingsInterval_clickHandler(event:MouseEvent):void {
@@ -1060,6 +1103,66 @@
 				}
 			}
 			
+			private function changeSpeechLanguage_clickHandler(event:MouseEvent):void {
+				rectSpeechLanguage1.color = uint("0xD3D3D3");
+				rectSpeechLanguage1.color = uint("0xD3D3D3");
+				setResetColorTimer();
+				
+				var selectedLanguage:int = 0;
+				var currentLanguage:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEECH_LANGUAGE);
+				var languagePackDesc:Array = (ModelLocator.resourceManagerInstance.getString("texttospeech","ttslanguagelistdescription") as String).split(",");
+				var languagePackCodes:Array = (ModelLocator.resourceManagerInstance.getString("texttospeech","ttslanguagelistcodes") as String).split(",");
+				
+				//Try to put the language picker in the corresponding position depending on the already previously selected language
+				for(var i:int = 0; i < languagePackCodes.length; i++)
+				{
+					if(languagePackCodes[i] == currentLanguage)
+					{
+						selectedLanguage = i;
+						break;
+					}
+				}
+				
+				//Create picker with language descriptions
+				var picker:PickerDialogView = Dialog.service.create(
+					new PickerDialogBuilder()
+					.setTitle(ModelLocator.resourceManagerInstance.getString('settingsview', 'speakreadingslanguagepickertitle'))
+					.setCancelLabel(ModelLocator.resourceManagerInstance.getString("general","cancel"))
+					.setAcceptLabel("Ok")
+					.addColumn(languagePackDesc, selectedLanguage)
+					.build()
+				);
+				
+				picker.addEventListener( DialogViewEvent.CLOSED, picker_closedHandler );
+				picker.show();
+				
+				function picker_closedHandler(event:DialogViewEvent): void 
+				{
+					//Get new language selected
+					var newLanguageDesc:String = event.values[0];
+					var newLanguageCode:String;
+					
+					//Find corresponding language code
+					for(var i:int = 0; i < languagePackDesc.length; i++)
+					{
+						if(languagePackDesc[i] == newLanguageDesc)
+						{
+							//Found match, get corresponding language code
+							newLanguageCode = languagePackCodes[i];
+							break;
+						}
+					}
+					
+					//If user selected the same language as he had previously, then do nothing
+					if (currentLanguage.toUpperCase() == newLanguageCode.toUpperCase())
+						return;
+					
+					//Update selected language in text field and database
+					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_SPEECH_LANGUAGE, newLanguageCode);
+					speakReadingsLanguageText = newLanguageDesc;
+				}
+			}
+			
 			private function speakReadingsTrendOnOff_clickHandler(event:MouseEvent):void {
 				rect63.color = uint("0xD3D3D3");
 				rect64.color = uint("0xD3D3D3");
@@ -1091,9 +1194,9 @@
 			private function changeSpeakReadingsStatus():void {
 				var enabled:Boolean = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_READINGS_ON) == "true";
 				if (enabled) {
-					speakReadingsNameGroup.includeInLayout = true;
-					speakReadingsNameGroup.visible = true;
-					speakReadingsNameGroup.enabled = true;
+					speakIntervalNameGroup.includeInLayout = true;
+					speakIntervalNameGroup.visible = true;
+					speakIntervalNameGroup.enabled = true;
 					speakreadingsline1.includeInLayout = true;speakreadingsline1.visible = true;
 					speakTrendNameGroup.includeInLayout = true;
 					speakTrendNameGroup.visible = true;
@@ -1103,10 +1206,14 @@
 					speakDeltaNameGroup.visible = true;
 					speakDeltaNameGroup.enabled = true;
 					speakreadingsline4.includeInLayout = true;speakreadingsline4.visible = true;
+					speakLanguageNameGroup.includeInLayout = true;
+					speakLanguageNameGroup.visible = true;
+					speakLanguageNameGroup.enabled = true;
+					speakreadingsline5.includeInLayout = true;speakreadingsline5.visible = true;
 				} else {
-					speakReadingsNameGroup.includeInLayout = false;
-					speakReadingsNameGroup.visible = false;
-					speakReadingsNameGroup.enabled = false;
+					speakIntervalNameGroup.includeInLayout = false;
+					speakIntervalNameGroup.visible = false;
+					speakIntervalNameGroup.enabled = false;
 					speakreadingsline1.includeInLayout = false;speakreadingsline1.visible = false;
 					speakTrendNameGroup.includeInLayout = false;
 					speakTrendNameGroup.visible = false;
@@ -1116,6 +1223,10 @@
 					speakDeltaNameGroup.visible = false;
 					speakDeltaNameGroup.enabled = false;
 					speakreadingsline4.includeInLayout = false;speakreadingsline4.visible = false;
+					speakLanguageNameGroup.includeInLayout = false;
+					speakLanguageNameGroup.visible = false;
+					speakLanguageNameGroup.enabled = false;
+					speakreadingsline5.includeInLayout = false;speakreadingsline5.visible = false;
 				}
 			}
 			
@@ -1203,10 +1314,12 @@
 					rect60.color = uint("0x212121");//speech onoff
 					rect61.color = uint("0x212121");//speech onoff
 					rect62.color = uint("0x212121");//speech onoff
-					rect63.color = uint("0x212121");//speech onoff
-					rect64.color = uint("0x212121");//speech onoff
-					rect65.color = uint("0x212121");//speech onoff
-					rect66.color = uint("0x212121");//speech onoff
+					rect63.color = uint("0x212121");//speech trend
+					rect64.color = uint("0x212121");//speech trend
+					rect65.color = uint("0x212121");//speech delta
+					rect66.color = uint("0x212121");//speech delta
+					rectSpeechLanguage1.color = uint("0x212121");//speech language
+					rectSpeechLanguage2.color = uint("0x212121");//speech language
 					rectAppUpdate1.color = uint("0x212121");//updates onoff
 					rectAppUpdate2.color = uint("0x212121");//updates onoff
 					rectAppUpdate3.color = uint("0x212121");//updates onoff
@@ -1919,7 +2032,7 @@
 						<s:SolidColorStroke color="0xFFFFFF" weight="1" alpha="0.25"/>
 					</s:stroke>
 				</s:Line>
-				<s:HGroup click="speakReadingsInterval_clickHandler(event)" width="100%" verticalAlign="bottom" id = "speakReadingsNameGroup">
+				<s:HGroup click="speakReadingsInterval_clickHandler(event)" width="100%" verticalAlign="bottom" id = "speakIntervalNameGroup">
 					<s:Rect height="100%" width="5" >
 						<s:fill>
 							<s:SolidColor color="#212121" id="rect61"/>
@@ -1932,6 +2045,27 @@
 					<s:Rect height="100%" width="5" >
 						<s:fill>
 							<s:SolidColor color="#212121" id="rect62"/>
+						</s:fill>
+					</s:Rect>
+				</s:HGroup>
+				<s:Line width="100%"  id = "speakreadingsline5">
+					<s:stroke>
+						<s:SolidColorStroke color="0xFFFFFF" weight="1" alpha="0.25"/>
+					</s:stroke>
+				</s:Line>
+				<s:HGroup click="changeSpeechLanguage_clickHandler(event)" width="100%" id = "speakLanguageNameGroup">
+					<s:Rect height="100%" width="5" >
+						<s:fill>
+							<s:SolidColor color="#212121" id="rectSpeechLanguage1"/>
+						</s:fill>
+					</s:Rect>
+					<s:Label text = "{ModelLocator.resourceManagerInstance.getString('settingsview','speakreadingslanguagetitle')}"
+							 width="100%" paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
+					<s:Label text = "{speakReadingsLanguageText}"  
+							 paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
+					<s:Rect height="100%" width="5" >
+						<s:fill>
+							<s:SolidColor color="#212121" id="rectSpeechLanguage2"/>
 						</s:fill>
 					</s:Rect>
 				</s:HGroup>
