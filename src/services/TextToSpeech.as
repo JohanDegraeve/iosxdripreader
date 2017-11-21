@@ -70,7 +70,6 @@ package services
 				initiated = true;
 				speakInterval = int(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_READINGS_INTERVAL));
 				
-				
 				//Register event listener for changed settings
 				CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, onSettingsChanged);
 				
@@ -81,15 +80,6 @@ package services
 				{
 					//Enable Audio Session Category for BackgroundFetch
 					BackgroundFetch.setAvAudioSessionCategory(true);
-					
-					//Manage and Start Deep Sleep Timer
-					/*if(deepSleepTimer == null)
-					{	
-						//Start and configure deep sleep timer
-						deepSleepTimer = new Timer(10000, 0);
-						deepSleepTimer.addEventListener(TimerEvent.TIMER, onDeepSleepTimer);
-						deepSleepTimer.start();
-					}*/
 				} 
 				else 
 				{
@@ -100,7 +90,6 @@ package services
 				//Set speech language
 				speechLanguageCode = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEECH_LANGUAGE);
 				
-				//Tracing
 				myTrace("TextToSpeech started. Enabled: " + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_READINGS_ON) + " | Interval: " + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_READINGS_INTERVAL) + " | Language: " + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEECH_LANGUAGE));
 			}
 		}
@@ -111,7 +100,6 @@ package services
 		
 		public static function sayText(text:String, language:String = "en-US"):void 
 		{
-			//Tracing
 			myTrace("Text to speak: " + text);
 			
 			//Start Text To Speech
@@ -151,7 +139,6 @@ package services
 						speechLanguageCode == "en-IE" || 
 						speechLanguageCode == "en-AU")
 					{
-						
 						ModelLocator.resourceManagerInstance.localeChain = ["en_US"];
 					}
 					else if(speechLanguageCode == "es-ES")
@@ -169,6 +156,14 @@ package services
 					else if(speechLanguageCode == "pt-BR")
 					{
 						ModelLocator.resourceManagerInstance.localeChain = ["pt_BR","pt_PT","en_US"];
+					}
+					else if(speechLanguageCode == "nl-NL" || speechLanguageCode == "nl-BE")
+					{
+						ModelLocator.resourceManagerInstance.localeChain = ["nl_BE","en_US"];
+					}
+					else if(speechLanguageCode == "fr-FR" || speechLanguageCode == "fr-CA")
+					{
+						ModelLocator.resourceManagerInstance.localeChain = ["fr_FR","en_US"];
 					}
 					
 					//If user wants trend to be spoken...
@@ -200,7 +195,7 @@ package services
 						if (currentDelta == "ERR" || currentDelta == "???")
 							currentDelta = ModelLocator.resourceManagerInstance.getString('texttospeech','deltanoncomputable');
 						
-						if (currentDelta == "0.0")
+						if (currentDelta == "0.0" || currentDelta == "+0" || currentDelta == "-0")
 							currentDelta = "0";
 					}
 					
@@ -235,29 +230,35 @@ package services
 			Trace.myTrace("TextToSpeech.as", log);
 		}
 		
+		private static function checkActiveAlarms():Boolean
+		{
+			//Calculate number of seconds since latest alarm
+			var oneSecond:Number = 1000;
+			var now:Number = (new Date()).valueOf();
+			var differenceMilliseconds:Number = Math.abs(AlarmService.latestAlarmFiredTimestamp - now);
+			var secondsAgo:Number =  Math.round(differenceMilliseconds/oneSecond);
+			
+			//Check if the latest alarm was fired 4min or more ago. If so, there's an active alarm
+			if(secondsAgo < 240)
+				return true;
+			
+			//Default action (no active alarms)
+			return false;
+		}
+		
 		/**
 		*Event Handlers
 		*/
 		
+		//Event fired when a new BG value is received from the transmitter
 		private static function onBgReadingReceived(event:Event = null):void 
 		{
-			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_READINGS_ON) == "true") 
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_READINGS_ON) == "true" && !checkActiveAlarms()) 
 			{	
 				//Speak BG Reading
 				speakReading();
 			} 
 		}
-		
-		/*protected static function onDeepSleepTimer(event:TimerEvent):void
-		{
-			if(!ModelLocator.isInForeground)
-			{
-				trace("in TTS onDeepSleepTimer, playing 1ms of silence to avoid deep sleep");
-				
-				//Play a silence audio file of 1 millisecond to avoid deep sleep
-				//BackgroundFetch.playSound("../assets/1-millisecond-of-silence.mp3");
-			}
-		}*/
 		
 		//Event fired when app settings are changed
 		private static function onSettingsChanged(event:SettingsServiceEvent):void 
@@ -267,6 +268,7 @@ package services
 			{
 				myTrace("Settings changed! Speak readings interval is now " + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_READINGS_INTERVAL));
 				
+				//Set new chosen interval
 				speakInterval = int(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_READINGS_INTERVAL));
 				
 				//Reset glucose readings
@@ -280,29 +282,18 @@ package services
 				{
 					//Enable Audio Session Category for BackgroundFetch
 					BackgroundFetch.setAvAudioSessionCategory(true);
-					
-					//Create, configure and start the deep sleep timer
-					/*deepSleepTimer = new Timer(10000, 0); //10 seconds
-					deepSleepTimer.addEventListener(TimerEvent.TIMER, onDeepSleepTimer);
-					deepSleepTimer.start();*/
 				} 
 				else 
 				{
 					//Disable Audio Session Category for BackgroundFetch
 					BackgroundFetch.setAvAudioSessionCategory(false);
-					
-					//Stop and Destroy the Deep Sleep timer
-					/*if(deepSleepTimer != null)
-					{
-						deepSleepTimer.stop();
-						deepSleepTimer = null;
-					}*/
 				}
 			}
 			else if (event.data == CommonSettings.COMMON_SETTING_SPEECH_LANGUAGE) 
 			{
 				myTrace("Settings changed! Speak readings language is now " + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEECH_LANGUAGE));
 				
+				//Set new language code in database
 				speechLanguageCode = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEECH_LANGUAGE);
 			}
 		}
