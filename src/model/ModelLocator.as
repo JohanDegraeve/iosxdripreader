@@ -85,6 +85,8 @@ package model
 		public const MAX_DAYS_TO_STORE_BGREADINGS_IN_MODELLOCATOR:int = 5;
 		public static const DEBUG_MODE:Boolean = true;
 
+		public static const IS_PRODUCTION:Boolean = true;
+		
 		public static function get isInForeground():Boolean
 		{
 			return _isInForeground;
@@ -227,7 +229,10 @@ package model
 							DexcomShareService.init();
 							NightScoutService.init();
 							TextToSpeech.init();
-							UpdateService.init();
+							
+							if (!IS_PRODUCTION) {
+								UpdateService.init();
+							}
 							
 							checkApplicationVersion();
 							

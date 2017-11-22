@@ -216,6 +216,11 @@
 					batteryalertgroup.enabled = false;
 					batteryalertgroup.includeInLayout = false;
 				}
+				
+				if (ModelLocator.IS_PRODUCTION) {
+					groupAppUpdates.visible = false;
+					groupAppUpdates.includeInLayout = false;
+				}
 			}
 			
 			private static function replaceByStars(input:String):String {
@@ -1557,12 +1562,12 @@
 						</s:fill>
 					</s:Rect>
 				</s:HGroup>
-				<s:Line width="100%">
-					<s:stroke>
-						<s:SolidColorStroke color="#3B6999"  weight="3"/>
-					</s:stroke>
-				</s:Line>	
 			</s:VGroup>
+			<s:Line width="100%">
+				<s:stroke>
+					<s:SolidColorStroke color="#3B6999"  weight="3"/>
+				</s:stroke>
+			</s:Line>	
 			
 			<!-- Chapter Alerts-->
 			<s:Label text = "{ModelLocator.resourceManagerInstance.getString('settingsview','alerts')}" textAlign="center"  color="#3B6999" 
