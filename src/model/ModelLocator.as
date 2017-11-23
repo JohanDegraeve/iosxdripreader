@@ -53,6 +53,7 @@ package model
 	import services.BackGroundFetchService;
 	import services.BluetoothService;
 	import services.CalibrationService;
+	import services.DeepSleepService;
 	import services.DexcomShareService;
 	import services.DialogService;
 	import services.HealthKitService;
@@ -229,6 +230,7 @@ package model
 							DexcomShareService.init();
 							NightScoutService.init();
 							TextToSpeech.init();
+							DeepSleepService.init();
 							
 							if (!IS_PRODUCTION) {
 								UpdateService.init();
