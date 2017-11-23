@@ -2,6 +2,8 @@ package services
 {
 	import com.distriqt.extension.application.Application;
 	import com.distriqt.extension.application.events.ApplicationStateEvent;
+	import com.distriqt.extension.bluetoothle.BluetoothLE;
+	import com.distriqt.extension.bluetoothle.events.PeripheralEvent;
 	import com.distriqt.extension.dialog.Dialog;
 	import com.distriqt.extension.dialog.DialogView;
 	import com.distriqt.extension.dialog.builders.PickerDialogBuilder;
@@ -205,7 +207,9 @@ package services
 			BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.PERFORMREMOTEFETCH, checkAlarmsAfterPerformFetch);
 			BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.PHONE_MUTED, phoneMuted);
 			BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.PHONE_NOT_MUTED, phoneNotMuted);
-			BluetoothService.instance.addEventListener(BlueToothServiceEvent.CHARACTERISTIC_UPDATE, characteristicUpdate);
+			BluetoothService.instance.addEventListener(BlueToothServiceEvent.CHARACTERISTIC_UPDATE, checkMuted);
+			BluetoothLE.service.centralManager.addEventListener(PeripheralEvent.DISCOVERED, checkMuted);
+			BluetoothLE.service.centralManager.addEventListener(PeripheralEvent.CONNECT, checkMuted );
 			CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, settingChanged);
 			if (Application.isSupported) {
 				Application.service.addEventListener(ApplicationStateEvent.DEACTIVATE, application_deactivateHandler);
@@ -259,13 +263,15 @@ package services
 			}
 		}
 		
-		private static function characteristicUpdate(event:Event):void {
-			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_READINGS_ON) == "true") {
-				myTrace("in characteristicUpdate, not calling checkmuted, because readings overrides muted status");
-			} else {
-				if (!BlueToothDevice.alwaysScan())
+		private static function checkMuted(event:Event):void {
+			/*if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_READINGS_ON) == "true") {
+				myTrace("in checkMuted, not calling checkmuted, because SPEAK_READINGS overrides muted status");
+			} else {*/
+				if ((new Date()).valueOf() - lastPhoneMuteAlarmCheckTimeStamp > (4 * 60 + 45) * 1000) {
+					myTrace("in checkMuted, calling BackgroundFetch.checkMuted");
 					BackgroundFetch.checkMuted();
-			}
+				}
+/*			}*/
 		}
 		
 		
@@ -789,7 +795,6 @@ package services
 			myTrace("in phoneMuted");
 			var now:Date = new Date(); 
 			if (now.valueOf() - lastPhoneMuteAlarmCheckTimeStamp > (4 * 60 + 45) * 1000) {
-				lastPhoneMuteAlarmCheckTimeStamp = now.valueOf();
 				myTrace("in phoneMuted, checking phoneMute Alarm because it's been more than 4 minutes 45 seconds");
 				var listOfAlerts:FromtimeAndValueArrayCollection = FromtimeAndValueArrayCollection.createList(
 					CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PHONE_MUTED_ALERT), false);
@@ -829,8 +834,8 @@ package services
 				
 			} else {
 				myTrace("less than 4 minutes 45 seconds since last check, not checking phoneMuted alert now");
-				return;
 			}
+			lastPhoneMuteAlarmCheckTimeStamp = now.valueOf();
 		}
 		
 		private static function phoneNotMuted(event:BackgroundFetchEvent):void {
@@ -841,6 +846,7 @@ package services
 			_phoneMutedAlertLatestSnoozeTimeInMs = Number.NaN;
 			_phoneMutedAlertLatestNotificationTime = Number.NaN;
 			_phoneMutedAlertSnoozePeriodInMinutes = 0;
+			lastPhoneMuteAlarmCheckTimeStamp = (new Date()).valueOf();
 		}
 		
 		private static function fireAlert(alertType:AlertType, notificationId:int, alertText:String, titleText:String, enableVibration:Boolean, enableLights:Boolean, categoryId:String, delay:int = 0):void {
