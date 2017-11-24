@@ -247,6 +247,8 @@
       				</dict>
       			<key>NSHealthUpdateUsageDescription</key>
 				<string>Store readings</string>
+      			<key>NSHealthShareUsageDescription</key>
+				<string>Store readings</string>
       				
       			<key>UIRequiredDeviceCapabilities</key>
       				<array>
