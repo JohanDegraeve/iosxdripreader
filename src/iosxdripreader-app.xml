@@ -258,12 +258,6 @@
 		</InfoAdditions>
 		<!-- A list of plist key/value pairs to be added to the application Entitlements.plist -->
 		<Entitlements> <![CDATA[
-		<!-- DEVELOPMENT -->
-		<key>get-task-allow</key>
-		<true/>
-		<key>aps-environment</key>
-		<string>development</string>
-		
 		<key>application-identifier</key>
 		<string>8DKSZ5HNLB.net.johandegraeve.iosxdripreader</string>
 		<key>com.apple.developer.healthkit</key>
