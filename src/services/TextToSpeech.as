@@ -163,6 +163,10 @@ package services
 					{
 						ModelLocator.resourceManagerInstance.localeChain = ["fr_FR","en_US"];
 					}
+					else if(speechLanguageCode == "ru-RU")
+					{
+						ModelLocator.resourceManagerInstance.localeChain = ["ru_RU","en_US"];
+					}
 					
 					//If user wants trend to be spoken...
 					if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_TREND_ON) == "true")
