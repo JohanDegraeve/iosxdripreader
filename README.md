@@ -10,6 +10,7 @@ xdrip/xbridge/G5/Bluereader/Blukon for iOS devices -
 * Upload to Nightscout
 * store values in HealthKit
 * upload to Dexcom Share
+* speak Bloodglucose readings, languages Dutch, English, French, Portugese, Spanish. If more languages needed send me an e-mail please (xdrip@proximus.be)
 
 Nice video about steps to take, created by Kamil (diabetic_energetic) : https://youtu.be/sNqj-Pvz53A
 

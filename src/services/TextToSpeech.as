@@ -54,8 +54,6 @@ package services
 		private static var receivedReadings:int = 0;
 		private static var speechLanguageCode:String;
 
-		//private static var deepSleepTimer:Timer;
-		
 		public function TextToSpeech()
 		{
 			//Don't allow class to be instantiated

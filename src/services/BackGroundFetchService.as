@@ -115,9 +115,6 @@ package services
 			BackgroundFetch.minimumBackgroundFetchInterval = BackgroundFetch.BACKGROUND_FETCH_INTERVAL_NEVER;
 			BackgroundFetch.setMaxFetchTimeInSeconds(3);
 			iosxdripreader.instance.addEventListener(IosXdripReaderEvent.APP_IN_FOREGROUND, retryRegisterPushNotificationIfNeeded);
-			
-			//goal is to regularly check if phone is  musted
-			BluetoothLE.service.centralManager.addEventListener(PeripheralEvent.DISCOVERED, central_peripheralDiscoveredHandler);
 		}
 		
 		private static function retryRegisterPushNotificationIfNeeded(event:Event = null):void {
@@ -126,21 +123,6 @@ package services
 				myTrace("BackGroundFetchService.retryRegisterPushNotificationIfNeeded");
 				BackGroundFetchService.registerPushNotification(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_WISHED_QBLOX_SUBSCRIPTION_TAG));
 				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_TIME_SINCE_LAST_QUICK_BLOX_SUBSCRIPTION, (new Date()).valueOf().toString());
-			}
-		}
-		
-		private static function central_peripheralDiscoveredHandler(be:PeripheralEvent):void {
-			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_READINGS_ON) == "true") {
-				myTrace("in central_peripheralDiscoveredHandler, not calling checkmuted, because readings overrides muted status");
-			} else {
-				if (BlueToothDevice.alwaysScan()) {
-					if ((new Date()).valueOf() - timeStampOfLastDeviceDiscovery < 60 * 1000) {
-						
-					} else {
-						timeStampOfLastDeviceDiscovery = (new Date()).valueOf();
-						BackgroundFetch.checkMuted();
-					}
-				}				
 			}
 		}
 		
