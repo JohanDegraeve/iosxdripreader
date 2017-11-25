@@ -234,7 +234,7 @@
                     <string>2</string>
                 </array>
                 <key>UIStatusBarStyle</key>
-                <string>UIStatusBarStyleBlackOpaque</string>
+                <string>UIStatusBarStyleLightContent</string>
                 <key>MinimumOSVersion</key>
                 <string>8.1.4</string>
                 <key>UIBackgroundModes</key>
@@ -242,6 +242,7 @@
 					<string>bluetooth-central</string>
 					<string>fetch</string>
 					<string>remote-notification</string>
+					<string>audio</string>
 				</array>
 				<key>NSAppTransportSecurity</key>
       				<dict>
