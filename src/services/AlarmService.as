@@ -893,7 +893,7 @@ package services
 					}
 				}
 			}
-			if (ModelLocator.isInForeground && delay == 0) {
+			if (delay == 0) {
 				BackgroundFetch.playSound(soundToSet);		
 			} else {
 				notificationBuilder.setSound(soundToSet);
