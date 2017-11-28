@@ -35,6 +35,7 @@ package services
 	import databaseclasses.Calibration;
 	import databaseclasses.CommonSettings;
 	import databaseclasses.Database;
+	import databaseclasses.LocalSettings;
 	import databaseclasses.Sensor;
 	
 	import events.BlueToothServiceEvent;
@@ -183,7 +184,6 @@ package services
 		private static var lastAlarmCheckTimeStamp:Number;
 		private static var lastPhoneMuteAlarmCheckTimeStamp:Number;
 		private static var latestAlertTypeUsedInMissedReadingNotification:AlertType;
-		public static var latestAlarmFiredTimestamp:Number;
 		
 		public static function get instance():AlarmService {
 			return _instance;
@@ -277,6 +277,7 @@ package services
 		
 		private static function notificationReceived(event:NotificationServiceEvent):void {
 			myTrace("in notificationReceived");
+			BackgroundFetch.stopPlayingSound();
 			if (event != null) {
 				var listOfAlerts:FromtimeAndValueArrayCollection;
 				var alertName:String ;
@@ -793,6 +794,7 @@ package services
 		
 		private static function phoneMuted(event:BackgroundFetchEvent):void {
 			myTrace("in phoneMuted");
+			ModelLocator.phoneMuted = true;
 			var now:Date = new Date(); 
 			if (now.valueOf() - lastPhoneMuteAlarmCheckTimeStamp > (4 * 60 + 45) * 1000) {
 				myTrace("in phoneMuted, checking phoneMute Alarm because it's been more than 4 minutes 45 seconds");
@@ -840,6 +842,7 @@ package services
 		
 		private static function phoneNotMuted(event:BackgroundFetchEvent):void {
 			myTrace("in phoneNotMuted");
+			ModelLocator.phoneMuted = false;
 			//remove notification, even if there isn't any
 			myTrace("cancel any existing alert for ID_FOR_PHONEMUTED_ALERT");
 			Notifications.service.cancel(NotificationService.ID_FOR_PHONEMUTED_ALERT);
@@ -857,8 +860,6 @@ package services
 			var notificationBuilder:NotificationBuilder;
 			var newSound:String;
 			var soundToSet:String = "";
-			//Set time of the alarm to now
-			latestAlarmFiredTimestamp = (new Date()).valueOf();
 			
 			notificationBuilder = new NotificationBuilder()
 				.setId(notificationId)
@@ -871,11 +872,7 @@ package services
 				notificationBuilder.setCategory(categoryId);
 			if (alertType.repeatInMinutes > 0)
 				notificationBuilder.setRepeatInterval(NotificationRepeatInterval.REPEAT_MINUTE);
-			if (delay != 0) {
-				notificationBuilder.setDelay(delay);
-				//Add the delay to better reflect when the alarm will be fired
-				latestAlarmFiredTimestamp += delay * 1000;
-			}
+			
 			if (alertType.sound == "no_sound" && enableVibration) {
 				soundToSet = "../assets/silence-1sec.aif";
 			} else 	if (alertType.sound == "no_sound" && !enableVibration) {
@@ -893,9 +890,51 @@ package services
 					}
 				}
 			}
+
+			if (delay != 0) {
+				notificationBuilder.setDelay(delay);
+			}
+
 			if (delay == 0) {
-				BackgroundFetch.playSound(soundToSet);		
+				if (ModelLocator.phoneMuted) {
+					if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_OVERRIDE_MUTE) == "true") {
+						//play the sound through backend ane, 
+						//this will ensure that sound will be played, 
+						// - no matter if it's in foreground or not, 
+						// - no matter if any other sounds are played now
+						// - no matter if phone is muted or not
+						BackgroundFetch.playSound(soundToSet);
+						
+						//make sure the phone vibrates depending on the setting
+						//could also be done through BackgroundFetch.vibrate(); 
+						if (enableVibration) {
+							notificationBuilder.setSound("../assets/silence-1sec.aif");
+						} else {
+							notificationBuilder.setSound("");
+						}
+					} else {
+						//phone is muted
+						//play sound through notification, as a result it will actually not be played because notification sounds are not played when phone is muted
+						notificationBuilder.setSound(soundToSet);
+					}
+				} else {
+					//play the sound through backend ane, 
+					//this will ensure that sound will be played, 
+					// - no matter if it's in foreground or not, 
+					// - no matter if any other sounds are played now
+					// - no matter if phone is muted or not
+					BackgroundFetch.playSound(soundToSet);		
+
+					//make sure the phone vibrates depending on the setting
+					//could also be done through BackgroundFetch.vibrate(); 
+					if (enableVibration) {
+						notificationBuilder.setSound("../assets/silence-1sec.aif");
+					} else {
+						notificationBuilder.setSound("");
+					}
+				}
 			} else {
+				//delay != means missed reading alert, will be played in the future, sound can't be played now so it must be done via the notification
 				notificationBuilder.setSound(soundToSet);
 			}
 			Notifications.service.notify(notificationBuilder.build());
@@ -1409,6 +1448,5 @@ package services
 		private static function myTrace(log:String):void {
 			Trace.myTrace("AlarmService.as", log);
 		}
-		
 	}
 }

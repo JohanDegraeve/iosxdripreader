@@ -9,8 +9,6 @@ package services
 	
 	import Utilities.Trace;
 	
-	import databaseclasses.CommonSettings;
-	
 	import events.IosXdripReaderEvent;
 
 	/**
@@ -51,10 +49,11 @@ package services
 		}
 		
 		private static function deepSleepTimerListener(event:Event):void {
-			BackgroundFetch.setAvAudioSessionCategory(true);
-			BackgroundFetch.playSound("../assets/1-millisecond-of-silence.mp3");
-			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_READINGS_ON) == "false") {
-				BackgroundFetch.setAvAudioSessionCategory(false);
+			if (BackgroundFetch.isPlayingSound()) {
+				myTrace("in deepSleepTimerListener, not playing deep sleep sound because another sound is playing now");
+			} else {
+				myTrace("in deepSleepTimerListener, playing 1 millisecond of silence");
+				BackgroundFetch.playSound("../assets/1-millisecond-of-silence.mp3");
 			}
 		}
 

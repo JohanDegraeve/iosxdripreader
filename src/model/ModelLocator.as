@@ -141,6 +141,19 @@ package model
 		}
 		
 		public static var navigator:ViewNavigator;
+
+		private static var _phoneMuted:Boolean;
+
+		public static function get phoneMuted():Boolean
+		{
+			return _phoneMuted;
+		}
+
+		public static function set phoneMuted(value:Boolean):void
+		{
+			_phoneMuted = value;
+		}
+
 		
 		public function ModelLocator()
 		{
@@ -223,7 +236,12 @@ package model
 							
 							CalibrationService.init();
 							NetworkInfo.init(DistriqtKey.distriqtKey);
+							
 							BackGroundFetchService.init();
+							//set AVAudioSession to AVAudioSessionCategoryPlayback with optoin AVAudioSessionCategoryOptionMixWithOthers
+							//this ensures that texttospeech and playsound work also in background
+							BackgroundFetch.setAvAudioSessionCategory(true);
+							
 							AlarmService.init();
 							HealthKitService.init();
 							

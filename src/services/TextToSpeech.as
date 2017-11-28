@@ -32,6 +32,7 @@ package services
 	
 	import databaseclasses.BgReading;
 	import databaseclasses.CommonSettings;
+	import databaseclasses.LocalSettings;
 	
 	import events.SettingsServiceEvent;
 	import events.TransmitterServiceEvent;
@@ -73,17 +74,6 @@ package services
 				
 				//Register event listener for new blood glucose readings
 				TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, onBgReadingReceived);
-				
-				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_READINGS_ON) == "true") 
-				{
-					//Enable Audio Session Category for BackgroundFetch
-					BackgroundFetch.setAvAudioSessionCategory(true);
-				} 
-				else 
-				{
-					//Disable Audio Session Category for BackgroundFetch
-					BackgroundFetch.setAvAudioSessionCategory(false);
-				}
 				
 				//Set speech language
 				speechLanguageCode = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEECH_LANGUAGE);
@@ -232,22 +222,6 @@ package services
 			Trace.myTrace("TextToSpeech.as", log);
 		}
 		
-		private static function checkActiveAlarms():Boolean
-		{
-			//Calculate number of seconds since latest alarm
-			var oneSecond:Number = 1000;
-			var now:Number = (new Date()).valueOf();
-			var differenceMilliseconds:Number = Math.abs(AlarmService.latestAlarmFiredTimestamp - now);
-			var secondsAgo:Number =  Math.round(differenceMilliseconds/oneSecond);
-			
-			//Check if the latest alarm was fired 4min or more ago. If so, there's an active alarm
-			if(secondsAgo < 240)
-				return true;
-			
-			//Default action (no active alarms)
-			return false;
-		}
-		
 		/**
 		*Event Handlers
 		*/
@@ -255,13 +229,19 @@ package services
 		//Event fired when a new BG value is received from the transmitter
 		private static function onBgReadingReceived(event:Event = null):void 
 		{
-			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_READINGS_ON) == "true" && !checkActiveAlarms()) 
+			//if phone is muted and mute is not overriden by alert, then there's no need to suppress the speak bgreading even if an alarm is ongoing
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_READINGS_ON) == "true" 
+				&& 
+					(	!BackgroundFetch.isPlayingSound() 
+						|| 
+						(ModelLocator.phoneMuted && !(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_OVERRIDE_MUTE) == "true"))
+					)
+			   ) 
 			{	
 				//Speak BG Reading
 				speakReading();
 			} 
 		}
-		
 		//Event fired when app settings are changed
 		private static function onSettingsChanged(event:SettingsServiceEvent):void 
 		{
@@ -279,17 +259,6 @@ package services
 			else if (event.data == CommonSettings.COMMON_SETTING_SPEAK_READINGS_ON) 
 			{
 				myTrace("Settings changed! Speak readings feature is now " + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_READINGS_ON));
-				
-				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_READINGS_ON) == "true") 
-				{
-					//Enable Audio Session Category for BackgroundFetch
-					BackgroundFetch.setAvAudioSessionCategory(true);
-				} 
-				else 
-				{
-					//Disable Audio Session Category for BackgroundFetch
-					BackgroundFetch.setAvAudioSessionCategory(false);
-				}
 			}
 			else if (event.data == CommonSettings.COMMON_SETTING_SPEECH_LANGUAGE) 
 			{

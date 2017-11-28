@@ -88,6 +88,10 @@
 			private static var versionText:String="";
 			[Bindable]
 			private static var dexcomShareURL:String="";
+			[Bindable]
+			private static var overrideMuteTextOnOrOff:String = "";
+
+
 			
 			private static var resetColorTimer:Timer;
 			
@@ -127,6 +131,12 @@
 					alwaysOnNotificationTextOnOrOff = ModelLocator.resourceManagerInstance.getString('settingsview','on');
 				} else {
 					alwaysOnNotificationTextOnOrOff = ModelLocator.resourceManagerInstance.getString('settingsview','off');
+				}
+				
+				if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_OVERRIDE_MUTE) == "true") {
+					overrideMuteTextOnOrOff = ModelLocator.resourceManagerInstance.getString('settingsview','on');
+				} else {
+					overrideMuteTextOnOrOff = ModelLocator.resourceManagerInstance.getString('settingsview','off');
 				}
 				
 				if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_HEALTHKIT_STORE_ON) == "true") {
@@ -456,6 +466,22 @@
 					alwaysOnNotificationTextOnOrOff = ModelLocator.resourceManagerInstance.getString('settingsview','on');
 				}
 			}
+			
+			private function overrideMute_clickHandler(event:MouseEvent):void {
+				rectoverrideMute1.color = uint("0xD3D3D3");
+				rectoverrideMute2.color = uint("0xD3D3D3");
+				setResetColorTimer();
+				
+				if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_OVERRIDE_MUTE) == "true") {
+					LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_OVERRIDE_MUTE, "false");
+					overrideMuteTextOnOrOff = ModelLocator.resourceManagerInstance.getString('settingsview','off');
+				} else {
+					LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_OVERRIDE_MUTE, "true");
+					overrideMuteTextOnOrOff = ModelLocator.resourceManagerInstance.getString('settingsview','on');
+				}
+			}
+			
+			
 			
 			private function healthkitstore_clickHandler(event:MouseEvent):void {
 				rect47.color = uint("0xD3D3D3");
@@ -1329,6 +1355,8 @@
 					rectAppUpdate2.color = uint("0x212121");//updates onoff
 					rectAppUpdate3.color = uint("0x212121");//updates onoff
 					rectAppUpdate4.color = uint("0x212121");//updates onoff
+					rectoverrideMute1.color = uint("0x212121");//mute
+					rectoverrideMute2.color = uint("0x212121");//mute
 				}
 			}
 			
@@ -1591,6 +1619,31 @@
 					<s:Rect height="100%" width="5" >
 						<s:fill>
 							<s:SolidColor color="#212121" id="rect32"/>
+						</s:fill>
+					</s:Rect>
+				</s:HGroup>
+				<s:Line width="100%">
+					<s:stroke>
+						<s:SolidColorStroke color="#FFFFFF" weight="1"/>
+					</s:stroke>
+				</s:Line>	
+			</s:VGroup>
+
+			<!-- Chapter Alerts Subsection Override mute -->
+			<s:VGroup click="overrideMute_clickHandler(event)" width="100%">
+				<s:HGroup width="100%">
+					<s:Rect height="100%" width="5" >
+						<s:fill>
+							<s:SolidColor color="#212121" id="rectoverrideMute1"/>
+						</s:fill>
+					</s:Rect>
+					<s:Label text = "{ModelLocator.resourceManagerInstance.getString('settingsview','override_mute')}"
+							 width="100%" paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
+					<s:Label text = "{overrideMuteTextOnOrOff}"  
+							 paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
+					<s:Rect height="100%" width="5" >
+						<s:fill>
+							<s:SolidColor color="#212121" id="rectoverrideMute2"/>
 						</s:fill>
 					</s:Rect>
 				</s:HGroup>
