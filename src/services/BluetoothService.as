@@ -1732,7 +1732,7 @@ package services
 		}
 		
 		public static function warnUnknownG4PacketType(packetType:int):void {
-			if (!ModelLocator.isInForeground) {
+			if (BackgroundFetch.appIsInBackground()) {
 				return;
 			}
 			if ((new Date()).valueOf() - new Number(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_TIMESTAMP_SINCE_LAST_INFO_UKNOWN_PACKET_TYPE)) < 30 * 60 * 1000)

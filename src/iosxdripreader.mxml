@@ -31,8 +31,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			
 			import events.IosXdripReaderEvent;
 			
-			import model.ModelLocator;
-			
 			import services.DialogService;
 			
 			[Bindable]
@@ -65,8 +63,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			
 			protected function activateHandler(event:Event):void
 			{
-				ModelLocator.isInForeground = true;
-				myTrace("setting ModelLocator.isInForeground = true and dispatching event IosXdripReaderEvent.APP_IN_FOREGROUND");
+				myTrace("dispatching event IosXdripReaderEvent.APP_IN_FOREGROUND");
 				dispatchEvent(new IosXdripReaderEvent(IosXdripReaderEvent.APP_IN_FOREGROUND));
 			}
 			

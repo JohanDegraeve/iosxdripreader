@@ -1,7 +1,5 @@
 package services
 {
-	import com.distriqt.extension.application.Application;
-	import com.distriqt.extension.application.events.ApplicationStateEvent;
 	import com.distriqt.extension.bluetoothle.BluetoothLE;
 	import com.distriqt.extension.bluetoothle.events.PeripheralEvent;
 	import com.distriqt.extension.dialog.Dialog;
@@ -172,8 +170,6 @@ package services
 		 */
 		private static var _calibrationRequestLatestNotificationTime:Number = Number.NaN;
 		
-		private static var checkMissedReadingAlertTimer:Timer;
-		
 		private static var missedReadingSnoozePickerOpen:Boolean;
 		
 		private static var snoozeValueMinutes:Array = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 75, 90, 120, 150, 180, 240, 300, 360, 420, 480, 540, 600, 1440, 10080];
@@ -211,11 +207,6 @@ package services
 			BluetoothLE.service.centralManager.addEventListener(PeripheralEvent.DISCOVERED, checkMuted);
 			BluetoothLE.service.centralManager.addEventListener(PeripheralEvent.CONNECT, checkMuted );
 			CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, settingChanged);
-			if (Application.isSupported) {
-				Application.service.addEventListener(ApplicationStateEvent.DEACTIVATE, application_deactivateHandler);
-			}
-			iosxdripreader.instance.addEventListener(IosXdripReaderEvent.APP_IN_FOREGROUND, appInForeGround);
-			
 			lastAlarmCheckTimeStamp = 0;
 			
 			for (var cntr:int = 0;cntr < snoozeValueMinutes.length;cntr++) {
@@ -229,38 +220,6 @@ package services
 			//immediately check missedreading alerts
 			checkMissedReadingAlert(new Date(), true);
 			myTrace("in init, calling appInForeGround");
-			appInForeGround();
-		}
-		
-		public static function appInForeGround(event:Event = null):void {
-			myTrace("in appInForeGround, calling checkMissedReadingAlert");
-			checkMissedReadingAlert(new Date(), true);
-			myTrace("starting checkMissedReadingAlertTimer with delay = 6 minutes, indefinitely");
-			checkMissedReadingAlertTimer = new Timer(6 * 60 * 1000, 0);
-			checkMissedReadingAlertTimer.addEventListener(TimerEvent.TIMER, checkMissedReadingAlertTimerExpiry);
-			checkMissedReadingAlertTimer.start();
-		}
-		
-		private static function checkMissedReadingAlertTimerExpiry(event:Event = null):void {
-			myTrace("in checkMissedReadingAlertTimerExpiry, calling checkMissedReadingAlert");
-			checkMissedReadingAlert(new Date(), true);
-		}
-		
-		private static function application_deactivateHandler(event:ApplicationStateEvent):void {
-			myTrace("in application_deactivateHandler, event.code = " + event.code);
-			switch (event.code) 
-			{
-				case ApplicationStateEvent.CODE_LOCK:
-				case ApplicationStateEvent.CODE_HOME:
-					if (checkMissedReadingAlertTimer != null) {
-						if (checkMissedReadingAlertTimer.running) {
-							myTrace("stopping checkMissedReadingAlertTimer because it will not expire when app is in brackground");
-							checkMissedReadingAlertTimer.stop();
-						}
-						checkMissedReadingAlertTimer = null;
-					}
-					break;
-			}
 		}
 		
 		private static function checkMuted(event:Event):void {

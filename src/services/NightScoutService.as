@@ -2,6 +2,7 @@ package services
 {
 	import com.distriqt.extension.networkinfo.NetworkInfo;
 	import com.distriqt.extension.networkinfo.events.NetworkInfoEvent;
+	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
 	import com.hurlant.crypto.hash.SHA1;
 	import com.hurlant.util.Hex;
 	
@@ -263,7 +264,7 @@ package services
 			
 			myTrace(ModelLocator.resourceManagerInstance.getString("nightscoutservice","nightscout_test_result_ok"));
 			
-			if (ModelLocator.isInForeground) {
+			if (BackgroundFetch.appIsInForeground()) {
 				DialogService.openSimpleDialog(ModelLocator.resourceManagerInstance.getString("nightscoutservice","nightscout_title"),
 					ModelLocator.resourceManagerInstance.getString("nightscoutservice","nightscout_test_result_ok"),
 					60);
@@ -275,7 +276,7 @@ package services
 			functionToCallAtUpOrDownloadSuccess = null;
 			functionToCallAtUpOrDownloadFailure = null;
 			
-			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_WARNING_THAT_NIGHTSCOUT_URL_AND_SECRET_IS_NOT_OK_ALREADY_GIVEN) == "false" && ModelLocator.isInForeground) {
+			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_WARNING_THAT_NIGHTSCOUT_URL_AND_SECRET_IS_NOT_OK_ALREADY_GIVEN) == "false" && BackgroundFetch.appIsInForeground()) {
 				var errorMessage:String = ModelLocator.resourceManagerInstance.getString("nightscoutservice","nightscout_test_result_nok");
 				errorMessage += "\n" + event.data.information;
 				
@@ -308,7 +309,7 @@ package services
 			//myTrace("LOCAL_SETTING_ACTUAL_QBLOX_SUBSCRIPTION_TAG = " + LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_ACTUAL_QBLOX_SUBSCRIPTION_TAG));
 			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_DEVICE_TOKEN_ID) != ""
 				&&
-				ModelLocator.isInForeground//registerpushnotification is using loadeer, which only works when app is in foreground
+				BackgroundFetch.appIsInForeground()//registerpushnotification is using loadeer, which only works when app is in foreground
 				&&
 				(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_SUBSCRIBED_TO_PUSH_NOTIFICATIONS) == "false"
 					||

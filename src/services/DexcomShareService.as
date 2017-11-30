@@ -225,7 +225,7 @@ package services
 				uploadBGRecords();
 			} else if (dexcomShareStatus == dexcomShareStatus_Waiting_credentialTest) {
 				myTrace("in createAndLoadUrlRequestSuccess and dexcomShareStatus == dexcomShareStatus_Waiting_credentialTest");
-				if (ModelLocator.isInForeground) {
+				if (BackgroundFetch.appIsInForeground()) {
 					DialogService.openSimpleDialog(ModelLocator.resourceManagerInstance.getString("dexcomshareservice","credentialtest"),
 						ModelLocator.resourceManagerInstance.getString("dexcomshareservice","credentialtest_success"),
 						60);
@@ -357,7 +357,7 @@ package services
 					syncRunning = false;
 				} else if (code == "MonitoredReceiverSerialNumberDoesNotMatch") {
 					myTrace("code MonitoredReceiverSerialNumberDoesNotMatch");
-					if (ModelLocator.isInForeground) {
+					if (BackgroundFetch.appIsInForeground()) {
 						DialogService.openSimpleDialog(ModelLocator.resourceManagerInstance.getString("dexcomshareservice","upload_error"),
 							ModelLocator.resourceManagerInstance.getString("dexcomshareservice","monitored_receiver_sn_doesnotmatch"),
 							60);
@@ -365,7 +365,7 @@ package services
 					syncRunning = false;
 				} else if (code == "MonitoredReceiverNotAssigned") {
 					myTrace("code MonitoredReceiverNotAssigned");
-					if (ModelLocator.isInForeground) {
+					if (BackgroundFetch.appIsInForeground()) {
 						var message:String =
 							ModelLocator.resourceManagerInstance.getString("dexcomshareservice","monitored_receiver_not_assigned_1") +
 							" " + (BlueToothDevice.isDexcomG4() ? CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_SERIALNUMBER)
@@ -386,19 +386,19 @@ package services
 				myTrace("in createAndLoadUrlRequestFailed and dexcomShareStatus == dexcomShareStatus_Waiting_LoginPublisherAccountByName, code = " + code);
 				syncRunning = false;
 				if (code == "SSO_AuthenticateAccountNotFound") {
-					if (ModelLocator.isInForeground) {
+					if (BackgroundFetch.appIsInForeground()) {
 						DialogService.openSimpleDialog(ModelLocator.resourceManagerInstance.getString("dexcomshareservice","login_error"),
 							ModelLocator.resourceManagerInstance.getString("dexcomshareservice","account_name_not_found"),
 							60);
 					}
 				} else if (code == "SSO_AuthenticatePasswordInvalid") {
-					if (ModelLocator.isInForeground) {
+					if (BackgroundFetch.appIsInForeground()) {
 						DialogService.openSimpleDialog(ModelLocator.resourceManagerInstance.getString("dexcomshareservice","login_error"),
 							ModelLocator.resourceManagerInstance.getString("dexcomshareservice","invalid_password"),
 							60);
 					}
 				} else if (code == "SSO_AuthenticateMaxAttemptsExceeed") {
-					if (ModelLocator.isInForeground) {
+					if (BackgroundFetch.appIsInForeground()) {
 						DialogService.openSimpleDialog(ModelLocator.resourceManagerInstance.getString("dexcomshareservice","login_error"),
 							ModelLocator.resourceManagerInstance.getString("dexcomshareservice","max_login_attempts_excceded"),
 							60);
@@ -422,7 +422,7 @@ package services
 				} else {
 					errorMessage = code;
 				}
-				if (ModelLocator.isInForeground) {
+				if (BackgroundFetch.appIsInForeground()) {
 					DialogService.openSimpleDialog(ModelLocator.resourceManagerInstance.getString("dexcomshareservice","login_error"),
 						errorMessage,
 						60);

@@ -17,14 +17,12 @@
  */
 package model
 {
-	import com.distriqt.extension.application.Application;
 	import com.distriqt.extension.message.Message;
 	import com.distriqt.extension.networkinfo.NetworkInfo;
 	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
 	
 	import flash.events.Event;
 	import flash.events.EventDispatcher;
-	import flash.utils.ByteArray;
 	
 	import mx.collections.ArrayCollection;
 	import mx.resources.IResourceManager;
@@ -35,9 +33,6 @@ package model
 	import spark.components.Image;
 	import spark.components.ViewNavigator;
 	import spark.core.ContentCache;
-	
-	import Utilities.Trace;
-	import Utilities.UniqueId;
 	
 	import databaseclasses.BgReading;
 	import databaseclasses.Database;
@@ -81,26 +76,10 @@ package model
 		public static var imageDone:Image;
 		public static var iconCache:ContentCache;
 
-		private static var _isInForeground:Boolean = false;
-		
 		public const MAX_DAYS_TO_STORE_BGREADINGS_IN_MODELLOCATOR:int = 5;
 		public static const DEBUG_MODE:Boolean = true;
 
 		public static const IS_PRODUCTION:Boolean = true;
-		
-		public static function get isInForeground():Boolean
-		{
-			return _isInForeground;
-		}
-
-		public static function set isInForeground(value:Boolean):void
-		{
-			if (_isInForeground == value)
-				return;
-			
-			_isInForeground = value;
-		}
-
 		
 		public static function get instance():ModelLocator
 		{
@@ -160,7 +139,6 @@ package model
 			if (_instance != null) {
 				throw new Error("ModelLocator class can only be instantiated through ModelLocator.getInstance()");	
 			}
-			_isInForeground = true;
 			
 			_appStartTimestamp = (new Date()).valueOf();
 			
@@ -181,9 +159,6 @@ package model
 				Database.instance.addEventListener(DatabaseEvent.BGREADING_RETRIEVAL_EVENT, bgReadingReceivedFromDatabase);
 				//bgreadings created after app start time are not needed because they are already stored in the _bgReadings by the transmitter service
 				Database.getBgReadings(_appStartTimestamp);
-				
-				//for an unknown reasy _isInForeground is back to value false here, so setting it to true.
-				isInForeground = true;
 			}
 
 			function bgReadingReceivedFromDatabase(de:DatabaseEvent):void {
@@ -217,16 +192,7 @@ package model
 				if (de.data != null)
 					if (de.data is String) {
 						if (de.data as String == Database.END_OF_RESULT) {
-
-							//now is the time to start the bluetoothservice because as soon as this service is started, 
-							//new bgreadings may come in, being created synchronously in the database, there should be no more async transactions in the database
-
-							//will initialise the bluetoothdevice
-							Database.getBlueToothDevice();24 *24
-							Application.init(DistriqtKey.distriqtKey);
-							if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_UDID) == "")
-								LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_UDID, Application.service.device.uniqueId("vendor", true));
-							//trace("unique device id = " + LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_UDID));
+							Database.getBlueToothDevice();
 							Message.init(DistriqtKey.distriqtKey);
 							TransmitterService.init();
 							BluetoothService.init();

@@ -23,6 +23,7 @@ package services
 	import com.distriqt.extension.dialog.events.DialogViewEvent;
 	import com.distriqt.extension.dialog.objects.DialogAction;
 	import com.distriqt.extension.notifications.Notifications;
+	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
 	
 	import flash.display.Stage;
 	import flash.events.Event;
@@ -103,7 +104,7 @@ package services
 		}
 		
 		private static function deviceNotPaired(event:Event):void {
-			if (ModelLocator.isInForeground)
+			if (BackgroundFetch.appIsInForeground())
 				return;
 			
 			if (BlueToothDevice.isBluKon())

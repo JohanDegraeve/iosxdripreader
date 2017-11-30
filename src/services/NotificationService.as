@@ -17,8 +17,6 @@
  */
 package services
 {
-	import com.distriqt.extension.application.Application;
-	import com.distriqt.extension.application.events.ApplicationStateEvent;
 	import com.distriqt.extension.core.Core;
 	import com.distriqt.extension.notifications.AuthorisationStatus;
 	import com.distriqt.extension.notifications.Notifications;
@@ -51,6 +49,7 @@ package services
 	
 	import events.BlueToothServiceEvent;
 	import events.CalibrationServiceEvent;
+	import events.IosXdripReaderEvent;
 	import events.NotificationServiceEvent;
 	import events.TransmitterServiceEvent;
 	
@@ -142,7 +141,7 @@ package services
 		private static function deviceNotPaired(event:Event):void {
 			var titleText:String = ModelLocator.resourceManagerInstance.getString("notificationservice","device_not_paired_notification_title");
 			var bodyText:String = ModelLocator.resourceManagerInstance.getString("notificationservice","device_not_paired_body_text_background");
-			if (ModelLocator.isInForeground)
+			if (BackgroundFetch.appIsInForeground())
 				var bodyText:String = ModelLocator.resourceManagerInstance.getString("notificationservice","device_not_paired_body_text_foreground");
 			Notifications.service.cancel(ID_FOR_DEVICE_NOT_PAIRED);
 			Notifications.service.notify(
@@ -313,32 +312,17 @@ package services
 				Notifications.service.addEventListener(NotificationEvent.ACTION, notificationHandler);
 				CalibrationService.instance.addEventListener(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT, updateBgNotification);
 				TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, updateBgNotification);
-				if (Application.isSupported) {
-					Application.service.addEventListener(ApplicationStateEvent.DEACTIVATE, application_deactivateHandler);
-				}
+				iosxdripreader.instance.addEventListener(IosXdripReaderEvent.APP_IN_FOREGROUND, appInForeGround);
 				Notifications.service.register();
 				_instance.dispatchEvent(new NotificationServiceEvent(NotificationServiceEvent.NOTIFICATION_SERVICE_INITIATED_EVENT));
 				
 			}
 			
-			function application_deactivateHandler(event:ApplicationStateEvent):void {
-				myTrace("in application_deactivateHandler, event.code = " + event.code);
-				switch (event.code) 
-				{
-					case ApplicationStateEvent.CODE_LOCK:
-					case ApplicationStateEvent.CODE_HOME:
-						myTrace("in application_deactivateHandler setting ModelLocator.isInForeground = false");
-						ModelLocator.isInForeground = false;
-						myTrace("in application_deactivateHandler setting active window to Home screen");
-						(ModelLocator.navigator.parentNavigator as TabbedViewNavigator).selectedIndex = 0;
-						myTrace("in application_deactivateHandler, setting systemIdleMode = SystemIdleMode.NORMAL");
-						NativeApplication.nativeApplication.systemIdleMode = SystemIdleMode.NORMAL;
-						
-						/*testTextToSpeechTimer = new Timer(10000);
-						testTextToSpeechTimer.addEventListener(TimerEvent.TIMER, listener);
-						testTextToSpeechTimer.start();*/
-					break;
-				}
+			function appInForeGround(event:Event):void {
+				myTrace("in appInForeGround, setting active window to Home screen");
+				(ModelLocator.navigator.parentNavigator as TabbedViewNavigator).selectedIndex = 0;
+				myTrace("in appInForeGround, setting systemIdleMode = SystemIdleMode.NORMAL");
+				NativeApplication.nativeApplication.systemIdleMode = SystemIdleMode.NORMAL;
 			}
 			
 			function notificationHandler(event:NotificationEvent):void {
@@ -368,7 +352,7 @@ package services
 			Notifications.service.cancel(ID_FOR_BG_VALUE);
 			
 			//start with bgreading notification
-			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_ALWAYS_ON_NOTIFICATION) == "true" && !ModelLocator.isInForeground) {
+			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_ALWAYS_ON_NOTIFICATION) == "true" && BackgroundFetch.appIsInBackground()) {
 				myTrace("in updateBgNotification notificatoin always on and not in foreground");
 				if (Calibration.allForSensor().length >= 2) {
 					var lastBgReading:BgReading = BgReading.lastNoSensor(); 

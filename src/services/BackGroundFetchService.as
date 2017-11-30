@@ -138,7 +138,7 @@ package services
 			} else {
 				myTrace("performLocalFetch");
 			}
-			if (!ModelLocator.isInForeground) {
+			if (BackgroundFetch.appIsInBackground()) {
 				var backgroundfetchServiceEvent:BackGroundFetchServiceEvent = new BackGroundFetchServiceEvent(BackGroundFetchServiceEvent.PERFORM_FETCH);
 				backgroundfetchServiceEvent.data = new Object();
 				backgroundfetchServiceEvent.data.information = event.data.result as String;
@@ -155,7 +155,7 @@ package services
 			//if already registered for push notifications, then update the token
 			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_SUBSCRIBED_TO_PUSH_NOTIFICATIONS) ==  "true"
 				&&
-				ModelLocator.isInForeground
+				BackgroundFetch.appIsInForeground()
 				&&
 				LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_DEVICE_TOKEN_ID) != token
 			) {
