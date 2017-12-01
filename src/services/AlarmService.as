@@ -15,8 +15,6 @@ package services
 	
 	import flash.events.Event;
 	import flash.events.EventDispatcher;
-	import flash.events.TimerEvent;
-	import flash.utils.Timer;
 	
 	import mx.collections.ArrayCollection;
 	
@@ -37,7 +35,7 @@ package services
 	import databaseclasses.Sensor;
 	
 	import events.BlueToothServiceEvent;
-	import events.IosXdripReaderEvent;
+	import events.DeepSleepServiceEvent;
 	import events.NotificationServiceEvent;
 	import events.SettingsServiceEvent;
 	import events.TransmitterServiceEvent;
@@ -180,6 +178,7 @@ package services
 		private static var lastAlarmCheckTimeStamp:Number;
 		private static var lastPhoneMuteAlarmCheckTimeStamp:Number;
 		private static var latestAlertTypeUsedInMissedReadingNotification:AlertType;
+		private static var lastMissedReadingAlertCheckTimeStamp:Number;
 		
 		public static function get instance():AlarmService {
 			return _instance;
@@ -207,7 +206,9 @@ package services
 			BluetoothLE.service.centralManager.addEventListener(PeripheralEvent.DISCOVERED, checkMuted);
 			BluetoothLE.service.centralManager.addEventListener(PeripheralEvent.CONNECT, checkMuted );
 			CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, settingChanged);
+			DeepSleepService.instance.addEventListener(DeepSleepServiceEvent.DEEP_SLEEP_SERVICE_TIMER_EVENT, deepSleepServiceTimerHandler);
 			lastAlarmCheckTimeStamp = 0;
+			lastMissedReadingAlertCheckTimeStamp = 0;
 			
 			for (var cntr:int = 0;cntr < snoozeValueMinutes.length;cntr++) {
 				snoozeValueStrings[cntr] = (snoozeValueStrings[cntr] as String).replace("minutes", ModelLocator.resourceManagerInstance.getString("alarmservice","minutes"));
@@ -899,13 +900,22 @@ package services
 			Notifications.service.notify(notificationBuilder.build());
 		}
 		
+		private static function deepSleepServiceTimerHandler(event:Event):void {
+			if (((new Date()).valueOf() - lastMissedReadingAlertCheckTimeStamp)/1000 > 5 * 60 + 30) {
+				myTrace("in deepSleepServiceTimerHandler, calling checkMissedReadingAlert");
+				checkMissedReadingAlert(new Date(), true);
+			}
+		}
+		
 		private static function checkMissedReadingAlert(now:Date, notTriggeredByNewReading:Boolean):void {
 			var listOfAlerts:FromtimeAndValueArrayCollection;
 			var alertValue:Number;
 			var alertName:String;
 			var alertType:AlertType;
 			var delay:int;
-			
+
+			lastMissedReadingAlertCheckTimeStamp = (new Date()).valueOf(); 	
+
 			if (Sensor.getActiveSensor() == null) {
 				myTrace("in checkMissedReadingAlert, but sensor is not active, not planning a missed reading alert now, and cancelling any missed reading alert that maybe still exists");
 				myTrace("cancel any existing alert for ID_FOR_MISSED_READING_ALERT");
@@ -947,12 +957,21 @@ package services
 							delay = 0;
 						myTrace("in checkMissedReadingAlert, was not triggered by new reading, reducing delay with time since last bgreading, new delay value in minutes = " + delay/60);
 					}
-					myTrace("in checkMissedReadingAlert, adding 30 seconds to the planned firedate, to avoid it fires just before a new reading is received");
-					delay += 30;
-					if (delay < 6 * 60) {
-						myTrace("in checkMissedReadingAlert, setting delay to 6 minutes, minimum value");
-						delay = 6 * 60;
+
+					if (((now.valueOf() - lastBgReading.timestamp) / 1000 > 5 * 60 + 30) || notTriggeredByNewReading) {
+					} else {
+						myTrace("in checkMissedReadingAlert, adding 30 seconds to the planned firedate, to avoid it fires just before a new reading is received");
+						delay += 30;
 					}
+					
+					if (now.valueOf() - ModelLocator.appStartTimestamp < 20 * 1000) {
+						//app just got launched, assuming maximum time between creation of appStartTimestamp and now = 20 seconds, which is a lot
+						if (delay < 60) {
+							myTrace("in checkMissedReadingAlert, app just started, setting delay to 60 seconds");
+							delay = 60;
+						}
+					}
+					
 					if (Database.getAlertType(listOfAlerts.getAlarmName(Number.NaN, "", dateOfFire)).enabled) {
 						latestAlertTypeUsedInMissedReadingNotification = alertType;
 						myTrace("in checkMissedReadingAlert, missed reading planned with delay in minutes = " + delay/60);
@@ -1006,10 +1025,6 @@ package services
 						latestAlertTypeUsedInMissedReadingNotification = alertType;
 						myTrace("in checkMissedReadingAlert, adding 30 seconds to the planned firedate, to avoid it fires just before a new reading is received");
 						delay += 30;
-						if (delay < 6 * 60) {
-							myTrace("in checkMissedReadingAlert, setting delay to 6 minutes, minimum value");
-							delay = 6 * 60;
-						}
 						myTrace("in checkMissedReadingAlert, missed reading planned with delay in minutes = " + delay/60);
 						fireAlert(
 							alertType, 
@@ -1393,11 +1408,10 @@ package services
 		}
 		
 		private static function settingChanged(event:SettingsServiceEvent):void {
-			if (event.data == CommonSettings.COMMON_SETTING_MISSED_READING_ALERT || event.data == CommonSettings.COMMON_SETTING_CURRENT_SENSOR) {
+			if (event.data == CommonSettings.COMMON_SETTING_CURRENT_SENSOR) {
 				checkMissedReadingAlert(new Date(), true);
 				//need to plan missed reading alert
-				//- in case the user has changed missed reading settings
-				//- or user has started, stopped a sensor
+				//in case user has started, stopped a sensor
 				//    if It was a sensor stop, then the setting COMMON_SETTING_CURRENT_SENSOR has value "0", and in checkMissedReadingAlert, the alert will be canceled and not replanned
 			} else if (event.data == CommonSettings.COMMON_SETTING_CALIBRATION_REQUEST_ALERT) {
 				checkCalibrationRequestAlert(new Date());
