@@ -50,9 +50,7 @@ package services
 		
 		private static function deepSleepTimerListener(event:Event):void {
 			if (BackgroundFetch.isPlayingSound()) {
-				myTrace("in deepSleepTimerListener, not playing deep sleep sound because another sound is playing now");
 			} else {
-				myTrace("in deepSleepTimerListener, playing 1 millisecond of silence");
 				BackgroundFetch.playSound("../assets/1-millisecond-of-silence.mp3");
 			}
 		}
