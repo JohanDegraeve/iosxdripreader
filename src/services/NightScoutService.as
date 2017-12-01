@@ -160,7 +160,6 @@ package services
 			
 			function bgreadingEventReceived(event:TransmitterServiceEvent):void {
 				myTrace("in bgreadingEventReceived");
-				calculateTag();
 				sync();
 			}
 			
@@ -190,44 +189,6 @@ package services
 						testNightScoutUrlAndSecret();
 					}
 				}
-			}
-		}
-		
-		private static function calculateTag():void {
-			var latestReadings:ArrayCollection = BgReading.latestBySize(1);
-			
-			if (latestReadings.length > 0) { 
-				var minute:Number = (new Date((latestReadings[0]  as BgReading).timestamp)).minutesUTC;
-				var tagNumber:int = minute % 5;
-				//example if bgreading is generated in minute 24, tagnumber = 4
-				switch (tagNumber) { 
-					case 0:
-						if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_WISHED_QBLOX_SUBSCRIPTION_TAG) != "TWO") {
-							LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_WISHED_QBLOX_SUBSCRIPTION_TAG, "TWO");
-						}
-						break;
-					case 1:
-						if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_WISHED_QBLOX_SUBSCRIPTION_TAG) != "THREE") {
-							LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_WISHED_QBLOX_SUBSCRIPTION_TAG, "THREE");
-						}
-						break;
-					case 2:
-						if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_WISHED_QBLOX_SUBSCRIPTION_TAG) != "FOUR") {
-							LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_WISHED_QBLOX_SUBSCRIPTION_TAG, "FOUR");
-						}
-						break;
-					case 3:
-						if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_WISHED_QBLOX_SUBSCRIPTION_TAG) != "FIVE") {
-							LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_WISHED_QBLOX_SUBSCRIPTION_TAG, "FIVE");
-						}
-						break;
-					case 4:
-						if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_WISHED_QBLOX_SUBSCRIPTION_TAG) != "ONE") {
-							LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_WISHED_QBLOX_SUBSCRIPTION_TAG, "ONE");
-						}
-						break;
-				}
-				
 			}
 		}
 		
@@ -302,25 +263,6 @@ package services
 				syncFinished();
 				return;
 			}
-			
-			//myTrace("LOCAL_SETTING_DEVICE_TOKEN_ID = " + LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_DEVICE_TOKEN_ID));
-			//myTrace("LOCAL_SETTING_SUBSCRIBED_TO_PUSH_NOTIFICATIONS = " + LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_SUBSCRIBED_TO_PUSH_NOTIFICATIONS));
-			//myTrace("LOCAL_SETTING_WISHED_QBLOX_SUBSCRIPTION_TAG = " + LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_WISHED_QBLOX_SUBSCRIPTION_TAG));
-			//myTrace("LOCAL_SETTING_ACTUAL_QBLOX_SUBSCRIPTION_TAG = " + LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_ACTUAL_QBLOX_SUBSCRIPTION_TAG));
-			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_DEVICE_TOKEN_ID) != ""
-				&&
-				BackgroundFetch.appIsInForeground()//registerpushnotification is using loadeer, which only works when app is in foreground
-				&&
-				(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_SUBSCRIBED_TO_PUSH_NOTIFICATIONS) == "false"
-					||
-					(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_WISHED_QBLOX_SUBSCRIPTION_TAG)
-						!=
-						LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_ACTUAL_QBLOX_SUBSCRIPTION_TAG)))
-			) {
-				myTrace("sync, url and secret tested, device token not empty and not subscribed, calling BackGroundFetchService.registerPushNotification");
-				BackGroundFetchService.registerPushNotification(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_WISHED_QBLOX_SUBSCRIPTION_TAG));
-			}
-			
 			
 			if (syncRunning) {
 				myTrace("NightScoutService.as sync : sync running already, return");

@@ -55,37 +55,18 @@ package databaseclasses
 		 * device token for remote push notifications 
 		 */
 		public static const LOCAL_SETTING_DEVICE_TOKEN_ID:int = 4;
-		/**
-		 * udid
-		 */
-		public static const LOCAL_SETTING_UDID:int = 5;
-		/**
-		 * subscribed to push notifications, true or false
-		 */
-		public static const LOCAL_SETTING_SUBSCRIBED_TO_PUSH_NOTIFICATIONS:int = 6;
+
+		public static const LOCAL_SETTING_UDID_NOT_USED_ANYMORE:int = 5;
+
+		public static const LOCAL_SETTING_SUBSCRIBED_TO_PUSH_NOTIFICATIONS_NOT_USED_ANYMORE:int = 6;
 		/**
 		 * use nslog, true or false
 		 */
 		public static const LOCAL_SETTING_NSLOG:int = 7;
-		/**
-		 * Tag list to which device should be subcribed (not necessarily is, that's the next setting)<br
-		 * <br>
-		 * Related to subscribing for push notifications at quickblox.<br>
-		 * The app will receive remote notifications that will trigger background fetch<br>
-		 * This needs to be synchronized with the timing that the transmitter generates readings<br>
-		 * Quickblox will send a remote notifications every minute, with a tag ONE, TWO, THREE, FOUR or FIVE<BR>
-		 * ONE will be sent at 00:00 (or a few seconds later). If the timing of the bg readings is between  55:00 and 59:59 then the app needs to subscribe to ONE,
-		 * if later then TWO, THREE, ...<br>
-		 * Default value ONE means device will receive first notification, every 5 minutes<br>
-		 * Multiple values are possible example "ONE,TWO"
-		 */
-		public static const LOCAL_SETTING_WISHED_QBLOX_SUBSCRIPTION_TAG:int = 8;
-		/**
-		 * Tag list to which device is subcribed<br
-		 * <br>
-		 * For explanation see LOCAL_SETTING_SUBSCRIBED_TO_PUSH_NOTIFICATIONS
-		 */
-		public static const LOCAL_SETTING_ACTUAL_QBLOX_SUBSCRIPTION_TAG:int = 9;
+
+		public static const LOCAL_SETTING_WISHED_QBLOX_SUBSCRIPTION_TAG_NOT_USED_ANYMORE:int = 8;
+
+		public static const LOCAL_SETTING_ACTUAL_QBLOX_SUBSCRIPTION_TAG_NOT_USED_ANYMORE:int = 9;
 		/**
 		 * taken over from Android version xdripplus 
 		 */
@@ -123,11 +104,11 @@ package databaseclasses
 			"",//LOCAL_SETTING_TRACE_FILE_NAME
 			"false",//LOCAL_SETTING_WARNING_THAT_NIGHTSCOUT_URL_AND_SECRET_IS_NOT_OK_ALREADY_GIVEN
 			"true",//LOCAL_SETTING_ALWAYS_ON_NOTIFICATION
-			"",//LOCAL_SETTING_DEVICE_TOKEN_ID
-			"",//LOCAL_SETTING_UDID
+			"",//LOCAL_SETTING_DEVICE_TOKEN_ID_NOT_USED_ANYMORE
+			"",//LOCAL_SETTING_UDID_NOT_USED_ANYMORE
 			"false",//LOCAL_SETTING_SUBSCRIBED_TO_PUSH_NOTIFICATIONS
-			"ONE",//LOCAL_SETTING_WISHED_QBLOX_SUBSCRIPTION_TAG
-			"ONE",//LOCAL_SETTING_ACTUAL_QBLOX_SUBSCRIPTION_TAG
+			"",//LOCAL_SETTING_WISHED_QBLOX_SUBSCRIPTION_TAG_NOT_USED_ANYMORE
+			"",//LOCAL_SETTING_ACTUAL_QBLOX_SUBSCRIPTION_TAG_NOT_USED_ANYMORE
 			"false",//LOCAL_SETTING_NSLOG
 			"false",//LOCAL_SETTING_G5_ALWAYS_AUTHENTICATE
 			"false",//LOCAL_SETTING_G5_ALWAYS_UNBOUND
