@@ -1286,11 +1286,7 @@ package services
 				myTrace("in processBLUKONTransmitterData, Patch Info received");
 				
 				//decodeSerialNumber(buffer);
-				buffer.position = 0;
-				for (var i:int = 0; i <= 17 && i < buffer.length; i++) {
-					buffer.readByte();
-				}
-				
+				buffer.position = 17;
 				if (isSensorReady(buffer.readByte())) {
 					blukonCurrentCommand = "810a00";
 					myTrace("in processBLUKONTransmitterData, Send ACK");
@@ -1850,7 +1846,6 @@ package services
 		}
 		
 		private static function isSensorReady(sensorStatusByte:int):Boolean {
-			return true;
 			var sensorStatusString:String = "";
 			var ret:Boolean = false;
 			
@@ -1860,6 +1855,7 @@ package services
 					break;
 				case 2:
 					sensorStatusString = "starting";
+					ret = true;
 					break;
 				case 3:
 					sensorStatusString = "ready";
@@ -1871,6 +1867,8 @@ package services
 					break;
 				case 5:
 					sensorStatusString = "shutdown";
+					//to use dead sensors for test
+					//ret = true
 					break;
 				case 6:
 					sensorStatusString = "in failure";
