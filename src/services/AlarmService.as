@@ -237,7 +237,14 @@ package services
 		
 		private static function notificationReceived(event:NotificationServiceEvent):void {
 			myTrace("in notificationReceived");
-			BackgroundFetch.stopPlayingSound();
+			if (BackgroundFetch.appIsInBackground()) {
+				//app is in background, which means the notification was received due to a specific app related user action, like clicking "snooze" or opening the notification
+				//  so stop the playing
+				BackgroundFetch.stopPlayingSound();
+			} else {
+				//alert was fired while the app was in the foreground, in this case the notificationReceived function is called by iOS itself, it's not due to a user action
+				//user can now snooze or cancel the alert, which will cause a stopPlayingSound
+			}
 			if (event != null) {
 				var listOfAlerts:FromtimeAndValueArrayCollection;
 				var alertName:String ;
@@ -725,14 +732,18 @@ package services
 			myTrace("in checkAlarms");
 			var now:Date = new Date();
 			lastAlarmCheckTimeStamp = now.valueOf();
+			var alertActive:Boolean = false;
 			
 			var lastbgreading:BgReading = BgReading.lastNoSensor();
 			if (lastbgreading != null) {
 				if (now.valueOf() - lastbgreading.timestamp < MAX_AGE_OF_READING_IN_MINUTES * 60 * 1000) {
-					if(!checkVeryLowAlert(now)) {
-						if (!checkLowAlert(now)) {
-							if (!checkVeryHighAlert(now)) {
-								checkHighAlert(now);
+					alertActive = checkVeryLowAlert(now);
+					if(!alertActive) {
+						alertActive = checkLowAlert(now);
+						if (!alertActive) {
+							alertActive = checkVeryHighAlert(now);
+							if (!alertActive) {
+								alertActive = checkHighAlert(now);
 							} else {
 								resetHighAlert();
 							}
@@ -747,9 +758,15 @@ package services
 					}
 				}
 				checkMissedReadingAlert(now, be == null);
-				checkCalibrationRequestAlert(now);
+				if (!alertActive) {
+					//to avoid that the arrival of a notification of a checkCalibrationRequestAlert stops the sounds of a previous low or high alert
+					checkCalibrationRequestAlert(now);
+				}
 			}
-			checkBatteryLowAlert(now);
+			if (!alertActive) {
+				//to avoid that the arrival of a notification of a checkBatteryLowAlert stops the sounds of a previous low or high alert
+				checkBatteryLowAlert(now);
+			}
 		}
 		
 		private static function phoneMuted(event:BackgroundFetchEvent):void {
