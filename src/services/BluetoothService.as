@@ -643,6 +643,7 @@ package services
 				peripheralConnected = false;
 				awaitingConnect = false;
 				tryReconnect();
+				startRescan(null);
 			} else if (BlueToothDevice.isBlueReader()) {
 				myTrace('it is a bluereader');
 				myTrace('setting peripheralConnected = false');
