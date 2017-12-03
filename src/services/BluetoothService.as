@@ -1314,7 +1314,7 @@ package services
 				}
 				if (strRecCmd == "8bda02") {
 					myTrace("in processBLUKONTransmitterData, gotUnknownCmd2: is maybe battery low????");
-					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_TIME_STAMP_LAST_SENSOR_AGE_CHECK_IN_MS, "5");
+					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_BLUKON_BATTERY_LEVEL, "5");
 					gotLowBat = true;
 				}
 				
