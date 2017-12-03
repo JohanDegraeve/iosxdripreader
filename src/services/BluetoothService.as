@@ -611,6 +611,13 @@ package services
 				discoverServiceOrCharacteristicTimer = null;
 			}
 			
+			if (!peripheralConnected) {
+				myTrace("discoverservices,  but peripheralConnected = false, returning");
+				amountOfDiscoverServicesOrCharacteristicsAttempt = 0;
+				
+				return;
+			}
+			
 			if (amountOfDiscoverServicesOrCharacteristicsAttempt < MAX_RETRY_DISCOVER_SERVICES_OR_CHARACTERISTICS) {
 				amountOfDiscoverServicesOrCharacteristicsAttempt++;
 				myTrace("discoverservices attempt " + amountOfDiscoverServicesOrCharacteristicsAttempt);
