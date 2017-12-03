@@ -606,11 +606,6 @@
 				dataToSend.keyboardtype = new Number(4);
 				
 				navigator.pushView(FromtimeAndValueListView,dataToSend);
-				if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_MISSED_READING_WARNING_GIVEN) == "false") {
-					DialogService.openSimpleDialog(ModelLocator.resourceManagerInstance.getString('settingsview',"warning"),
-						ModelLocator.resourceManagerInstance.getString('settingsview',"warn_missed_reading_needs_internet"));
-					LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_MISSED_READING_WARNING_GIVEN,"true");
-				}
 			}
 			
 			private function batteryLowAlert_clickHandler(event:MouseEvent):void {
