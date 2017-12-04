@@ -226,14 +226,14 @@
 	<iPhone>
 		<!-- A list of plist key/value pairs to be added to the application Info.plist -->
 		<InfoAdditions>
+			<![CDATA[<key>UIViewControllerBasedStatusBarAppearance</key><false/>]]>
+    		<![CDATA[<key>UIStatusBarStyle</key><string>UIStatusBarStyleLightContent</string>]]>
             <![CDATA[
                 <key>UIDeviceFamily</key>
                 <array>
                     <string>1</string>
                     <string>2</string>
                 </array>
-                <key>UIStatusBarStyle</key>
-               <string>UIStatusBarStyleLightContent</string>
                 <key>MinimumOSVersion</key>
                 <string>8.1.4</string>
                 <key>UIBackgroundModes</key>
@@ -348,11 +348,9 @@
 		<extensionID>com.distriqt.Core</extensionID>
 		<extensionID>com.distriqt.Dialog</extensionID>
 		<extensionID>com.distriqt.AndroidSupport</extensionID>
-		
 		<extensionID>com.distriqt.Message</extensionID>
 		<extensionID>com.distriqt.NetworkInfo</extensionID>
 		<extensionID>net.johandegraeve.iosfetchinterval</extensionID>
 		<extensionID>com.freshplanet.AirBackgroundFetch</extensionID>
-    	
     </extensions>
 </application>
