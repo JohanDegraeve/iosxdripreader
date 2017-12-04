@@ -642,8 +642,9 @@ package services
 				myTrace('setting peripheralConnected = false');
 				peripheralConnected = false;
 				awaitingConnect = false;
+				//try to reconnect and also restart scanning, to cover reconnect issue. Because maybe the transmitter starts re-advertising
 				tryReconnect();
-				startRescan(null);
+				startScanning();
 			} else if (BlueToothDevice.isBlueReader()) {
 				myTrace('it is a bluereader');
 				myTrace('setting peripheralConnected = false');
