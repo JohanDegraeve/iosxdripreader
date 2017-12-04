@@ -351,5 +351,6 @@
 		<extensionID>net.johandegraeve.iosfetchinterval</extensionID>
 		<extensionID>com.freshplanet.AirBackgroundFetch</extensionID>
     	
+    <extensionID>com.distriqt.Application</extensionID>
     </extensions>
 </application>
