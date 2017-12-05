@@ -89,7 +89,7 @@ package services
 			}
 			catch (error:Error) 
 			{
-				trace("Unable to load GitHub repo API: " + error);
+				myTrace("Unable to load GitHub repo API: " + error);
 			}
 		}
 		
@@ -123,7 +123,7 @@ package services
 			//If it has been more than 1 day since the last check for updates or it's the first time the app checks for updates and app updates are enebled in the settings
 			if((daysSinceLastUpdateCheck > 1 || CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_APP_UPDATE_LAST_UPDATE_CHECK) == "") && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_APP_UPDATE_NOTIFICATIONS_ON) == "true")
 			{
-				trace("App can check for new updates");
+				myTrace("App can check for new updates");
 				return true;
 			}
 			
@@ -132,7 +132,7 @@ package services
 		
 		private static function myTrace(log:String):void 
 		{
-			Trace.myTrace("TextToSpeech.as", log);
+			Trace.myTrace("UpdateService.as", log);
 		}
 		
 		//Event Listeners
