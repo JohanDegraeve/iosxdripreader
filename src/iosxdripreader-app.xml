@@ -35,7 +35,7 @@
 		An updated version of application must have a versionNumber value higher 
 		than the previous version. Required for namespace >= 2.5 . For iOS Apps, 
 		this represents build number. -->
-	<versionNumber>1.1.21</versionNumber>
+	<versionNumber>1.1.22</versionNumber>
 	<!-- A string value (such as "v1", "2.5", or "Alpha 1") that represents 
 		the version of the application, as it should be shown to users. For iOS Apps, 
 		this represents application version number and format should be (<0-999>.<0-999>.<0-999>). 
@@ -257,6 +257,8 @@
       				<array>
       					<string>healthkit</string>
 					</array>
+				<key>ITSAppUsesNonExemptEncryption</key><false/>
+					
             ]]>
 		</InfoAdditions>
 		<!-- A list of plist key/value pairs to be added to the application Entitlements.plist -->
