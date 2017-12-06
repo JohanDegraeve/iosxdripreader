@@ -441,16 +441,11 @@ package services
 		
 		private static function central_peripheralDiscoveredHandler(event:PeripheralEvent):void {
 			myTrace("in central_peripheralDiscoveredHandler, stop scanning");
-			if (BlueToothDevice.isBluKon()) {
-				//don't stop scanning - attempt to fix reconnect issue
-				BluetoothLE.service.centralManager.stopScan();
-			} else {
-				BluetoothLE.service.centralManager.stopScan();
-			}
+			BluetoothLE.service.centralManager.stopScan();
 
 			discoveryTimeStamp = (new Date()).valueOf();
 			if (awaitingConnect && !(BlueToothDevice.alwaysScan())) {
-				myTrace("passing in central_peripheralDiscoveredHandler but already awaiting connect, ignoring this one. peripheral name = " + event.peripheral.name);
+				myTrace("in central_peripheralDiscoveredHandler but already awaiting connect, ignoring this one. peripheral name = " + event.peripheral.name);
 				myTrace("restart scan");
 				startRescan(null);
 				return;
@@ -463,6 +458,13 @@ package services
 					myTrace("G5 but last reading was less than 1 minute ago, ignoring this peripheral discovery");
 					myTrace("restart scan");
 					startRescan(null);
+					return;
+				}
+			}
+			
+			if (BlueToothDevice.isBluKon()) {
+				if (peripheralConnected) {
+					myTrace("in central_peripheralDiscoveredHandler, blukon, already connected. Ignoring this device (it could be another one) and not restarting scanning");
 					return;
 				}
 			}
@@ -537,6 +539,14 @@ package services
 		private static function central_peripheralConnectHandler(event:PeripheralEvent):void {
 			myTrace("in central_peripheralConnectHandler, setting peripheralConnected = true");
 			peripheralConnected = true;
+			
+			if (BlueToothDevice.isBluKon()) {
+				if (BluetoothLE.service.centralManager.isScanning) {
+					//this may happen because for blukon, after disconnect, we start scanning and also try to reconnect
+					myTrace("in central_peripheralConnectHandler, blukon and scanning. Stop scanning");
+					BluetoothLE.service.centralManager.stopScan();
+				}
+			}
 			
 			if (BlueToothDevice.isDexcomG5()) {
 				if ((new Date()).valueOf() - timeStampOfLastG5Reading < 60 * 1000) {
