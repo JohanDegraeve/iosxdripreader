@@ -262,9 +262,10 @@
             ]]>
 		</InfoAdditions>
 		<!-- A list of plist key/value pairs to be added to the application Entitlements.plist -->
+		<!-- change aps-environment to production for release to app store -->
 		<Entitlements> <![CDATA[
 		<key>aps-environment</key>
-   		<string>production</string>
+   		<string>development</string>
 		<key>application-identifier</key>
 		<string>8DKSZ5HNLB.net.johandegraeve.iosxdripreader</string>
 		<key>com.apple.developer.healthkit</key>
