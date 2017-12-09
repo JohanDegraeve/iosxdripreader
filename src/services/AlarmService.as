@@ -650,7 +650,6 @@ package services
 						latestAlertTypeUsedInMissedReadingNotification, 
 						NotificationService.ID_FOR_MISSED_READING_ALERT, 
 						ModelLocator.resourceManagerInstance.getString("alarmservice","missed_reading_alert_notification_alert"), 
-						ModelLocator.resourceManagerInstance.getString("alarmservice","missed_reading_alert_notification_alert"),
 						alertType.enableVibration,
 						alertType.enableLights,
 						null,
@@ -675,7 +674,6 @@ package services
 						latestAlertTypeUsedInMissedReadingNotification, 
 						NotificationService.ID_FOR_MISSED_READING_ALERT, 
 						ModelLocator.resourceManagerInstance.getString("alarmservice","missed_reading_alert_notification_alert"), 
-						ModelLocator.resourceManagerInstance.getString("alarmservice","missed_reading_alert_notification_alert"),
 						alertType.enableVibration,
 						alertType.enableLights,
 						null,
@@ -790,7 +788,6 @@ package services
 							alertType, 
 							NotificationService.ID_FOR_PHONEMUTED_ALERT, 
 							ModelLocator.resourceManagerInstance.getString("alarmservice","phonemuted_alert_notification_alert_text"), 
-							ModelLocator.resourceManagerInstance.getString("alarmservice","phonemuted_alert_notification_alert_text"),
 							alertType.enableVibration,
 							alertType.enableLights,
 							NotificationService.ID_FOR_PHONE_MUTED_CATEGORY
@@ -829,7 +826,7 @@ package services
 			lastPhoneMuteAlarmCheckTimeStamp = (new Date()).valueOf();
 		}
 		
-		private static function fireAlert(alertType:AlertType, notificationId:int, alertText:String, titleText:String, enableVibration:Boolean, enableLights:Boolean, categoryId:String, delay:int = 0):void {
+		private static function fireAlert(alertType:AlertType, notificationId:int, alertText:String, enableVibration:Boolean, enableLights:Boolean, categoryId:String, delay:int = 0):void {
 			var soundsAsDisplayed:String = ModelLocator.resourceManagerInstance.getString("alerttypeview","sound_names_as_displayed_can_be_translated_must_match_above_list");
 			var soundsAsStoredInAssets:String = ModelLocator.resourceManagerInstance.getString("alerttypeview","sound_names_as_in_assets_no_translation_needed_comma_seperated");
 			var soundsAsDisplayedSplitted:Array = soundsAsDisplayed.split(',');
@@ -841,7 +838,7 @@ package services
 			notificationBuilder = new NotificationBuilder()
 				.setId(notificationId)
 				.setAlert(alertText)
-				.setTitle(titleText)
+				.setTitle(alertText)
 				.setBody(" ")
 				.enableVibration(enableVibration)
 				.enableLights(enableLights);
@@ -996,7 +993,6 @@ package services
 							alertType, 
 							NotificationService.ID_FOR_MISSED_READING_ALERT, 
 							ModelLocator.resourceManagerInstance.getString("alarmservice","missed_reading_alert_notification_alert"), 
-							ModelLocator.resourceManagerInstance.getString("alarmservice","missed_reading_alert_notification_alert"),
 							alertType.enableVibration,
 							alertType.enableLights,
 							null,
@@ -1047,7 +1043,6 @@ package services
 							alertType, 
 							NotificationService.ID_FOR_MISSED_READING_ALERT, 
 							ModelLocator.resourceManagerInstance.getString("alarmservice","missed_reading_alert_notification_alert"), 
-							ModelLocator.resourceManagerInstance.getString("alarmservice","missed_reading_alert_notification_alert"),
 							alertType.enableVibration,
 							alertType.enableLights,
 							null,
@@ -1095,7 +1090,6 @@ package services
 								alertType, 
 								NotificationService.ID_FOR_CALIBRATION_REQUEST_ALERT, 
 								ModelLocator.resourceManagerInstance.getString("alarmservice","calibration_request_alert_notification_alert_title"), 
-								ModelLocator.resourceManagerInstance.getString("alarmservice","calibration_request_alert_notification_alert_title"),
 								alertType.enableVibration,
 								alertType.enableLights,
 								NotificationService.ID_FOR_ALERT_CALIBRATION_REQUEST_CATEGORY
@@ -1159,7 +1153,6 @@ package services
 							 alertType, 
 							 NotificationService.ID_FOR_BATTERY_ALERT, 
 							 ModelLocator.resourceManagerInstance.getString("alarmservice","batteryLevel_alert_notification_alert_text"), 
-							 ModelLocator.resourceManagerInstance.getString("alarmservice","batteryLevel_alert_notification_alert_text"),
 							 alertType.enableVibration,
 							 alertType.enableLights,
 							 NotificationService.ID_FOR_ALERT_BATTERY_CATEGORY
@@ -1214,7 +1207,6 @@ package services
 							 alertType, 
 							 NotificationService.ID_FOR_HIGH_ALERT, 
 							 ModelLocator.resourceManagerInstance.getString("alarmservice","high_alert_notification_alert_text"), 
-							 ModelLocator.resourceManagerInstance.getString("alarmservice","high_alert_notification_alert_text"),
 							 alertType.enableVibration,
 							 alertType.enableLights,
 							 NotificationService.ID_FOR_ALERT_HIGH_CATEGORY
@@ -1265,7 +1257,6 @@ package services
 							 alertType, 
 							 NotificationService.ID_FOR_VERY_HIGH_ALERT, 
 							 ModelLocator.resourceManagerInstance.getString("alarmservice","veryhigh_alert_notification_alert_text"), 
-							 ModelLocator.resourceManagerInstance.getString("alarmservice","veryhigh_alert_notification_alert_text"),
 							 alertType.enableVibration,
 							 alertType.enableLights,
 							 NotificationService.ID_FOR_ALERT_VERY_HIGH_CATEGORY
@@ -1317,7 +1308,6 @@ package services
 							 alertType, 
 							 NotificationService.ID_FOR_LOW_ALERT, 
 							 ModelLocator.resourceManagerInstance.getString("alarmservice","low_alert_notification_alert_text"), 
-							 ModelLocator.resourceManagerInstance.getString("alarmservice","low_alert_notification_alert_text"),
 							 alertType.enableVibration,
 							 alertType.enableLights,
 							 NotificationService.ID_FOR_ALERT_LOW_CATEGORY
@@ -1368,7 +1358,6 @@ package services
 							 alertType, 
 							 NotificationService.ID_FOR_VERY_LOW_ALERT, 
 							 ModelLocator.resourceManagerInstance.getString("alarmservice","verylow_alert_notification_alert_text"), 
-							 ModelLocator.resourceManagerInstance.getString("alarmservice","verylow_alert_notification_alert_text"),
 							 alertType.enableVibration,
 							 alertType.enableLights,
 							 NotificationService.ID_FOR_ALERT_VERY_LOW_CATEGORY
