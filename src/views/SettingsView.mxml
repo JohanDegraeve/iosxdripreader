@@ -221,7 +221,7 @@
 				
 				versionText = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_APPLICATION_VERSION);
 				
-				if (BlueToothDevice.isTypeLimitter()) {
+				if (BlueToothDevice.isBlueReader() || BlueToothDevice.isLimitter()) {
 					batteryalertgroup.visible = false;
 					batteryalertgroup.enabled = false;
 					batteryalertgroup.includeInLayout = false;
@@ -255,7 +255,7 @@
 					}
 					changeDexcomShareStatus();
 					changeSpeakReadingsStatus();
-					if (BlueToothDevice.isTypeLimitter()) {
+					if (BlueToothDevice.isBlueReader() || BlueToothDevice.isLimitter()) {
 						batteryalertgroup.visible = false;
 						batteryalertgroup.enabled = false;
 						batteryalertgroup.includeInLayout = false;

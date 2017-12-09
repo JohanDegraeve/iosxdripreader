@@ -291,7 +291,7 @@
 			 if (commonSettingId == COMMON_SETTING_BATTERY_ALERT) {
 				 if ((commonSettings[COMMON_SETTING_BATTERY_ALERT] as String).indexOf('DefaultValue') > -1) {
 					 newString = (commonSettings[COMMON_SETTING_BATTERY_ALERT] as String)
-						 .replace('DefaultValue', TransmitterStatus.TRANSMITTER_BATTERY_LOW);
+						 .replace('DefaultValue', "300");//default value for G5 is 300 - if user picks other transmitter type, (s)he will need to change the default value
 					 setCommonSetting(COMMON_SETTING_BATTERY_ALERT, newString);
 				 }
 			 }

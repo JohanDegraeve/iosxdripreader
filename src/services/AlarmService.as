@@ -1122,8 +1122,8 @@ package services
 		/**
 		 * returns true of alarm fired
 		 */private static function checkBatteryLowAlert(now:Date):Boolean {
-			 if (BlueToothDevice.isTypeLimitter()) {
-				 myTrace("in checkAlarms, checkBatteryLowAlert, device is of typelimitter, battery value not yet supported/tested for any of blukon, bluereader, limitter");
+			 if (BlueToothDevice.isBlueReader() || BlueToothDevice.isLimitter()) {
+				 myTrace("in checkAlarms, checkBatteryLowAlert, device is bluereader or limitter, battery value not yet supported/tested.");
 				 return false;
 			 }
 			 
@@ -1146,7 +1146,9 @@ package services
 					 myTrace("in checkAlarms, batteryLevel alert not snoozed ");
 					 //not snoozed
 					 
-					 if ((!BlueToothDevice.isDexcomG5() && (new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G4_TRANSMITTER_BATTERY_VOLTAGE)) < alertValue) && (new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G4_TRANSMITTER_BATTERY_VOLTAGE)) > 0))
+					 if ((BlueToothDevice.isDexcomG4()() && (new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G4_TRANSMITTER_BATTERY_VOLTAGE)) < alertValue) && (new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G4_TRANSMITTER_BATTERY_VOLTAGE)) > 0))
+						 ||
+						 (BlueToothDevice.isBluKon() && (new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BLUKON_BATTERY_LEVEL)) < alertValue) && (new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BLUKON_BATTERY_LEVEL)) > 0))
 						 ||
 						 (BlueToothDevice.isDexcomG5() && (new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_VOLTAGEA)) < alertValue) && (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_VOLTAGEA) != "unknown"))) {
 						 myTrace("in checkAlarms, battery level is too low");
