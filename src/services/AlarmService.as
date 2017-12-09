@@ -21,6 +21,7 @@ package services
 	import spark.components.TabbedViewNavigator;
 	import spark.transitions.FlipViewTransition;
 	
+	import Utilities.BgGraphBuilder;
 	import Utilities.DateTimeUtilities;
 	import Utilities.FromtimeAndValueArrayCollection;
 	import Utilities.Trace;
@@ -1206,7 +1207,8 @@ package services
 						 fireAlert(
 							 alertType, 
 							 NotificationService.ID_FOR_HIGH_ALERT, 
-							 ModelLocator.resourceManagerInstance.getString("alarmservice","high_alert_notification_alert_text"), 
+							 ModelLocator.resourceManagerInstance.getString("alarmservice","high_alert_notification_alert_text")
+							 	+ "     " + BgGraphBuilder.unitizedString(BgReading.lastNoSensor().calculatedValue, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true"),
 							 alertType.enableVibration,
 							 alertType.enableLights,
 							 NotificationService.ID_FOR_ALERT_HIGH_CATEGORY
@@ -1256,7 +1258,8 @@ package services
 						 fireAlert(
 							 alertType, 
 							 NotificationService.ID_FOR_VERY_HIGH_ALERT, 
-							 ModelLocator.resourceManagerInstance.getString("alarmservice","veryhigh_alert_notification_alert_text"), 
+							 ModelLocator.resourceManagerInstance.getString("alarmservice","veryhigh_alert_notification_alert_text")
+							 	+ "     " + BgGraphBuilder.unitizedString(BgReading.lastNoSensor().calculatedValue, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true"),
 							 alertType.enableVibration,
 							 alertType.enableLights,
 							 NotificationService.ID_FOR_ALERT_VERY_HIGH_CATEGORY
@@ -1307,7 +1310,8 @@ package services
 						 fireAlert(
 							 alertType, 
 							 NotificationService.ID_FOR_LOW_ALERT, 
-							 ModelLocator.resourceManagerInstance.getString("alarmservice","low_alert_notification_alert_text"), 
+							 ModelLocator.resourceManagerInstance.getString("alarmservice","low_alert_notification_alert_text")
+							  + "     " + BgGraphBuilder.unitizedString(BgReading.lastNoSensor().calculatedValue, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true"), 
 							 alertType.enableVibration,
 							 alertType.enableLights,
 							 NotificationService.ID_FOR_ALERT_LOW_CATEGORY
@@ -1357,7 +1361,8 @@ package services
 						 fireAlert(
 							 alertType, 
 							 NotificationService.ID_FOR_VERY_LOW_ALERT, 
-							 ModelLocator.resourceManagerInstance.getString("alarmservice","verylow_alert_notification_alert_text"), 
+							 ModelLocator.resourceManagerInstance.getString("alarmservice","verylow_alert_notification_alert_text")
+							 	+ "     " + BgGraphBuilder.unitizedString(BgReading.lastNoSensor().calculatedValue, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true"), 
 							 alertType.enableVibration,
 							 alertType.enableLights,
 							 NotificationService.ID_FOR_ALERT_VERY_LOW_CATEGORY
