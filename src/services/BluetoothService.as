@@ -566,7 +566,7 @@ package services
 				G4ScanTimer = null;
 			}
 
-			if (!awaitingConnect) {
+			if (!awaitingConnect && !BlueToothDevice.isBluKon()) {
 				myTrace("in central_peripheralConnectHandler but awaitingConnect = false, will disconnect");
 				//activeBluetoothPeripheral = null;
 				BluetoothLE.service.centralManager.disconnect(event.peripheral);
@@ -767,7 +767,7 @@ package services
 		
 		private static function peripheral_discoverCharacteristicsHandler(event:PeripheralEvent):void {
 			myTrace("in peripheral_discoverCharacteristicsHandler");
-			if (!waitingForPeripheralCharacteristicsDiscovered) {
+			if (!waitingForPeripheralCharacteristicsDiscovered && !BlueToothDevice.isBluKon()) {
 				myTrace("in peripheral_discoverCharacteristicsHandler but not waitingForPeripheralCharacteristicsDiscovered");
 				return;
 			}
