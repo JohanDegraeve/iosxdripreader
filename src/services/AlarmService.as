@@ -177,7 +177,7 @@ package services
 			"5 hours", "6 hours", "7 hours", "8 hours", "9 hours", "10 hours", "1 day", "1 week"];
 		
 		private static var lastAlarmCheckTimeStamp:Number;
-		private static var lastPhoneMuteAlarmCheckTimeStamp:Number;
+		private static var lastCheckMuteTimeStamp:Number;
 		private static var latestAlertTypeUsedInMissedReadingNotification:AlertType;
 		private static var lastMissedReadingAlertCheckTimeStamp:Number;
 		
@@ -197,7 +197,7 @@ package services
 			else
 				initialStart = false;
 			
-			lastPhoneMuteAlarmCheckTimeStamp = new Number(0);
+			lastCheckMuteTimeStamp = new Number(0);
 			TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, checkAlarms);
 			NotificationService.instance.addEventListener(NotificationServiceEvent.NOTIFICATION_EVENT, notificationReceived);
 			BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.PERFORMREMOTEFETCH, checkAlarmsAfterPerformFetch);
@@ -210,6 +210,7 @@ package services
 			DeepSleepService.instance.addEventListener(DeepSleepServiceEvent.DEEP_SLEEP_SERVICE_TIMER_EVENT, deepSleepServiceTimerHandler);
 			lastAlarmCheckTimeStamp = 0;
 			lastMissedReadingAlertCheckTimeStamp = 0;
+			lastCheckMuteTimeStamp = 0;
 			
 			for (var cntr:int = 0;cntr < snoozeValueMinutes.length;cntr++) {
 				snoozeValueStrings[cntr] = (snoozeValueStrings[cntr] as String).replace("minutes", ModelLocator.resourceManagerInstance.getString("alarmservice","minutes"));
@@ -221,18 +222,14 @@ package services
 			
 			//immediately check missedreading alerts
 			checkMissedReadingAlert(new Date(), true);
-			myTrace("in init, calling appInForeGround");
+			checkMuted(null);
 		}
 		
 		private static function checkMuted(event:Event):void {
-			/*if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_READINGS_ON) == "true") {
-				myTrace("in checkMuted, not calling checkmuted, because SPEAK_READINGS overrides muted status");
-			} else {*/
-				if ((new Date()).valueOf() - lastPhoneMuteAlarmCheckTimeStamp > (4 * 60 + 45) * 1000) {
+				if ((new Date()).valueOf() - lastCheckMuteTimeStamp > (4 * 60 + 45) * 1000) {
 					myTrace("in checkMuted, calling BackgroundFetch.checkMuted");
 					BackgroundFetch.checkMuted();
 				}
-/*			}*/
 		}
 		
 		
@@ -772,7 +769,7 @@ package services
 			myTrace("in phoneMuted");
 			ModelLocator.phoneMuted = true;
 			var now:Date = new Date(); 
-			if (now.valueOf() - lastPhoneMuteAlarmCheckTimeStamp > (4 * 60 + 45) * 1000) {
+			if (now.valueOf() - lastCheckMuteTimeStamp > (4 * 60 + 45) * 1000) {
 				myTrace("in phoneMuted, checking phoneMute Alarm because it's been more than 4 minutes 45 seconds");
 				var listOfAlerts:FromtimeAndValueArrayCollection = FromtimeAndValueArrayCollection.createList(
 					CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PHONE_MUTED_ALERT), false);
@@ -812,7 +809,7 @@ package services
 			} else {
 				myTrace("less than 4 minutes 45 seconds since last check, not checking phoneMuted alert now");
 			}
-			lastPhoneMuteAlarmCheckTimeStamp = now.valueOf();
+			lastCheckMuteTimeStamp = now.valueOf();
 		}
 		
 		private static function phoneNotMuted(event:BackgroundFetchEvent):void {
@@ -824,7 +821,7 @@ package services
 			_phoneMutedAlertLatestSnoozeTimeInMs = Number.NaN;
 			_phoneMutedAlertLatestNotificationTime = Number.NaN;
 			_phoneMutedAlertSnoozePeriodInMinutes = 0;
-			lastPhoneMuteAlarmCheckTimeStamp = (new Date()).valueOf();
+			lastCheckMuteTimeStamp = (new Date()).valueOf();
 		}
 		
 		private static function fireAlert(alertType:AlertType, notificationId:int, alertText:String, enableVibration:Boolean, enableLights:Boolean, categoryId:String, delay:int = 0):void {
@@ -920,6 +917,7 @@ package services
 				myTrace("in deepSleepServiceTimerHandler, calling checkMissedReadingAlert");
 				checkMissedReadingAlert(new Date(), true);
 			}
+			checkMuted(null);
 		}
 		
 		private static function checkMissedReadingAlert(now:Date, notTriggeredByNewReading:Boolean):void {
