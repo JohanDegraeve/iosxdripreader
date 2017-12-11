@@ -269,6 +269,8 @@
 		<Entitlements> <![CDATA[
 		<key>application-identifier</key>
 		<string>8DKSZ5HNLB.net.johandegraeve.iosxdripreader</string>
+		<key>beta-reports-active</key>
+   		<true/>
 		<key>com.apple.developer.healthkit</key>
 		<true/>
 		<key>keychain-access-groups</key>
