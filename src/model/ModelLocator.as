@@ -80,7 +80,7 @@ package model
 		public static const MAX_DAYS_TO_STORE_BGREADINGS_IN_MODELLOCATOR:int = 1;
 		public static const DEBUG_MODE:Boolean = true;
 
-		public static const IS_PRODUCTION:Boolean = false;
+		public static const IS_PRODUCTION:Boolean = true;
 		
 		public static function get instance():ModelLocator
 		{
