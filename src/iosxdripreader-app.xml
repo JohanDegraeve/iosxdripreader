@@ -240,7 +240,6 @@
 				<array>
 					<string>bluetooth-central</string>
 					<string>audio</string>
-					<string>remote-notification</string>
 				</array>
 				<key>NSAppTransportSecurity</key>
       				<dict>
@@ -269,8 +268,6 @@
 		<Entitlements> <![CDATA[
 		<key>application-identifier</key>
 		<string>8DKSZ5HNLB.net.johandegraeve.iosxdripreader</string>
-		<key>aps-environment</key>
-		<string>production></string>
 		<key>beta-reports-active</key>
    		<true/>
 		<key>com.apple.developer.healthkit</key>
