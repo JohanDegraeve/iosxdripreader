@@ -835,7 +835,7 @@
 					new AlertBuilder()
 					.setTitle(ModelLocator.resourceManagerInstance.getString("settingsview","enter_app_update_group_title"))
 					.setMessage(ModelLocator.resourceManagerInstance.getString("settingsview","enter_app_update_group_message"))
-					.addTextField(checkUpdatesGroupText,"")
+					.addTextField(checkUpdatesGroupText,"",false,4)
 					.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
 					.addOption(ModelLocator.resourceManagerInstance.getString("general","cancel"), DialogAction.STYLE_CANCEL, 1)
 					.build()
