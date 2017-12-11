@@ -263,9 +263,10 @@
 		</InfoAdditions>
 		<!-- A list of plist key/value pairs to be added to the application Entitlements.plist -->
 		<!-- change aps-environment to production for release to app store -->
+		<!--   ADD BETA-REPORTS-ACTIVE IN ENTITLEMENTS TO RELEASE FOR TESTFLIGHT -->
+		<!--  key>beta-reports-active</key-->
+   		<!--  true/-->
 		<Entitlements> <![CDATA[
-		<key>beta-reports-active</key>
-   		<true/>
 		<key>application-identifier</key>
 		<string>8DKSZ5HNLB.net.johandegraeve.iosxdripreader</string>
 		<key>com.apple.developer.healthkit</key>
