@@ -614,7 +614,6 @@ package services
 			if (!peripheralConnected) {
 				myTrace("discoverservices,  but peripheralConnected = false, returning");
 				amountOfDiscoverServicesOrCharacteristicsAttempt = 0;
-				
 				return;
 			}
 			
@@ -628,9 +627,11 @@ package services
 					(BlueToothDevice.isDexcomG5() ? uuids_G5_Service:
 					(BlueToothDevice.isBlueReader() ? uuids_BlueReader_Service:
 					uuids_G4_Service)));
-				discoverServiceOrCharacteristicTimer = new Timer(DISCOVER_SERVICES_OR_CHARACTERISTICS_RETRY_TIME_IN_SECONDS * 1000, 1);
-				discoverServiceOrCharacteristicTimer.addEventListener(TimerEvent.TIMER, discoverServices);
-				discoverServiceOrCharacteristicTimer.start();
+				if (!BlueToothDevice.isBluKon()) {
+					discoverServiceOrCharacteristicTimer = new Timer(DISCOVER_SERVICES_OR_CHARACTERISTICS_RETRY_TIME_IN_SECONDS * 1000, 1);
+					discoverServiceOrCharacteristicTimer.addEventListener(TimerEvent.TIMER, discoverServices);
+					discoverServiceOrCharacteristicTimer.start();
+				}
 			} else {
 				myTrace("Maximum amount of attempts for discover bluetooth services reached.")
 				amountOfDiscoverServicesOrCharacteristicsAttempt = 0;
@@ -717,6 +718,12 @@ package services
 			if (discoverServiceOrCharacteristicTimer != null) {
 				discoverServiceOrCharacteristicTimer.stop();
 				discoverServiceOrCharacteristicTimer = null;
+			}
+			
+			if (!peripheralConnected) {
+				myTrace("discoverCharacteristics,  but peripheralConnected = false, returning");
+				amountOfDiscoverServicesOrCharacteristicsAttempt = 0;
+				return;
 			}
 			
 			if (amountOfDiscoverServicesOrCharacteristicsAttempt < MAX_RETRY_DISCOVER_SERVICES_OR_CHARACTERISTICS
@@ -1865,6 +1872,9 @@ package services
 		}
 		
 		private static function isSensorReady(sensorStatusByte:int):Boolean {
+			if (!ModelLocator.IS_PRODUCTION)
+				return true;
+			
 			var sensorStatusString:String = "";
 			var ret:Boolean = false;
 			
