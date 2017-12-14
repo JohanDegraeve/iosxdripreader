@@ -56,27 +56,7 @@ Alert Types can be re-used for different types of alerts.
 
 # To Install the app.
 
-The application is not available on iTunes and must be signed for your device.
-If you have an Apple Developer Account then you can do this yourself using this tool as described here by Daniel Harrelson : https://gist.github.com/danielharrelson/3e66c8c76cdb8465981d0548b121b053
-The ipa file to download is here, take the latest release : https://github.com/JohanDegraeve/iosxdripreader/releases
-Regulary check for updates.
-You should enable Healthkit and Push notification in the Apple Developer portal, although push notification is not used anymore in the app. It would probably work also without it.
-
-If you don't have an Apple Developer Account, or you don't succeed in resigning, then send my the UDID of your device in a mail please. (xdrip@proximus.be).
-
-How to find UDID : https://www.innerfence.com/howto/find-iphone-unique-device-identifier-udid
-
-Once you have an IPA signed for UDID, you can install the app.
-Easist is if you have xCode on a Mac : Connect your iphone to your mac,
-Select "Window", "Devices", go to "Installed apps", click the + sign, then select the ipa file.
-
-Alternative for Mac is "Apple 2 Configurator". Download from Apple store, install, open, connect device, then "Add", "Apps", "Select from My Mac"
-
-Also working on Mac is http://www.i-funbox.com/en_download.html. Install, connect your iphone and chose "Install App"
-
-On Windows, try http://www.i-funbox.com/en_download.html, I haven't used it myself on PC.
-
-There is also a gitter room https://gitter.im/nightscout/iosxdripreader
+Send your iTunes account e-mail address to xdrip@proximus.be and you will receive an invite to install the app via TestFlight
 
 # To compile (only if you want to develop):
 - install Flash Builder 4.7 with FLex SDK 4.15.0, AIR 22.0 en_US
