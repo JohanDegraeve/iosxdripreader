@@ -155,7 +155,7 @@ package model
 			function getBgReadingsAndLogsFromDatabase():void {
 				Database.instance.addEventListener(DatabaseEvent.BGREADING_RETRIEVAL_EVENT, bgReadingReceivedFromDatabase);
 				//bgreadings created after app start time are not needed because they are already stored in the _bgReadings by the transmitter service
-				Database.getBgReadings(_appStartTimestamp);
+				Database.getBgReadings((new Date()).valueOf() - 24 * 3600 * 1000, _appStartTimestamp);
 			}
 
 			function bgReadingReceivedFromDatabase(de:DatabaseEvent):void {

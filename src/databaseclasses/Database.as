@@ -59,7 +59,7 @@ package databaseclasses
 		public static const END_OF_RESULT:String = "END_OF_RESULT";
 		private static const debugMode:Boolean = true;
 		private static var loggingTableExists:Boolean = false;
-		private static const MAX_DAYS_TO_STORE_BGREADINGS_IN_DATABASE:int = 1;
+		private static const MAX_DAYS_TO_STORE_BGREADINGS_IN_DATABASE:int = 90;
 		
 		/**
 		 * create table to store the bluetooth device name and address<br>
@@ -1817,10 +1817,10 @@ package databaseclasses
 		 * will get the bgreadings and dispatch them one by one (ie one event per bgreading) in the data field of a BGREADING_RETRIEVAL_EVENT<br>
 		 * If the last string is sent, an additional event is set with data = "END_OF_RESULT"<br>
 		 * <br>
-		 * until = loggings with timestamp >= until will not be returned. until is timestamp in ms<br>
+		 * until = readings with timestamp >= until will not be returned. until is timestamp in ms<br>
 		 * asynchronous
 		 */
-		public static function getBgReadings(until:Number):void {
+		public static function getBgReadings(from:Number, until:Number):void {
 			var localSqlStatement:SQLStatement = new SQLStatement();
 			var localdispatcher:EventDispatcher = new EventDispatcher();
 			
@@ -1836,7 +1836,7 @@ package databaseclasses
 				localSqlStatement.addEventListener(SQLEvent.RESULT,bgReadingsRetrieved);
 				localSqlStatement.addEventListener(SQLErrorEvent.ERROR,bgreadingRetrievalFailed);
 				localSqlStatement.sqlConnection = aConn;
-				localSqlStatement.text =  "SELECT * from bgreading where timestamp < " + until;
+				localSqlStatement.text =  "SELECT * from bgreading where timestamp < " + until + " AND timestamp > " + from;
 				localSqlStatement.execute();
 			}
 			
