@@ -76,7 +76,7 @@ package model
 		public static var imageDone:Image;
 		public static var iconCache:ContentCache;
 
-		public const MAX_DAYS_TO_STORE_BGREADINGS_IN_MODELLOCATOR:int = 5;
+		public static const MAX_DAYS_TO_STORE_BGREADINGS_IN_MODELLOCATOR:int = 1;
 		public static const DEBUG_MODE:Boolean = true;
 
 		public static const IS_PRODUCTION:Boolean = false;
@@ -99,9 +99,6 @@ package model
 		private static var _bgReadings:ArrayCollection;
 
 		/**
-		 * last 24 hour bg readings<br>
-		 * seperate method is there to add a bg reading, which will also there to clean up any items older dan 24 hours<br>
-		 * there's no guarantee that there are no items older dan 24 hours<br>
 		 * Sorted ascending, from small to large, ie latest element is also the last element
 		 */
 		public static function get bgReadings():ArrayCollection
@@ -264,7 +261,7 @@ package model
 		}
 		
 		/**
-		 * add bgreading also removes bgreadings olther than 24 hours but keeps at least 5
+		 * add bgreading also removes bgreadings older than MAX_DAYS_TO_STORE_BGREADINGS_IN_MODELLOCATOR days but keep at least 5<br>
 		 */
 		public static function addBGReading(bgReading:BgReading):void {
 			_bgReadings.addItem(bgReading);
@@ -275,7 +272,7 @@ package model
 			
 			var firstBGReading:BgReading = _bgReadings.getItemAt(0) as BgReading;
 			var now:Number = (new Date()).valueOf();
-			while (now - firstBGReading.timestamp > 24 * 3600 * 1000) {
+			while (now - firstBGReading.timestamp > MAX_DAYS_TO_STORE_BGREADINGS_IN_MODELLOCATOR * 24 * 3600 * 1000) {
 				_bgReadings.removeItemAt(0);
 				if (_bgReadings.length <= 5)
 					break;

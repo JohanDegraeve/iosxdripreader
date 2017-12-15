@@ -56,10 +56,10 @@ package databaseclasses
 		private static var xmlFileName:String;
 		private static var databaseWasCopiedFromSampleFile:Boolean = true;
 		private static const maxDaysToKeepLogfiles:int = 2;
-		private static const maxDaysToKeepBgReadings:int = 5;
 		public static const END_OF_RESULT:String = "END_OF_RESULT";
 		private static const debugMode:Boolean = true;
 		private static var loggingTableExists:Boolean = false;
+		private static const MAX_DAYS_TO_STORE_BGREADINGS_IN_DATABASE:int = 1;
 		
 		/**
 		 * create table to store the bluetooth device name and address<br>
@@ -550,7 +550,7 @@ package databaseclasses
 		private static function deleteBgReadingsAsynchronous(continueCreatingTables:Boolean):void {
 			sqlStatement.clearParameters();
 			sqlStatement.text = "DELETE FROM bgreading where (timestamp < :timestamp)";
-			sqlStatement.parameters[":timestamp"] = (new Date()).valueOf() - maxDaysToKeepBgReadings * 24 * 60 * 60 * 1000;
+			sqlStatement.parameters[":timestamp"] = (new Date()).valueOf() - MAX_DAYS_TO_STORE_BGREADINGS_IN_DATABASE * 24 * 60 * 60 * 1000;
 			
 			sqlStatement.addEventListener(SQLEvent.RESULT,oldBgReadingsDeleted);
 			sqlStatement.addEventListener(SQLErrorEvent.ERROR,oldBgReadingDeletionFailed);
@@ -579,7 +579,7 @@ package databaseclasses
 				var deleteRequest:SQLStatement = new SQLStatement();
 				deleteRequest.sqlConnection = conn;
 				deleteRequest.text = "DELETE FROM bgreading where (timestamp < :timestamp)";
-				deleteRequest.parameters[":timestamp"] = (new Date()).valueOf() - maxDaysToKeepBgReadings * 24 * 60 * 60 * 1000;
+				deleteRequest.parameters[":timestamp"] = (new Date()).valueOf() - MAX_DAYS_TO_STORE_BGREADINGS_IN_DATABASE * 24 * 60 * 60 * 1000;
 				deleteRequest.execute();
 				deleteRequest.getResult();
 				conn.close();
