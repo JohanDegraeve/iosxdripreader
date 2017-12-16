@@ -782,10 +782,16 @@
 					var newTransmitterType:String = event.values[0];
 					if (newTransmitterType.toUpperCase() == currentType.toUpperCase())
 						return;
-					
+
+					if (newTransmitterType.toUpperCase() == "BLUKON" || newTransmitterType.toUpperCase() == "BLUCON" ) {
+						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID, "BLU00000");
+						transmitterIdText = "BLU00000";
+					} else {
+						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID, "00000");
+						transmitterIdText = "00000";
+					}
 					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE, newTransmitterType);
-					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID, "00000");
-					transmitterIdText = "00000";
+					
 					//transmitterTypeText = newTransmitterType;	
 					resetAllTransmitterBatteryLevels();
 					if (BlueToothDevice.isLimitter()) {
