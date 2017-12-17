@@ -113,7 +113,12 @@ package services
 					//Get current glucose
 					var currentBgReading:BgReading = currentBgReadingList.getItemAt(0) as BgReading;
 					var currentBgReadingFormatted:String = BgGraphBuilder.unitizedString(currentBgReading.calculatedValue, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true");
-						
+					if (currentBgReadingFormatted == "HIGH") {
+						currentBgReadingFormatted = ". " + ModelLocator.resourceManagerInstance.getString('texttospeech','high');
+					} else if (currentBgReadingFormatted == "LOW") {
+						currentBgReadingFormatted = ". " + ModelLocator.resourceManagerInstance.getString('texttospeech','low');
+					}  
+	
 					//Get trend (slope)
 					var currentTrend:String = currentBgReading.slopeName() as String;
 						
