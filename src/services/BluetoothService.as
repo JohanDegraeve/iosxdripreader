@@ -65,6 +65,7 @@ package services
 	import distriqtkey.DistriqtKey;
 	
 	import events.BlueToothServiceEvent;
+	import events.DeepSleepServiceEvent;
 	import events.SettingsServiceEvent;
 	
 	import model.ModelLocator;
@@ -127,10 +128,11 @@ package services
 		public static const BlueReader_SERVICE:String = "6e400001-b5a3-f393-e0a9-e50e24dcca9e";
 		public static const BlueReader_TX_Characteristic_UUID:String = "6E400002-B5A3-F393-E0A9-E50E24DCCA9E";
 		public static const BlueReader_RX_Characteristic_UUID:String = "6E400003-B5A3-F393-E0A9-E50E24DCCA9E";
+		public static const uuids_BLUKON_Advertisement:String = "436A62C0-082E-4CE8-A08B-01D81F195B24";
 
 		private static const uuids_G4_Service:Vector.<String> = new <String>[HM_10_SERVICE_G4];
 		private static const uuids_G5_Service:Vector.<String> = new <String>["F8083532-849E-531C-C594-30F1F86A4EA5"];
-		private static const uuids_BLUKON_Service:Vector.<String> = new <String>["436A62C0-082E-4CE8-A08B-01D81F195B24"];
+		private static const uuids_BLUKON_Service:Vector.<String> = new <String>[uuids_BLUKON_Advertisement];
 		private static const uuids_BlueReader_Service:Vector.<String> = new <String>[BlueReader_SERVICE];
 		private static const uuids_Bluereader_Advertisement:Vector.<String> = new <String>[""];//00001530-1212-EFDE-1523-785FEABCD123", "7905F431-B5CE-4E99-A40F-4B1E122D00D0"];
 			
@@ -183,6 +185,7 @@ package services
 		private static var m_full_data:ByteArray = new ByteArray();
 		private static var FSLSensorAGe:Number;
 		private static var unsupportedPacketType:int = 0;
+		private static var startedMonitoringForRegion:Boolean = false;
 
 		private static function set activeBluetoothPeripheral(value:Peripheral):void
 		{
@@ -262,6 +265,10 @@ package services
 			peripheralConnected = false;
 			
 			CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, settingChanged);
+			if (BlueToothDevice.isBluKon()) {
+				BackgroundFetch.startMonitoringForRegion(uuids_BLUKON_Advertisement);
+				startedMonitoringForRegion = true;
+			}
 			
 			//blukon
 			m_gotOneTimeUnknownCmd = false;
@@ -339,6 +346,12 @@ package services
 						startScanning();
 					}
 				} else {
+				}
+				if (BlueToothDevice.isBluKon()) {
+					if (!startedMonitoringForRegion) {
+						BackgroundFetch.startMonitoringForRegion(uuids_BLUKON_Advertisement);
+						startedMonitoringForRegion = true;
+					}
 				}
 			} else if (event.data == CommonSettings.COMMON_SETTING_TRANSMITTER_ID) {
 				myTrace("in settingChanged, event.data = COMMON_SETTING_TRANSMITTER_ID, calling BlueToothDevice.forgetbluetoothdevice");
@@ -1916,7 +1929,5 @@ package services
 			}
 			return ret;
 		}
-		
-
 	}
 }
