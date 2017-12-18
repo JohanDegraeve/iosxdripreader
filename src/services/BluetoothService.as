@@ -352,6 +352,11 @@ package services
 						BackgroundFetch.startMonitoringForRegion(uuids_BLUKON_Advertisement);
 						startedMonitoringForRegion = true;
 					}
+				} else {
+					if (startedMonitoringForRegion) {
+						BackgroundFetch.stopMonitoringForRegion(uuids_BLUKON_Advertisement);
+						startedMonitoringForRegion = false;
+					}
 				}
 			} else if (event.data == CommonSettings.COMMON_SETTING_TRANSMITTER_ID) {
 				myTrace("in settingChanged, event.data = COMMON_SETTING_TRANSMITTER_ID, calling BlueToothDevice.forgetbluetoothdevice");
