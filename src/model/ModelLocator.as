@@ -192,6 +192,7 @@ package model
 							Database.getBlueToothDevice();
 							Message.init(DistriqtKey.distriqtKey);
 							TransmitterService.init();
+							BackGroundFetchService.init();
 							BluetoothService.init();
 
 							NotificationService.instance.addEventListener(NotificationServiceEvent.NOTIFICATION_SERVICE_INITIATED_EVENT, HomeView.notificationServiceInitiated);
@@ -200,7 +201,6 @@ package model
 							CalibrationService.init();
 							NetworkInfo.init(DistriqtKey.distriqtKey);
 							
-							BackGroundFetchService.init();
 							//set AVAudioSession to AVAudioSessionCategoryPlayback with optoin AVAudioSessionCategoryOptionMixWithOthers
 							//this ensures that texttospeech and playsound work also in background
 							BackgroundFetch.setAvAudioSessionCategory(true);
