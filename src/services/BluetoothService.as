@@ -185,7 +185,7 @@ package services
 		private static var m_full_data:ByteArray = new ByteArray();
 		private static var FSLSensorAGe:Number;
 		private static var unsupportedPacketType:int = 0;
-		private static var startedMonitoringForRegion:Boolean = false;
+		private static var startedMonitoringAndRangingBeaconsInRegion:Boolean = false;
 
 		private static function set activeBluetoothPeripheral(value:Peripheral):void
 		{
@@ -265,10 +265,6 @@ package services
 			peripheralConnected = false;
 			
 			CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, settingChanged);
-			if (BlueToothDevice.isBluKon()) {
-				BackgroundFetch.startMonitoringForRegion(uuids_BLUKON_Advertisement);
-				startedMonitoringForRegion = true;
-			}
 			
 			//blukon
 			m_gotOneTimeUnknownCmd = false;
@@ -346,17 +342,6 @@ package services
 						startScanning();
 					}
 				} else {
-				}
-				if (BlueToothDevice.isBluKon()) {
-					if (!startedMonitoringForRegion) {
-						BackgroundFetch.startMonitoringForRegion(uuids_BLUKON_Advertisement);
-						startedMonitoringForRegion = true;
-					}
-				} else {
-					if (startedMonitoringForRegion) {
-						BackgroundFetch.stopMonitoringForRegion(uuids_BLUKON_Advertisement);
-						startedMonitoringForRegion = false;
-					}
 				}
 			} else if (event.data == CommonSettings.COMMON_SETTING_TRANSMITTER_ID) {
 				myTrace("in settingChanged, event.data = COMMON_SETTING_TRANSMITTER_ID, calling BlueToothDevice.forgetbluetoothdevice");
@@ -442,6 +427,9 @@ package services
 						G4ScanTimer.addEventListener(TimerEvent.TIMER, stopScanning);
 						G4ScanTimer.start();
 					}
+					if (BlueToothDevice.isBluKon()) {
+						startMonitoringAndRangingBeaconsInRegion(uuids_BLUKON_Advertisement);
+					}
 				}
 			} else {
 				myTrace("in startscanning but already scanning");
@@ -453,6 +441,9 @@ package services
 			if (BluetoothLE.service.centralManager.isScanning) {
 				myTrace("in stopScanning, is scanning, call stopScan");
 				BluetoothLE.service.centralManager.stopScan();
+				if (BlueToothDevice.isBluKon()) {
+					stopMonitoringAndRangingBeaconsInRegion(uuids_BLUKON_Advertisement);
+				}
 				_instance.dispatchEvent(new BlueToothServiceEvent(BlueToothServiceEvent.STOPPED_SCANNING));
 			}
 		}
@@ -460,6 +451,9 @@ package services
 		private static function central_peripheralDiscoveredHandler(event:PeripheralEvent):void {
 			myTrace("in central_peripheralDiscoveredHandler, stop scanning");
 			BluetoothLE.service.centralManager.stopScan();
+			if (BlueToothDevice.isBluKon()) {
+				stopMonitoringAndRangingBeaconsInRegion(uuids_BLUKON_Advertisement);
+			}
 
 			discoveryTimeStamp = (new Date()).valueOf();
 			if (awaitingConnect && !(BlueToothDevice.alwaysScan())) {
@@ -563,6 +557,9 @@ package services
 					//this may happen because for blukon, after disconnect, we start scanning and also try to reconnect
 					myTrace("in central_peripheralConnectHandler, blukon and scanning. Stop scanning");
 					BluetoothLE.service.centralManager.stopScan();
+					if (BlueToothDevice.isBluKon()) {
+						stopMonitoringAndRangingBeaconsInRegion(uuids_BLUKON_Advertisement);
+					}
 				}
 			}
 			
@@ -1933,6 +1930,19 @@ package services
 					60);
 			}
 			return ret;
+		}
+		
+		private static function startMonitoringAndRangingBeaconsInRegion(uuid:String):void {
+			if (!startedMonitoringAndRangingBeaconsInRegion) {
+				BackgroundFetch.startMonitoringAndRangingBeaconsInRegion(uuid);
+				startedMonitoringAndRangingBeaconsInRegion = true;
+			}
+		}
+		private static function stopMonitoringAndRangingBeaconsInRegion(uuid:String):void {
+			if (startedMonitoringAndRangingBeaconsInRegion) {
+				BackgroundFetch.stopMonitoringAndRangingBeaconsInRegion(uuid);
+				startedMonitoringAndRangingBeaconsInRegion = false;
+			}
 		}
 	}
 }
