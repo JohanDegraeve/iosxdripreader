@@ -2,22 +2,29 @@ package Utilities
 {
 	import com.distriqt.extension.message.Message;
 	import com.distriqt.extension.message.MessageAttachment;
+	import com.distriqt.extension.notifications.NotificationRepeatInterval;
 	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
 	
 	import flash.filesystem.File;
 	import flash.system.Capabilities;
 	
+	import mx.collections.ArrayCollection;
+	
 	import spark.formatters.DateTimeFormatter;
 	
+	import databaseclasses.AlertType;
 	import databaseclasses.BlueToothDevice;
 	import databaseclasses.Calibration;
 	import databaseclasses.CommonSettings;
+	import databaseclasses.Database;
 	import databaseclasses.LocalSettings;
 	import databaseclasses.Sensor;
 	
 	import events.SettingsServiceEvent;
 	
 	import model.ModelLocator;
+	
+	import services.DialogService;
 	
 	
 	public class Trace
@@ -124,6 +131,7 @@ package Utilities
 				BackgroundFetch.writeStringToFile(filePath, "BackgroundFetch ANE version = " + BackgroundFetch.getANEVersion());
 				var additionalInfoToWrite:String = "";
 				additionalInfoToWrite += "Device type = " + BlueToothDevice.deviceType() + ".\n";
+				additionalInfoToWrite += "Transmitterid = " + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID) + ".\n";
 				additionalInfoToWrite += "Sensor " + (Sensor.getActiveSensor() == null ? "not":"") + " started ";
 				additionalInfoToWrite += (Sensor.getActiveSensor() == null ? ".\n": dateFormatter.format(new Date(Sensor.getActiveSensor().startedAt)) + ".\n" + "\n");
 				if (Sensor.getActiveSensor() != null) {
@@ -132,6 +140,8 @@ package Utilities
 						additionalInfoToWrite += "Last calibration = " + dateFormatter.format(new Date(Calibration.last().timestamp))  + ".\n";
 					}
 				}
+				additionalInfoToWrite += "\nReadings in notification = " + LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_ALWAYS_ON_NOTIFICATION) + "\n";
+				additionalInfoToWrite += "\nHealthkit on  = " + LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_HEALTHKIT_STORE_ON) + "\n";
 				additionalInfoToWrite += "Battery alert = " + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BATTERY_ALERT) + "\n";
 				additionalInfoToWrite += "Low alert = " + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_LOW_ALERT) + "\n";
 				additionalInfoToWrite += "Very Low alert = " + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_VERY_LOW_ALERT) + "\n";
@@ -140,6 +150,23 @@ package Utilities
 				additionalInfoToWrite += "Phone Muted alert = " + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PHONE_MUTED_ALERT) + "\n";
 				additionalInfoToWrite += "Missed Reading alert = " + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_MISSED_READING_ALERT) + "\n";
 				additionalInfoToWrite += "Calibration Request alert = " + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CALIBRATION_REQUEST_ALERT) + "\n";
+				additionalInfoToWrite += "\nOverride Mute = " + LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_OVERRIDE_MUTE) + "\n\n";
+				additionalInfoToWrite += "\nList of Alert Types : \n";
+				var listOfAlarmname:ArrayCollection = Database.getAllAlertTypes();
+				for (var i:int = 0;i < listOfAlarmname.length;i++) {
+					var alertType:AlertType = listOfAlarmname.getItemAt(i) as AlertType;
+					var texttoadd:String = "Alert type name = " + alertType.alarmName;
+					texttoadd += ",\n   enabled = " + alertType.enabled;
+					texttoadd += ",\n   default snooze = " + alertType.defaultSnoozePeriodInMinutes;
+					texttoadd += ",\n   vibration = " + alertType.enableVibration;
+					texttoadd += ",\n   override mute = " + alertType.overrideSilentMode;
+					texttoadd += ",\n   repeat = " + (alertType.repeatInMinutes > 0 ? "true" : "false");
+					texttoadd += ",\n   snooze from notification = " + alertType.snoozeFromNotification;
+					texttoadd += ",\n   sound = " + alertType.sound;
+					texttoadd += "\n";
+					additionalInfoToWrite += texttoadd;
+				}
+
 				//zzz
 				BackgroundFetch.writeStringToFile(filePath, additionalInfoToWrite);
 			} else {
