@@ -25,6 +25,7 @@ package services
 	import com.distriqt.extension.notifications.Notifications;
 	import com.distriqt.extension.notifications.builders.NotificationBuilder;
 	import com.distriqt.extension.notifications.events.NotificationEvent;
+	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
 	
 	import flash.events.EventDispatcher;
 	import flash.utils.ByteArray;
@@ -229,14 +230,33 @@ package services
 					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_G4_TRANSMITTER_BATTERY_VOLTAGE, transmitterDataG5Packet.transmitterBatteryVoltage.toString());
 					if (Sensor.getActiveSensor() != null)
 						Sensor.getActiveSensor().latestBatteryLevel = transmitterDataG5Packet.transmitterBatteryVoltage;
-					//create and save bgreading
-					BgReading.
-						create(transmitterDataG5Packet.rawData, transmitterDataG5Packet.filteredData)
-						.saveToDatabaseSynchronous();
 					
-					//dispatch the event that there's new data
-					transmitterServiceEvent = new TransmitterServiceEvent(TransmitterServiceEvent.BGREADING_EVENT);
-					_instance.dispatchEvent(transmitterServiceEvent);
+					//check special values filtered and unfiltered to detect dead battery
+					if (transmitterDataG5Packet.filteredData == 2096896) {
+						myTrace("in transmitterDataReceived, filteredData = 2096896, this indicates a dead G5 battery, no further processing");
+						if (BackgroundFetch.appIsInForeground()) {
+							DialogService.openSimpleDialog(ModelLocator.resourceManagerInstance.getString("transmitterservice","dead_g5_battery"),
+								ModelLocator.resourceManagerInstance.getString("transmitterservice","dead_g5_battery_info"), 4 * 60);
+							BackgroundFetch.vibrate();
+						} else {
+							var notificationBuilderG5BatteryInfo:NotificationBuilder = new NotificationBuilder()
+								.setId(NotificationService.ID_FOR_DEAD_G5_BATTERY_INFO)
+								.setAlert(ModelLocator.resourceManagerInstance.getString("transmitterservice","dead_g5_battery"))
+								.setTitle(ModelLocator.resourceManagerInstance.getString("transmitterservice","dead_g5_battery"))
+								.setBody(ModelLocator.resourceManagerInstance.getString("transmitterservice","dead_g5_battery_info"))
+								.enableVibration(true)
+							Notifications.service.notify(notificationBuilderG5BatteryInfo.build());
+						}
+					} else {
+						//create and save bgreading
+						BgReading.
+							create(transmitterDataG5Packet.rawData, transmitterDataG5Packet.filteredData)
+							.saveToDatabaseSynchronous();
+						
+						//dispatch the event that there's new data
+						transmitterServiceEvent = new TransmitterServiceEvent(TransmitterServiceEvent.BGREADING_EVENT);
+						_instance.dispatchEvent(transmitterServiceEvent);
+					}
 				} else if (be.data is TransmitterDataBlueReaderPacket) {
 					var transmitterDataBlueReaderPacket:TransmitterDataBlueReaderPacket = be.data as TransmitterDataBlueReaderPacket;
 					if (!isNaN(transmitterDataBlueReaderPacket.bridgeBatteryLevel)) {
@@ -309,6 +329,9 @@ package services
 					);
 					alert.addEventListener(DialogViewEvent.CLOSED, transmitterIdEntered);
 					DialogService.addDialog(alert, 58);
+				} else if (notificationEvent.id == NotificationService.ID_FOR_DEAD_G5_BATTERY_INFO) {
+					DialogService.openSimpleDialog(ModelLocator.resourceManagerInstance.getString("transmitterservice","dead_g5_battery"),
+						ModelLocator.resourceManagerInstance.getString("transmitterservice","dead_g5_battery_info"), 4 * 60);
 				}
 			}		
 		}
