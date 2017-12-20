@@ -1886,15 +1886,15 @@ package services
 					sensorStatusString = "starting";
 					ret = true;
 					break;
-				case 3:
+				case 3:       // status for 14 days and 12 h of normal operation, abbott reader quits after 14 days
 					sensorStatusString = "ready";
 					ret = true;
 					break;
-				case 4:
+				case 4:       // status of the following 12 h, sensor delivers last BG reading constantly
 					sensorStatusString = "expired";
-					ret = true;
+					//ret = true;
 					break;
-				case 5:
+				case 5:		  // sensor stops operation after 15d after start
 					sensorStatusString = "shutdown";
 					//to use dead sensors for test
 					//ret = true
