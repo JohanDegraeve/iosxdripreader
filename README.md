@@ -56,7 +56,8 @@ Alert Types can be re-used for different types of alerts.
 
 # To Install the app.
 
-Send your iTunes account e-mail address to xdrip@proximus.be and you will receive an invite to install the app via TestFlight
+Send your iTunes account e-mail address to xdrip@proximus.be and you will receive an invite to install the app via TestFlight.
+
 
 # To compile (only if you want to develop):
 - install Flash Builder 4.7 with FLex SDK 4.15.0, AIR 22.0 en_US
