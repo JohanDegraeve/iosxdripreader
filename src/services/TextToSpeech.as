@@ -286,7 +286,10 @@ package services
 			{
 				ModelLocator.resourceManagerInstance.localeChain = ["it_IT","en_US"];
 			}
-
+			else if(speechLanguageCode == "zh-CN")
+			{
+				ModelLocator.resourceManagerInstance.localeChain = ["zh_CN","en_US"];
+			}
 		}
 	}
 }
