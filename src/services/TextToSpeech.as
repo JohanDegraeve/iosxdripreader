@@ -78,6 +78,8 @@ package services
 				//Set speech language
 				speechLanguageCode = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEECH_LANGUAGE);
 				
+				setLocaleChain();
+				
 				myTrace("TextToSpeech started. Enabled: " + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_READINGS_ON) + " | Interval: " + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_READINGS_INTERVAL) + " | Language: " + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEECH_LANGUAGE));
 			}
 		}
@@ -125,51 +127,6 @@ package services
 					//Get current delta
 					var currentDelta:String = BgGraphBuilder.unitizedDeltaString(false, true);
 					
-					//Define locales and fallbacks
-					if(speechLanguageCode == "en-GB" || 
-						speechLanguageCode == "en-US" || 
-						speechLanguageCode == "en-ZA" || 
-						speechLanguageCode == "en-IE" || 
-						speechLanguageCode == "en-AU")
-					{
-						ModelLocator.resourceManagerInstance.localeChain = ["en_US"];
-					}
-					else if(speechLanguageCode == "es-ES")
-					{
-						ModelLocator.resourceManagerInstance.localeChain = ["es_ES","es_MX","en_US"];
-					}
-					else if(speechLanguageCode == "es-MX")
-					{
-						ModelLocator.resourceManagerInstance.localeChain = ["es_MX","es_ES","en_US"];
-					}
-					else if(speechLanguageCode == "pt-PT")
-					{
-						ModelLocator.resourceManagerInstance.localeChain = ["pt_PT","pt_BR","en_US"];
-					}
-					else if(speechLanguageCode == "pt-BR")
-					{
-						ModelLocator.resourceManagerInstance.localeChain = ["pt_BR","pt_PT","en_US"];
-					}
-					else if(speechLanguageCode == "nl-NL" || speechLanguageCode == "nl-BE")
-					{
-						ModelLocator.resourceManagerInstance.localeChain = ["nl_BE","en_US"];
-					}
-					else if(speechLanguageCode == "fr-FR" || speechLanguageCode == "fr-CA")
-					{
-						ModelLocator.resourceManagerInstance.localeChain = ["fr_FR","en_US"];
-					}
-					else if(speechLanguageCode == "ru-RU")
-					{
-						ModelLocator.resourceManagerInstance.localeChain = ["ru_RU","en_US"];
-					}
-					else if(speechLanguageCode == "pl-PL")
-					{
-						ModelLocator.resourceManagerInstance.localeChain = ["pl_PL","en_US"];
-					}
-					else if(speechLanguageCode == "it-IT")
-					{
-						ModelLocator.resourceManagerInstance.localeChain = ["it_IT","en_US"];
-					}
 					
 					//If user wants trend to be spoken...
 					if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_TREND_ON) == "true")
@@ -279,7 +236,57 @@ package services
 				
 				//Set new language code in database
 				speechLanguageCode = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEECH_LANGUAGE);
+				setLocaleChain();
 			}
+		}
+		
+		public static function setLocaleChain():void {
+			//Define locales and fallbacks
+			if(speechLanguageCode == "en-GB" || 
+				speechLanguageCode == "en-US" || 
+				speechLanguageCode == "en-ZA" || 
+				speechLanguageCode == "en-IE" || 
+				speechLanguageCode == "en-AU")
+			{
+				ModelLocator.resourceManagerInstance.localeChain = ["en_US"];
+			}
+			else if(speechLanguageCode == "es-ES")
+			{
+				ModelLocator.resourceManagerInstance.localeChain = ["es_ES","es_MX","en_US"];
+			}
+			else if(speechLanguageCode == "es-MX")
+			{
+				ModelLocator.resourceManagerInstance.localeChain = ["es_MX","es_ES","en_US"];
+			}
+			else if(speechLanguageCode == "pt-PT")
+			{
+				ModelLocator.resourceManagerInstance.localeChain = ["pt_PT","pt_BR","en_US"];
+			}
+			else if(speechLanguageCode == "pt-BR")
+			{
+				ModelLocator.resourceManagerInstance.localeChain = ["pt_BR","pt_PT","en_US"];
+			}
+			else if(speechLanguageCode == "nl-NL" || speechLanguageCode == "nl-BE")
+			{
+				ModelLocator.resourceManagerInstance.localeChain = ["nl_BE","en_US"];
+			}
+			else if(speechLanguageCode == "fr-FR" || speechLanguageCode == "fr-CA")
+			{
+				ModelLocator.resourceManagerInstance.localeChain = ["fr_FR","en_US"];
+			}
+			else if(speechLanguageCode == "ru-RU")
+			{
+				ModelLocator.resourceManagerInstance.localeChain = ["ru_RU","en_US"];
+			}
+			else if(speechLanguageCode == "pl-PL")
+			{
+				ModelLocator.resourceManagerInstance.localeChain = ["pl_PL","en_US"];
+			}
+			else if(speechLanguageCode == "it-IT")
+			{
+				ModelLocator.resourceManagerInstance.localeChain = ["it_IT","en_US"];
+			}
+
 		}
 	}
 }
