@@ -292,11 +292,7 @@
 				}
 			}
 			
-			private function nightScoutUrl_clickHandler(event:MouseEvent):void {
-				rect1.color = uint("0xD3D3D3");
-				rect2.color = uint("0xD3D3D3");
-				setResetColorTimer();
-				
+			private static function nightScoutUrlChangeDialog():void {
 				var alert:DialogView = Dialog.service.create(
 					new AlertBuilder()
 					.setTitle(ModelLocator.resourceManagerInstance.getString("settingsview","enter_nightscout_url_title"))
@@ -306,8 +302,8 @@
 					.addOption(ModelLocator.resourceManagerInstance.getString("general","cancel"), DialogAction.STYLE_CANCEL, 1)
 					.build()
 				);
-				DialogService.addDialog(alert);
 				alert.addEventListener(DialogViewEvent.CLOSED, nightscouturlentered);
+				DialogService.addDialog(alert);
 				
 				function nightscouturlentered(event:DialogViewEvent):void {
 					if (event.index == 1) {
@@ -320,6 +316,14 @@
 					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME, event.values[0] as String);
 					nightScoutUrl = event.values[0] as String;
 				}
+			}
+			
+			private function nightScoutUrl_clickHandler(event:MouseEvent):void {
+				rect1.color = uint("0xD3D3D3");
+				rect2.color = uint("0xD3D3D3");
+				setResetColorTimer();
+
+				nightScoutUrlChangeDialog();
 			}
 			
 			private function nightScoutApiSecret_clickHandler(event:MouseEvent):void {
@@ -668,7 +672,15 @@
 			public static function requestNewTransmitterId(calledFromHomeView:Boolean = false):void {
 				var title:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE) + " " +
 					ModelLocator.resourceManagerInstance.getString("transmitterservice","transmitter_id_settings_title");
-				var message:String = ModelLocator.resourceManagerInstance.getString("transmitterservice","enter_transmitter_id");
+				var message:String = "";
+				if (!BlueToothDevice.isFollower()) {
+					message = ModelLocator.resourceManagerInstance.getString("transmitterservice","enter_transmitter_id");
+				} else {
+					if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME) == CommonSettings.DEFAULT_SITE_NAME) {
+						nightScoutUrlChangeDialog();
+					}
+					return;
+				}
 				if (BlueToothDevice.isDexcomG4()) {
 					message += " (5 characters)";
 				} else if (BlueToothDevice.isDexcomG5()) {
@@ -760,11 +772,13 @@
 					selectedTransmitterType = 2;
 				} else if (currentType.toUpperCase() == "BLUEREADER") {
 					selectedTransmitterType = 3;
-				}  else if (currentType.toUpperCase() == "BLUKON") {
+				} else if (currentType.toUpperCase() == "BLUKON") {
 					selectedTransmitterType = 4;
+				} else if (currentType.toUpperCase() == "FOLLOW") {
+					selectedTransmitterType = 5;
 				}
 				var transmitterTypeNames:Array = new Array();
-				transmitterTypeNames.push("G4", "G5", "Limitter", "Bluereader", "BluKon");
+				transmitterTypeNames.push("G4", "G5", "Limitter", "Bluereader", "BluKon", "Follow");
 				
 				var picker:PickerDialogView = Dialog.service.create(
 					new PickerDialogBuilder()
@@ -783,21 +797,25 @@
 					if (newTransmitterType.toUpperCase() == currentType.toUpperCase())
 						return;
 
-					if (newTransmitterType.toUpperCase() == "BLUKON" || newTransmitterType.toUpperCase() == "BLUCON" ) {
-						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID, "BLU00000");
-						transmitterIdText = "BLU00000";
+					if (newTransmitterType.toUpperCase() != "FOLLOW") {
+						if (newTransmitterType.toUpperCase() == "BLUKON" || newTransmitterType.toUpperCase() == "BLUCON" ) {
+							CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID, "BLU00000");
+							transmitterIdText = "BLU00000";
+						} else {
+							CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID, "00000");
+							transmitterIdText = "00000";
+						}
+						resetAllTransmitterBatteryLevels();
+						if (BlueToothDevice.isLimitter()) {
+							DialogService.openSimpleDialog("Warning",
+								"Limitter is not yet tested, if you want to support testing, please send me an e-mail");
+						} 
 					} else {
-						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID, "00000");
-						transmitterIdText = "00000";
+						//User is setting type to follow
+						//If there's any transmitter id already set, no need to remove that, user may decide to re-use this device as receiver
+						//also it could be that that device keeps receiving from the transmitter
 					}
 					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE, newTransmitterType);
-					
-					//transmitterTypeText = newTransmitterType;	
-					resetAllTransmitterBatteryLevels();
-					if (BlueToothDevice.isLimitter()) {
-						DialogService.openSimpleDialog("Warning",
-							"Limitter is not yet tested, if you want to support testing, please send me an e-mail");
-					} 
 				}
 			}
 			
