@@ -108,6 +108,7 @@
 		 * Limitter<br>
 		 * Bluereader<br>
 		 * BluKon<br>
+		 * Follow<br>
 		 * <br>
 		 * Default value is an empty string, peripheral type unknown
 		  */

@@ -149,6 +149,10 @@ package databaseclasses
 			return (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE).toUpperCase() == "LIMITTER");
 		}
 
+		public static function isFollower():Boolean {
+			return (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE).toUpperCase() == "Follow"); 
+		}
+		
 		/**
 		 * for type BlueReader, Limitter, BluKon, ie devices that transmit FSL sensor data<br>
 		 * important for calibration
@@ -184,6 +188,9 @@ package databaseclasses
 			return (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID) != "00000");
 		}
 		
+		/**
+		 * possible values : G4, G5, BlueReader, BluKon, Limitter, Follow 
+		 */
 		public static function deviceType():String {
 			if (isDexcomG4()) 
 				return "G4";
@@ -195,6 +202,8 @@ package databaseclasses
 				return "BluKon";
 			if (isLimitter())
 				return "Limitter";
+			if (isFollower())
+				return "Follow";
 			return "unknown";
 		}
 
