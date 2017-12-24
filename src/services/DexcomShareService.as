@@ -149,6 +149,11 @@ package services
 				myTrace("network not reachable, return");
 				return;
 			}
+			
+			if (BlueToothDevice.isFollower()) {
+				myTrace("sync, isFollower, return");
+				return;
+			}
 
 			if (syncRunning) {
 				myTrace("sync running already, return");

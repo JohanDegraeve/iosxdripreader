@@ -103,6 +103,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			private static var deltaValueText:String = "---";
 			[Bindable]
 			private static var _calibrateButtonActive:Boolean = false;
+			private static var _bluetoothButtonActive:Boolean = false;
 			private static const ACTION_SHEET_INDEX_FOR_SCAN_FOR_DEVICE:int = 0;
 			private static const ACTION_SHEET_INDEX_FOR_FORGET_DEVICE:int = 1;
 			private static const ACTION_SHEET_INDEX_FOR_START_SENSOR:int = 2;
@@ -227,21 +228,29 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 						if (BlueToothDevice.needsTransmitterId()) {
 							SettingsView.requestNewTransmitterId();
 						}
-						if (BlueToothDevice.alwaysScan()) {
-							scanningWasUserInitiated = false;
-							if (BlueToothDevice.isDexcomG5()) {
-								if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_INFO_SCREEN_SHOWN) == "false") {
-									showG5InfoScreen();
+						if (!BlueToothDevice.isFollower()) {
+							if (BlueToothDevice.alwaysScan()) {
+								scanningWasUserInitiated = false;
+								if (BlueToothDevice.isDexcomG5()) {
+									if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_INFO_SCREEN_SHOWN) == "false") {
+										showG5InfoScreen();
+									}
+								} else if (BlueToothDevice.isBluKon()) {
+									if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BLUKON_INFO_SCREEN_SHOWN) == "false") {
+										showBluKonInfoScreen();
+									}
 								}
-							} else if (BlueToothDevice.isBluKon()) {
-								if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BLUKON_INFO_SCREEN_SHOWN) == "false") {
-									showBluKonInfoScreen();
+							} else {
+								if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G4_INFO_SCREEN_SHOWN) == "false") {
+									showG4InfoScreen();
 								}
 							}
+							_bluetoothButtonActive = true;
+							if (Calibration.allForSensor().length > 1)
+								_calibrateButtonActive = true;
 						} else {
-							if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G4_INFO_SCREEN_SHOWN) == "false") {
-								showG4InfoScreen();
-							}
+							_bluetoothButtonActive = false;
+							_calibrateButtonActive = false;
 						}
 					}
 					
@@ -271,8 +280,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 					//at this moment the database is intialised, but the logs, bgreadings, ... might still be read in the ModelLocator, Modellocator is listening to the same event
 					
 					//set calibration button in the correct state
-					if (Calibration.allForSensor().length > 1) {
+					if (Calibration.allForSensor().length > 1 && !BlueToothDevice.isFollower()) {
 						_calibrateButtonActive = true;
+					}
+					if (!BlueToothDevice.isFollower()) {
+						_bluetoothButtonActive = true;
 					}
 					
 					BluetoothService.instance.addEventListener(BlueToothServiceEvent.BLUETOOTH_SERVICE_INITIATED, blueToothServiceInitiated);
@@ -1080,7 +1092,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 		]]>
 	</fx:Script>
 	<s:actionContent>
-		<s:Button id="devicetypebutton" icon="../assets/bluetooth.png" click="deviceTypeButtonClicked(event)"/>
+		<s:Button id="bluetoothbutton" icon="../assets/bluetooth.png" alpha="{_bluetoothButtonActive ? 1:0.25}" enabled="{_bluetoothButtonActive}" click="deviceTypeButtonClicked(event)"/>
 		<s:Button icon="{ModelLocator.image_calibrate_active}" id="calibrateButton" alpha="{_calibrateButtonActive ? 1:0.25}" enabled="{_calibrateButtonActive}" click="calibrationButtonClicked(event)"/>
 	</s:actionContent>
 	

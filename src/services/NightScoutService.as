@@ -16,6 +16,7 @@ package services
 	
 	import spark.formatters.DateTimeFormatter;
 	
+	import Utilities.DateTimeUtilities;
 	import Utilities.Trace;
 	import Utilities.UniqueId;
 	
@@ -27,6 +28,7 @@ package services
 	
 	import events.BackGroundFetchServiceEvent;
 	import events.CalibrationServiceEvent;
+	import events.DeepSleepServiceEvent;
 	import events.IosXdripReaderEvent;
 	import events.SettingsServiceEvent;
 	import events.TransmitterServiceEvent;
@@ -56,6 +58,21 @@ package services
 		private static var lastSyncrunningChangeDate:Number = (new Date()).valueOf();
 		private static const maxMinutesToKeepSyncRunningTrue:int = 1;
 		private static var lastCalibrationSyncTimeStamp:Number = 0;
+		private static var nextFollowDownloadTimeStamp:Number = 0;
+		private static var formatter:DateTimeFormatter;
+		
+		/**
+		 * follower related
+		 */
+		private static var timeStampOfFirstBgReadingToDowload:Number;//for upload to NS
+		/**
+		 * follower related
+		 */
+		private static var waitingForGetBgReadingsFromNS:Boolean = false;
+		/**
+		 * follower related
+		 */
+		private static var timeStampOfLastDownloadAttempt:Number;
 		
 		//Holder for visual calibrations data
 		private static var listOfVisualCalibrationsToUploadAsArray:Array = [];
@@ -109,6 +126,11 @@ package services
 			else
 				initialStart = false;
 			
+			formatter = new DateTimeFormatter();
+			formatter.dateTimePattern = "yyyy-MM-dd'T'HH:mm:ss.SSSZ";
+			formatter.setStyle("locale", "en_US");
+			formatter.useUTC = false;
+			
 			//Get Hashed API secret from user
 			_hashedAPISecret = Hex.fromArray(hash.hash(Hex.toArray(Hex.fromString(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_API_SECRET)))));
 			
@@ -133,6 +155,7 @@ package services
 			BackGroundFetchService.instance.addEventListener(BackGroundFetchServiceEvent.LOAD_REQUEST_RESULT, defaultSuccessFunction);
 			BackGroundFetchService.instance.addEventListener(BackGroundFetchServiceEvent.PERFORM_FETCH, performFetch);
 			iosxdripreader.instance.addEventListener(IosXdripReaderEvent.APP_IN_FOREGROUND, appInForeGround);
+			DeepSleepService.instance.addEventListener(DeepSleepServiceEvent.DEEP_SLEEP_SERVICE_TIMER_EVENT, getNewBgReadingsFromNS);
 			
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME) != CommonSettings.DEFAULT_SITE_NAME
 				&&
@@ -264,6 +287,11 @@ package services
 				return;
 			}
 			
+			if (BlueToothDevice.isFollower()) {
+				myTrace("in sync, is follower, return");
+				return;
+			}
+			
 			if (syncRunning) {
 				myTrace("NightScoutService.as sync : sync running already, return");
 				return;
@@ -296,10 +324,6 @@ package services
 			
 			var listOfReadingsAsArray:Array = [];
 			var lastSyncTimeStamp:Number = new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_UPLOAD_BGREADING_TIMESTAMP));
-			var formatter:DateTimeFormatter = new DateTimeFormatter();
-			formatter.dateTimePattern = "yyyy-MM-dd'T'HH:mm:ss.SSSZ";
-			formatter.setStyle("locale", "en_US");
-			formatter.useUTC = false;
 			
 			var cntr:int = ModelLocator.bgReadings.length - 1;
 			var arrayCntr:int = 0;
@@ -545,6 +569,120 @@ package services
 			
 			//Finish Sync
 			syncFinished();
+		}
+		
+		private static function getNewBgReadingsFromNS(event:Event):void {
+			if (!BlueToothDevice.isFollower())
+				return;
+			
+			if (!NetworkInfo.networkInfo.isReachable()) {
+				return;
+			}
+			
+			//example query https://YOUR-SITE.azurewebsites.net/api/v1/entries.json?find[dateString][$gte]=2017-12-20&count=500
+			//gives bg readings with datestring > 2016-12-20 , the latest 500
+			var now:Number = (new Date()).valueOf();
+			
+			if (nextFollowDownloadTimeStamp < now) {
+				var latestBGReading:BgReading = BgReading.lastNoSensor();
+				if (latestBGReading == null) {
+					timeStampOfFirstBgReadingToDowload = (new Date()).valueOf() - 24 * 3600 * 1000;//max 1 day of readings will be fetched
+				} else {
+					timeStampOfFirstBgReadingToDowload = latestBGReading.timestamp + 1;//yes + 1 ms
+				}
+				var count:int = (now - timeStampOfFirstBgReadingToDowload)/1000/60/12;
+				var latestDate:Date = new Date(timeStampOfFirstBgReadingToDowload);
+				var year:String = latestDate.fullYear.toString();
+				var month:String = latestDate.month.toString();
+				while (month.length < 2)
+					month = "0" + month;
+				var date:String = latestDate.date.toString();
+				while (date.length < 2)
+					date = "0" + date;
+				
+				var urlVariables:URLVariables = new URLVariables();
+				urlVariables["find[dateString][$gte]"] = year + "-" + month + "-" + date;
+				urlVariables[count] = count;
+				waitingForGetBgReadingsFromNS = true;
+				timeStampOfLastDownloadAttempt = (new Date()).valueOf();
+				setNextFollowDownloadTimeStamp();
+				createAndLoadURLRequest(_nightScoutEventsUrl, URLRequestMethod.GET, urlVariables, null, getNewBgReadingsFromNSSuccess, getNewBgReadingsFromNSFailed);
+			} else {
+				//next time
+			}
+		}
+		
+		private static function getNewBgReadingsFromNSSuccess(event:Event):void {
+			if (!waitingForGetBgReadingsFromNS || (new Date()).valueOf() - timeStampOfLastDownloadAttempt > 10 * 1000) {//dont' wait longer than 10 seconds for a download response
+				myTrace("in getNewBgReadingsFromNSSuccess but waitingForGetBgReadingsFromNS = false or last download attempt was more than 10 seconds ago, return");
+				waitingForGetBgReadingsFromNS = false;
+				return;
+			}
+			myTrace("in getNewBgReadingsFromNSSuccess");
+			waitingForGetBgReadingsFromNS = false;
+			if (event != null) {
+				var eventAsJSONObject:Object = JSON.parse(event.target.data as String);
+				if (eventAsJSONObject is Array) {
+					var arrayOfBGReadings:Array = eventAsJSONObject as Array;
+					for (var arrayCounter:int = 0; arrayCounter < arrayOfBGReadings.length; arrayCounter++) {
+						var bgReadingAsObject:Object = arrayOfBGReadings[arrayCounter];
+						//"sysTime":"2017-12-23T17:59:10.330+0100"
+						var sysTime:Number = (DateTimeUtilities.parseNSFormattedDateTimeString(bgReadingAsObject.sysTime)).valueOf();
+						if (sysTime.valueOf() >= timeStampOfFirstBgReadingToDowload) {
+							var bgReading:BgReading = new BgReading(
+								sysTime, //timestamp
+								null, //sensor id, not known here as the reading comes from NS
+								null, //calibration object
+								bgReadingAsObject.unfiltered,  
+								bgReadingAsObject.filtered, 
+								Number.NaN,  //ageAdjustedRawValue
+								false, //calibrationFlag
+								bgReadingAsObject.sgv, //calculatedValue
+								Number.NaN, //filteredCalculatedValue
+								Number.NaN,  //CalculatedValueSlope
+								Number.NaN,  //a
+								Number.NaN,  //b
+								Number.NaN,  //c
+								Number.NaN,  //ra
+								Number.NaN,  //cb
+								Number.NaN,  //rc
+								Number.NaN,  //rawCalculated
+								false, //hideSlope
+								"", //noise
+								sysTime, //lastmodifiedtimestamp
+								bgReadingAsObject._id);  //unique id
+							ModelLocator.addBGReading(bgReading);
+						}
+					}
+				} else {
+					myTrace("in getNewBgReadingsFromNSSuccess, response was not a json array :");
+					myTrace(event.target.data as String);
+				}
+			}
+		}
+
+		private static function getNewBgReadingsFromNSFailed(event:Event):void {
+			if (!waitingForGetBgReadingsFromNS || (new Date()).valueOf() - timeStampOfLastDownloadAttempt > 10 * 1000) {//dont' wait longer than 10 seconds for a download response) 
+				myTrace("in getNewBgReadingsFromNSFailed but waitingForGetBgReadingsFromNS = false or last download attempt was more than 10 seconds ago, return");
+				waitingForGetBgReadingsFromNS = false;
+				return;
+			}
+			myTrace("in getNewBgReadingsFromNSFailed");
+			waitingForGetBgReadingsFromNS = false;
+		}
+		
+		private static function setNextFollowDownloadTimeStamp():void {
+			var now:Number = (new Date()).valueOf();
+			var latestBGReading:BgReading = BgReading.lastNoSensor();
+			if (latestBGReading != null) {
+				nextFollowDownloadTimeStamp = latestBGReading.timestamp + 5000;//timestamp of latest stored reading + 5 minutes	
+				while (nextFollowDownloadTimeStamp < now) {
+					nextFollowDownloadTimeStamp += 5 * 60 * 1000;
+				}
+				nextFollowDownloadTimeStamp += 5 * 1000;//add 5 seconds, giving time to uploader to upload new reading
+			} else {
+				nextFollowDownloadTimeStamp = now + 5 * 60 * 1000;
+			}
 		}
 	}
 }
