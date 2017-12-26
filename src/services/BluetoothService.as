@@ -337,11 +337,13 @@ package services
 					G4ScanTimer = null;
 				}
 				stopScanning(null);//need to stop scanning because device type has changed, means also the UUID to scan for
-				if (BlueToothDevice.alwaysScan() && BlueToothDevice.transmitterIdKnown()) {
-					if (BluetoothLE.service.centralManager.state == BluetoothLEState.STATE_ON) {
-						startScanning();
+				if (!BlueToothDevice.isFollower()) {
+					if (BlueToothDevice.alwaysScan() && BlueToothDevice.transmitterIdKnown()) {
+						if (BluetoothLE.service.centralManager.state == BluetoothLEState.STATE_ON) {
+							startScanning();
+						}
+					} else {
 					}
-				} else {
 				}
 			} else if (event.data == CommonSettings.COMMON_SETTING_TRANSMITTER_ID) {
 				myTrace("in settingChanged, event.data = COMMON_SETTING_TRANSMITTER_ID, calling BlueToothDevice.forgetbluetoothdevice");
@@ -411,6 +413,10 @@ package services
 		}
 		
 		public static function startScanning(initialG4Scan:Boolean = false):void {
+			if (BlueToothDevice.isFollower()) {
+				myTrace("in startScanning but follower, not starting scan");
+				return;
+			}
 			if (!BluetoothLE.service.centralManager.isScanning) {
 				if (!BluetoothLE.service.centralManager.scanForPeripherals(
 					BlueToothDevice.isBluKon() ? uuids_BLUKON_Service : 

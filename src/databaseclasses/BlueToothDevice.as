@@ -150,7 +150,7 @@ package databaseclasses
 		}
 
 		public static function isFollower():Boolean {
-			return (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE).toUpperCase() == "Follow"); 
+			return (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE).toUpperCase() == "FOLLOW"); 
 		}
 		
 		/**

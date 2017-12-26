@@ -1,6 +1,7 @@
 package events
 {
 	[Event(name="NightScoutServiceInformation",type="events.NightScoutServiceEvent")]
+	[Event(name="BgReadingReceived",type="events.NightScoutServiceEvent")]
 	
 	public class NightScoutServiceEvent extends GenericEvent
 	{
@@ -9,6 +10,11 @@ package events
 		 * data.information will be a string with this info. 
 		 */
 		public static const NIGHTSCOUT_SERVICE_INFORMATION_EVENT:String = "NightScoutServiceInformation";
+		
+		/**
+		 * on or more bgreading received from NS. Only for Follower<br>
+		 */
+		public static const NIGHTSCOUT_SERVICE_BG_READING_RECEIVED:String = "BgReadingReceived";
 		
 		public var data:*;
 		

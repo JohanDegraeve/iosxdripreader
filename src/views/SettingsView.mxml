@@ -292,7 +292,7 @@
 				}
 			}
 			
-			private static function nightScoutUrlChangeDialog():void {
+			public static function nightScoutUrlChangeDialog():void {
 				var alert:DialogView = Dialog.service.create(
 					new AlertBuilder()
 					.setTitle(ModelLocator.resourceManagerInstance.getString("settingsview","enter_nightscout_url_title"))
@@ -672,15 +672,7 @@
 			public static function requestNewTransmitterId(calledFromHomeView:Boolean = false):void {
 				var title:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE) + " " +
 					ModelLocator.resourceManagerInstance.getString("transmitterservice","transmitter_id_settings_title");
-				var message:String = "";
-				if (!BlueToothDevice.isFollower()) {
-					message = ModelLocator.resourceManagerInstance.getString("transmitterservice","enter_transmitter_id");
-				} else {
-					if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME) == CommonSettings.DEFAULT_SITE_NAME) {
-						nightScoutUrlChangeDialog();
-					}
-					return;
-				}
+				var message:String = ModelLocator.resourceManagerInstance.getString("transmitterservice","enter_transmitter_id");
 				if (BlueToothDevice.isDexcomG4()) {
 					message += " (5 characters)";
 				} else if (BlueToothDevice.isDexcomG5()) {

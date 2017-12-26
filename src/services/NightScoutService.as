@@ -4,6 +4,7 @@ package services
 	import com.distriqt.extension.networkinfo.events.NetworkInfoEvent;
 	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
 	import com.hurlant.crypto.hash.SHA1;
+	import com.hurlant.crypto.symmetric.NullPad;
 	import com.hurlant.util.Hex;
 	
 	import flash.events.Event;
@@ -27,9 +28,11 @@ package services
 	import databaseclasses.LocalSettings;
 	
 	import events.BackGroundFetchServiceEvent;
+	import events.BlueToothServiceEvent;
 	import events.CalibrationServiceEvent;
 	import events.DeepSleepServiceEvent;
 	import events.IosXdripReaderEvent;
+	import events.NightScoutServiceEvent;
 	import events.SettingsServiceEvent;
 	import events.TransmitterServiceEvent;
 	
@@ -121,6 +124,7 @@ package services
 		}
 		
 		public static function init():void {
+			myTrace("nightscoutservice init");
 			if (!initialStart)
 				return;
 			else
@@ -165,6 +169,10 @@ package services
 			) {
 				testNightScoutUrlAndSecret();
 			} 
+			
+			if (BlueToothDevice.isFollower()) {
+				getNewBgReadingsFromNS(null);
+			}
 			
 			function appInForeGround(event:Event = null):void {
 				myTrace("in appInForeGround");
@@ -571,11 +579,17 @@ package services
 			syncFinished();
 		}
 		
-		private static function getNewBgReadingsFromNS(event:Event):void {
+		public static function getNewBgReadingsFromNS(event:Event):void {
 			if (!BlueToothDevice.isFollower())
 				return;
 			
 			if (!NetworkInfo.networkInfo.isReachable()) {
+				setNextFollowDownloadTimeStamp();
+				return;
+			}
+			
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME) == CommonSettings.DEFAULT_SITE_NAME) {
+				setNextFollowDownloadTimeStamp();
 				return;
 			}
 			
@@ -586,14 +600,14 @@ package services
 			if (nextFollowDownloadTimeStamp < now) {
 				var latestBGReading:BgReading = BgReading.lastNoSensor();
 				if (latestBGReading == null) {
-					timeStampOfFirstBgReadingToDowload = (new Date()).valueOf() - 24 * 3600 * 1000;//max 1 day of readings will be fetched
+					timeStampOfFirstBgReadingToDowload = now - 24 * 3600 * 1000;//max 1 day of readings will be fetched
 				} else {
 					timeStampOfFirstBgReadingToDowload = latestBGReading.timestamp + 1;//yes + 1 ms
 				}
-				var count:int = (now - timeStampOfFirstBgReadingToDowload)/1000/60/12;
+				var count:Number = (now - timeStampOfFirstBgReadingToDowload)/1000/3600*12;
 				var latestDate:Date = new Date(timeStampOfFirstBgReadingToDowload);
 				var year:String = latestDate.fullYear.toString();
-				var month:String = latestDate.month.toString();
+				var month:String = (latestDate.month + 1).toString();
 				while (month.length < 2)
 					month = "0" + month;
 				var date:String = latestDate.date.toString();
@@ -602,18 +616,19 @@ package services
 				
 				var urlVariables:URLVariables = new URLVariables();
 				urlVariables["find[dateString][$gte]"] = year + "-" + month + "-" + date;
-				urlVariables[count] = count;
+				urlVariables["count"] = Math.round(count);
 				waitingForGetBgReadingsFromNS = true;
 				timeStampOfLastDownloadAttempt = (new Date()).valueOf();
 				setNextFollowDownloadTimeStamp();
-				createAndLoadURLRequest(_nightScoutEventsUrl, URLRequestMethod.GET, urlVariables, null, getNewBgReadingsFromNSSuccess, getNewBgReadingsFromNSFailed);
+				createAndLoadURLRequest(_nightScoutEventsUrl + ".json", URLRequestMethod.GET, urlVariables, null, getNewBgReadingsFromNSSuccess, getNewBgReadingsFromNSFailed);
 			} else {
 				//next time
 			}
 		}
 		
-		private static function getNewBgReadingsFromNSSuccess(event:Event):void {
-			if (!waitingForGetBgReadingsFromNS || (new Date()).valueOf() - timeStampOfLastDownloadAttempt > 10 * 1000) {//dont' wait longer than 10 seconds for a download response
+		private static function getNewBgReadingsFromNSSuccess(event:BackGroundFetchServiceEvent):void {
+			var now:Number = (new Date()).valueOf();
+			if (!waitingForGetBgReadingsFromNS || (now - timeStampOfLastDownloadAttempt > 10 * 1000)) {//dont' wait longer than 10 seconds for a download response
 				myTrace("in getNewBgReadingsFromNSSuccess but waitingForGetBgReadingsFromNS = false or last download attempt was more than 10 seconds ago, return");
 				waitingForGetBgReadingsFromNS = false;
 				return;
@@ -621,47 +636,71 @@ package services
 			myTrace("in getNewBgReadingsFromNSSuccess");
 			waitingForGetBgReadingsFromNS = false;
 			if (event != null) {
-				var eventAsJSONObject:Object = JSON.parse(event.target.data as String);
-				if (eventAsJSONObject is Array) {
-					var arrayOfBGReadings:Array = eventAsJSONObject as Array;
-					for (var arrayCounter:int = 0; arrayCounter < arrayOfBGReadings.length; arrayCounter++) {
-						var bgReadingAsObject:Object = arrayOfBGReadings[arrayCounter];
-						//"sysTime":"2017-12-23T17:59:10.330+0100"
-						var sysTime:Number = (DateTimeUtilities.parseNSFormattedDateTimeString(bgReadingAsObject.sysTime)).valueOf();
-						if (sysTime.valueOf() >= timeStampOfFirstBgReadingToDowload) {
-							var bgReading:BgReading = new BgReading(
-								sysTime, //timestamp
-								null, //sensor id, not known here as the reading comes from NS
-								null, //calibration object
-								bgReadingAsObject.unfiltered,  
-								bgReadingAsObject.filtered, 
-								Number.NaN,  //ageAdjustedRawValue
-								false, //calibrationFlag
-								bgReadingAsObject.sgv, //calculatedValue
-								Number.NaN, //filteredCalculatedValue
-								Number.NaN,  //CalculatedValueSlope
-								Number.NaN,  //a
-								Number.NaN,  //b
-								Number.NaN,  //c
-								Number.NaN,  //ra
-								Number.NaN,  //cb
-								Number.NaN,  //rc
-								Number.NaN,  //rawCalculated
-								false, //hideSlope
-								"", //noise
-								sysTime, //lastmodifiedtimestamp
-								bgReadingAsObject._id);  //unique id
-							ModelLocator.addBGReading(bgReading);
+				try {
+					var eventAsJSONObject:Object = JSON.parse(event.data.information as String);
+					if (eventAsJSONObject is Array) {
+						var arrayOfBGReadings:Array = eventAsJSONObject as Array;
+						var newReadingReceived:Boolean = false;
+						for (var arrayCounter:int = 0; arrayCounter < arrayOfBGReadings.length; arrayCounter++) {
+							var bgReadingAsObject:Object = arrayOfBGReadings[arrayCounter];
+							if (bgReadingAsObject.sysTime) {
+								//format "sysTime":"2017-12-23T17:59:10.330+0100"
+								var sysTime:Number = (DateTimeUtilities.parseNSFormattedDateTimeString(bgReadingAsObject.sysTime)).valueOf();
+								if (sysTime >= timeStampOfFirstBgReadingToDowload) {
+									var bgReading:BgReading = new BgReading(
+										sysTime, //timestamp
+										null, //sensor id, not known here as the reading comes from NS
+										null, //calibration object
+										bgReadingAsObject.unfiltered,  
+										bgReadingAsObject.filtered, 
+										Number.NaN,  //ageAdjustedRawValue
+										false, //calibrationFlag
+										bgReadingAsObject.sgv, //calculatedValue
+										Number.NaN, //filteredCalculatedValue
+										Number.NaN,  //CalculatedValueSlope
+										Number.NaN,  //a
+										Number.NaN,  //b
+										Number.NaN,  //c
+										Number.NaN,  //ra
+										Number.NaN,  //cb
+										Number.NaN,  //rc
+										Number.NaN,  //rawCalculated
+										false, //hideSlope
+										"", //noise
+										sysTime, //lastmodifiedtimestamp
+										bgReadingAsObject._id);  //unique id
+									ModelLocator.addBGReading(bgReading, false);
+									newReadingReceived = true;
+								} else {
+									break;//readings come sorted from NS, no need to further check the rest
+								}
+							} else {
+								myTrace("in getNewBgReadingsFromNSSuccess, result has a reading without sysTime");
+								if (bgReadingAsObject._id) {
+									myTrace("_id of that reading = " + bgReadingAsObject._id); 
+								}
+							}
 						}
+						if (newReadingReceived) {
+							ModelLocator.refreshBgReadingArrayCollection();
+							for (var cntr:int = 0;cntr < ModelLocator.bgReadings.length;cntr++) {
+								(ModelLocator.bgReadings.getItemAt(cntr) as BgReading).findSlope(true);
+							}
+							_instance.dispatchEvent(new NightScoutServiceEvent(NightScoutServiceEvent.NIGHTSCOUT_SERVICE_BG_READING_RECEIVED));
+						}
+					} else {
+						myTrace("in getNewBgReadingsFromNSSuccess, response was not a json array :");
+						myTrace(event.data.information as String);
 					}
-				} else {
-					myTrace("in getNewBgReadingsFromNSSuccess, response was not a json array :");
-					myTrace(event.target.data as String);
+				} catch (error:Error) {
+					myTrace("in getNewBgReadingsFromNSSuccess, error = " + error.message);
+					myTrace("event.data.information = " + (event.data.information as String));
 				}
 			}
+			setNextFollowDownloadTimeStamp();
 		}
 
-		private static function getNewBgReadingsFromNSFailed(event:Event):void {
+		private static function getNewBgReadingsFromNSFailed(event:BackGroundFetchServiceEvent):void {
 			if (!waitingForGetBgReadingsFromNS || (new Date()).valueOf() - timeStampOfLastDownloadAttempt > 10 * 1000) {//dont' wait longer than 10 seconds for a download response) 
 				myTrace("in getNewBgReadingsFromNSFailed but waitingForGetBgReadingsFromNS = false or last download attempt was more than 10 seconds ago, return");
 				waitingForGetBgReadingsFromNS = false;
@@ -669,20 +708,25 @@ package services
 			}
 			myTrace("in getNewBgReadingsFromNSFailed");
 			waitingForGetBgReadingsFromNS = false;
+			setNextFollowDownloadTimeStamp();
 		}
 		
 		private static function setNextFollowDownloadTimeStamp():void {
 			var now:Number = (new Date()).valueOf();
 			var latestBGReading:BgReading = BgReading.lastNoSensor();
+			/*if (latestBGReading != null)
+				myTrace("in setNextFollowDownloadTimeStamp, latestBGReading.timestamp = " + (new Date(latestBGReading.timestamp)).toLocaleString());
+			else
+				myTrace("in setNextFollowDownloadTimeStamp, latestBgReading is null");*/
 			if (latestBGReading != null) {
-				nextFollowDownloadTimeStamp = latestBGReading.timestamp + 5000;//timestamp of latest stored reading + 5 minutes	
+				nextFollowDownloadTimeStamp = latestBGReading.timestamp + 5 * 60 * 1000+ 10000;//timestamp of latest stored reading + 5 minutes + 10 seconds	
 				while (nextFollowDownloadTimeStamp < now) {
 					nextFollowDownloadTimeStamp += 5 * 60 * 1000;
 				}
-				nextFollowDownloadTimeStamp += 5 * 1000;//add 5 seconds, giving time to uploader to upload new reading
 			} else {
 				nextFollowDownloadTimeStamp = now + 5 * 60 * 1000;
 			}
+			//myTrace("in setNextFollowDownloadTimeStamp, nextFollowDownloadTimeStamp = " + (new Date(nextFollowDownloadTimeStamp)).toLocaleString());
 		}
 	}
 }

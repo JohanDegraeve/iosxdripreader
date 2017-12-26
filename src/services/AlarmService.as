@@ -37,6 +37,7 @@ package services
 	
 	import events.BlueToothServiceEvent;
 	import events.DeepSleepServiceEvent;
+	import events.NightScoutServiceEvent;
 	import events.NotificationServiceEvent;
 	import events.SettingsServiceEvent;
 	import events.TransmitterServiceEvent;
@@ -199,6 +200,7 @@ package services
 			
 			lastCheckMuteTimeStamp = new Number(0);
 			TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, checkAlarms);
+			NightScoutService.instance.addEventListener(NightScoutServiceEvent.NIGHTSCOUT_SERVICE_BG_READING_RECEIVED, checkAlarms);
 			NotificationService.instance.addEventListener(NotificationServiceEvent.NOTIFICATION_EVENT, notificationReceived);
 			BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.PERFORMREMOTEFETCH, checkAlarmsAfterPerformFetch);
 			BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.PHONE_MUTED, phoneMuted);
@@ -724,7 +726,7 @@ package services
 		/**
 		 * if be == null, then check was triggered by  checkAlarmsAfterPerformFetch
 		 */
-		private static function checkAlarms(be:TransmitterServiceEvent):void {
+		private static function checkAlarms(be:Event):void {
 			myTrace("in checkAlarms");
 			var now:Date = new Date();
 			lastAlarmCheckTimeStamp = now.valueOf();
@@ -754,12 +756,12 @@ package services
 					}
 				}
 				checkMissedReadingAlert(now, be == null);
-				if (!alertActive) {
+				if (!alertActive && !BlueToothDevice.isFollower()) {
 					//to avoid that the arrival of a notification of a checkCalibrationRequestAlert stops the sounds of a previous low or high alert
 					checkCalibrationRequestAlert(now);
 				}
 			}
-			if (!alertActive) {
+			if (!alertActive && !BlueToothDevice.isFollower()) {
 				//to avoid that the arrival of a notification of a checkBatteryLowAlert stops the sounds of a previous low or high alert
 				checkBatteryLowAlert(now);
 			}

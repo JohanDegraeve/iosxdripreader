@@ -41,6 +41,7 @@ package services
 	import Utilities.Trace;
 	
 	import databaseclasses.BgReading;
+	import databaseclasses.BlueToothDevice;
 	import databaseclasses.Calibration;
 	import databaseclasses.CommonSettings;
 	import databaseclasses.LocalSettings;
@@ -50,6 +51,7 @@ package services
 	import events.BlueToothServiceEvent;
 	import events.CalibrationServiceEvent;
 	import events.IosXdripReaderEvent;
+	import events.NightScoutServiceEvent;
 	import events.NotificationServiceEvent;
 	import events.TransmitterServiceEvent;
 	
@@ -313,6 +315,7 @@ package services
 				Notifications.service.addEventListener(NotificationEvent.ACTION, notificationHandler);
 				CalibrationService.instance.addEventListener(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT, updateBgNotification);
 				TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, updateBgNotification);
+				NightScoutService.instance.addEventListener(NightScoutServiceEvent.NIGHTSCOUT_SERVICE_BG_READING_RECEIVED, updateBgNotification);
 				iosxdripreader.instance.addEventListener(IosXdripReaderEvent.APP_IN_FOREGROUND, appInForeGround);
 				Notifications.service.register();
 				_instance.dispatchEvent(new NotificationServiceEvent(NotificationServiceEvent.NOTIFICATION_SERVICE_INITIATED_EVENT));
@@ -355,7 +358,7 @@ package services
 			//start with bgreading notification
 			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_ALWAYS_ON_NOTIFICATION) == "true" && BackgroundFetch.appIsInBackground()) {
 				myTrace("in updateBgNotification notificatoin always on and not in foreground");
-				if (Calibration.allForSensor().length >= 2) {
+				if (Calibration.allForSensor().length >= 2 || BlueToothDevice.isFollower()) {
 					var lastBgReading:BgReading = BgReading.lastNoSensor(); 
 					var valueToShow:String = "";
 					myTrace("in updateBgNotification Calibration.allForSensor().length >= 2");

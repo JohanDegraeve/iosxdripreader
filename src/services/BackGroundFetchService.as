@@ -63,11 +63,12 @@ package services
 		
 		private static function loadRequestSuccess(event:BackgroundFetchEvent):void {
 			myTrace("loadRequestSuccess, result only visible in NSLog : connect phone to Mac and use cfgutil");
-			myTrace("result = " + (event.data.result as String), true); 
+			myTrace("result = " + (event.data.result as String).substring(0, 2000), true); 
 			
 			var backgroundFetchServiceResult:BackGroundFetchServiceEvent = new BackGroundFetchServiceEvent(BackGroundFetchServiceEvent.LOAD_REQUEST_RESULT);
 			backgroundFetchServiceResult.data = new Object();
 			backgroundFetchServiceResult.data.information = event.data.result as String;
+			trace("BACKGROUNDFETSERVICE information = " + backgroundFetchServiceResult.data.information); 
 			_instance.dispatchEvent(backgroundFetchServiceResult);
 		}
 		

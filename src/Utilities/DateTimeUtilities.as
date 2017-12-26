@@ -53,8 +53,7 @@ package Utilities
 			var minute:Number = time.split(":")[1];
 			var second:Number = (time.split(":")[2] as String).split(".")[0];
 			var millisecondsecond:Number = (time.split(":")[2] as String).split(".")[1].substr(0,3);
-			var returnvalue:Date = new Date(year,month,day,hour,minute,second,millisecondsecond);
-			return convertFromUTC(new Date(year,month,day,hour,minute,second,millisecondsecond));
+			return new Date(year,month,day,hour,minute,second,millisecondsecond);
 		}
 	}
 }
