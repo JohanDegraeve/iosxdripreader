@@ -105,6 +105,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			private static var deltaValueText:String = "---";
 			[Bindable]
 			private static var _calibrateButtonActive:Boolean = false;
+			[Bindable]
 			private static var _bluetoothButtonActive:Boolean = false;
 			private static const ACTION_SHEET_INDEX_FOR_SCAN_FOR_DEVICE:int = 0;
 			private static const ACTION_SHEET_INDEX_FOR_FORGET_DEVICE:int = 1;
