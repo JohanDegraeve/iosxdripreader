@@ -45,7 +45,7 @@ package services
 		}
 		
 		private static function startDeepSleepTimer():void {
-			deepSleepTimer = new Timer(10000,0);
+			deepSleepTimer = new Timer(5000,0);
 			deepSleepTimer.addEventListener(TimerEvent.TIMER, deepSleepTimerListener);
 			deepSleepTimer.start();
 		}

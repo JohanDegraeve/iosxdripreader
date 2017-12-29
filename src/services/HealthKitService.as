@@ -2,9 +2,12 @@ package services
 {
 	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
 	
+	import flash.events.Event;
+	
 	import databaseclasses.BgReading;
 	import databaseclasses.LocalSettings;
 	
+	import events.NightScoutServiceEvent;
 	import events.SettingsServiceEvent;
 	import events.TransmitterServiceEvent;
 	
@@ -27,6 +30,7 @@ package services
 				initialStart = false;
 			LocalSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, localSettingChanged);
 			TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, bgReadingReceived);
+			NightScoutService.instance.addEventListener(NightScoutServiceEvent.NIGHTSCOUT_SERVICE_BG_READING_RECEIVED, bgReadingReceived);
 			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_HEALTHKIT_STORE_ON) == "true") {
 				BackgroundFetch.initHealthKit();
 			}
@@ -41,7 +45,7 @@ package services
 			}
 		}
 		
-		private static function bgReadingReceived(be:TransmitterServiceEvent):void {
+		private static function bgReadingReceived(be:Event):void {
 			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_HEALTHKIT_STORE_ON) == "false") {
 				return;
 			}

@@ -221,10 +221,16 @@
 				
 				versionText = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_APPLICATION_VERSION);
 				
-				if (BlueToothDevice.isBlueReader() || BlueToothDevice.isLimitter()) {
+				if (BlueToothDevice.isBlueReader() || BlueToothDevice.isLimitter() || BlueToothDevice.isFollower()) {
 					batteryalertgroup.visible = false;
 					batteryalertgroup.enabled = false;
 					batteryalertgroup.includeInLayout = false;
+				}
+				
+				if (BlueToothDevice.isFollower()) {
+					calibrationalertgroup.enabled = false;
+					calibrationalertgroup.visible = false;
+					calibrationalertgroup.includeInLayout = false;
 				}
 				
 				if (ModelLocator.IS_PRODUCTION) {
@@ -248,6 +254,14 @@
 					transmitterIdText = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID);
 				} else if (event.data == CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE) {
 					transmitterTypeText = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE);
+					if (BlueToothDevice.needsTransmitterId() && (transmitterIdText == "BLU00000" || transmitterIdText == "00000")) {
+						SettingsView.requestNewTransmitterId();
+					}
+					if (BlueToothDevice.isFollower()) {
+						if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME) == CommonSettings.DEFAULT_SITE_NAME) {
+							SettingsView.nightScoutUrlChangeDialog();
+						}
+					}
 					if (BlueToothDevice.needsTransmitterId()) {
 						groupTransmitterId.alpha = 1;
 					} else {
@@ -255,7 +269,7 @@
 					}
 					changeDexcomShareStatus();
 					changeSpeakReadingsStatus();
-					if (BlueToothDevice.isBlueReader() || BlueToothDevice.isLimitter()) {
+					if (BlueToothDevice.isBlueReader() || BlueToothDevice.isLimitter() || BlueToothDevice.isFollower()) {
 						batteryalertgroup.visible = false;
 						batteryalertgroup.enabled = false;
 						batteryalertgroup.includeInLayout = false;
@@ -263,6 +277,15 @@
 						batteryalertgroup.visible = true;
 						batteryalertgroup.enabled = true;
 						batteryalertgroup.includeInLayout = true;
+					}
+					if (BlueToothDevice.isFollower()) {
+						calibrationalertgroup.enabled = false;
+						calibrationalertgroup.visible = false;
+						calibrationalertgroup.includeInLayout = false;
+					} else {
+						calibrationalertgroup.enabled = true;
+						calibrationalertgroup.visible = true;
+						calibrationalertgroup.includeInLayout = true;
 					}
 				}
 			}
@@ -797,7 +820,9 @@
 					if (newTransmitterType.toUpperCase() == currentType.toUpperCase())
 						return;
 
-					if (newTransmitterType.toUpperCase() != "FOLLOW") {
+					if (newTransmitterType.toUpperCase() != "FOLLOW" && !BlueToothDevice.isFollower()) {
+						//when changing from or to follower, don't change the transmitter id
+						//this allows the user to switch from follow to non-follow or vice versa, without having to reset the transmitter id
 						if (newTransmitterType.toUpperCase() == "BLUKON" || newTransmitterType.toUpperCase() == "BLUCON" ) {
 							CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID, "BLU00000");
 							transmitterIdText = "BLU00000";
@@ -1674,7 +1699,7 @@
 			</s:VGroup>
 
 			<!-- Chapter Alerts Subsection Calibration Request-->
-			<s:VGroup click="calibrationRequestAlert_clickHandler(event)" width="100%">
+			<s:VGroup click="calibrationRequestAlert_clickHandler(event)" width="100%" id = "calibrationalertgroup">
 				<s:HGroup width="100%">
 					<s:Rect height="100%" width="5" >
 						<s:fill>

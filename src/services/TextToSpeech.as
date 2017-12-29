@@ -34,6 +34,7 @@ package services
 	import databaseclasses.CommonSettings;
 	import databaseclasses.LocalSettings;
 	
+	import events.NightScoutServiceEvent;
 	import events.SettingsServiceEvent;
 	import events.TransmitterServiceEvent;
 	
@@ -74,6 +75,7 @@ package services
 				
 				//Register event listener for new blood glucose readings
 				TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, onBgReadingReceived);
+				NightScoutService.instance.addEventListener(NightScoutServiceEvent.NIGHTSCOUT_SERVICE_BG_READING_RECEIVED, onBgReadingReceived);
 				
 				//Set speech language
 				speechLanguageCode = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEECH_LANGUAGE);
@@ -105,80 +107,85 @@ package services
 			if (((receivedReadings - 1) % speakInterval == 0))
 			{	
 				//Get current bg reading and format it 
-				var currentBgReadingList:ArrayCollection = BgReading.latestBySize(1);
-				if (currentBgReadingList.length > 0) 
+				//Get current glucose
+				var currentBgReading:BgReading = BgReading.lastNoSensor();
+				if (currentBgReading != null) 
 				
 				{
-					//Speech Output
-					var currentBgReadingOutput:String;
-					
-					//Get current glucose
-					var currentBgReading:BgReading = currentBgReadingList.getItemAt(0) as BgReading;
-					var currentBgReadingFormatted:String = BgGraphBuilder.unitizedString(currentBgReading.calculatedValue, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true");
-					if (currentBgReadingFormatted == "HIGH") {
-						currentBgReadingFormatted = ". " + ModelLocator.resourceManagerInstance.getString('texttospeech','high');
-					} else if (currentBgReadingFormatted == "LOW") {
-						currentBgReadingFormatted = ". " + ModelLocator.resourceManagerInstance.getString('texttospeech','low');
-					}  
-	
-					//Get trend (slope)
-					var currentTrend:String = currentBgReading.slopeName() as String;
+					if ((new Date()).valueOf() - currentBgReading.timestamp < 4.5 * 60 * 1000) {
+						//Speech Output
+						var currentBgReadingOutput:String;
 						
-					//Get current delta
-					var currentDelta:String = BgGraphBuilder.unitizedDeltaString(false, true);
-					
-					
-					//If user wants trend to be spoken...
-					if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_TREND_ON) == "true")
-					{
-						//Format trend (slope)
-						if (currentTrend == "NONE" || currentTrend == "NON COMPUTABLE")
-							currentTrend = ModelLocator.resourceManagerInstance.getString('texttospeech','trendnoncomputable');
-						else if (currentTrend == "DoubleDown")
-							currentTrend = ModelLocator.resourceManagerInstance.getString('texttospeech','trenddoubledown');
-						else if (currentTrend == "SingleDown")
-							currentTrend = ModelLocator.resourceManagerInstance.getString('texttospeech','trendsingledown');
-						else if (currentTrend == "FortyFiveDown")
-							currentTrend = ModelLocator.resourceManagerInstance.getString('texttospeech','trendfortyfivedown');
-						else if (currentTrend == "Flat")
-							currentTrend = ModelLocator.resourceManagerInstance.getString('texttospeech','trendflat');
-						else if (currentTrend == "FortyFiveUp")
-							currentTrend = ModelLocator.resourceManagerInstance.getString('texttospeech','trendfortyfiveup');
-						else if (currentTrend == "SingleUp")
-							currentTrend = ModelLocator.resourceManagerInstance.getString('texttospeech','trendsingleup');
-						else if (currentTrend == "DoubleUp")
-							currentTrend = ModelLocator.resourceManagerInstance.getString('texttospeech','trenddoubleup');
-					}
-					
-					//If user wants delta to be spoken...
-					if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_DELTA_ON) == "true")
-					{	
-						//Format current delta in case of anomalies
-						if (currentDelta == "ERR" || currentDelta == "???")
-							currentDelta = ModelLocator.resourceManagerInstance.getString('texttospeech','deltanoncomputable');
+						var currentBgReadingFormatted:String = BgGraphBuilder.unitizedString(currentBgReading.calculatedValue, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true");
+						if (currentBgReadingFormatted == "HIGH") {
+							currentBgReadingFormatted = ". " + ModelLocator.resourceManagerInstance.getString('texttospeech','high');
+						} else if (currentBgReadingFormatted == "LOW") {
+							currentBgReadingFormatted = ". " + ModelLocator.resourceManagerInstance.getString('texttospeech','low');
+						}  
 						
-						if (currentDelta == "0.0" || currentDelta == "+0" || currentDelta == "-0")
-							currentDelta = "0";
+						//Get trend (slope)
+						var currentTrend:String = currentBgReading.slopeName() as String;
+						
+						//Get current delta
+						var currentDelta:String = BgGraphBuilder.unitizedDeltaString(false, true);
+						
+						
+						//If user wants trend to be spoken...
+						if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_TREND_ON) == "true")
+						{
+							//Format trend (slope)
+							if (currentTrend == "NONE" || currentTrend == "NON COMPUTABLE")
+								currentTrend = ModelLocator.resourceManagerInstance.getString('texttospeech','trendnoncomputable');
+							else if (currentTrend == "DoubleDown")
+								currentTrend = ModelLocator.resourceManagerInstance.getString('texttospeech','trenddoubledown');
+							else if (currentTrend == "SingleDown")
+								currentTrend = ModelLocator.resourceManagerInstance.getString('texttospeech','trendsingledown');
+							else if (currentTrend == "FortyFiveDown")
+								currentTrend = ModelLocator.resourceManagerInstance.getString('texttospeech','trendfortyfivedown');
+							else if (currentTrend == "Flat")
+								currentTrend = ModelLocator.resourceManagerInstance.getString('texttospeech','trendflat');
+							else if (currentTrend == "FortyFiveUp")
+								currentTrend = ModelLocator.resourceManagerInstance.getString('texttospeech','trendfortyfiveup');
+							else if (currentTrend == "SingleUp")
+								currentTrend = ModelLocator.resourceManagerInstance.getString('texttospeech','trendsingleup');
+							else if (currentTrend == "DoubleUp")
+								currentTrend = ModelLocator.resourceManagerInstance.getString('texttospeech','trenddoubleup');
+						}
+						
+						//If user wants delta to be spoken...
+						if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_DELTA_ON) == "true")
+						{	
+							//Format current delta in case of anomalies
+							if (currentDelta == "ERR" || currentDelta == "???")
+								currentDelta = ModelLocator.resourceManagerInstance.getString('texttospeech','deltanoncomputable');
+							
+							if (currentDelta == "0.0" || currentDelta == "+0" || currentDelta == "-0")
+								currentDelta = "0";
+						}
+						
+						//Create output text
+						var currentBgPrefix:String = ModelLocator.resourceManagerInstance.getString('texttospeech','currentglucose');
+						var currentTrendPrefix:String = ModelLocator.resourceManagerInstance.getString('texttospeech','currenttrend');
+						var currentDeltaPrefix:String = ModelLocator.resourceManagerInstance.getString('texttospeech','currentdelta');
+						
+						//Glucose
+						currentBgReadingOutput = currentBgPrefix + " " + currentBgReadingFormatted + ". ";
+						
+						//If user wants trend to be spoken...
+						if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_TREND_ON) == "true")
+							currentBgReadingOutput += currentTrendPrefix + " " + currentTrend + ". ";
+						
+						//If user wants delta to be spoken...
+						if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_DELTA_ON) == "true")
+							currentBgReadingOutput += currentDeltaPrefix + " " + currentDelta + ".";
+						
+						//Send output to TTS
+						sayText(currentBgReadingOutput, speechLanguageCode);
+					} else {
+						//not speaking the reading if it's older than 4,5 minutes
+						//this can be the case for follower mode
+						myTrace("in speakReading, timestamp of lastbgreading is older than 4.5 minutes");
 					}
-					
-					//Create output text
-					var currentBgPrefix:String = ModelLocator.resourceManagerInstance.getString('texttospeech','currentglucose');
-					var currentTrendPrefix:String = ModelLocator.resourceManagerInstance.getString('texttospeech','currenttrend');
-					var currentDeltaPrefix:String = ModelLocator.resourceManagerInstance.getString('texttospeech','currentdelta');
-					
-					//Glucose
-					currentBgReadingOutput = currentBgPrefix + " " + currentBgReadingFormatted + ". ";
-					
-					//If user wants trend to be spoken...
-					if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_TREND_ON) == "true")
-						currentBgReadingOutput += currentTrendPrefix + " " + currentTrend + ". ";
-					
-					//If user wants delta to be spoken...
-					if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_DELTA_ON) == "true")
-						currentBgReadingOutput += currentDeltaPrefix + " " + currentDelta + ".";
-			
-					//Send output to TTS
-					sayText(currentBgReadingOutput, speechLanguageCode);
 				}
 			}
 		}

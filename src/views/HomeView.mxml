@@ -229,13 +229,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 						event.data == CommonSettings.COMMON_SETTING_LOW_MARK) {
 						displayCurrentInfoFromReading();
 					} else if (event.data == CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE) {
-						if (BlueToothDevice.needsTransmitterId()) {
-							SettingsView.requestNewTransmitterId();
-						} else if (BlueToothDevice.isFollower()) {
-							if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME) == CommonSettings.DEFAULT_SITE_NAME) {
-								SettingsView.nightScoutUrlChangeDialog();
-							}
-						}
 						if (!BlueToothDevice.isFollower()) {
 							if (BlueToothDevice.alwaysScan()) {
 								scanningWasUserInitiated = false;
