@@ -26,6 +26,7 @@ package services
 	import databaseclasses.Calibration;
 	import databaseclasses.CommonSettings;
 	import databaseclasses.LocalSettings;
+	import databaseclasses.NSBgReading;
 	
 	import events.BackGroundFetchServiceEvent;
 	import events.BlueToothServiceEvent;
@@ -62,6 +63,8 @@ package services
 		private static const maxMinutesToKeepSyncRunningTrue:int = 1;
 		private static var lastCalibrationSyncTimeStamp:Number = 0;
 		private static var nextFollowDownloadTimeStamp:Number = 0;
+		private static var isFollower:Boolean = false;//when changing from follower to non-follower, nightscoutservice must delete readings
+		
 		private static var formatter:DateTimeFormatter;
 		
 		/**
@@ -171,6 +174,7 @@ package services
 			} 
 			
 			if (BlueToothDevice.isFollower()) {
+				isFollower = true;
 				getNewBgReadingsFromNS(null);
 			}
 			
@@ -218,6 +222,28 @@ package services
 						&& 
 						!DexcomShareService.DexcomShareSyncRunning()) {
 						testNightScoutUrlAndSecret();
+					}
+				}
+				
+				if (event.data == CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE) {
+					if (!BlueToothDevice.isFollower()) {
+						if (isFollower) {
+							//clean up readings that were retrieved from NightScout
+							for (var cntr:int = 0;cntr < ModelLocator.bgReadings.length;cntr++) {
+								if (ModelLocator.bgReadings.getItemAt(cntr) is NSBgReading) {
+									ModelLocator.bgReadings.removeItemAt(cntr);
+									cntr--;
+								}
+							}
+							ModelLocator.refreshBgReadingArrayCollection();
+							isFollower = false;
+							nextFollowDownloadTimeStamp = 0;
+							//chart in homescreen may still contain values retrieved from NS, will disappear after some refreshes
+							_instance.dispatchEvent(new NightScoutServiceEvent(NightScoutServiceEvent.NIGHTSCOUT_SERVICE_BG_READINGS_REMOVED));
+						}
+					} else {
+						isFollower = true;
+						getNewBgReadingsFromNS(null);
 					}
 				}
 			}
@@ -647,7 +673,7 @@ package services
 								//format "sysTime":"2017-12-23T17:59:10.330+0100"
 								var sysTime:Number = (DateTimeUtilities.parseNSFormattedDateTimeString(bgReadingAsObject.sysTime)).valueOf();
 								if (sysTime >= timeStampOfFirstBgReadingToDowload) {
-									var bgReading:BgReading = new BgReading(
+									var bgReading:NSBgReading = new NSBgReading(
 										sysTime, //timestamp
 										null, //sensor id, not known here as the reading comes from NS
 										null, //calibration object
@@ -719,7 +745,7 @@ package services
 			else
 				myTrace("in setNextFollowDownloadTimeStamp, latestBgReading is null");*/
 			if (latestBGReading != null) {
-				nextFollowDownloadTimeStamp = latestBGReading.timestamp + 5 * 60 * 1000+ 10000;//timestamp of latest stored reading + 5 minutes + 10 seconds	
+				nextFollowDownloadTimeStamp = latestBGReading.timestamp + 5 * 60 * 1000 + 10000;//timestamp of latest stored reading + 5 minutes + 10 seconds	
 				while (nextFollowDownloadTimeStamp < now) {
 					nextFollowDownloadTimeStamp += 5 * 60 * 1000;
 				}

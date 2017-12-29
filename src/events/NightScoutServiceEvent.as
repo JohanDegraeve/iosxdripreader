@@ -15,6 +15,10 @@ package events
 		 * on or more bgreading received from NS. Only for Follower<br>
 		 */
 		public static const NIGHTSCOUT_SERVICE_BG_READING_RECEIVED:String = "BgReadingReceived";
+		/**
+		 * readings that were stored in modellocator by nightscoutservice, are removed
+		 */
+		public static const NIGHTSCOUT_SERVICE_BG_READINGS_REMOVED:String = "BgReadingsRemoved";
 		
 		public var data:*;
 		

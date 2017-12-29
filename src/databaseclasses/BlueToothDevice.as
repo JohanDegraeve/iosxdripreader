@@ -149,6 +149,9 @@ package databaseclasses
 			return (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE).toUpperCase() == "LIMITTER");
 		}
 
+		/**
+		 * Follower mode, not really a bluetoothdevice but it comes in handy to put it here also
+		 */
 		public static function isFollower():Boolean {
 			return (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE).toUpperCase() == "FOLLOW"); 
 		}

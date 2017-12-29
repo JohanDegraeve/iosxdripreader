@@ -208,6 +208,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 					initialStart = false;
 					CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, settingChanged);
 					NightScoutService.instance.addEventListener(NightScoutServiceEvent.NIGHTSCOUT_SERVICE_BG_READING_RECEIVED, bgReadingReceived);
+					NightScoutService.instance.addEventListener(NightScoutServiceEvent.NIGHTSCOUT_SERVICE_BG_READINGS_REMOVED, NSReadingsRemoved);
 
 					dateFormatterForSensorStartTimeAndDate = new DateTimeFormatter();
 					dateFormatterForSensorStartTimeAndDate.dateTimePattern = ModelLocator.resourceManagerInstance.getString('homeview','datetimepatternforstatusinfo');
@@ -486,6 +487,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 					showInfoAboutClickOnChart();
 					completeChartValues();
 				}
+			}
+			
+			private function NSReadingsRemoved(event:Event):void {
+				resetChartValues();
+				chartInitialisationDone = false;//needs to get the right value in case user switches back from non-follower type to follower
 			}
 			
 			private function restartCurrentInfoUpdateTimer():void {
