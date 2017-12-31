@@ -162,10 +162,8 @@
 				dexcomShareSerialNumber = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_SERIALNUMBER);
 				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_ON) == "true") {
 					dexcomShareOnOffText = ModelLocator.resourceManagerInstance.getString('settingsview','on');
-					changeDexcomShareStatus();
 				} else {
 					dexcomShareOnOffText = ModelLocator.resourceManagerInstance.getString('settingsview','off');
-					changeDexcomShareStatus();
 				}
 				dexcomShareURL = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_US_URL) == "true" ?
 					ModelLocator.resourceManagerInstance.getString("settingsview","dexcom_us_url")
@@ -1033,12 +1031,11 @@
 				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_ON) == "true") {
 					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_ON, "false");
 					dexcomShareOnOffText = ModelLocator.resourceManagerInstance.getString('settingsview','off');
-					changeDexcomShareStatus();
 				} else {
 					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_ON, "true");
 					dexcomShareOnOffText = ModelLocator.resourceManagerInstance.getString('settingsview','on');
-					changeDexcomShareStatus();
 				}
+				changeDexcomShareStatus();
 			}
 			
 			private function dexcomShareURL_clickHandler(event:MouseEvent):void {
@@ -1304,21 +1301,6 @@
 					speakreadingsline5.includeInLayout = false;speakreadingsline5.visible = false;
 				}
 			}
-			
-			/*private function changeSpeakTrendStatus():void {
-				var enabled:Boolean = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_TREND_ON) == "true";
-				if (enabled) {
-					speakReadingsNameGroup.includeInLayout = true;
-					speakReadingsNameGroup.visible = true;
-					speakReadingsNameGroup.enabled = true;
-					speakreadingsline1.includeInLayout = true;speakreadingsline1.visible = true;
-				} else {
-					speakReadingsNameGroup.includeInLayout = false;
-					speakReadingsNameGroup.visible = false;
-					speakReadingsNameGroup.enabled = false;
-					speakreadingsline1.includeInLayout = false;speakreadingsline1.visible = false;
-				}
-			}*/
 			
 			private function setResetColorTimer():void {
 				if (resetColorTimer != null)

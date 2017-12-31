@@ -55,7 +55,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			import G5Model.TransmitterStatus;
 			
 			import Utilities.BgGraphBuilder;
-			import Utilities.FromtimeAndValueArrayCollection;
 			import Utilities.Trace;
 			
 			import databaseclasses.BgReading;
@@ -326,25 +325,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 				}
 			}
 						
-			/*private static function peripheralTypeSelected(event:DialogViewEvent):void {
-				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_INITIAL_SELECTION_G4_OR_G5_DONE, "true");
-				if (event.index== 1) {
-					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE, "G5");
-					if (BluetoothLE.service.centralManager.state == BluetoothLEState.STATE_ON) {
-						if (!BluetoothLE.service.centralManager.isScanning) {
-							BluetoothService.startScanning();
-						}
-					}
-					showG5InfoScreen();
-					//default battery alert level is 210, assuming xdrip with G4, when user selects G5, that needs to be changed
-					var newSetting:String = FromtimeAndValueArrayCollection.replaceAllValues(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BATTERY_ALERT), new Number(G5Model.TransmitterStatus.LOW_BATTERY_WARNING_LEVEL_VOLTAGEA), false)
-					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_BATTERY_ALERT, newSetting);
-				} else if (event.index == 2) {
-					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE, "G4");
-					showG4InfoScreen();
-				}
-			}*/
-			
 			private static function showG4InfoScreen():void {
 				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G4_INFO_SCREEN_SHOWN) == "false") {
 					DialogService.openSimpleDialog(ModelLocator.resourceManagerInstance.getString('homeview',"info"),
@@ -767,7 +747,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 				);
 				dateTime.addEventListener(DialogViewEvent.CLOSED, date_closedRequestHandler);
 				dateTime.addEventListener(DialogDateTimeEvent.SELECTED, date_selectedHandler);
-				//dateTime.addEventListener(DialogDateTimeEvent.CHANGED, dateTime_changedHandler);Not needed, this is triggered whenever the user clicks another date, but hasn't closed
 				DialogService.addDialog(dateTime);
 			}
 			
@@ -809,7 +788,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 				);
 				dateTime.addEventListener(DialogViewEvent.CLOSED, time_closedRequestHandler);
 				dateTime.addEventListener(DialogDateTimeEvent.SELECTED, time_selectedHandler);
-				//dateTime.addEventListener(DialogDateTimeEvent.CHANGED, dateTime_changedHandler);Not needed, this is triggered whenever the user clicks another date, but hasn't closed
 				DialogService.addDialog(dateTime);
 			}
 			
@@ -1066,13 +1044,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 				if (!largeBGLabelGroup.includeInLayout)
 					return;
 				if (largeBGLabel.width > 1 * iosxdripreader.deviceScreenWidth) {
-					//myTrace("in largeBGLabel_updateCompleteHandler, decreasing fontSizeForLargeBGLabel");
 					fontSizeForLargeBGLabel = fontSizeForLargeBGLabel * 0.9;
 				} else if (largeBGLabel.width < 0.9 * iosxdripreader.deviceScreenWidth) {
 					if (largeBGLabel.height < 0.95 * largeBGLabelGroup.height) {
 						fontSizeForLargeBGLabel = fontSizeForLargeBGLabel * 1.1;
-						//myTrace("in largeBGLabel_updateCompleteHandler, increasing fontSizeForLargeBGLabel to " + fontSizeForLargeBGLabel + ", largeBGLabel.height = " + largeBGLabel.height + ", largebglabelgroup.height= " + largeBGLabelGroup.height);
-						//myTrace("labelheight = " + largeBGLabel.height);
 					}
 				}  
 			}

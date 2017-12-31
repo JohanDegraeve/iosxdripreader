@@ -32,7 +32,6 @@ package services
 	import flash.desktop.SystemIdleMode;
 	import flash.events.Event;
 	import flash.events.EventDispatcher;
-	import flash.events.TimerEvent;
 	import flash.utils.Timer;
 	
 	import spark.components.TabbedViewNavigator;
@@ -56,8 +55,6 @@ package services
 	import events.TransmitterServiceEvent;
 	
 	import model.ModelLocator;
-	
-	import views.HomeView;
 	
 	/**
 	 * This service<br>
@@ -342,13 +339,6 @@ package services
 			}
 			
 
-		}
-		
-		private static function dispatchInformation(information:String):void {
-			var notificationserviceEvent:NotificationServiceEvent = new NotificationServiceEvent(NotificationServiceEvent.LOG_INFO);
-			notificationserviceEvent.data = new Object();
-			notificationserviceEvent.data.information = information;
-			_instance.dispatchEvent(notificationserviceEvent);
 		}
 		
 		public static function updateBgNotification(be:Event = null):void {

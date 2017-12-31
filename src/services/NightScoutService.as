@@ -29,7 +29,6 @@ package services
 	import databaseclasses.NSBgReading;
 	
 	import events.BackGroundFetchServiceEvent;
-	import events.BlueToothServiceEvent;
 	import events.CalibrationServiceEvent;
 	import events.DeepSleepServiceEvent;
 	import events.IosXdripReaderEvent;
@@ -401,9 +400,6 @@ package services
 			if (listOfReadingsAsArray.length > 0) {
 				myTrace("listOfReadingsAsArray.length > 0");
 				var logString:String = ".. not filled in ..";
-				/*for (var cntr2:int = 0; cntr2 < listOfReadingsAsArray.length; cntr2++) {
-				logString += " " + listOfReadingsAsArray[cntr2]["_id"] + ",";
-				}*/
 				myTrace("uploading_events_with_id" + logString);
 				createAndLoadURLRequest(_nightScoutEventsUrl, URLRequestMethod.POST, null, JSON.stringify(listOfReadingsAsArray), bgReadingToNSUploadSuccess, bgReadingToNSUploadFailed);
 			} else {
@@ -740,10 +736,6 @@ package services
 		private static function setNextFollowDownloadTimeStamp():void {
 			var now:Number = (new Date()).valueOf();
 			var latestBGReading:BgReading = BgReading.lastNoSensor();
-			/*if (latestBGReading != null)
-				myTrace("in setNextFollowDownloadTimeStamp, latestBGReading.timestamp = " + (new Date(latestBGReading.timestamp)).toLocaleString());
-			else
-				myTrace("in setNextFollowDownloadTimeStamp, latestBgReading is null");*/
 			if (latestBGReading != null) {
 				nextFollowDownloadTimeStamp = latestBGReading.timestamp + 5 * 60 * 1000 + 10000;//timestamp of latest stored reading + 5 minutes + 10 seconds	
 				while (nextFollowDownloadTimeStamp < now) {
@@ -752,7 +744,6 @@ package services
 			} else {
 				nextFollowDownloadTimeStamp = now + 5 * 60 * 1000;
 			}
-			//myTrace("in setNextFollowDownloadTimeStamp, nextFollowDownloadTimeStamp = " + (new Date(nextFollowDownloadTimeStamp)).toLocaleString());
 		}
 	}
 }

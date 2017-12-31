@@ -1,6 +1,8 @@
 package events
 {
-	public class IosXdripReaderEvent extends GenericEvent
+	import flash.events.Event;
+
+	public class IosXdripReaderEvent extends Event
 	{
 		[Event(name="AppInForeGroundEvent",type="events.IosXdripReaderEvent")]
 		

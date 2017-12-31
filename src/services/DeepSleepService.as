@@ -11,7 +11,6 @@ package services
 	import Utilities.Trace;
 	
 	import events.DeepSleepServiceEvent;
-	import events.DialogServiceEvent;
 	import events.IosXdripReaderEvent;
 
 	/**

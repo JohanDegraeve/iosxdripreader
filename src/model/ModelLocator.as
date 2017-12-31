@@ -218,20 +218,6 @@ package model
 							}
 							
 							checkApplicationVersion();
-							
-							//test blockNumberForNowGlucoseData
-							/*var bufferasstring:String = "8BDE03423F07115203C8A0";
-							var bufferasbytearray:ByteArray = Utilities.UniqueId.hexStringToByteArray(bufferasstring);
-							trace("test blockNumberForNowGlucoseData, result  " + BluetoothService.blockNumberForNowGlucoseData(bufferasbytearray) + ", expected = 08");
-							
-							bufferasstring = "8bde031ffd081d8804c834";
-							bufferasbytearray = Utilities.UniqueId.hexStringToByteArray(bufferasstring);
-							trace("test 2 for blockNumberForNowGlucoseData, result  " + BluetoothService.blockNumberForNowGlucoseData(bufferasbytearray) + ", expected = 08");
-							
-							//test nowGetGlucoseValue
-							var nowGlucoseValueasString = "8bde08c204c8a45f00b804";
-							bufferasbytearray = Utilities.UniqueId.hexStringToByteArray(nowGlucoseValueasString);
-							trace("test nowGetGlucoseValue =   " + BluetoothService.nowGetGlucoseValue(bufferasbytearray) + ", expected = 142");*/
 						} else {
 						}
 					}

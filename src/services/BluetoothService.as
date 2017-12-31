@@ -65,7 +65,6 @@ package services
 	import distriqtkey.DistriqtKey;
 	
 	import events.BlueToothServiceEvent;
-	import events.DeepSleepServiceEvent;
 	import events.SettingsServiceEvent;
 	
 	import model.ModelLocator;
@@ -76,8 +75,6 @@ package services
 	import model.TransmitterDataXBridgeBeaconPacket;
 	import model.TransmitterDataXBridgeDataPacket;
 	import model.TransmitterDataXdripDataPacket;
-	
-	import views.SettingsView;
 	
 	/**
 	 * all functionality related to bluetooth connectivity<br>

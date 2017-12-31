@@ -17,8 +17,6 @@ package services
 	
 	import model.ModelLocator;
 	
-	import views.SettingsView;
-
 	public class DexcomShareService extends EventDispatcher
 	{
 		[ResourceBundle("dexcomshareservice")]
@@ -39,7 +37,7 @@ package services
 		private static var lastSyncrunningChangeDate:Number = (new Date()).valueOf();
 		private static const maxMinutesToKeepSyncRunningTrue:int = 1;
 		private static var timeStampOfLastSSO_AuthenticateMaxAttemptsExceeed:Number = 0;
-		private static const timeToWaitAfterSSO_AuthenticateMaxAttemptsExceeedInMinutes = 10;
+		private static const timeToWaitAfterSSO_AuthenticateMaxAttemptsExceeedInMinutes:Number = 10;
 		private static var timeStampOfLastLoginAttemptSinceJSONParsingErrorReceived:Number = 0;
 
 		private static var dexcomShareUrl:String = "";

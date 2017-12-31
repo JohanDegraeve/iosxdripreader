@@ -1,6 +1,8 @@
 package events
 {
-	public class DialogServiceEvent extends GenericEvent
+	import flash.events.Event;
+
+	public class DialogServiceEvent extends Event
 	{
 		[Event(name="DialogServiceInitiatedEvent",type="events.DialogServiceEvent")]
 		
