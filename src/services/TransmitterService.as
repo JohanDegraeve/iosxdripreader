@@ -249,8 +249,8 @@ package services
 								.enableVibration(true)
 							Notifications.service.notify(notificationBuilderG5BatteryInfo.build());
 						}
-					} if (transmitterDataG5Packet.filteredData == 0) {
-						myTrace("in transmitterDataReceived, filteredData = 0, this may be caused by refurbished G5 with badly placed batteries, or badly placed transmitter");
+					} if (transmitterDataG5Packet.rawData == 0) {
+						myTrace("in transmitterDataReceived, rawdata = 0, this may be caused by refurbished G5 with badly placed batteries, or badly placed transmitter");
 						if ((new Date()).valueOf() - timeStampSinceLastG5BadlyPlacedBatteriesInfo > 1 * 3600 * 1000 && Sensor.getActiveSensor() != null) {
 							timeStampSinceLastG5BadlyPlacedBatteriesInfo = (new Date()).valueOf();
 							if (BackgroundFetch.appIsInForeground()) {
