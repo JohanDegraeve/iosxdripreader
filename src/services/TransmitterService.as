@@ -250,19 +250,19 @@ package services
 							Notifications.service.notify(notificationBuilderG5BatteryInfo.build());
 						}
 					} if (transmitterDataG5Packet.filteredData == 0) {
-						myTrace("in transmitterDataReceived, filteredData = 0, this may be caused by refurbished G5 with badly placed batteries");
-						if ((new Date()).valueOf() - timeStampSinceLastG5BadlyPlacedBatteriesInfo > 1 * 3600 * 1000) {
+						myTrace("in transmitterDataReceived, filteredData = 0, this may be caused by refurbished G5 with badly placed batteries, or badly placed transmitter");
+						if ((new Date()).valueOf() - timeStampSinceLastG5BadlyPlacedBatteriesInfo > 1 * 3600 * 1000 && Sensor.getActiveSensor() != null) {
 							timeStampSinceLastG5BadlyPlacedBatteriesInfo = (new Date()).valueOf();
 							if (BackgroundFetch.appIsInForeground()) {
-								DialogService.openSimpleDialog(ModelLocator.resourceManagerInstance.getString("transmitterservice","bad_replaced_g5_batteries"),
-									ModelLocator.resourceManagerInstance.getString("transmitterservice","bad_replaced_g5_batteries_info"), 4 * 60);
+								DialogService.openSimpleDialog(ModelLocator.resourceManagerInstance.getString("transmitterservice","bad_placed_g5_transmitter"),
+									ModelLocator.resourceManagerInstance.getString("transmitterservice","bad_placed_g5_transmitter_info"), 4 * 60);
 								BackgroundFetch.vibrate();
 							} else {
 								var notificationBuilderG5BatteryInfo:NotificationBuilder = new NotificationBuilder()
 									.setId(NotificationService.ID_FOR_DEAD_G5_BATTERY_INFO)
-									.setAlert(ModelLocator.resourceManagerInstance.getString("transmitterservice","bad_replaced_g5_batteries"))
-									.setTitle(ModelLocator.resourceManagerInstance.getString("transmitterservice","bad_replaced_g5_batteries"))
-									.setBody(ModelLocator.resourceManagerInstance.getString("transmitterservice","bad_replaced_g5_batteries_info"))
+									.setAlert(ModelLocator.resourceManagerInstance.getString("transmitterservice","bad_placed_g5_transmitter"))
+									.setTitle(ModelLocator.resourceManagerInstance.getString("transmitterservice","bad_placed_g5_transmitter"))
+									.setBody(ModelLocator.resourceManagerInstance.getString("transmitterservice","bad_placed_g5_transmitter_info"))
 									.enableVibration(true)
 								Notifications.service.notify(notificationBuilderG5BatteryInfo.build());
 							}
