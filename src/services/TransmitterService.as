@@ -73,6 +73,8 @@ package services
 		 */
 		private static var lastPacketTime:Number = 0;
 		
+		private static var timeStampSinceLastG5BadlyPlacedBatteriesInfo = 0;
+		
 		public function TransmitterService()
 		{
 			if (_instance != null) {
@@ -247,6 +249,24 @@ package services
 								.enableVibration(true)
 							Notifications.service.notify(notificationBuilderG5BatteryInfo.build());
 						}
+					} if (transmitterDataG5Packet.filteredData == 0) {
+						myTrace("in transmitterDataReceived, filteredData = 0, this may be caused by refurbished G5 with badly placed batteries");
+						if ((new Date()).valueOf() - timeStampSinceLastG5BadlyPlacedBatteriesInfo > 1 * 3600 * 1000) {
+							timeStampSinceLastG5BadlyPlacedBatteriesInfo = (new Date()).valueOf();
+							if (BackgroundFetch.appIsInForeground()) {
+								DialogService.openSimpleDialog(ModelLocator.resourceManagerInstance.getString("transmitterservice","bad_replaced_g5_batteries"),
+									ModelLocator.resourceManagerInstance.getString("transmitterservice","bad_replaced_g5_batteries_info"), 4 * 60);
+								BackgroundFetch.vibrate();
+							} else {
+								var notificationBuilderG5BatteryInfo:NotificationBuilder = new NotificationBuilder()
+									.setId(NotificationService.ID_FOR_DEAD_G5_BATTERY_INFO)
+									.setAlert(ModelLocator.resourceManagerInstance.getString("transmitterservice","bad_replaced_g5_batteries"))
+									.setTitle(ModelLocator.resourceManagerInstance.getString("transmitterservice","bad_replaced_g5_batteries"))
+									.setBody(ModelLocator.resourceManagerInstance.getString("transmitterservice","bad_replaced_g5_batteries_info"))
+									.enableVibration(true)
+								Notifications.service.notify(notificationBuilderG5BatteryInfo.build());
+							}
+						} 
 					} else {
 						//create and save bgreading
 						BgReading.
