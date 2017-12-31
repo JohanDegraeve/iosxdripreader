@@ -238,7 +238,7 @@ package services
 						myTrace("in transmitterDataReceived, filteredData = 2096896, this indicates a dead G5 battery, no further processing");
 						if (BackgroundFetch.appIsInForeground()) {
 							DialogService.openSimpleDialog(ModelLocator.resourceManagerInstance.getString("transmitterservice","dead_g5_battery"),
-								ModelLocator.resourceManagerInstance.getString("transmitterservice","dead_g5_battery_info"), 4 * 60);
+								ModelLocator.resourceManagerInstance.getString("transmitterservice","dead_g5_battery_info"));
 							BackgroundFetch.vibrate();
 						} else {
 							var notificationBuilderG5BatteryInfo:NotificationBuilder = new NotificationBuilder()
@@ -255,11 +255,11 @@ package services
 							timeStampSinceLastG5BadlyPlacedBatteriesInfo = (new Date()).valueOf();
 							if (BackgroundFetch.appIsInForeground()) {
 								DialogService.openSimpleDialog(ModelLocator.resourceManagerInstance.getString("transmitterservice","bad_placed_g5_transmitter"),
-									ModelLocator.resourceManagerInstance.getString("transmitterservice","bad_placed_g5_transmitter_info"), 4 * 60);
+									ModelLocator.resourceManagerInstance.getString("transmitterservice","bad_placed_g5_transmitter_info"));
 								BackgroundFetch.vibrate();
 							} else {
 								var notificationBuilderG5BatteryInfo:NotificationBuilder = new NotificationBuilder()
-									.setId(NotificationService.ID_FOR_DEAD_G5_BATTERY_INFO)
+									.setId(NotificationService.ID_FOR_BAD_PLACED_G5_INFO)
 									.setAlert(ModelLocator.resourceManagerInstance.getString("transmitterservice","bad_placed_g5_transmitter"))
 									.setTitle(ModelLocator.resourceManagerInstance.getString("transmitterservice","bad_placed_g5_transmitter"))
 									.setBody(ModelLocator.resourceManagerInstance.getString("transmitterservice","bad_placed_g5_transmitter_info"))
@@ -351,8 +351,11 @@ package services
 					DialogService.addDialog(alert, 58);
 				} else if (notificationEvent.id == NotificationService.ID_FOR_DEAD_G5_BATTERY_INFO) {
 					DialogService.openSimpleDialog(ModelLocator.resourceManagerInstance.getString("transmitterservice","dead_g5_battery"),
-						ModelLocator.resourceManagerInstance.getString("transmitterservice","dead_g5_battery_info"), 4 * 60);
-				}
+						ModelLocator.resourceManagerInstance.getString("transmitterservice","dead_g5_battery_info"));
+				} else if (notificationEvent.id == NotificationService.ID_FOR_BAD_PLACED_G5_INFO) {
+				DialogService.openSimpleDialog(ModelLocator.resourceManagerInstance.getString("transmitterservice","bad_placed_g5_transmitter"),
+					ModelLocator.resourceManagerInstance.getString("transmitterservice","bad_placed_g5_transmitter_info"));
+			} 
 			}		
 		}
 		
