@@ -31,6 +31,8 @@ package services
 	import com.distriqt.extension.dialog.events.DialogViewEvent;
 	import com.distriqt.extension.dialog.objects.DialogAction;
 	import com.distriqt.extension.message.Message;
+	import com.distriqt.extension.notifications.Notifications;
+	import com.distriqt.extension.notifications.builders.NotificationBuilder;
 	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
 	
 	import flash.events.Event;
@@ -183,6 +185,8 @@ package services
 		private static var FSLSensorAGe:Number;
 		private static var unsupportedPacketType:int = 0;
 		private static var startedMonitoringAndRangingBeaconsInRegion:Boolean = false;
+		private static var awaitingAuthStatusRxMessage:Boolean = false;//used for G5, to detect situations where other app is connecting to G5
+		private static var timeStampOfLastInfoAboutOtherApp:Number = 0;//used for G5, to detect situations where other app is connecting to G5
 
 		private static function set activeBluetoothPeripheral(value:Peripheral):void
 		{
@@ -673,6 +677,28 @@ package services
 		
 		private static function central_peripheralDisconnectHandler(event:Event = null):void {
 			myTrace('Disconnected from device or attempt to reconnect failed');
+			if (BlueToothDevice.isDexcomG5() && awaitingAuthStatusRxMessage) {
+				myTrace('in central_peripheralDisconnectHandler, Dexcom G5 and awaitingAuthStatusRxMessage, seems another app is trying to connecto to the G5');
+				awaitingAuthStatusRxMessage = false;
+				if ((new Date()).valueOf() - timeStampOfLastInfoAboutOtherApp > 1 * 3600 * 1000) {//not repeating the warning every 5 minutes, only once per hour
+					myTrace('in central_peripheralDisconnectHandler, giving warning to the user');
+					timeStampOfLastInfoAboutOtherApp = (new Date()).valueOf();
+					if (BackgroundFetch.appIsInForeground()) {
+						DialogService.openSimpleDialog(ModelLocator.resourceManagerInstance.getString("bluetoothservice","other_G5_app"),
+							ModelLocator.resourceManagerInstance.getString("bluetoothservice","other_G5_app_info"), 4 * 60);
+						BackgroundFetch.vibrate();
+					} else {
+						var notificationBuilderG5OtherAppRunningInfo:NotificationBuilder = new NotificationBuilder()
+							.setId(NotificationService.ID_FOR_DEAD_G5_BATTERY_INFO)
+							.setAlert(ModelLocator.resourceManagerInstance.getString("bluetoothservice","other_G5_app"))
+							.setTitle(ModelLocator.resourceManagerInstance.getString("bluetoothservice","other_G5_app"))
+							.setBody(ModelLocator.resourceManagerInstance.getString("bluetoothservice","other_G5_app_info"))
+							.enableVibration(true)
+						Notifications.service.notify(notificationBuilderG5OtherAppRunningInfo.build());
+					}
+				}
+			}
+			
 			if (BlueToothDevice.isBluKon()) {
 				myTrace('it is a blukon');
 				myTrace('setting peripheralConnected = false');
@@ -997,6 +1023,9 @@ package services
 			if (BlueToothDevice.isDexcomG4()) {
 				_instance.dispatchEvent(new BlueToothServiceEvent(BlueToothServiceEvent.BLUETOOTH_DEVICE_CONNECTION_COMPLETED));
 			}
+			if (BlueToothDevice.isDexcomG5() && event.characteristic.uuid.toUpperCase() == G5_Authentication_Characteristic_UUID.toUpperCase()) {
+				awaitingAuthStatusRxMessage = true;
+			}
 		}
 		
 		private static function peripheral_characteristic_writeErrorHandler(event:CharacteristicEvent):void {
@@ -1100,6 +1129,7 @@ package services
 			var code:int = buffer.readByte();
 			switch (code) {
 				case 5:
+					awaitingAuthStatusRxMessage = false;
 					authStatus = new AuthStatusRxMessage(buffer);
 					myTrace("AuthStatusRxMessage created = " + UniqueId.byteArrayToString(authStatus.byteSequence));
 					if (!authStatus.bonded) {
