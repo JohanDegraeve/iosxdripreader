@@ -1895,12 +1895,9 @@ package services
 			}
 		}
 		
-		/**
-		 * to be called when performfetch is received, this will actually start the rescan 
-		 */
 		public static function startRescan(event:Event):void {
 			if (!(BluetoothLE.service.centralManager.state == BluetoothLEState.STATE_ON)) {
-				myTrace("In rescanAtPerformFetch but bluetooth is not on");
+				myTrace("In startRescan but bluetooth is not on");
 				return;
 			}
 			

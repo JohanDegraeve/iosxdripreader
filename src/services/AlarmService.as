@@ -202,7 +202,6 @@ package services
 			TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, checkAlarms);
 			NightScoutService.instance.addEventListener(NightScoutServiceEvent.NIGHTSCOUT_SERVICE_BG_READING_RECEIVED, checkAlarms);
 			NotificationService.instance.addEventListener(NotificationServiceEvent.NOTIFICATION_EVENT, notificationReceived);
-			BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.PERFORMREMOTEFETCH, checkAlarmsAfterPerformFetch);
 			BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.PHONE_MUTED, phoneMuted);
 			BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.PHONE_NOT_MUTED, phoneNotMuted);
 			BluetoothService.instance.addEventListener(BlueToothServiceEvent.CHARACTERISTIC_UPDATE, checkMuted);
@@ -715,17 +714,6 @@ package services
 			}
 		}
 		
-		private static function checkAlarmsAfterPerformFetch(event:BackgroundFetchEvent):void {
-			myTrace("in checkAlarmsAfterPerformFetch");
-			if ((new Date()).valueOf() - lastAlarmCheckTimeStamp > (4 * 60 + 45) * 1000) {
-				myTrace("in checkAlarmsAfterPerformFetch, calling checkAlarms because it's been more than 4 minutes 45 seconds");
-				checkAlarms(null);
-			}
-		}
-		
-		/**
-		 * if be == null, then check was triggered by  checkAlarmsAfterPerformFetch
-		 */
 		private static function checkAlarms(be:Event):void {
 			myTrace("in checkAlarms");
 			var now:Date = new Date();

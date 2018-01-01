@@ -159,7 +159,6 @@ package services
 			CalibrationService.instance.addEventListener(CalibrationServiceEvent.NEW_CALIBRATION_EVENT, calibrationReceived);
 			BackGroundFetchService.instance.addEventListener(BackGroundFetchServiceEvent.LOAD_REQUEST_ERROR, defaultErrorFunction);
 			BackGroundFetchService.instance.addEventListener(BackGroundFetchServiceEvent.LOAD_REQUEST_RESULT, defaultSuccessFunction);
-			BackGroundFetchService.instance.addEventListener(BackGroundFetchServiceEvent.PERFORM_FETCH, performFetch);
 			iosxdripreader.instance.addEventListener(IosXdripReaderEvent.APP_IN_FOREGROUND, appInForeGround);
 			DeepSleepService.instance.addEventListener(DeepSleepServiceEvent.DEEP_SLEEP_SERVICE_TIMER_EVENT, getNewBgReadingsFromNS);
 			
@@ -184,11 +183,6 @@ package services
 			
 			function calibrationReceived(event:CalibrationServiceEvent):void {
 				myTrace("in initialCalibrationReceived");
-				sync();
-			}
-			
-			function performFetch(event:BackGroundFetchServiceEvent):void {
-				myTrace("in performfetch");
 				sync();
 			}
 			
