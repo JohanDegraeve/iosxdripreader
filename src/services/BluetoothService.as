@@ -33,6 +33,7 @@ package services
 	import com.distriqt.extension.message.Message;
 	import com.distriqt.extension.notifications.Notifications;
 	import com.distriqt.extension.notifications.builders.NotificationBuilder;
+	import com.distriqt.extension.notifications.events.NotificationEvent;
 	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
 	
 	import flash.events.Event;
@@ -67,6 +68,7 @@ package services
 	import distriqtkey.DistriqtKey;
 	
 	import events.BlueToothServiceEvent;
+	import events.NotificationServiceEvent;
 	import events.SettingsServiceEvent;
 	
 	import model.ModelLocator;
@@ -266,7 +268,8 @@ package services
 			peripheralConnected = false;
 			
 			CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, settingChanged);
-			
+			NotificationService.instance.addEventListener(NotificationServiceEvent.NOTIFICATION_EVENT, notificationReceived);
+
 			//blukon
 			m_gotOneTimeUnknownCmd = false;
 			m_getNowGlucoseDataCommand = false;
@@ -325,6 +328,16 @@ package services
 				
 			} else {
 				myTrace("Unfortunately your Device does not support Bluetooth Low Energy");
+			}
+		}
+		
+		private static function notificationReceived(event:NotificationServiceEvent):void {
+			if (event != null) {
+				var notificationEvent:NotificationEvent = event.data as NotificationEvent;
+				if (notificationEvent.id == NotificationService.ID_FOR_OTHER_G5_APP) {
+					DialogService.openSimpleDialog(ModelLocator.resourceManagerInstance.getString("bluetoothservice","other_G5_app"),
+						ModelLocator.resourceManagerInstance.getString("bluetoothservice","other_G5_app_info"));
+				}		
 			}
 		}
 		
@@ -642,6 +655,9 @@ package services
 			if (amountOfDiscoverServicesOrCharacteristicsAttempt < MAX_RETRY_DISCOVER_SERVICES_OR_CHARACTERISTICS) {
 				amountOfDiscoverServicesOrCharacteristicsAttempt++;
 				myTrace("discoverservices attempt " + amountOfDiscoverServicesOrCharacteristicsAttempt);
+				if (BlueToothDevice.isDexcomG5()) {
+					awaitingAuthStatusRxMessage = true;//to detect other device is connecting to the transmitter
+				}
 				
 				waitingForServicesDiscovered = true;
 				activeBluetoothPeripheral.discoverServices(
@@ -677,6 +693,9 @@ package services
 		
 		private static function central_peripheralDisconnectHandler(event:Event = null):void {
 			myTrace('Disconnected from device or attempt to reconnect failed');
+			if (BlueToothDevice.isDexcomG5()) {
+				amountOfDiscoverServicesOrCharacteristicsAttempt = 0;
+			}
 			if (BlueToothDevice.isDexcomG5() && awaitingAuthStatusRxMessage) {
 				myTrace('in central_peripheralDisconnectHandler, Dexcom G5 and awaitingAuthStatusRxMessage, seems another app is trying to connecto to the G5');
 				awaitingAuthStatusRxMessage = false;
@@ -685,11 +704,11 @@ package services
 					timeStampOfLastInfoAboutOtherApp = (new Date()).valueOf();
 					if (BackgroundFetch.appIsInForeground()) {
 						DialogService.openSimpleDialog(ModelLocator.resourceManagerInstance.getString("bluetoothservice","other_G5_app"),
-							ModelLocator.resourceManagerInstance.getString("bluetoothservice","other_G5_app_info"), 4 * 60);
+							ModelLocator.resourceManagerInstance.getString("bluetoothservice","other_G5_app_info"));
 						BackgroundFetch.vibrate();
 					} else {
 						var notificationBuilderG5OtherAppRunningInfo:NotificationBuilder = new NotificationBuilder()
-							.setId(NotificationService.ID_FOR_DEAD_G5_BATTERY_INFO)
+							.setId(NotificationService.ID_FOR_OTHER_G5_APP)
 							.setAlert(ModelLocator.resourceManagerInstance.getString("bluetoothservice","other_G5_app"))
 							.setTitle(ModelLocator.resourceManagerInstance.getString("bluetoothservice","other_G5_app"))
 							.setBody(ModelLocator.resourceManagerInstance.getString("bluetoothservice","other_G5_app_info"))
@@ -1125,11 +1144,11 @@ package services
 		
 		private static function processG5TransmitterData(buffer:ByteArray, characteristic:Characteristic):void {
 			myTrace("in processG5TransmitterData");
+			awaitingAuthStatusRxMessage = false;
 			buffer.endian = Endian.LITTLE_ENDIAN;
 			var code:int = buffer.readByte();
 			switch (code) {
 				case 5:
-					awaitingAuthStatusRxMessage = false;
 					authStatus = new AuthStatusRxMessage(buffer);
 					myTrace("AuthStatusRxMessage created = " + UniqueId.byteArrayToString(authStatus.byteSequence));
 					if (!authStatus.bonded) {
@@ -1850,6 +1869,7 @@ package services
 			myTrace("in fullAuthenticateG5");
 			if (G5AuthenticationCharacteristic != null) {
 				sendAuthRequestTxMessage(G5AuthenticationCharacteristic);
+				awaitingAuthStatusRxMessage = true;
 			} else {
 				myTrace("fullAuthenticate: authCharacteristic is NULL!");
 			}

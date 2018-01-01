@@ -249,7 +249,7 @@ package services
 								.enableVibration(true)
 							Notifications.service.notify(notificationBuilderG5BatteryInfo.build());
 						}
-					} if (transmitterDataG5Packet.rawData == 0) {
+					} if (transmitterDataG5Packet.rawData == 0 || transmitterDataG5Packet.filteredData == 0) {
 						myTrace("in transmitterDataReceived, rawdata = 0, this may be caused by refurbished G5 with badly placed batteries, or badly placed transmitter");
 						if ((new Date()).valueOf() - timeStampSinceLastG5BadlyPlacedBatteriesInfo > 1 * 3600 * 1000 && Sensor.getActiveSensor() != null) {
 							timeStampSinceLastG5BadlyPlacedBatteriesInfo = (new Date()).valueOf();
@@ -353,9 +353,9 @@ package services
 					DialogService.openSimpleDialog(ModelLocator.resourceManagerInstance.getString("transmitterservice","dead_g5_battery"),
 						ModelLocator.resourceManagerInstance.getString("transmitterservice","dead_g5_battery_info"));
 				} else if (notificationEvent.id == NotificationService.ID_FOR_BAD_PLACED_G5_INFO) {
-				DialogService.openSimpleDialog(ModelLocator.resourceManagerInstance.getString("transmitterservice","bad_placed_g5_transmitter"),
-					ModelLocator.resourceManagerInstance.getString("transmitterservice","bad_placed_g5_transmitter_info"));
-			} 
+					DialogService.openSimpleDialog(ModelLocator.resourceManagerInstance.getString("transmitterservice","bad_placed_g5_transmitter"),
+						ModelLocator.resourceManagerInstance.getString("transmitterservice","bad_placed_g5_transmitter_info"));
+				} 
 			}		
 		}
 		
