@@ -112,7 +112,7 @@ package services
 		/**
 		 * if lastbgreading is older than MAX_AGE_OF_READING_IN_MINUTES minutes, then no low or high alert will be generated  
 		 */
-		public static const MAX_AGE_OF_READING_IN_MINUTES:int = 15
+		public static const MAX_AGE_OF_READING_IN_MINUTES:int = 4
 		
 		//batteryLevel alert
 		/**
