@@ -60,19 +60,7 @@ Send your iTunes account e-mail address to xdrip@proximus.be and you will receiv
 
 
 # To compile (only if you want to develop):
-- install Flash Builder 4.7 with FLex SDK 4.15.0, AIR 22.0 en_US
-- an ios developer membership is required, full explanation : http://help.adobe.com/en_US/flex/mobileapps/WS064a3073e805330f6c6abf312e7545f65e-8000.html
-- clone the repository, lets say folder iosxdripreader
-- purchase license for distriqt Notifications, Dialog, Application, Message, NetworkInfo ane at http://airnativeextensions.com/
-- create a folder named ane under iosxdripreader
-- download the zip package, extract, and copy the file com.distriqt.BluetoothLE.ane to the folder ane
-- on the site of airnativeextensions.com, create an application key, application id = net.johandegraeve.iosxdripreader (you can use another application id if you want, but then change the name also in iosxdripreader-app.xml)
-- create a folder named src/distriqtkey under iosxdripreader
-- create a new class in that package, DistriqtKey.as
-- add a public static const distriqtKey:String = your key from distriqt
-- as explained here http://airnativeextensions.com/knowledgebase/tutorial/1#ios
-- donwload the ios sdk (there should be a zip corresponding to the latest ios version) and put it in a new folder under iosxdripreader
-- and add it in the flash builder project properties (also explained on  http://airnativeextensions.com/knowledgebase/tutorial/1#ios)
-- (explained : right click in project, properties, flex build path, native extensions, browse to the ane folder and add the new ane, then go to flex build packaging, ios, native extensions, add the file com.distriqt.BluetoothLE.ane as native extensions, check the "package" check box, also add the Apple iOS SDK that was downloaded
-- in the same way as above, do this also for the Notifications, Dialog, Application, Message, NetworkInfo, AndroidSupport and core ane.
-- it also uses my own ANE : https://github.com/JohanDegraeve/ANE-BackgroundFetch
+- install Flash Builder 4.7 with latest FLex SDK (contact me and I'll share you a folder for OSX or Windows)
+- If you don't have an iOS developer account, I can create you a certificate that will allow you to compile. Full explanation : http://help.adobe.com/en_US/flex/mobileapps/WS064a3073e805330f6c6abf312e7545f65e-8000.html
+- clone the repository
+- you will need the native extensions, I can share you the ANE's so send me an e-mail.
