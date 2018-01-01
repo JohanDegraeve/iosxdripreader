@@ -39,7 +39,8 @@ package services
 		private static var timeStampOfLastSSO_AuthenticateMaxAttemptsExceeed:Number = 0;
 		private static const timeToWaitAfterSSO_AuthenticateMaxAttemptsExceeedInMinutes:Number = 10;
 		private static var timeStampOfLastLoginAttemptSinceJSONParsingErrorReceived:Number = 0;
-
+		private static var timeStampOfLastBGReadingToUpload:Number = 0;
+		
 		private static var dexcomShareUrl:String = "";
 
 		public static function DexcomShareSyncRunning():Boolean {
@@ -221,7 +222,10 @@ package services
 				uploadBGRecords();
 			} else if (dexcomShareStatus == dexcomShareStatus_Waiting_PostReceiverEgvRecords) {
 				myTrace("in createAndLoadUrlRequestSuccess and dexcomShareStatus == dexcomShareStatus_Waiting_PostReceiverEgvRecords");
-				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_DEXCOMSHARE_SYNC_TIMESTAMP, (new Date()).valueOf().toString());
+				if (timeStampOfLastBGReadingToUpload > 0) {
+					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_DEXCOMSHARE_SYNC_TIMESTAMP, timeStampOfLastBGReadingToUpload.toString());
+					timeStampOfLastBGReadingToUpload = 0;
+				}
 				syncRunning = false;
 			} else if (dexcomShareStatus == dexcomShareStatus_Waiting_StartRemoteMonitoringSession) {
 				myTrace("in createAndLoadUrlRequestSuccess and dexcomShareStatus == dexcomShareStatus_Waiting_StartRemoteMonitoringSession");
@@ -247,6 +251,7 @@ package services
 			var cntr:int = ModelLocator.bgReadings.length - 1;
 			var arrayCntr:int = 0;
 			
+			timeStampOfLastBGReadingToUpload = 0;
 			while (cntr > -1) {
 				var bgReading:BgReading = ModelLocator.bgReadings.getItemAt(cntr) as BgReading;
 				if (bgReading.timestamp > lastSyncTimeStamp && now - bgReading.timestamp < 24 * 3600 * 1000) {
@@ -259,6 +264,9 @@ package services
 
 						newReading["direction"] = bgReading.slopeName();
 						Egvs[arrayCntr] = newReading;
+						if (timeStampOfLastBGReadingToUpload < bgReading.timestamp) {
+							timeStampOfLastBGReadingToUpload = bgReading.timestamp;
+						}
 					}
 				} else {
 					break;

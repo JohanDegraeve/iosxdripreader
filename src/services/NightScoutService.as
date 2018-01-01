@@ -65,6 +65,7 @@ package services
 		private static var isFollower:Boolean = false;//when changing from follower to non-follower, nightscoutservice must delete readings
 		
 		private static var formatter:DateTimeFormatter;
+		private static var timeStampOfLastBGReadingToUpload:Number = 0;
 		
 		/**
 		 * follower related
@@ -188,6 +189,14 @@ package services
 			
 			function bgreadingEventReceived(event:TransmitterServiceEvent):void {
 				myTrace("in bgreadingEventReceived");
+				var lastbgreading:BgReading = BgReading.lastNoSensor();
+				if (lastbgreading != null) {
+					if ((new Date()).valueOf() - lastbgreading.timestamp > 6 * 60 * 1000) {
+						myTrace("in bgreadingEventReceived, but last reading is older dan 6 minutes, not starting sync");
+						//this mainly for blucon, where historic data is read, for each reading this function is called, only for the last one a sync should be initiated
+						return;
+					}
+				}
 				sync();
 			}
 			
@@ -354,6 +363,7 @@ package services
 			
 			var cntr:int = ModelLocator.bgReadings.length - 1;
 			var arrayCntr:int = 0;
+			timeStampOfLastBGReadingToUpload = 0;
 			
 			while (cntr > -1) {
 				var bgReading:BgReading = ModelLocator.bgReadings.getItemAt(cntr) as BgReading;
@@ -380,6 +390,9 @@ package services
 						newReading["sysTime"] = formatter.format(bgReading.timestamp);
 						newReading["_id"] = bgReading.uniqueId;
 						listOfReadingsAsArray[arrayCntr] = newReading;
+						if (timeStampOfLastBGReadingToUpload < bgReading.timestamp) {
+							timeStampOfLastBGReadingToUpload = bgReading.timestamp;
+						}
 					}
 				} else {
 					break;
@@ -405,13 +418,16 @@ package services
 		private static function bgReadingToNSUploadSuccess(event:Event):void {
 			myTrace("in bgReadingToNSUploadSuccess");
 			myTrace("upload_to_nightscout_successfull");
-			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_UPLOAD_BGREADING_TIMESTAMP, (new Date()).valueOf().toString());
+			if (timeStampOfLastBGReadingToUpload > 0) {
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_UPLOAD_BGREADING_TIMESTAMP, timeStampOfLastBGReadingToUpload.toString());
+				timeStampOfLastBGReadingToUpload = 0;
+			}
 			uploadCalibrations();
 		}
 		
 		private static function bgReadingToNSUploadFailed(event:BackGroundFetchServiceEvent):void {
 			myTrace("in nightScoutUploadFailed");
-			
+			timeStampOfLastBGReadingToUpload = 0;
 			var errorMessage:String;
 			if (event.data) {
 				if (event.data.information)
