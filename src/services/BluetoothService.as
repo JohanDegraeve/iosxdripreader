@@ -655,9 +655,6 @@ package services
 			if (amountOfDiscoverServicesOrCharacteristicsAttempt < MAX_RETRY_DISCOVER_SERVICES_OR_CHARACTERISTICS) {
 				amountOfDiscoverServicesOrCharacteristicsAttempt++;
 				myTrace("discoverservices attempt " + amountOfDiscoverServicesOrCharacteristicsAttempt);
-				if (BlueToothDevice.isDexcomG5()) {
-					awaitingAuthStatusRxMessage = true;//to detect other device is connecting to the transmitter
-				}
 				
 				waitingForServicesDiscovered = true;
 				activeBluetoothPeripheral.discoverServices(
@@ -766,6 +763,10 @@ package services
 			myTrace("Bluetooth peripheral services discovered.");
 			amountOfDiscoverServicesOrCharacteristicsAttempt = 0;
 			
+			if (BlueToothDevice.isDexcomG5()) {
+				awaitingAuthStatusRxMessage = false;	
+			}
+			
 			if (event.peripheral.services.length > 0)
 			{
 				discoverCharacteristics();
@@ -869,6 +870,7 @@ package services
 			
 			var o:Object;
 			if (BlueToothDevice.isDexcomG5()) {
+				awaitingAuthStatusRxMessage = false;
 				for each (o in activeBluetoothPeripheral.services) {
 					if (HM_10_SERVICE_G5.indexOf((o.uuid as String).toUpperCase()) > -1) {
 						break;
