@@ -91,9 +91,12 @@
 			[Bindable]
 			private static var overrideMuteTextOnOrOff:String = "";
 
-
-			
 			private static var resetColorTimer:Timer;
+			
+			public static function init():void {
+				LocalSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, peripheralTypeSettingChanged);
+				CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, peripheralTypeSettingChanged);
+			}
 			
 			private function onInitialize():void {
 				title = ModelLocator.resourceManagerInstance.getString('settingsview','title');
@@ -216,7 +219,7 @@
 				
 				LocalSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, settingChanged);
 				CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, settingChanged);
-				
+
 				versionText = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_APPLICATION_VERSION);
 				
 				if (BlueToothDevice.isBlueReader() || BlueToothDevice.isLimitter() || BlueToothDevice.isFollower()) {
@@ -247,12 +250,9 @@
 				return returnValue;
 			}
 			
-			private function settingChanged(event:SettingsServiceEvent):void {
-				if (event.data == CommonSettings.COMMON_SETTING_TRANSMITTER_ID) {
-					transmitterIdText = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID);
-				} else if (event.data == CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE) {
-					transmitterTypeText = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE);
-					if (BlueToothDevice.needsTransmitterId() && (transmitterIdText == "BLU00000" || transmitterIdText == "00000")) {
+			private static function peripheralTypeSettingChanged(event:SettingsServiceEvent):void {
+				if (event.data == CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE) {
+					if (BlueToothDevice.needsTransmitterId() && (transmitterIdText == "BLU00000" || transmitterIdText == "00000" || transmitterIdText == "")) {
 						SettingsView.requestNewTransmitterId();
 					}
 					if (BlueToothDevice.isFollower()) {
@@ -260,6 +260,15 @@
 							SettingsView.nightScoutUrlChangeDialog();
 						}
 					}
+				}				
+			}
+			
+			private function settingChanged(event:SettingsServiceEvent):void {
+				if (event.data == CommonSettings.COMMON_SETTING_TRANSMITTER_ID) {
+					transmitterIdText = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID);
+				} else if (event.data == CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE) {
+					transmitterTypeText = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE);
+
 					if (BlueToothDevice.needsTransmitterId()) {
 						groupTransmitterId.alpha = 1;
 					} else {

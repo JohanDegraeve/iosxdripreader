@@ -59,6 +59,7 @@ package model
 	import services.UpdateService;
 	
 	import views.HomeView;
+	import views.SettingsView;
 
 	/**
 	 * holds arraylist needed for displaying etc, like bgreadings of last 24 hours, loggings, .. 
@@ -212,6 +213,7 @@ package model
 							NightScoutService.init();
 							TextToSpeech.init();
 							DeepSleepService.init();
+							SettingsView.init();
 							
 							if (!IS_PRODUCTION) {
 								UpdateService.init();
