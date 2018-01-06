@@ -116,7 +116,6 @@ package Utilities
 				 super.addItem(new FromtimeAndValue((item as FromtimeAndValue).from, (item as FromtimeAndValue).value, (item as FromtimeAndValue).alarmName, (item as FromtimeAndValue).editable, (item as FromtimeAndValue).deletable,  (item as FromtimeAndValue).isBgValue));
 			 }
 			 refresh();	
-			 trace("in addItem");
 			 _arrayChanged = true;
 		 }
 		 

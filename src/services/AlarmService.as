@@ -112,7 +112,9 @@ package services
 		/**
 		 * if lastbgreading is older than MAX_AGE_OF_READING_IN_MINUTES minutes, then no low or high alert will be generated  
 		 */
-		public static const MAX_AGE_OF_READING_IN_MINUTES:int = 4
+		public static const MAX_AGE_OF_READING_IN_MINUTES:int = 4;
+			
+		private static const MAX_REPEATS_FOR_ALERTS:int = 9;//repeating alerts are repeated every minute, means maximum 10 minutes of repeat
 		
 		//batteryLevel alert
 		/**
@@ -182,6 +184,71 @@ package services
 		private static var latestAlertTypeUsedInMissedReadingNotification:AlertType;
 		private static var lastMissedReadingAlertCheckTimeStamp:Number;
 		
+		//for repeat of alarms every minute, this is only for non-snoozed alerts
+		//each element in an array represents certain alarm 
+		/**
+		 * 0:calibration, 1:Low, 2:Very Low, 3:High, 4:Very High, 5:Missed Reading, 6:Battery Low, 7:Phone Muted<br>
+		 * true means alert is active, repeat check is necessary (not necessarily repeat, that depends on the setting in the alert type)
+		 */
+		private static var repeatAlertsArray:Array = [false,false,false,false,false,false,false,false,false];
+		/**
+		 * 0:calibration, 1:Low, 2:Very Low, 3:High, 4:Very High, 5:Missed Reading, 6:Battery Low, 7:Phone Muted<br>
+		 * last timestamp the alert was fired
+		 */
+		private static var repeatAlertsLastFireTimeStampArray:Array = [0,0,0,0,0,0,0,0,0];
+		/**
+		 * 0:calibration, 1:Low, 2:Very Low, 3:High, 4:Very High, 5:Missed Reading, 6:Battery Low, 7:Phone Muted<br>
+		 * the name of the alert type to be used when repeating the alert, and also to check if it needs to be repeated
+		 */
+		private static var repeatAlertsAlertTypeNameArray:Array = ["","","","","","","","",""];
+		/**
+		 * 0:calibration, 1:Low, 2:Very Low, 3:High, 4:Very High, 5:Missed Reading, 6:Battery Low, 7:Phone Muted<br>
+		 * alert texts for the alert
+		 */
+		private static var repeatAlertsTexts:Array = ["","","","","","","","",""];
+		/**
+		 * 0:calibration, 1:Low, 2:Very Low, 3:High, 4:Very High, 5:Missed Reading, 6:Battery Low, 7:Phone Muted<br>
+		 * how many times repeated
+		 */
+		private static var repeatAlertsRepeatCount:Array = [1, 1, 1, 1, 1, 1, 1, 1, 1];
+		/**
+		 * list of notification ids<br>
+		 * 0:calibration, 1:Low, 2:Very Low, 3:High, 4:Very High, 5:Missed Reading, 6:Battery Low, 7:Phone Muted<br>
+		 */
+		private static const repeatAlertsNotificationIds:Array = [
+			NotificationService.ID_FOR_CALIBRATION_REQUEST_ALERT,
+			NotificationService.ID_FOR_LOW_ALERT,
+			NotificationService.ID_FOR_VERY_LOW_ALERT,
+			NotificationService.ID_FOR_HIGH_ALERT,
+			NotificationService.ID_FOR_VERY_HIGH_ALERT,
+			NotificationService.ID_FOR_MISSED_READING_ALERT,
+			NotificationService.ID_FOR_BATTERY_ALERT,
+			NotificationService.ID_FOR_PHONEMUTED_ALERT];
+		/**
+		 * list of category ids<br>
+		 * 0:calibration, 1:Low, 2:Very Low, 3:High, 4:Very High, 5:Missed Reading, 6:Battery Low, 7:Phone Muted<br>
+		 */
+		private static const repeatAlertsCategoryIds:Array = [
+			NotificationService.ID_FOR_ALERT_CALIBRATION_REQUEST_CATEGORY,
+			NotificationService.ID_FOR_ALERT_LOW_CATEGORY,
+			NotificationService.ID_FOR_ALERT_VERY_LOW_CATEGORY,
+			NotificationService.ID_FOR_ALERT_HIGH_CATEGORY,
+			NotificationService.ID_FOR_ALERT_VERY_HIGH_CATEGORY,
+			null,
+			NotificationService.ID_FOR_ALERT_BATTERY_CATEGORY,
+			NotificationService.ID_FOR_PHONE_MUTED_CATEGORY];
+		
+		private static var snoozePeriodPickerLowAlert:DialogView;
+		private static var snoozePeriodPickerHighAlert:DialogView;
+		private static var snoozePeriodPickerMissedReadingAlert:DialogView;
+		private static var snoozePeriodPickerPhoneMutedAlert:DialogView;
+		private static var snoozePeriodPickerCalibrationAlert:DialogView;
+		private static var snoozePeriodPickerBatteryLevelAlert:DialogView;
+		private static var snoozePeriodPickerVeryLowAlert:DialogView;
+		private static var snoozePeriodPickerVeryHighAlert:DialogView;
+
+		private static var flipTrans:FlipViewTransition; 
+		
 		public static function get instance():AlarmService {
 			return _instance;
 		}
@@ -198,6 +265,8 @@ package services
 			else
 				initialStart = false;
 			
+			flipTrans = new FlipViewTransition(); 
+			flipTrans.duration = 0;
 			lastCheckMuteTimeStamp = new Number(0);
 			TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, checkAlarms);
 			NightScoutService.instance.addEventListener(NightScoutServiceEvent.NIGHTSCOUT_SERVICE_BG_READING_RECEIVED, checkAlarms);
@@ -258,6 +327,9 @@ package services
 				var notificationEvent:NotificationEvent = event.data as NotificationEvent;
 				myTrace("in notificationReceived, event != null, id = " + NotificationService.notificationIdToText(notificationEvent.id));
 				if (notificationEvent.id == NotificationService.ID_FOR_LOW_ALERT) {
+					if (BackgroundFetch.appIsInBackground()) {//if app would be in foreground, notificationReceived is called even withtout any user interaction, don't disable the repeat in that case
+						disableRepeatAlert(1);
+					}
 					var now:Date = new Date();
 					if ((now.valueOf() - _lowAlertLatestSnoozeTimeInMs) > _lowAlertSnoozePeriodInMinutes * 60 * 1000
 						||
@@ -277,8 +349,7 @@ package services
 							}
 						}
 						if (notificationEvent.identifier == null) {
-							var snoozePeriodPicker1:DialogView;
-							snoozePeriodPicker1 = Dialog.service.create(
+							snoozePeriodPickerLowAlert = Dialog.service.create(
 								new PickerDialogBuilder()
 								.setTitle("")
 								.setCancelLabel(ModelLocator.resourceManagerInstance.getString("general","cancel"))
@@ -286,11 +357,11 @@ package services
 								.addColumn( snoozeValueStrings, index )
 								.build()
 							);
-							snoozePeriodPicker1.addEventListener( DialogViewEvent.CLOSED, lowSnoozePicker_closedHandler );
-							snoozePeriodPicker1.addEventListener( DialogViewEvent.CHANGED, snoozePickerChangedOrCanceledHandler );
-							snoozePeriodPicker1.addEventListener( DialogViewEvent.CANCELLED, snoozePickerChangedOrCanceledHandler );
+							snoozePeriodPickerLowAlert.addEventListener( DialogViewEvent.CLOSED, lowSnoozePicker_closedHandler );
+							snoozePeriodPickerLowAlert.addEventListener( DialogViewEvent.CHANGED, snoozePickerChangedOrCanceledHandler );
+							snoozePeriodPickerLowAlert.addEventListener( DialogViewEvent.CANCELLED, snoozePickerChangedOrCanceledHandler );
 							var dataToSend:Object = new Object();
-							dataToSend.picker = snoozePeriodPicker1;
+							dataToSend.picker = snoozePeriodPickerLowAlert;
 							dataToSend.pickertext = ModelLocator.resourceManagerInstance.getString("alarmservice","snooze_text_low_alert");
 							myTrace("adding PickerView");
 							ModelLocator.navigator.pushView(PickerView, dataToSend, null, flipTrans);
@@ -303,6 +374,9 @@ package services
 						myTrace("in checkAlarms, alarm snoozed, _lowAlertLatestSnoozeTime = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date(_lowAlertLatestSnoozeTimeInMs)) + ", _lowAlertSnoozePeriodInMinutes = " + _lowAlertSnoozePeriodInMinutes + ", actual time = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date()));
 					}
 				} else if (notificationEvent.id == NotificationService.ID_FOR_HIGH_ALERT) {
+					if (BackgroundFetch.appIsInBackground()) {//if app would be in foreground, notificationReceived is called even withtout any user interaction, don't disable the repeat in that case
+						disableRepeatAlert(3);
+					}
 					var now:Date = new Date();
 					if ((now.valueOf() - _highAlertLatestSnoozeTimeInMs) > _highAlertSnoozePeriodInMinutes * 60 * 1000
 						||
@@ -322,8 +396,7 @@ package services
 							}
 						}
 						if (notificationEvent.identifier == null) {
-							var snoozePeriodPicker2:DialogView;
-							snoozePeriodPicker2 = Dialog.service.create(
+							snoozePeriodPickerHighAlert = Dialog.service.create(
 								new PickerDialogBuilder()
 								.setTitle("")
 								.setCancelLabel(ModelLocator.resourceManagerInstance.getString("general","cancel"))
@@ -331,11 +404,11 @@ package services
 								.addColumn( snoozeValueStrings, index )
 								.build()
 							);
-							snoozePeriodPicker2.addEventListener( DialogViewEvent.CLOSED, highSnoozePicker_closedHandler );
-							snoozePeriodPicker2.addEventListener( DialogViewEvent.CHANGED, snoozePickerChangedOrCanceledHandler );
-							snoozePeriodPicker2.addEventListener( DialogViewEvent.CANCELLED, snoozePickerChangedOrCanceledHandler );
+							snoozePeriodPickerHighAlert.addEventListener( DialogViewEvent.CLOSED, highSnoozePicker_closedHandler );
+							snoozePeriodPickerHighAlert.addEventListener( DialogViewEvent.CHANGED, snoozePickerChangedOrCanceledHandler );
+							snoozePeriodPickerHighAlert.addEventListener( DialogViewEvent.CANCELLED, snoozePickerChangedOrCanceledHandler );
 							var dataToSend:Object = new Object();
-							dataToSend.picker = snoozePeriodPicker2;
+							dataToSend.picker = snoozePeriodPickerHighAlert;
 							dataToSend.pickertext = ModelLocator.resourceManagerInstance.getString("alarmservice","snooze_text_high_alert");
 							ModelLocator.navigator.pushView(PickerView, dataToSend, null, flipTrans);
 						} else if (notificationEvent.identifier == NotificationService.ID_FOR_HIGH_ALERT_SNOOZE_IDENTIFIER) {
@@ -347,6 +420,9 @@ package services
 						myTrace("in checkAlarms, alarm snoozed, _highAlertLatestSnoozeTime = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date(_highAlertLatestSnoozeTimeInMs)) + ", _highAlertSnoozePeriodInMinutes = " + _highAlertSnoozePeriodInMinutes + ", actual time = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date()));
 					}
 				} else if (notificationEvent.id == NotificationService.ID_FOR_VERY_LOW_ALERT) {
+					if (BackgroundFetch.appIsInBackground()) {//if app would be in foreground, notificationReceived is called even withtout any user interaction, don't disable the repeat in that case
+						disableRepeatAlert(2);
+					}
 					var now:Date = new Date();
 					if ((now.valueOf() - _veryLowAlertLatestSnoozeTimeInMs) > _veryLowAlertSnoozePeriodInMinutes * 60 * 1000
 						||
@@ -366,8 +442,7 @@ package services
 							}
 						}
 						if (notificationEvent.identifier == null) {
-							var snoozePeriodPicker7:DialogView;
-							snoozePeriodPicker7 = Dialog.service.create(
+							snoozePeriodPickerVeryLowAlert = Dialog.service.create(
 								new PickerDialogBuilder()
 								.setTitle("")
 								.setCancelLabel(ModelLocator.resourceManagerInstance.getString("general","cancel"))
@@ -375,11 +450,11 @@ package services
 								.addColumn( snoozeValueStrings, index )
 								.build()
 							);
-							snoozePeriodPicker7.addEventListener( DialogViewEvent.CLOSED, veryLowSnoozePicker_closedHandler );
-							snoozePeriodPicker7.addEventListener( DialogViewEvent.CHANGED, snoozePickerChangedOrCanceledHandler );
-							snoozePeriodPicker7.addEventListener( DialogViewEvent.CANCELLED, snoozePickerChangedOrCanceledHandler );
+							snoozePeriodPickerVeryLowAlert.addEventListener( DialogViewEvent.CLOSED, veryLowSnoozePicker_closedHandler );
+							snoozePeriodPickerVeryLowAlert.addEventListener( DialogViewEvent.CHANGED, snoozePickerChangedOrCanceledHandler );
+							snoozePeriodPickerVeryLowAlert.addEventListener( DialogViewEvent.CANCELLED, snoozePickerChangedOrCanceledHandler );
 							var dataToSend:Object = new Object();
-							dataToSend.picker = snoozePeriodPicker7;
+							dataToSend.picker = snoozePeriodPickerVeryLowAlert;
 							dataToSend.pickertext = ModelLocator.resourceManagerInstance.getString("alarmservice","snooze_text_very_low_alert");
 							myTrace("adding PickerView");
 							ModelLocator.navigator.pushView(PickerView, dataToSend, null, flipTrans);
@@ -392,6 +467,9 @@ package services
 						myTrace("in checkAlarms, alarm snoozed, _veryLowAlertLatestSnoozeTime = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date(_veryLowAlertLatestSnoozeTimeInMs)) + ", _veryLowAlertSnoozePeriodInMinutes = " + _veryLowAlertSnoozePeriodInMinutes + ", actual time = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date()));
 					}
 				} else if (notificationEvent.id == NotificationService.ID_FOR_VERY_HIGH_ALERT) {
+					if (BackgroundFetch.appIsInBackground()) {//if app would be in foreground, notificationReceived is called even withtout any user interaction, don't disable the repeat in that case
+						disableRepeatAlert(4);
+					}
 					var now:Date = new Date();
 					if ((now.valueOf() - _veryHighAlertLatestSnoozeTimeInMs) > _veryHighAlertSnoozePeriodInMinutes * 60 * 1000
 						||
@@ -411,8 +489,7 @@ package services
 							}
 						}
 						if (notificationEvent.identifier == null) {
-							var snoozePeriodPicker8:DialogView;
-							snoozePeriodPicker8 = Dialog.service.create(
+							snoozePeriodPickerVeryHighAlert = Dialog.service.create(
 								new PickerDialogBuilder()
 								.setTitle("")
 								.setCancelLabel(ModelLocator.resourceManagerInstance.getString("general","cancel"))
@@ -420,11 +497,11 @@ package services
 								.addColumn( snoozeValueStrings, index )
 								.build()
 							);
-							snoozePeriodPicker8.addEventListener( DialogViewEvent.CLOSED, veryHighSnoozePicker_closedHandler );
-							snoozePeriodPicker8.addEventListener( DialogViewEvent.CHANGED, snoozePickerChangedOrCanceledHandler );
-							snoozePeriodPicker8.addEventListener( DialogViewEvent.CANCELLED, snoozePickerChangedOrCanceledHandler );
+							snoozePeriodPickerVeryHighAlert.addEventListener( DialogViewEvent.CLOSED, veryHighSnoozePicker_closedHandler );
+							snoozePeriodPickerVeryHighAlert.addEventListener( DialogViewEvent.CHANGED, snoozePickerChangedOrCanceledHandler );
+							snoozePeriodPickerVeryHighAlert.addEventListener( DialogViewEvent.CANCELLED, snoozePickerChangedOrCanceledHandler );
 							var dataToSend:Object = new Object();
-							dataToSend.picker = snoozePeriodPicker8;
+							dataToSend.picker = snoozePeriodPickerVeryHighAlert;
 							dataToSend.pickertext = ModelLocator.resourceManagerInstance.getString("alarmservice","snooze_text_very_high_alert");
 							ModelLocator.navigator.pushView(PickerView, dataToSend, null, flipTrans);
 						} else if (notificationEvent.identifier == NotificationService.ID_FOR_VERY_HIGH_ALERT_SNOOZE_IDENTIFIER) {
@@ -436,7 +513,9 @@ package services
 						myTrace("in checkAlarms, alarm snoozed, _veryHighAlertLatestSnoozeTime = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date(_veryHighAlertLatestSnoozeTimeInMs)) + ", _veryHighAlertSnoozePeriodInMinutes = " + _veryHighAlertSnoozePeriodInMinutes + ", actual time = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date()));
 					}
 				} else if (notificationEvent.id == NotificationService.ID_FOR_MISSED_READING_ALERT) {
-					
+					if (BackgroundFetch.appIsInBackground()) {//if app would be in foreground, notificationReceived is called even withtout any user interaction, don't disable the repeat in that case
+						disableRepeatAlert(5);
+					}
 					listOfAlerts = FromtimeAndValueArrayCollection.createList(
 						CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_MISSED_READING_ALERT), false);
 					alertName = listOfAlerts.getAlarmName(Number.NaN, "", new Date());
@@ -452,8 +531,7 @@ package services
 						}
 					}
 					if (notificationEvent.identifier == null && !missedReadingSnoozePickerOpen) {
-						var snoozePeriodPicker3:DialogView;
-						snoozePeriodPicker3 = Dialog.service.create(
+						snoozePeriodPickerMissedReadingAlert = Dialog.service.create(
 							new PickerDialogBuilder()
 							.setTitle("")
 							.setCancelLabel(ModelLocator.resourceManagerInstance.getString("general","cancel"))
@@ -461,18 +539,21 @@ package services
 							.addColumn( snoozeValueStrings, index )
 							.build()
 						);
-						snoozePeriodPicker3.addEventListener( DialogViewEvent.CLOSED, missedReadingSnoozePicker_closedHandler );
-						snoozePeriodPicker3.addEventListener( DialogViewEvent.CHANGED, snoozePickerChangedOrCanceledHandler );
-						snoozePeriodPicker3.addEventListener( DialogViewEvent.CANCELLED, snoozePickerChangedOrCanceledHandler );
+						snoozePeriodPickerMissedReadingAlert.addEventListener( DialogViewEvent.CLOSED, missedReadingSnoozePicker_closedHandler );
+						snoozePeriodPickerMissedReadingAlert.addEventListener( DialogViewEvent.CHANGED, snoozePickerChangedOrCanceledHandler );
+						snoozePeriodPickerMissedReadingAlert.addEventListener( DialogViewEvent.CANCELLED, snoozePickerChangedOrCanceledHandler );
 						//also interested when user cancels the snooze picker because in that case the missed reading alert needs to be replanned
-						snoozePeriodPicker3.addEventListener( DialogViewEvent.CANCELLED, missedReadingSnoozePicker_canceledHandler );
+						snoozePeriodPickerMissedReadingAlert.addEventListener( DialogViewEvent.CANCELLED, missedReadingSnoozePicker_canceledHandler );
 						var dataToSend:Object = new Object();
-						dataToSend.picker = snoozePeriodPicker3;
+						dataToSend.picker = snoozePeriodPickerMissedReadingAlert;
 						dataToSend.pickertext = ModelLocator.resourceManagerInstance.getString("alarmservice","snooze_text_missed_reading_alert");
 						ModelLocator.navigator.pushView(PickerView, dataToSend, null, flipTrans);
 						missedReadingSnoozePickerOpen = true;
 					}
 				} else if (notificationEvent.id == NotificationService.ID_FOR_PHONEMUTED_ALERT) {
+					if (BackgroundFetch.appIsInBackground()) {//if app would be in foreground, notificationReceived is called even withtout any user interaction, don't disable the repeat in that case
+						disableRepeatAlert(7);
+					}
 					var now:Date = new Date();
 					if ((now.valueOf() - _phoneMutedAlertLatestSnoozeTimeInMs) > _phoneMutedAlertSnoozePeriodInMinutes * 60 * 1000
 						||
@@ -492,8 +573,7 @@ package services
 							}
 						}
 						if (notificationEvent.identifier == null) {
-							var snoozePeriodPicker4:DialogView;
-							snoozePeriodPicker4 = Dialog.service.create(
+							snoozePeriodPickerPhoneMutedAlert = Dialog.service.create(
 								new PickerDialogBuilder()
 								.setTitle("")
 								.setCancelLabel(ModelLocator.resourceManagerInstance.getString("general","cancel"))
@@ -501,11 +581,11 @@ package services
 								.addColumn( snoozeValueStrings, index )
 								.build()
 							);
-							snoozePeriodPicker4.addEventListener( DialogViewEvent.CLOSED, phoneMutedSnoozePicker_closedHandler );
-							snoozePeriodPicker4.addEventListener( DialogViewEvent.CHANGED, snoozePickerChangedOrCanceledHandler );
-							snoozePeriodPicker4.addEventListener( DialogViewEvent.CANCELLED, snoozePickerChangedOrCanceledHandler );
+							snoozePeriodPickerPhoneMutedAlert.addEventListener( DialogViewEvent.CLOSED, phoneMutedSnoozePicker_closedHandler );
+							snoozePeriodPickerPhoneMutedAlert.addEventListener( DialogViewEvent.CHANGED, snoozePickerChangedOrCanceledHandler );
+							snoozePeriodPickerPhoneMutedAlert.addEventListener( DialogViewEvent.CANCELLED, snoozePickerChangedOrCanceledHandler );
 							var dataToSend:Object = new Object();
-							dataToSend.picker = snoozePeriodPicker4;
+							dataToSend.picker = snoozePeriodPickerPhoneMutedAlert;
 							dataToSend.pickertext = ModelLocator.resourceManagerInstance.getString("alarmservice","snooze_text_phone_muted_alert");
 							ModelLocator.navigator.pushView(PickerView, dataToSend, null, flipTrans);
 						} else if (notificationEvent.identifier == NotificationService.ID_FOR_PHONE_MUTED_SNOOZE_IDENTIFIER) {
@@ -517,6 +597,9 @@ package services
 						myTrace("in checkAlarms, alarm snoozed, _phoneMutedAlertLatestSnoozeTimeInMs = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date(_phoneMutedAlertLatestSnoozeTimeInMs)) + ", _phoneMutedAlertSnoozePeriodInMinutes = " + _phoneMutedAlertSnoozePeriodInMinutes + ", actual time = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date()));
 					}
 				} else if (notificationEvent.id == NotificationService.ID_FOR_BATTERY_ALERT) {
+					if (BackgroundFetch.appIsInBackground()) {//if app would be in foreground, notificationReceived is called even withtout any user interaction, don't disable the repeat in that case
+						disableRepeatAlert(6);
+					}
 					var now:Date = new Date();
 					if ((now.valueOf() - _batteryLevelAlertLatestSnoozeTimeInMs) > _batteryLevelAlertSnoozePeriodInMinutes * 60 * 1000
 						||
@@ -536,8 +619,7 @@ package services
 							}
 						}
 						if (notificationEvent.identifier == null) {
-							var snoozePeriodPicker4:DialogView;
-							snoozePeriodPicker4 = Dialog.service.create(
+							snoozePeriodPickerBatteryLevelAlert = Dialog.service.create(
 								new PickerDialogBuilder()
 								.setTitle("")
 								.setCancelLabel(ModelLocator.resourceManagerInstance.getString("general","cancel"))
@@ -545,11 +627,11 @@ package services
 								.addColumn( snoozeValueStrings, index )
 								.build()
 							);
-							snoozePeriodPicker4.addEventListener( DialogViewEvent.CLOSED, batteryLevelSnoozePicker_closedHandler );
-							snoozePeriodPicker4.addEventListener( DialogViewEvent.CHANGED, snoozePickerChangedOrCanceledHandler );
-							snoozePeriodPicker4.addEventListener( DialogViewEvent.CANCELLED, snoozePickerChangedOrCanceledHandler );
+							snoozePeriodPickerBatteryLevelAlert.addEventListener( DialogViewEvent.CLOSED, batteryLevelSnoozePicker_closedHandler );
+							snoozePeriodPickerBatteryLevelAlert.addEventListener( DialogViewEvent.CHANGED, snoozePickerChangedOrCanceledHandler );
+							snoozePeriodPickerBatteryLevelAlert.addEventListener( DialogViewEvent.CANCELLED, snoozePickerChangedOrCanceledHandler );
 							var dataToSend:Object = new Object();
-							dataToSend.picker = snoozePeriodPicker4;
+							dataToSend.picker = snoozePeriodPickerBatteryLevelAlert;
 							dataToSend.pickertext = ModelLocator.resourceManagerInstance.getString("alarmservice","snooze_text_battery_alert");
 							ModelLocator.navigator.pushView(PickerView, dataToSend, null, flipTrans);
 						} else if (notificationEvent.identifier == NotificationService.ID_FOR_BATTERY_LEVEL_ALERT_SNOOZE_IDENTIFIER) {
@@ -561,6 +643,9 @@ package services
 						myTrace("in checkAlarms, alarm snoozed, _batteryLevelAlertLatestSnoozeTime = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date(_batteryLevelAlertLatestSnoozeTimeInMs)) + ", _batteryLevelAlertSnoozePeriodInMinutes = " + _batteryLevelAlertSnoozePeriodInMinutes + ", actual time = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date()));
 					}
 				} else if (notificationEvent.id == NotificationService.ID_FOR_CALIBRATION_REQUEST_ALERT) {
+					if (BackgroundFetch.appIsInBackground()) {//if app would be in foreground, notificationReceived is called even withtout any user interaction, don't disable the repeat in that case
+						disableRepeatAlert(0);
+					}
 					var now:Date = new Date();
 					if ((now.valueOf() - _calibrationRequestLatestSnoozeTimeInMs) > _calibrationRequestSnoozePeriodInMinutes * 60 * 1000
 						||
@@ -594,8 +679,7 @@ package services
 			
 			function snoozeCalibrationRequest():void {
 				myTrace("in snoozeCalibrationRequest");
-				var snoozePeriodPicker5:DialogView;
-				snoozePeriodPicker5 = Dialog.service.create(
+				snoozePeriodPickerCalibrationAlert = Dialog.service.create(
 					new PickerDialogBuilder()
 					.setTitle("")
 					.setCancelLabel(ModelLocator.resourceManagerInstance.getString("general","cancel"))
@@ -603,11 +687,11 @@ package services
 					.addColumn( snoozeValueStrings, index )
 					.build()
 				);
-				snoozePeriodPicker5.addEventListener( DialogViewEvent.CLOSED, calibrationRequestSnoozePicker_closedHandler );
-				snoozePeriodPicker5.addEventListener( DialogViewEvent.CHANGED, snoozePickerChangedOrCanceledHandler );
-				snoozePeriodPicker5.addEventListener( DialogViewEvent.CANCELLED, snoozePickerChangedOrCanceledHandler );
+				snoozePeriodPickerCalibrationAlert.addEventListener( DialogViewEvent.CLOSED, calibrationRequestSnoozePicker_closedHandler );
+				snoozePeriodPickerCalibrationAlert.addEventListener( DialogViewEvent.CHANGED, snoozePickerChangedOrCanceledHandler );
+				snoozePeriodPickerCalibrationAlert.addEventListener( DialogViewEvent.CANCELLED, snoozePickerChangedOrCanceledHandler );
 				var dataToSend:Object = new Object();
-				dataToSend.picker = snoozePeriodPicker5;
+				dataToSend.picker = snoozePeriodPickerCalibrationAlert;
 				dataToSend.pickertext = ModelLocator.resourceManagerInstance.getString("alarmservice","snooze_text_calibration_alert");
 				ModelLocator.navigator.pushView(PickerView, dataToSend, null, flipTrans);
 			}
@@ -615,6 +699,7 @@ package services
 			function calibrationRequestSnoozePicker_closedHandler(event:DialogViewEvent): void {
 				BackgroundFetch.stopPlayingSound();
 				myTrace("in calibrationRequestSnoozePicker_closedHandler snoozing the notification for " + snoozeValueStrings[event.indexes[0]] + " minutes");
+				disableRepeatAlert(0);
 				_calibrationRequestSnoozePeriodInMinutes = snoozeValueMinutes[event.indexes[0]];
 				_calibrationRequestLatestSnoozeTimeInMs = (new Date()).valueOf();
 			}
@@ -622,6 +707,7 @@ package services
 			function batteryLevelSnoozePicker_closedHandler(event:DialogViewEvent): void {
 				BackgroundFetch.stopPlayingSound();
 				myTrace("in batteryLevelSnoozePicker_closedHandler snoozing the notification for " + snoozeValueStrings[event.indexes[0]] + " minutes");
+				disableRepeatAlert(6);
 				_batteryLevelAlertSnoozePeriodInMinutes = snoozeValueMinutes[event.indexes[0]];
 				_batteryLevelAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
 			}
@@ -629,6 +715,7 @@ package services
 			function phoneMutedSnoozePicker_closedHandler(event:DialogViewEvent): void {
 				BackgroundFetch.stopPlayingSound();
 				myTrace("in phoneMutedSnoozePicker_closedHandler snoozing the notification for " + snoozeValueStrings[event.indexes[0]] + " minutes");
+				disableRepeatAlert(7);
 				_phoneMutedAlertSnoozePeriodInMinutes = snoozeValueMinutes[event.indexes[0]];
 				_phoneMutedAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
 			}
@@ -637,15 +724,17 @@ package services
 				BackgroundFetch.stopPlayingSound();
 				missedReadingSnoozePickerOpen = false;
 				myTrace("in missedReadingSnoozePicker_canceledHandler");
+				disableRepeatAlert(5);
 				//first cancelling any existing because it may already have been set while app came in foreground
 				myTrace("cancel any existing alert for ID_FOR_MISSED_READING_ALERT");
 				Notifications.service.cancel(NotificationService.ID_FOR_MISSED_READING_ALERT);
 				_missedReadingAlertSnoozePeriodInMinutes = 5;
 				_missedReadingAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
-				myTrace("planning a new notification of the same type with delay in minues 5");
+				myTrace("planning a new notification of the same type with delay in minutes 5");
 				
 				if (latestAlertTypeUsedInMissedReadingNotification != null) {
 					fireAlert(
+						5,
 						latestAlertTypeUsedInMissedReadingNotification, 
 						NotificationService.ID_FOR_MISSED_READING_ALERT, 
 						ModelLocator.resourceManagerInstance.getString("alarmservice","missed_reading_alert_notification_alert"), 
@@ -663,6 +752,7 @@ package services
 				BackgroundFetch.stopPlayingSound();
 				//first cancelling any existing because it may already have been set while app came in foreground
 				myTrace("cancel any existing alert for ID_FOR_MISSED_READING_ALERT");
+				disableRepeatAlert(5);
 				Notifications.service.cancel(NotificationService.ID_FOR_MISSED_READING_ALERT);
 				_missedReadingAlertSnoozePeriodInMinutes = snoozeValueMinutes[event.indexes[0]];
 				_missedReadingAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
@@ -670,6 +760,7 @@ package services
 				
 				if (latestAlertTypeUsedInMissedReadingNotification != null) {
 					fireAlert(
+						5,
 						latestAlertTypeUsedInMissedReadingNotification, 
 						NotificationService.ID_FOR_MISSED_READING_ALERT, 
 						ModelLocator.resourceManagerInstance.getString("alarmservice","missed_reading_alert_notification_alert"), 
@@ -683,6 +774,7 @@ package services
 			
 			function lowSnoozePicker_closedHandler(event:DialogViewEvent): void {
 				myTrace("in lowSnoozePicker_closedHandler snoozing the notification for " + snoozeValueStrings[event.indexes[0]]);
+				disableRepeatAlert(1);
 				BackgroundFetch.stopPlayingSound();
 				_lowAlertSnoozePeriodInMinutes = snoozeValueMinutes[event.indexes[0]];
 				_lowAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
@@ -690,6 +782,7 @@ package services
 			
 			function highSnoozePicker_closedHandler(event:DialogViewEvent): void {
 				myTrace("in highSnoozePicker_closedHandler snoozing the notification for " + snoozeValueStrings[event.indexes[0]]);
+				disableRepeatAlert(3);
 				BackgroundFetch.stopPlayingSound();
 				_highAlertSnoozePeriodInMinutes = snoozeValueMinutes[event.indexes[0]];
 				_highAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
@@ -697,6 +790,7 @@ package services
 			
 			function veryHighSnoozePicker_closedHandler(event:DialogViewEvent): void {
 				myTrace("in veryHighSnoozePicker_closedHandler snoozing the notification for " + snoozeValueStrings[event.indexes[0]]);
+				disableRepeatAlert(4);
 				BackgroundFetch.stopPlayingSound();
 				_veryHighAlertSnoozePeriodInMinutes = snoozeValueMinutes[event.indexes[0]];
 				_veryHighAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
@@ -704,6 +798,7 @@ package services
 			
 			function veryLowSnoozePicker_closedHandler(event:DialogViewEvent): void {
 				myTrace("in veryLowSnoozePicker_closedHandler snoozing the notification for " + snoozeValueStrings[event.indexes[0]]);
+				disableRepeatAlert(2);
 				BackgroundFetch.stopPlayingSound();
 				_veryLowAlertSnoozePeriodInMinutes = snoozeValueMinutes[event.indexes[0]];
 				_veryLowAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
@@ -773,6 +868,7 @@ package services
 						isNaN(_phoneMutedAlertLatestSnoozeTimeInMs)) {
 						myTrace("in phoneMuted, phoneMuted alert not snoozed ");
 						fireAlert(
+							7,
 							alertType, 
 							NotificationService.ID_FOR_PHONEMUTED_ALERT, 
 							ModelLocator.resourceManagerInstance.getString("alarmservice","phonemuted_alert_notification_alert_text"), 
@@ -814,7 +910,10 @@ package services
 			lastCheckMuteTimeStamp = (new Date()).valueOf();
 		}
 		
-		private static function fireAlert(alertType:AlertType, notificationId:int, alertText:String, enableVibration:Boolean, enableLights:Boolean, categoryId:String, delay:int = 0):void {
+		/**
+		 * repeatId ==> 0:calibration, 1:Low, 2:Very Low, 3:High, 4:Very High, 5:Missed Reading, 6:Battery Low, 7:Phone Muted<br>
+		 */
+		private static function fireAlert(repeatId:int, alertType:AlertType, notificationId:int, alertText:String, enableVibration:Boolean, enableLights:Boolean, categoryId:String, delay:int = 0):void {
 			var soundsAsDisplayed:String = ModelLocator.resourceManagerInstance.getString("alerttypeview","sound_names_as_displayed_can_be_translated_must_match_above_list");
 			var soundsAsStoredInAssets:String = ModelLocator.resourceManagerInstance.getString("alerttypeview","sound_names_as_in_assets_no_translation_needed_comma_seperated");
 			var soundsAsDisplayedSplitted:Array = soundsAsDisplayed.split(',');
@@ -832,8 +931,6 @@ package services
 				.enableLights(enableLights);
 			if (categoryId != null)
 				notificationBuilder.setCategory(categoryId);
-			if (alertType.repeatInMinutes > 0)
-				notificationBuilder.setRepeatInterval(NotificationRepeatInterval.REPEAT_MINUTE);
 			
 			if (alertType.sound == "no_sound" && enableVibration) {
 				soundToSet = "../assets/silence-1sec.aif";
@@ -900,6 +997,11 @@ package services
 				notificationBuilder.setSound(soundToSet);
 			}
 			Notifications.service.notify(notificationBuilder.build());
+			
+			//set repeat arrays
+			if (delay == 0) {
+				enableRepeatAlert(repeatId, alertType.alarmName, alertText);
+			}
 		}
 		
 		private static function deepSleepServiceTimerHandler(event:Event):void {
@@ -908,6 +1010,7 @@ package services
 				checkMissedReadingAlert(new Date(), true);
 			}
 			checkMuted(null);
+			repeatAlerts();
 		}
 		
 		private static function checkMissedReadingAlert(now:Date, notTriggeredByNewReading:Boolean):void {
@@ -949,6 +1052,7 @@ package services
 					//cance any planned alert because it's not snoozed and we actually received a reading
 					myTrace("cancel any existing alert for ID_FOR_MISSED_READING_ALERT");
 					Notifications.service.cancel(NotificationService.ID_FOR_MISSED_READING_ALERT);
+					disableRepeatAlert(5);
 					//check if missed reading alert is still enabled at the time it's supposed to fire
 					var dateOfFire:Date = new Date(now.valueOf() + alertValue * 60 * 1000);
 					delay = alertValue * 60;
@@ -979,6 +1083,7 @@ package services
 						latestAlertTypeUsedInMissedReadingNotification = alertType;
 						myTrace("in checkMissedReadingAlert, missed reading planned with delay in minutes = " + delay/60);
 						fireAlert(
+							5,
 							alertType, 
 							NotificationService.ID_FOR_MISSED_READING_ALERT, 
 							ModelLocator.resourceManagerInstance.getString("alarmservice","missed_reading_alert_notification_alert"), 
@@ -1012,6 +1117,7 @@ package services
 						//cance any planned alert because it's not snoozed and we actually received a reading
 						myTrace("cancel any existing alert for ID_FOR_MISSED_READING_ALERT");
 						Notifications.service.cancel(NotificationService.ID_FOR_MISSED_READING_ALERT);
+						disableRepeatAlert(5);
 						var currentHourLocal:int = now.hours;
 						var currentMinuteLocal:int = now.minutes;
 						var currentSecondsLocal:int = now.seconds;
@@ -1029,6 +1135,7 @@ package services
 						delay += 30;
 						myTrace("in checkMissedReadingAlert, missed reading planned with delay in minutes = " + delay/60);
 						fireAlert(
+							5,
 							alertType, 
 							NotificationService.ID_FOR_MISSED_READING_ALERT, 
 							ModelLocator.resourceManagerInstance.getString("alarmservice","missed_reading_alert_notification_alert"), 
@@ -1044,6 +1151,7 @@ package services
 						myTrace("in checkMissedReadingAlert, missed reading, snoozed, and current alert not enabled anymore, so canceling alert and resetting snooze");
 						myTrace("cancel any existing alert for ID_FOR_MISSED_READING_ALERT");
 						Notifications.service.cancel(NotificationService.ID_FOR_MISSED_READING_ALERT);
+						disableRepeatAlert(5);
 						_missedReadingAlertLatestSnoozeTimeInMs = Number.NaN;
 						_missedReadingAlertLatestNotificationTime = Number.NaN;
 						_missedReadingAlertSnoozePeriodInMinutes = 0;
@@ -1076,6 +1184,7 @@ package services
 						if (alertValue < ((now.valueOf() - Calibration.last().timestamp) / 1000 / 60 / 60)) {
 							myTrace("in checkAlarms, calibration is necessary");
 							fireAlert(
+								0,
 								alertType, 
 								NotificationService.ID_FOR_CALIBRATION_REQUEST_ALERT, 
 								ModelLocator.resourceManagerInstance.getString("alarmservice","calibration_request_alert_notification_alert_title"), 
@@ -1088,10 +1197,12 @@ package services
 						} else {
 							myTrace("cancel any existing alert for ID_FOR_CALIBRATION_REQUEST_ALERT");
 							Notifications.service.cancel(NotificationService.ID_FOR_CALIBRATION_REQUEST_ALERT);
+							disableRepeatAlert(0);
 						}
 					} else {
 						myTrace("cancel any existing alert for ID_FOR_CALIBRATION_REQUEST_ALERT");
 						Notifications.service.cancel(NotificationService.ID_FOR_CALIBRATION_REQUEST_ALERT);
+						disableRepeatAlert(0);
 					}
 				} else {
 					//snoozed no need to do anything
@@ -1101,6 +1212,7 @@ package services
 				//remove calibration request notification, even if there isn't any	
 				myTrace("cancel any existing alert for ID_FOR_CALIBRATION_REQUEST_ALERT");
 				Notifications.service.cancel(NotificationService.ID_FOR_CALIBRATION_REQUEST_ALERT);
+				disableRepeatAlert(0);
 				_calibrationRequestLatestSnoozeTimeInMs = Number.NaN;
 				_calibrationRequestLatestNotificationTime = Number.NaN;
 				_calibrationRequestSnoozePeriodInMinutes = 0;
@@ -1141,6 +1253,7 @@ package services
 						 (BlueToothDevice.isDexcomG5() && (new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_VOLTAGEA)) < alertValue) && (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_VOLTAGEA) != "unknown"))) {
 						 myTrace("in checkAlarms, battery level is too low");
 						 fireAlert(
+							 6,
 							 alertType, 
 							 NotificationService.ID_FOR_BATTERY_ALERT, 
 							 ModelLocator.resourceManagerInstance.getString("alarmservice","batteryLevel_alert_notification_alert_text"), 
@@ -1154,6 +1267,7 @@ package services
 					 } else {
 						 myTrace("cancel any existing alert for ID_FOR_BATTERY_ALERT");
 						 Notifications.service.cancel(NotificationService.ID_FOR_BATTERY_ALERT);
+						 disableRepeatAlert(6);
 					 }
 				 } else {
 					 //snoozed no need to do anything
@@ -1163,6 +1277,7 @@ package services
 				 //remove notification, even if there isn't any
 				 myTrace("cancel any existing alert for ID_FOR_BATTERY_ALERT");
 				 Notifications.service.cancel(NotificationService.ID_FOR_BATTERY_ALERT);
+				 disableRepeatAlert(6);
 				 _batteryLevelAlertLatestSnoozeTimeInMs = Number.NaN;
 				 _batteryLevelAlertLatestNotificationTime = Number.NaN;
 				 _batteryLevelAlertSnoozePeriodInMinutes = 0;
@@ -1195,6 +1310,7 @@ package services
 					 if (alertValue < BgReading.lastNoSensor().calculatedValue) {
 						 myTrace("in checkAlarms, reading is too high");
 						 fireAlert(
+							 3,
 							 alertType, 
 							 NotificationService.ID_FOR_HIGH_ALERT, 
 							 ModelLocator.resourceManagerInstance.getString("alarmservice","high_alert_notification_alert_text")
@@ -1209,6 +1325,7 @@ package services
 					 } else {
 						 myTrace("cancel any existing alert for ID_FOR_HIGH_ALERT");
 						 Notifications.service.cancel(NotificationService.ID_FOR_HIGH_ALERT);
+						 disableRepeatAlert(3);
 					 }
 				 } else {
 					 //snoozed no need to do anything
@@ -1246,6 +1363,7 @@ package services
 					 if (alertValue < BgReading.lastNoSensor().calculatedValue) {
 						 myTrace("in checkAlarms, reading is too veryHigh");
 						 fireAlert(
+							 4,
 							 alertType, 
 							 NotificationService.ID_FOR_VERY_HIGH_ALERT, 
 							 ModelLocator.resourceManagerInstance.getString("alarmservice","veryhigh_alert_notification_alert_text")
@@ -1260,6 +1378,7 @@ package services
 					 } else {
 						 myTrace("cancel any existing alert for ID_FOR_VERY_HIGH_ALERT");
 						 Notifications.service.cancel(NotificationService.ID_FOR_VERY_HIGH_ALERT);
+						 disableRepeatAlert(4);
 					 }
 				 } else {
 					 //snoozed no need to do anything,returnvalue = true because there's no need to check for high alert
@@ -1298,6 +1417,7 @@ package services
 					 if (alertValue > BgReading.lastNoSensor().calculatedValue) {
 						 myTrace("in checkAlarms, reading is too low");
 						 fireAlert(
+							 1,
 							 alertType, 
 							 NotificationService.ID_FOR_LOW_ALERT, 
 							 ModelLocator.resourceManagerInstance.getString("alarmservice","low_alert_notification_alert_text")
@@ -1312,6 +1432,7 @@ package services
 					 } else {
 						 myTrace("cancel any existing alert for ID_FOR_LOW_ALERT");
 						 Notifications.service.cancel(NotificationService.ID_FOR_LOW_ALERT);
+						 disableRepeatAlert(1);
 					 }
 				 } else {
 					 //snoozed no need to do anything
@@ -1349,6 +1470,7 @@ package services
 					 if (alertValue > BgReading.lastNoSensor().calculatedValue) {
 						 myTrace("in checkAlarms, reading is too veryLow");
 						 fireAlert(
+							 2,
 							 alertType, 
 							 NotificationService.ID_FOR_VERY_LOW_ALERT, 
 							 ModelLocator.resourceManagerInstance.getString("alarmservice","verylow_alert_notification_alert_text")
@@ -1363,6 +1485,7 @@ package services
 					 } else {
 						 myTrace("cancel any existing alert for ID_FOR_VERY_LOW_ALERT");
 						 Notifications.service.cancel(NotificationService.ID_FOR_VERY_LOW_ALERT);
+						 disableRepeatAlert(2);
 					 }
 				 } else {
 					 //snoozed no need to do anything, set returnvalue to true because there's no need to further check
@@ -1379,6 +1502,7 @@ package services
 		private static function resetVeryHighAlert():void {
 			myTrace("cancel any existing alert for ID_FOR_VERY_HIGH_ALERT");
 			Notifications.service.cancel(NotificationService.ID_FOR_VERY_HIGH_ALERT);
+			disableRepeatAlert(4);
 			_veryHighAlertLatestSnoozeTimeInMs = Number.NaN;
 			_veryHighAlertLatestNotificationTime = Number.NaN;
 			_veryHighAlertSnoozePeriodInMinutes = 0;
@@ -1387,6 +1511,7 @@ package services
 		private static function resetVeryLowAlert():void {
 			myTrace("cancel any existing alert for ID_FOR_VERY_LOW_ALERT");
 			Notifications.service.cancel(NotificationService.ID_FOR_VERY_LOW_ALERT);
+			disableRepeatAlert(2);
 			_veryLowAlertLatestSnoozeTimeInMs = Number.NaN;
 			_veryLowAlertLatestNotificationTime = Number.NaN;
 			_veryLowAlertSnoozePeriodInMinutes = 0;
@@ -1395,6 +1520,7 @@ package services
 		private static function resetHighAlert():void {
 			myTrace("cancel any existing alert for ID_FOR_HIGH_ALERT");
 			Notifications.service.cancel(NotificationService.ID_FOR_HIGH_ALERT);
+			disableRepeatAlert(3);
 			_highAlertLatestSnoozeTimeInMs = Number.NaN;
 			_highAlertLatestNotificationTime = Number.NaN;
 			_highAlertSnoozePeriodInMinutes = 0;
@@ -1403,6 +1529,7 @@ package services
 		private static function resetLowAlert():void {
 			myTrace("cancel any existing alert for ID_FOR_LOW_ALERT");
 			Notifications.service.cancel(NotificationService.ID_FOR_LOW_ALERT);
+			disableRepeatAlert(1);
 			_lowAlertLatestSnoozeTimeInMs = Number.NaN;
 			_lowAlertLatestNotificationTime = Number.NaN;
 			_lowAlertSnoozePeriodInMinutes = 0;
@@ -1419,6 +1546,136 @@ package services
 			}
 		}
 		
+		/**
+		 * repeatAlert variables are used for repeating alerts<br><br>
+		 * sets variables repeatAlertsArray, repeatAlertsLastFireTimeStampArray, repeatAlertsAlertTypeNameArray<br>
+		 * <br>
+		 * the function setrepeatAlert will set a specific alert (repeatAlertsArray), with alerttypename (repeatAlertsAlertTypeNameArray) and firedate (repeatAlertsLastFireTimeStampArray) which will be 
+		 * the curren date and time<br><br>
+		 * Every minute a check will be done to see if the alert needs to be repeated, based on lastfiredate and repeat setting for the alerttype<br>
+		 * <br>
+		 * id ==> 0:calibration, 1:Low, 2:Very Low, 3:High, 4:Very High, 5:Missed Reading, 6:Battery Low, 7:Phone Muted<br>
+		 * <br>
+		 * repeatCntr > 0 if this is a repeat
+		 */
+		private static function enableRepeatAlert(id:int, alertTypeName:String, alertText:String, repeatCntr:int = 0):void {
+			repeatAlertsArray[id] = true;
+			repeatAlertsAlertTypeNameArray[id] = alertTypeName;
+			repeatAlertsLastFireTimeStampArray[id] = (new Date()).valueOf();
+			repeatAlertsTexts[id] = alertText;
+			repeatAlertsRepeatCount[id] = repeatCntr;
+		}
+		
+		/**
+		 * disables an active alert. More explanation see enablerepeatAlert<br>
+		 * id ==> 0:calibration, 1:Low, 2:Very Low, 3:High, 4:Very High, 5:Missed Reading, 6:Battery Low, 7:Phone Muted<br
+		 */
+		private static function disableRepeatAlert(id:int):void {
+			repeatAlertsArray[id] = false;
+			repeatAlertsAlertTypeNameArray[id] = "";
+			repeatAlertsLastFireTimeStampArray[id] = 0;
+			repeatAlertsTexts[id] = "";
+			repeatAlertsRepeatCount[id] = 0;
+		}
+		
+		/**
+		 * check if alerts need to be repeated<br>
+		 * low/very low , high/very high : check will be done a number of repeats, if max reached then reset to false
+		 */
+		private static function repeatAlerts():void {
+			//id ==> 0:calibration, 1:Low, 2:Very Low, 3:High, 4:Very High, 5:Missed Reading, 6:Battery Low, 7:Phone Muted<br
+			for (var cntr:int = 0;cntr < repeatAlertsArray.length;cntr++) {
+				if (repeatAlertsArray[cntr] == true) {
+					if ((new Date()).valueOf() - repeatAlertsLastFireTimeStampArray[cntr] > 60 * 1000) {
+						var alertType:AlertType = Database.getAlertType(repeatAlertsAlertTypeNameArray[cntr]);
+						if (alertType.repeatInMinutes > 0) {
+							Notifications.service.cancel(repeatAlertsNotificationIds[cntr]);//remove any notification that may already exist
+							
+							//remove also any open pickerdialog
+							switch (cntr) {
+								case 0:
+									if (snoozePeriodPickerCalibrationAlert != null) {
+										snoozePeriodPickerCalibrationAlert.dismiss();
+										snoozePeriodPickerCalibrationAlert.dispose();
+										if (ModelLocator.navigator != null) ModelLocator.navigator.popView(flipTrans);
+									}
+									break;
+								case 1:
+									if (snoozePeriodPickerLowAlert != null) {
+										snoozePeriodPickerLowAlert.dismiss();
+										snoozePeriodPickerLowAlert.dispose();
+										if (ModelLocator.navigator != null) ModelLocator.navigator.popView(flipTrans);
+									}
+									break;
+								case 2:
+									if (snoozePeriodPickerVeryLowAlert != null) {
+										snoozePeriodPickerVeryLowAlert.dismiss();
+										snoozePeriodPickerVeryLowAlert.dispose();
+										if (ModelLocator.navigator != null) ModelLocator.navigator.popView(flipTrans);
+									}
+									break;
+								case 3:
+									if (snoozePeriodPickerHighAlert != null) {
+										snoozePeriodPickerHighAlert.dismiss();
+										snoozePeriodPickerHighAlert.dispose();
+										if (ModelLocator.navigator != null) ModelLocator.navigator.popView(flipTrans);
+									}
+									break;
+								case 4:
+									if (snoozePeriodPickerVeryHighAlert != null) {
+										snoozePeriodPickerVeryHighAlert.dismiss();
+										snoozePeriodPickerVeryHighAlert.dispose();
+										if (ModelLocator.navigator != null) ModelLocator.navigator.popView(flipTrans);
+									}
+									break;
+								case 5:
+									if (snoozePeriodPickerMissedReadingAlert != null) {
+										snoozePeriodPickerMissedReadingAlert.dismiss();
+										snoozePeriodPickerMissedReadingAlert.dispose();
+										if (ModelLocator.navigator != null) ModelLocator.navigator.popView(flipTrans);
+									}
+									break;
+								case 6:
+									if (snoozePeriodPickerBatteryLevelAlert != null) {
+										snoozePeriodPickerBatteryLevelAlert.dismiss();
+										snoozePeriodPickerBatteryLevelAlert.dispose();
+										if (ModelLocator.navigator != null) ModelLocator.navigator.popView(flipTrans);
+									}
+									break;
+								case 7:
+									if (snoozePeriodPickerPhoneMutedAlert != null) {
+										snoozePeriodPickerPhoneMutedAlert.dismiss();
+										snoozePeriodPickerPhoneMutedAlert.dispose();
+										if (ModelLocator.navigator != null) ModelLocator.navigator.popView(flipTrans);
+									}
+									break;
+							}
+							
+							//fire the alert again
+							fireAlert(
+								cntr,
+								alertType, 
+								repeatAlertsNotificationIds[cntr], 
+								repeatAlertsTexts[cntr], 
+								alertType.enableVibration, 
+								alertType.enableLights, 
+								repeatAlertsCategoryIds[cntr],
+								0);//alerts with delay should not be repeated
+							enableRepeatAlert(cntr, repeatAlertsAlertTypeNameArray[cntr], repeatAlertsTexts[cntr], repeatAlertsRepeatCount[cntr] + 1);
+							
+							//if it's a low, very low, high or very high alert, 
+							if (cntr == 1 || cntr == 2 || cntr == 3 || cntr == 4) {
+								if (repeatAlertsRepeatCount[cntr] > MAX_REPEATS_FOR_ALERTS) {
+									disableRepeatAlert(cntr);
+								}
+							}
+						}
+
+					}
+				}
+			}
+		}
+	
 		private static function myTrace(log:String):void {
 			Trace.myTrace("AlarmService.as", log);
 		}
