@@ -675,12 +675,12 @@ package services
 						var newReadingReceived:Boolean = false;
 						for (var arrayCounter:int = 0; arrayCounter < arrayOfBGReadings.length; arrayCounter++) {
 							var bgReadingAsObject:Object = arrayOfBGReadings[arrayCounter];
-							if (bgReadingAsObject.sysTime) {
-								//format "sysTime":"2017-12-23T17:59:10.330+0100"
-								var sysTime:Number = (DateTimeUtilities.parseNSFormattedDateTimeString(bgReadingAsObject.sysTime)).valueOf();
-								if (sysTime >= timeStampOfFirstBgReadingToDowload) {
+							if (bgReadingAsObject.dateString) {
+								//format "dateString":"2017-12-23T17:59:10.330+0100"
+								var dateString:Number = (DateTimeUtilities.parseNSFormattedDateTimeString(bgReadingAsObject.dateString)).valueOf();
+								if (dateString >= timeStampOfFirstBgReadingToDowload) {
 									var bgReading:NSBgReading = new NSBgReading(
-										sysTime, //timestamp
+										dateString, //timestamp
 										null, //sensor id, not known here as the reading comes from NS
 										null, //calibration object
 										bgReadingAsObject.unfiltered,  
@@ -699,7 +699,7 @@ package services
 										Number.NaN,  //rawCalculated
 										false, //hideSlope
 										"", //noise
-										sysTime, //lastmodifiedtimestamp
+										dateString, //lastmodifiedtimestamp
 										bgReadingAsObject._id);  //unique id
 									ModelLocator.addBGReading(bgReading, false);
 									newReadingReceived = true;
@@ -707,7 +707,7 @@ package services
 									break;//readings come sorted from NS, no need to further check the rest
 								}
 							} else {
-								myTrace("in getNewBgReadingsFromNSSuccess, result has a reading without sysTime");
+								myTrace("in getNewBgReadingsFromNSSuccess, result has a reading without dateString");
 								if (bgReadingAsObject._id) {
 									myTrace("_id of that reading = " + bgReadingAsObject._id); 
 								}
