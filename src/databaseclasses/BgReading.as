@@ -414,7 +414,7 @@ package databaseclasses
 		/**
 		 * - rawData != 0<br>
 		 * - calculatedValule != 0<br>
-		 * - latest
+		 * - latest<br>
 		 * - null if there's none i guess
 		 */
 		public static function lastNoSensor():BgReading {
@@ -423,6 +423,25 @@ package databaseclasses
 			while (cntr > -1) {
 				var bgReading:BgReading = ModelLocator.bgReadings.getItemAt(cntr) as BgReading;
 				if (bgReading.rawData != 0 && bgReading.calculatedValue != 0) {
+					returnValue = bgReading;
+					break;
+				}
+				cntr--;
+			}
+			return returnValue;
+		}
+		
+	    /**
+		 * - calculatedValule != 0<br>
+		 * - latest<br>
+		 * - null if there's none
+		 */
+		public static function lastWithCalculatedValue():BgReading {
+			var returnValue:BgReading;
+			var cntr:int = ModelLocator.bgReadings.length - 1;
+			while (cntr > -1) {
+				var bgReading:BgReading = ModelLocator.bgReadings.getItemAt(cntr) as BgReading;
+				if (bgReading.calculatedValue != 0) {
 					returnValue = bgReading;
 					break;
 				}

@@ -213,6 +213,7 @@ package services
 					}
 					
 					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_URL_AND_API_SECRET_TESTED,"false");
+					nextFollowDownloadTimeStamp = 0;//resetting to zero will ensure new download attempt next time getNewBgReadingsFromNS is calle
 				}
 				
 				if (event.data == CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME || event.data == CommonSettings.COMMON_SETTING_API_SECRET) {
@@ -621,7 +622,6 @@ package services
 			}
 			
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME) == CommonSettings.DEFAULT_SITE_NAME) {
-				setNextFollowDownloadTimeStamp();
 				return;
 			}
 			
@@ -630,7 +630,7 @@ package services
 			var now:Number = (new Date()).valueOf();
 			
 			if (nextFollowDownloadTimeStamp < now) {
-				var latestBGReading:BgReading = BgReading.lastNoSensor();
+				var latestBGReading:BgReading = BgReading.lastWithCalculatedValue();
 				if (latestBGReading == null) {
 					timeStampOfFirstBgReadingToDowload = now - 24 * 3600 * 1000;//max 1 day of readings will be fetched
 				} else {
