@@ -675,12 +675,12 @@ package services
 						var newReadingReceived:Boolean = false;
 						for (var arrayCounter:int = 0; arrayCounter < arrayOfBGReadings.length; arrayCounter++) {
 							var bgReadingAsObject:Object = arrayOfBGReadings[arrayCounter];
-							if (bgReadingAsObject.dateString) {
-								//format "dateString":"2017-12-23T17:59:10.330+0100"
-								var dateString:Number = (DateTimeUtilities.parseNSFormattedDateTimeString(bgReadingAsObject.dateString)).valueOf();
-								if (dateString >= timeStampOfFirstBgReadingToDowload) {
+							if (bgReadingAsObject.date) {
+								//format "dateString":"2017-12-23T17:59:10.000Z"
+								var date:Number = bgReadingAsObject.date;
+								if (date >= timeStampOfFirstBgReadingToDowload) {
 									var bgReading:NSBgReading = new NSBgReading(
-										dateString, //timestamp
+										date, //timestamp
 										null, //sensor id, not known here as the reading comes from NS
 										null, //calibration object
 										bgReadingAsObject.unfiltered,  
@@ -699,7 +699,7 @@ package services
 										Number.NaN,  //rawCalculated
 										false, //hideSlope
 										"", //noise
-										dateString, //lastmodifiedtimestamp
+										date, //lastmodifiedtimestamp
 										bgReadingAsObject._id);  //unique id
 									ModelLocator.addBGReading(bgReading, false);
 									newReadingReceived = true;
