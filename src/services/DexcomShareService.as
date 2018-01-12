@@ -267,12 +267,12 @@ package services
 						if (timeStampOfLastBGReadingToUpload < bgReading.timestamp) {
 							timeStampOfLastBGReadingToUpload = bgReading.timestamp;
 						}
+						arrayCntr++;
 					}
 				} else {
 					break;
 				}
 				cntr--;
-				arrayCntr++;
 			}		
 			
 			if (Egvs.length > 0) {

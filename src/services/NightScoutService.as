@@ -394,12 +394,12 @@ package services
 						if (timeStampOfLastBGReadingToUpload < bgReading.timestamp) {
 							timeStampOfLastBGReadingToUpload = bgReading.timestamp;
 						}
+						arrayCntr++;
 					}
 				} else {
 					break;
 				}
 				cntr--;
-				arrayCntr++;
 			}			
 			
 			var endtime:Number  = (new Date()).valueOf();
