@@ -927,34 +927,39 @@ package services
 				.setAlert(alertText)
 				.setTitle(alertText)
 				.setBody(" ")
-				.enableVibration(enableVibration)
+				.enableVibration((enableVibration && delay != 0) ? true:false)// for alerts without delay, vibration will be done through ANE
 				.enableLights(enableLights);
 			if (categoryId != null)
 				notificationBuilder.setCategory(categoryId);
 			
-			if (alertType.sound == "no_sound" && enableVibration) {
-				soundToSet = "../assets/silence-1sec.aif";
-			} else 	if (alertType.sound == "no_sound" && !enableVibration) {
-				soundToSet = "";
+			if (alertType.sound == "default") {
+				//it's the default sound, nothing to do
+				//default sound will not be played through ANE because I don't have the mp3
+				soundToSet = "default";
 			} else {
-				if (alertType.sound == "default") {
-					//it's the default sound, nothing to do
-				} else {
-					for (var cntr:int = 0;cntr < soundsAsDisplayedSplitted.length;cntr++) {
-						newSound = soundsAsDisplayedSplitted[cntr];
-						if (newSound == alertType.sound) {
-							soundToSet = soundsAsStoredInAssetsSplitted[cntr];
-							break;
-						}
+				for (var cntr:int = 0;cntr < soundsAsDisplayedSplitted.length;cntr++) {
+					newSound = soundsAsDisplayedSplitted[cntr];
+					if (newSound == alertType.sound) {
+						soundToSet = soundsAsStoredInAssetsSplitted[cntr];
+						break;
 					}
 				}
 			}
-
+			
 			if (delay != 0) {
 				notificationBuilder.setDelay(delay);
+				if (enableVibration) {
+					notificationBuilder.setSound("../assets/silence-1sec.aif");
+				} else {
+					notificationBuilder.setSound("");
+				}
+			} else {
+				if (enableVibration) {
+					BackgroundFetch.vibrate();//make the vibrate immediately through ANE because it seems to fail on some devices if done through ios notification
+				}
 			}
 
-			if (delay == 0) {
+			if (delay == 0 && alertType.sound != "default") {//default sound we don't have the mp3, so don't play throough ANE, means also we can not override mute
 				if (ModelLocator.phoneMuted) {
 					if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_OVERRIDE_MUTE) == "true") {
 						//play the sound through backend ane, 
@@ -963,14 +968,6 @@ package services
 						// - no matter if any other sounds are played now
 						// - no matter if phone is muted or not
 						BackgroundFetch.playSound(soundToSet);
-						
-						//make sure the phone vibrates depending on the setting
-						//could also be done through BackgroundFetch.vibrate(); 
-						if (enableVibration) {
-							notificationBuilder.setSound("../assets/silence-1sec.aif");
-						} else {
-							notificationBuilder.setSound("");
-						}
 					} else {
 						//phone is muted
 						//play sound through notification, as a result it will actually not be played because notification sounds are not played when phone is muted
@@ -983,17 +980,10 @@ package services
 					// - no matter if any other sounds are played now
 					// - no matter if phone is muted or not
 					BackgroundFetch.playSound(soundToSet);		
-
-					//make sure the phone vibrates depending on the setting
-					//could also be done through BackgroundFetch.vibrate(); 
-					if (enableVibration) {
-						notificationBuilder.setSound("../assets/silence-1sec.aif");
-					} else {
-						notificationBuilder.setSound("");
-					}
 				}
 			} else {
-				//delay != means missed reading alert, will be played in the future, sound can't be played now so it must be done via the notification
+				//delay !=  means missed reading alert, will be played in the future, sound can't be played now so it must be done via the notification
+				//or default ios sound, can't play that through ANE
 				notificationBuilder.setSound(soundToSet);
 			}
 			Notifications.service.notify(notificationBuilder.build());
