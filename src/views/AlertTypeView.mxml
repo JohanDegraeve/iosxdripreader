@@ -202,6 +202,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 							}
 						}
 					}
+					
+					if ((event.values[0] as String).indexOf("-") > -1) {
+						DialogService.openSimpleDialog(ModelLocator.resourceManagerInstance.getString("alerttypeview","alarm_name_invalid"),
+							ModelLocator.resourceManagerInstance.getString("alerttypeview","alarm_name_should_not_have_dash"));
+						return;
+					}
+					
 					if (alarmName != (event.values[0] as String)) {
 						alertTypeChanged = true;
 						previousAlertTypeName = alarmName;
