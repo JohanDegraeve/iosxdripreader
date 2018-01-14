@@ -21,6 +21,7 @@
 			
 			import spark.primitives.Rect;
 			
+			import Utilities.Export;
 			import Utilities.Trace;
 			
 			import databaseclasses.BgReading;
@@ -1138,6 +1139,14 @@
 				}
 			}
 			
+			private function exportSidiary_clickHandler(event:MouseEvent):void {
+				rectexportsidiary1.color = uint("0xD3D3D3");
+				rectexportsidiary2.color = uint("0xD3D3D3");
+				setResetColorTimer();
+				
+				Export.exportSiDiary();
+			}
+			
 			private static function speechInstructionsShowed(ev:DialogViewEvent):void 
 			{
 				if (ev != null) {
@@ -1392,6 +1401,8 @@
 					rectAppUpdate4.color = uint("0x212121");//updates onoff
 					rectoverrideMute1.color = uint("0x212121");//mute
 					rectoverrideMute2.color = uint("0x212121");//mute
+					rectexportsidiary1.color = uint("0x212121");
+					rectexportsidiary2.color = uint("0x212121");
 				}
 			}
 			
@@ -2159,6 +2170,38 @@
 					<s:Rect height="100%" width="5" >
 						<s:fill>
 							<s:SolidColor color="#212121" id="rectSpeechLanguage2"/>
+						</s:fill>
+					</s:Rect>
+				</s:HGroup>
+				<s:Line width="100%">
+					<s:stroke>
+						<s:SolidColorStroke color="#3B6999"  weight="3"/>
+					</s:stroke>
+				</s:Line>
+			</s:VGroup>
+
+			<!-- Chapter Export --> 
+			<s:Label text = "{ModelLocator.resourceManagerInstance.getString('settingsview','export')}" textAlign="center"  color="#3B6999" 
+					 width="100%" paddingLeft="3" paddingRight="0" fontSize="20" fontWeight="bold" paddingTop="10" paddingBottom ="10"/>
+			<s:Line width="100%">
+				<s:stroke>
+					<s:SolidColorStroke color="#3B6999"  weight="3"/>
+				</s:stroke>
+			</s:Line>
+			
+			<!-- Chapter Export subsection SiDiary --> 
+			<s:VGroup width="100%" >
+				<s:HGroup id="sidiaryexport" width="100%" click="exportSidiary_clickHandler(event)">
+					<s:Rect height="100%" width="5" >
+						<s:fill>
+							<s:SolidColor color="#212121" id="rectexportsidiary1"/>
+						</s:fill>
+					</s:Rect>
+					<s:Label text = "SiDiary" 
+							 width="100%" paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
+					<s:Rect height="100%" width="5" >
+						<s:fill>
+							<s:SolidColor color="#212121" id="rectexportsidiary2"/>
 						</s:fill>
 					</s:Rect>
 				</s:HGroup>

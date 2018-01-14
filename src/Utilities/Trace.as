@@ -86,7 +86,7 @@ package Utilities
 			} else {
 				if (filePath == "")
 					getSaveStream();
-				BackgroundFetch.writeStringToFile(filePath, traceText.replace(" xdripreadertrace ", " "));			
+				BackgroundFetch.writeTraceToFile(filePath, traceText.replace(" xdripreadertrace ", " "));			
 			}
 		}
 		
@@ -100,7 +100,7 @@ package Utilities
 				var body:String = "Hi,\n\nFind attached trace file " + fileName + "\n\nregards.";
 				Message.service.sendMailWithOptions("Trace file", body, "xdrip@proximus.be","","",[attachment],false);
 				f.deleteFileAsync();
-				BackgroundFetch.resetWriteStringToFilePath();
+				BackgroundFetch.resetTraceFilePath();
 				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_TRACE_FILE_NAME, "");
 				fileName = "";
 				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_TRACE_FILE_PATH_NAME, "");
@@ -126,9 +126,9 @@ package Utilities
 				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_TRACE_FILE_NAME, fileName);
 				filePath = File.applicationStorageDirectory.resolvePath(fileName).nativePath;
 				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_TRACE_FILE_PATH_NAME, filePath);
-				BackgroundFetch.writeStringToFile(filePath, "New file created with name " + fileName);
-				BackgroundFetch.writeStringToFile(filePath, "Application version = " + LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_APPLICATION_VERSION));
-				BackgroundFetch.writeStringToFile(filePath, "BackgroundFetch ANE version = " + BackgroundFetch.getANEVersion());
+				BackgroundFetch.writeTraceToFile(filePath, "New file created with name " + fileName);
+				BackgroundFetch.writeTraceToFile(filePath, "Application version = " + LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_APPLICATION_VERSION));
+				BackgroundFetch.writeTraceToFile(filePath, "BackgroundFetch ANE version = " + BackgroundFetch.getANEVersion());
 				var additionalInfoToWrite:String = "";
 				additionalInfoToWrite += "Device type = " + BlueToothDevice.deviceType() + ".\n";
 				additionalInfoToWrite += "Transmitterid = " + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID) + ".\n";
@@ -168,7 +168,7 @@ package Utilities
 				}
 
 				//zzz
-				BackgroundFetch.writeStringToFile(filePath, additionalInfoToWrite);
+				BackgroundFetch.writeTraceToFile(filePath, additionalInfoToWrite);
 			} else {
 				filePath = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_TRACE_FILE_PATH_NAME);
 			}
