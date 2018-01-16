@@ -617,6 +617,7 @@ package services
 				return;
 			
 			if (!NetworkInfo.networkInfo.isReachable()) {
+				myTrace("in getNewBgReadingsFromNS");
 				setNextFollowDownloadTimeStamp();
 				return;
 			}
@@ -632,11 +633,15 @@ package services
 			if (nextFollowDownloadTimeStamp < now) {
 				var latestBGReading:BgReading = BgReading.lastWithCalculatedValue();
 				if (latestBGReading == null) {
+					//trace("LOG latestBGReading == null");
 					timeStampOfFirstBgReadingToDowload = now - 24 * 3600 * 1000;//max 1 day of readings will be fetched
 				} else {
+					//trace("LOG latestBGReading != null, latestBGReading.timestamp = " + (new Date(latestBGReading.timestamp)).toLocaleString());
 					timeStampOfFirstBgReadingToDowload = latestBGReading.timestamp + 1;//yes + 1 ms
 				}
-				var count:Number = (now - timeStampOfFirstBgReadingToDowload)/1000/3600*12;
+				//trace("LOG setting timeStampOfFirstBgReadingToDowload to " + (new Date(timeStampOfFirstBgReadingToDowload)).toLocaleString());
+				var count:Number = (now - timeStampOfFirstBgReadingToDowload)/1000/3600*12 + 1;
+				//trace("LOG setting count to " + count);
 				var latestDate:Date = new Date(timeStampOfFirstBgReadingToDowload);
 				var year:String = latestDate.fullYear.toString();
 				var month:String = (latestDate.month + 1).toString();
@@ -647,11 +652,12 @@ package services
 					date = "0" + date;
 				
 				var urlVariables:URLVariables = new URLVariables();
+				//trace("LOG setting find[dateString][$gte] " + year + "-" + month + "-" + date);
 				urlVariables["find[dateString][$gte]"] = year + "-" + month + "-" + date;
 				urlVariables["count"] = Math.round(count);
 				waitingForGetBgReadingsFromNS = true;
-				timeStampOfLastDownloadAttempt = (new Date()).valueOf();
 				setNextFollowDownloadTimeStamp();
+				timeStampOfLastDownloadAttempt = (new Date()).valueOf();
 				createAndLoadURLRequest(_nightScoutEventsUrl + ".json", URLRequestMethod.GET, urlVariables, null, getNewBgReadingsFromNSSuccess, getNewBgReadingsFromNSFailed);
 			} else {
 				//next time
@@ -660,8 +666,8 @@ package services
 		
 		private static function getNewBgReadingsFromNSSuccess(event:BackGroundFetchServiceEvent):void {
 			var now:Number = (new Date()).valueOf();
-			if (!waitingForGetBgReadingsFromNS || (now - timeStampOfLastDownloadAttempt > 10 * 1000)) {//dont' wait longer than 10 seconds for a download response
-				myTrace("in getNewBgReadingsFromNSSuccess but waitingForGetBgReadingsFromNS = false or last download attempt was more than 10 seconds ago, return");
+			if (!waitingForGetBgReadingsFromNS || (now - timeStampOfLastDownloadAttempt > 270 * 1000)) {//dont' wait longer than 270 seconds for a download response
+				myTrace("in getNewBgReadingsFromNSSuccess but waitingForGetBgReadingsFromNS = false or last download attempt was more than 270 seconds ago, return");
 				waitingForGetBgReadingsFromNS = false;
 				return;
 			}
@@ -678,6 +684,7 @@ package services
 							if (bgReadingAsObject.date) {
 								//format "dateString":"2017-12-23T17:59:10.000Z"
 								var date:Number = bgReadingAsObject.date;
+								//trace("LOG found element with date = " + (new Date(date)).toLocaleString());
 								if (date >= timeStampOfFirstBgReadingToDowload) {
 									var bgReading:NSBgReading = new NSBgReading(
 										date, //timestamp
@@ -707,7 +714,7 @@ package services
 									break;//readings come sorted from NS, no need to further check the rest
 								}
 							} else {
-								myTrace("in getNewBgReadingsFromNSSuccess, result has a reading without dateString");
+								myTrace("in getNewBgReadingsFromNSSuccess, result has a reading without date");
 								if (bgReadingAsObject._id) {
 									myTrace("_id of that reading = " + bgReadingAsObject._id); 
 								}
@@ -754,6 +761,7 @@ package services
 			} else {
 				nextFollowDownloadTimeStamp = now + 5 * 60 * 1000;
 			}
+			//trace("LOG in setNextFollowDownloadTimeStamp = " + (new Date(nextFollowDownloadTimeStamp)).toLocaleString());			
 		}
 	}
 }
