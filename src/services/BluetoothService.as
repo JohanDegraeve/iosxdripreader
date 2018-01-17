@@ -176,7 +176,6 @@ package services
 		private static var blukonCurrentCommand:String="";
 		
 		private static var m_getNowGlucoseDataIndexCommand:Boolean = false;
-		private static var m_gotOneTimeUnknownCmd:Boolean = false;
 		private static var GET_SENSOR_AGE_DELAY_IN_SECONDS:int =  3 * 3600;
 		private static var BLUKON_GETSENSORAGE_TIMER:String = "blukon-getSensorAge-timer";
 		private static var m_getNowGlucoseDataCommand:Boolean = false;// to be sure we wait for a GlucoseData Block and not using another block
@@ -271,7 +270,6 @@ package services
 			NotificationService.instance.addEventListener(NotificationServiceEvent.NOTIFICATION_EVENT, notificationReceived);
 
 			//blukon
-			m_gotOneTimeUnknownCmd = false;
 			m_getNowGlucoseDataCommand = false;
 			m_getNowGlucoseDataIndexCommand = false;
 			m_getOlderReading = false;
@@ -1292,7 +1290,6 @@ package services
 			var blueToothServiceEvent:BlueToothServiceEvent  = null;
 			var gotLowBat:Boolean = false;
 			
-			////////code copied form xdripplus, commit e429b3db0bcd059cd8bb517bf15cabe705436ed2
 			var cmdFound:int = 0;
 			
 			//BluKon code by gregorybel
@@ -1313,28 +1310,8 @@ package services
 				
 				if (blukonCurrentCommand.indexOf("810a00") == 0) {//ACK sent
 					//ack received
-					
-					//This command will be asked only one time after first connect and never again
-					if (!m_gotOneTimeUnknownCmd) {
-						blukonCurrentCommand = "010d0b00";
-						myTrace("in processBLUKONTransmitterData, getUnknownCmd1: " + blukonCurrentCommand);
-					} else {
-						if ((new Date()).valueOf() - new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TIME_STAMP_LAST_SENSOR_AGE_CHECK_IN_MS)) > GET_SENSOR_AGE_DELAY_IN_SECONDS * 1000) {
-							// do something only once every 4 hours
-							blukonCurrentCommand = "010d0e0127";
-							myTrace("in processBLUKONTransmitterData, getSensorAge");
-						} else {
-							if (true) {
-								myTrace("in processBLUKONTransmitterData, getHistoricData (1)");
-								blukonCurrentCommand = "010d0f02002b";
-								m_blockNumber = 0;
-							} else {
-								blukonCurrentCommand = "010d0e0103"; 
-								m_getNowGlucoseDataIndexCommand = true;//to avoid issue when gotNowDataIndex cmd could be same as getNowGlucoseData (case block=3)
-								myTrace("in processBLUKONTransmitterData, getNowGlucoseDataIndexCommand");
-							}
-						}
-					}
+					blukonCurrentCommand = "010d0b00";
+					myTrace("in processBLUKONTransmitterData, getUnknownCmd1: " + blukonCurrentCommand);
 					
 				} else {
 					myTrace("in processBLUKONTransmitterData, Got sleep ack, resetting initialstate!");
@@ -1362,7 +1339,6 @@ package services
 					_instance.dispatchEvent(blueToothServiceEvent);
 				}
 
-				m_gotOneTimeUnknownCmd = false;
 				m_getNowGlucoseDataCommand = false;
 				m_getNowGlucoseDataIndexCommand = false;
 				blukonCurrentCommand = "";
@@ -1413,7 +1389,6 @@ package services
 					gotLowBat = true;
 				}
 				
-				//try asking each time m_gotOneTimeUnknownCmd = true;
 				if ((new Date()).valueOf() - new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TIME_STAMP_LAST_SENSOR_AGE_CHECK_IN_MS)) > GET_SENSOR_AGE_DELAY_IN_SECONDS * 1000) {
 					blukonCurrentCommand = "010d0e0127";
 					myTrace("in processBLUKONTransmitterData, getSensorAge");
