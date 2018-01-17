@@ -36,6 +36,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			
 			import mx.collections.ArrayCollection;
 			import mx.events.FlexEvent;
+			import mx.utils.StringUtil;
 			
 			import Utilities.FromtimeAndValueArrayCollection;
 			
@@ -96,10 +97,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 				soundName = alertType.sound;
 				if (soundName == "no_sound")
 					soundName = ModelLocator.resourceManagerInstance.getString("alerttypeview","no_sound");
-				if (soundName == "default") {
-					var sounds:String = ModelLocator.resourceManagerInstance.getString("alerttypeview","sound_names_as_displayed_can_be_translated_must_match_above_list");
-					var soundsSplitted:Array = sounds.split(',');
-					soundName = soundsSplitted[0];
+				if (soundName == "default") {//for backward compatibility, default sound is removed as of 2.2.5
+					soundName = ModelLocator.resourceManagerInstance.getString("alerttypeview","default_sound_as_displayed");
 				}
 				if (alarmEnabled) {
 					soundgroup.alpha = 1;
@@ -326,12 +325,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 				}
 				
 				function picker_changedHandler(event:DialogViewEvent):void {
+					BackgroundFetch.stopPlayingSound();
+
 					var newSoundName:String = event.values[0];
 					var soundInList:String;
 					if (newSoundName == ModelLocator.resourceManagerInstance.getString("alerttypeview","no_sound")) {
-						// no sound to play						
-					} else if (newSoundName == ModelLocator.resourceManagerInstance.getString("alerttypeview","default_sound_as_displayed")) {
-						// no sound to play						
 					} else {
 						for (var cntr:int = 0;cntr < soundsAsDisplayedSplitted.length;cntr++) {
 							soundInList = soundsAsDisplayedSplitted[cntr];
@@ -349,7 +347,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 					if (soundName == newSoundName)
 						return;
 					
-					soundName = newSoundName;
+					soundName = StringUtil.trim(newSoundName);//using trim because during tests sometimes the soundname had a preceding white space
 					alertTypeChanged = true;					
 				}
 			}
@@ -412,8 +410,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 				var neworExistingAlertType:AlertType; 
 				if (soundName == ModelLocator.resourceManagerInstance.getString("alerttypeview","no_sound"))
 					soundName = "no_sound";
-				if (soundName == ModelLocator.resourceManagerInstance.getString("alerttypeview","default_sound_as_displayed"))
-					soundName = "default";
 				if (alertTypeInDatabase != null) {
 					neworExistingAlertType = new AlertType(
 						alertTypeInDatabase.uniqueId, 

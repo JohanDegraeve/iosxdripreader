@@ -17,6 +17,7 @@ package services
 	import flash.events.EventDispatcher;
 	
 	import mx.collections.ArrayCollection;
+	import mx.utils.StringUtil;
 	
 	import spark.components.TabbedViewNavigator;
 	import spark.transitions.FlipViewTransition;
@@ -932,17 +933,17 @@ package services
 			if (categoryId != null)
 				notificationBuilder.setCategory(categoryId);
 			
-			if (alertType.sound == "no_sound" && enableVibration) {
+			if (StringUtil.trim(alertType.sound) == "no_sound" && enableVibration) {//using trim because during tests sometimes the soundname had a preceding white space
 				soundToSet = "../assets/silence-1sec.aif";
-			} else 	if (alertType.sound == "no_sound" && !enableVibration) {
+			} else 	if (StringUtil.trim(alertType.sound) == "no_sound" && !enableVibration) {//using trim because during tests sometimes the soundname had a preceding white space
 				soundToSet = "";
 			} else {
-				if (alertType.sound == "default") {
-					//it's the default sound, nothing to do
+				if (StringUtil.trim(alertType.sound) == "default") {//using trim because during tests sometimes the soundname had a preceding white space
+					soundToSet = "default";//only here for backward compatibility. default sound has been removed release 2.2.5
 				} else {
 					for (var cntr:int = 0;cntr < soundsAsDisplayedSplitted.length;cntr++) {
-						newSound = soundsAsDisplayedSplitted[cntr];
-						if (newSound == alertType.sound) {
+						newSound = StringUtil.trim(soundsAsDisplayedSplitted[cntr]);//using trim because during tests sometimes the soundname had a preceding white space
+						if (newSound == StringUtil.trim(alertType.sound)) {//using trim because during tests sometimes the soundname had a preceding white space
 							soundToSet = soundsAsStoredInAssetsSplitted[cntr];
 							break;
 						}
@@ -955,7 +956,7 @@ package services
 			}
 
 			if (delay == 0) {
-				if (ModelLocator.phoneMuted) {
+				if (ModelLocator.phoneMuted && !(StringUtil.trim(alertType.sound) == "default")) {//check against default for backward compability. Default sound can't be played with playSound
 					if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_OVERRIDE_MUTE) == "true") {
 						//play the sound through backend ane, 
 						//this will ensure that sound will be played, 
@@ -982,6 +983,7 @@ package services
 					// - no matter if it's in foreground or not, 
 					// - no matter if any other sounds are played now
 					// - no matter if phone is muted or not
+					// not for default sound
 					BackgroundFetch.playSound(soundToSet);		
 
 					//make sure the phone vibrates depending on the setting
