@@ -51,7 +51,7 @@ package Utilities
 				while (cntr > -1) {
 					var calibration:Calibration = calibrations.getItemAt(cntr) as Calibration;
 					if (calibration.timestamp > lastExportTimeStamp) {
-						BackgroundFetch.writeStringToFile(DateTimeUtilities.createSiDiaryEntryFormattedDateAndTime(new Date(bgReading.timestamp)) + ";;" + Math.round(calibration.bg) + ";;;;;", getFilePath());
+						BackgroundFetch.writeStringToFile(DateTimeUtilities.createSiDiaryEntryFormattedDateAndTime(new Date(calibration.timestamp)) + ";;" + Math.round(calibration.bg) + ";;;;;", getFilePath());
 					}
 					cntr--;
 				}			
