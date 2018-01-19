@@ -63,7 +63,7 @@ package services
 		private static function deepSleepTimerListener(event:Event):void {
 			if (BackgroundFetch.isPlayingSound()) {
 			} else {
-				BackgroundFetch.playSound("../assets/1-millisecond-of-silence.mp3");
+				BackgroundFetch.playSound("../assets/1-millisecond-of-silence.mp3", 0);
 			}
 			//for other services that need to do something at regular intervals
 			_instance.dispatchEvent(new DeepSleepServiceEvent(DeepSleepServiceEvent.DEEP_SLEEP_SERVICE_TIMER_EVENT));
