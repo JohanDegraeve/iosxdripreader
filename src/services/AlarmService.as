@@ -909,6 +909,7 @@ package services
 			_phoneMutedAlertLatestNotificationTime = Number.NaN;
 			_phoneMutedAlertSnoozePeriodInMinutes = 0;
 			lastCheckMuteTimeStamp = (new Date()).valueOf();
+			disableRepeatAlert(7);
 		}
 		
 		/**
