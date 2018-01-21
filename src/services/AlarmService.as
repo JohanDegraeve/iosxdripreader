@@ -6,7 +6,6 @@ package services
 	import com.distriqt.extension.dialog.DialogView;
 	import com.distriqt.extension.dialog.builders.PickerDialogBuilder;
 	import com.distriqt.extension.dialog.events.DialogViewEvent;
-	import com.distriqt.extension.notifications.NotificationRepeatInterval;
 	import com.distriqt.extension.notifications.Notifications;
 	import com.distriqt.extension.notifications.builders.NotificationBuilder;
 	import com.distriqt.extension.notifications.events.NotificationEvent;
@@ -173,8 +172,6 @@ package services
 		 */
 		private static var _calibrationRequestLatestNotificationTime:Number = Number.NaN;
 		
-		private static var missedReadingSnoozePickerOpen:Boolean;
-		
 		private static var snoozeValueMinutes:Array = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 75, 90, 120, 150, 180, 240, 300, 360, 420, 480, 540, 600, 1440, 10080];
 		private static var snoozeValueStrings:Array = ["5 minutes", "10 minutes", "15 minutes", "20 minutes", "25 minutes", "30 minutes", "35 minutes",
 			"40 minutes", "45 minutes", "50 minutes", "55 minutes", "1 hour", "1 hour 15 minutes", "1,5 hours", "2 hours", "2,5 hours", "3 hours", "4 hours",
@@ -235,7 +232,7 @@ package services
 			NotificationService.ID_FOR_ALERT_VERY_LOW_CATEGORY,
 			NotificationService.ID_FOR_ALERT_HIGH_CATEGORY,
 			NotificationService.ID_FOR_ALERT_VERY_HIGH_CATEGORY,
-			null,
+			NotificationService.ID_FOR_ALERT_MISSED_READING_CATEGORY,
 			NotificationService.ID_FOR_ALERT_BATTERY_CATEGORY,
 			NotificationService.ID_FOR_PHONE_MUTED_CATEGORY];
 		
@@ -291,8 +288,6 @@ package services
 				snoozeValueStrings[cntr] = (snoozeValueStrings[cntr] as String).replace("week", ModelLocator.resourceManagerInstance.getString("alarmservice","week"));
 			}
 			
-			//immediately check missedreading alerts
-			checkMissedReadingAlert(new Date(), true);
 			checkMuted(null);
 		}
 		
@@ -531,7 +526,7 @@ package services
 							break;
 						}
 					}
-					if (notificationEvent.identifier == null && !missedReadingSnoozePickerOpen) {
+					if (notificationEvent.identifier == null) {
 						snoozePeriodPickerMissedReadingAlert = Dialog.service.create(
 							new PickerDialogBuilder()
 							.setTitle("")
@@ -543,13 +538,14 @@ package services
 						snoozePeriodPickerMissedReadingAlert.addEventListener( DialogViewEvent.CLOSED, missedReadingSnoozePicker_closedHandler );
 						snoozePeriodPickerMissedReadingAlert.addEventListener( DialogViewEvent.CHANGED, snoozePickerChangedOrCanceledHandler );
 						snoozePeriodPickerMissedReadingAlert.addEventListener( DialogViewEvent.CANCELLED, snoozePickerChangedOrCanceledHandler );
-						//also interested when user cancels the snooze picker because in that case the missed reading alert needs to be replanned
-						snoozePeriodPickerMissedReadingAlert.addEventListener( DialogViewEvent.CANCELLED, missedReadingSnoozePicker_canceledHandler );
 						var dataToSend:Object = new Object();
 						dataToSend.picker = snoozePeriodPickerMissedReadingAlert;
 						dataToSend.pickertext = ModelLocator.resourceManagerInstance.getString("alarmservice","snooze_text_missed_reading_alert");
 						ModelLocator.navigator.pushView(PickerView, dataToSend, null, flipTrans);
-						missedReadingSnoozePickerOpen = true;
+					} else if (notificationEvent.identifier == NotificationService.ID_FOR_MISSED_READING_ALERT_SNOOZE_IDENTIFIER) {
+						_missedReadingAlertSnoozePeriodInMinutes = alertType.defaultSnoozePeriodInMinutes;
+						myTrace("in notificationReceived with id = ID_FOR_MISSED_READING_ALERT, snoozing the notification for " + _missedReadingAlertSnoozePeriodInMinutes + " minutes");
+						_missedReadingAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
 					}
 				} else if (notificationEvent.id == NotificationService.ID_FOR_PHONEMUTED_ALERT) {
 					if (BackgroundFetch.appIsInBackground()) {//if app would be in foreground, notificationReceived is called even withtout any user interaction, don't disable the repeat in that case
@@ -721,56 +717,12 @@ package services
 				_phoneMutedAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
 			}
 			
-			function missedReadingSnoozePicker_canceledHandler(event:DialogViewEvent):void {
-				BackgroundFetch.stopPlayingSound();
-				missedReadingSnoozePickerOpen = false;
-				myTrace("in missedReadingSnoozePicker_canceledHandler");
-				disableRepeatAlert(5);
-				//first cancelling any existing because it may already have been set while app came in foreground
-				myTrace("cancel any existing alert for ID_FOR_MISSED_READING_ALERT");
-				Notifications.service.cancel(NotificationService.ID_FOR_MISSED_READING_ALERT);
-				_missedReadingAlertSnoozePeriodInMinutes = 5;
-				_missedReadingAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
-				myTrace("planning a new notification of the same type with delay in minutes 5");
-				
-				if (latestAlertTypeUsedInMissedReadingNotification != null) {
-					fireAlert(
-						5,
-						latestAlertTypeUsedInMissedReadingNotification, 
-						NotificationService.ID_FOR_MISSED_READING_ALERT, 
-						ModelLocator.resourceManagerInstance.getString("alarmservice","missed_reading_alert_notification_alert"), 
-						alertType.enableVibration,
-						alertType.enableLights,
-						null,
-						_missedReadingAlertSnoozePeriodInMinutes * 60
-					);
-				}
-			}
-			
 			function missedReadingSnoozePicker_closedHandler(event:DialogViewEvent): void {
-				missedReadingSnoozePickerOpen = false;
-				myTrace("in missedReadingSnoozePicker_closedHandler snoozing the notification for " + snoozeValueStrings[event.indexes[0]] + " minutes");
 				BackgroundFetch.stopPlayingSound();
-				//first cancelling any existing because it may already have been set while app came in foreground
-				myTrace("cancel any existing alert for ID_FOR_MISSED_READING_ALERT");
+				myTrace("in phoneMutedSnoozePicker_closedHandler snoozing the notification for " + snoozeValueStrings[event.indexes[0]] + " minutes");
 				disableRepeatAlert(5);
-				Notifications.service.cancel(NotificationService.ID_FOR_MISSED_READING_ALERT);
 				_missedReadingAlertSnoozePeriodInMinutes = snoozeValueMinutes[event.indexes[0]];
 				_missedReadingAlertLatestSnoozeTimeInMs = (new Date()).valueOf();
-				myTrace("in missedReadingSnoozePicker_closedHandler planning a new notification of the same type with delay in minues " + _missedReadingAlertSnoozePeriodInMinutes);
-				
-				if (latestAlertTypeUsedInMissedReadingNotification != null) {
-					fireAlert(
-						5,
-						latestAlertTypeUsedInMissedReadingNotification, 
-						NotificationService.ID_FOR_MISSED_READING_ALERT, 
-						ModelLocator.resourceManagerInstance.getString("alarmservice","missed_reading_alert_notification_alert"), 
-						alertType.enableVibration,
-						alertType.enableLights,
-						null,
-						_missedReadingAlertSnoozePeriodInMinutes * 60
-					); 
-				}
 			}
 			
 			function lowSnoozePicker_closedHandler(event:DialogViewEvent): void {
@@ -839,7 +791,7 @@ package services
 						resetLowAlert();
 					}
 				}
-				checkMissedReadingAlert(now, be == null);
+				checkMissedReadingAlert();
 				if (!alertActive && !BlueToothDevice.isFollower()) {
 					//to avoid that the arrival of a notification of a checkCalibrationRequestAlert stops the sounds of a previous low or high alert
 					checkCalibrationRequestAlert(now);
@@ -915,7 +867,7 @@ package services
 		/**
 		 * repeatId ==> 0:calibration, 1:Low, 2:Very Low, 3:High, 4:Very High, 5:Missed Reading, 6:Battery Low, 7:Phone Muted<br>
 		 */
-		private static function fireAlert(repeatId:int, alertType:AlertType, notificationId:int, alertText:String, enableVibration:Boolean, enableLights:Boolean, categoryId:String, delay:int = 0):void {
+		private static function fireAlert(repeatId:int, alertType:AlertType, notificationId:int, alertText:String, enableVibration:Boolean, enableLights:Boolean, categoryId:String):void {
 			var soundsAsDisplayed:String = ModelLocator.resourceManagerInstance.getString("alerttypeview","sound_names_as_displayed_can_be_translated_must_match_above_list");
 			var soundsAsStoredInAssets:String = ModelLocator.resourceManagerInstance.getString("alerttypeview","sound_names_as_in_assets_no_translation_needed_comma_seperated");
 			var soundsAsDisplayedSplitted:Array = soundsAsDisplayed.split(',');
@@ -952,41 +904,15 @@ package services
 				}
 			}
 
-			if (delay != 0) {
-				notificationBuilder.setDelay(delay);
-			}
-
-			if (delay == 0) {
-				if (ModelLocator.phoneMuted && !(StringUtil.trim(alertType.sound) == "default")) {//check against default for backward compability. Default sound can't be played with playSound
-					if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_OVERRIDE_MUTE) == "true") {
-						//play the sound through backend ane, 
-						//this will ensure that sound will be played, 
-						// - no matter if it's in foreground or not, 
-						// - no matter if any other sounds are played now
-						// - no matter if phone is muted or not
-						BackgroundFetch.playSound(soundToSet);
-						
-						//make sure the phone vibrates depending on the setting
-						//could also be done through BackgroundFetch.vibrate(); 
-						if (enableVibration) {
-							notificationBuilder.setSound("../assets/silence-1sec.aif");
-						} else {
-							notificationBuilder.setSound("");
-						}
-					} else {
-						//phone is muted
-						//play sound through notification, as a result it will actually not be played because notification sounds are not played when phone is muted
-						notificationBuilder.setSound(soundToSet);
-					}
-				} else {
+			if (ModelLocator.phoneMuted && !(StringUtil.trim(alertType.sound) == "default")) {//check against default for backward compability. Default sound can't be played with playSound
+				if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_OVERRIDE_MUTE) == "true") {
 					//play the sound through backend ane, 
 					//this will ensure that sound will be played, 
 					// - no matter if it's in foreground or not, 
 					// - no matter if any other sounds are played now
 					// - no matter if phone is muted or not
-					// not for default sound
-					BackgroundFetch.playSound(soundToSet);		
-
+					BackgroundFetch.playSound(soundToSet);
+					
 					//make sure the phone vibrates depending on the setting
 					//could also be done through BackgroundFetch.vibrate(); 
 					if (enableVibration) {
@@ -994,34 +920,49 @@ package services
 					} else {
 						notificationBuilder.setSound("");
 					}
+				} else {
+					//phone is muted
+					//play sound through notification, as a result it will actually not be played because notification sounds are not played when phone is muted
+					notificationBuilder.setSound(soundToSet);
 				}
 			} else {
-				//delay != means missed reading alert, will be played in the future, sound can't be played now so it must be done via the notification
-				notificationBuilder.setSound(soundToSet);
+				//play the sound through backend ane, 
+				//this will ensure that sound will be played, 
+				// - no matter if it's in foreground or not, 
+				// - no matter if any other sounds are played now
+				// - no matter if phone is muted or not
+				// not for default sound
+				BackgroundFetch.playSound(soundToSet);		
+				
+				//make sure the phone vibrates depending on the setting
+				//could also be done through BackgroundFetch.vibrate(); 
+				if (enableVibration) {
+					notificationBuilder.setSound("../assets/silence-1sec.aif");
+				} else {
+					notificationBuilder.setSound("");
+				}
 			}
 			Notifications.service.notify(notificationBuilder.build());
 			
 			//set repeat arrays
-			if (delay == 0) {
-				enableRepeatAlert(repeatId, alertType.alarmName, alertText);
-			}
+			enableRepeatAlert(repeatId, alertType.alarmName, alertText);
 		}
 		
 		private static function deepSleepServiceTimerHandler(event:Event):void {
 			if (((new Date()).valueOf() - lastMissedReadingAlertCheckTimeStamp)/1000 > 5 * 60 + 30) {
 				myTrace("in deepSleepServiceTimerHandler, calling checkMissedReadingAlert");
-				checkMissedReadingAlert(new Date(), true);
+				checkMissedReadingAlert();
 			}
 			checkMuted(null);
 			repeatAlerts();
 		}
 		
-		private static function checkMissedReadingAlert(now:Date, notTriggeredByNewReading:Boolean):void {
+		private static function checkMissedReadingAlert():void {
 			var listOfAlerts:FromtimeAndValueArrayCollection;
 			var alertValue:Number;
 			var alertName:String;
 			var alertType:AlertType;
-			var delay:int;
+			var now:Date = new Date();
 
 			lastMissedReadingAlertCheckTimeStamp = (new Date()).valueOf(); 	
 
@@ -1061,41 +1002,10 @@ package services
 				if (((now).valueOf() - _missedReadingAlertLatestSnoozeTimeInMs) > _missedReadingAlertSnoozePeriodInMinutes * 60 * 1000
 					||
 					isNaN(_missedReadingAlertLatestSnoozeTimeInMs)) {
-					myTrace("in checkMissedReadingAlert, missed reading alert not snoozed, canceling any planned missed reading alert");
+					myTrace("in checkMissedReadingAlert, missed reading alert not snoozed");
 					//not snoozed
-					//cance any planned alert because it's not snoozed and we actually received a reading
-					myTrace("cancel any existing alert for ID_FOR_MISSED_READING_ALERT");
-					Notifications.service.cancel(NotificationService.ID_FOR_MISSED_READING_ALERT);
-					disableRepeatAlert(5);
-					//check if missed reading alert is still enabled at the time it's supposed to fire
-					var dateOfFire:Date = new Date(now.valueOf() + alertValue * 60 * 1000);
-					delay = alertValue * 60;
-					myTrace("in checkMissedReadingAlert, calculated delay in minutes = " + delay/60);
-					if (notTriggeredByNewReading) {
-						var diffInSeconds:Number = (now.valueOf() - lastBgReading.timestamp)/1000;
-						delay = delay - diffInSeconds;
-						if (delay < 0)
-							delay = 0;
-						myTrace("in checkMissedReadingAlert, was not triggered by new reading, reducing delay with time since last bgreading, new delay value in minutes = " + delay/60);
-					}
-
-					if (((now.valueOf() - lastBgReading.timestamp) / 1000 > 5 * 60 + 30) || notTriggeredByNewReading) {
-					} else {
-						myTrace("in checkMissedReadingAlert, adding 30 seconds to the planned firedate, to avoid it fires just before a new reading is received");
-						delay += 30;
-					}
-					
-					if (now.valueOf() - ModelLocator.appStartTimestamp < 20 * 1000) {
-						//app just got launched, assuming maximum time between creation of appStartTimestamp and now = 20 seconds, which is a lot
-						if (delay < 60) {
-							myTrace("in checkMissedReadingAlert, app just started, setting delay to 60 seconds");
-							delay = 60;
-						}
-					}
-					
-					if (Database.getAlertType(listOfAlerts.getAlarmName(Number.NaN, "", dateOfFire)).enabled) {
-						latestAlertTypeUsedInMissedReadingNotification = alertType;
-						myTrace("in checkMissedReadingAlert, missed reading planned with delay in minutes = " + delay/60);
+					if (((now.valueOf() - lastBgReading.timestamp) > alertValue * 60 * 1000) && ((now.valueOf() - ModelLocator.appStartTimestamp) > 5 * 60 * 1000)) {
+						myTrace("in checkAlarms, missed reading");
 						fireAlert(
 							5,
 							alertType, 
@@ -1103,78 +1013,22 @@ package services
 							ModelLocator.resourceManagerInstance.getString("alarmservice","missed_reading_alert_notification_alert"), 
 							alertType.enableVibration,
 							alertType.enableLights,
-							null,
-							delay
+							NotificationService.ID_FOR_ALERT_MISSED_READING_CATEGORY
 						); 
 						_missedReadingAlertLatestSnoozeTimeInMs = Number.NaN;
 						_missedReadingAlertSnoozePeriodInMinutes = 0;
 					} else {
-						myTrace("in checkMissedReadingAlert, current missed reading alert is enabled, but the time it's supposed to expire it is not enabled so not setting it");
+						myTrace("cancel any existing alert for ID_FOR_MISSED_READING_ALERT");
+						Notifications.service.cancel(NotificationService.ID_FOR_MISSED_READING_ALERT);
+						disableRepeatAlert(5);
 					}
-					
 				} else {
 					//snoozed no need to do anything
 					myTrace("in checkMissedReadingAlert, missed reading snoozed, _missedReadingAlertLatestSnoozeTime = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date(_missedReadingAlertLatestSnoozeTimeInMs)) + ", _missedReadingAlertSnoozePeriodInMinutes = " + _missedReadingAlertSnoozePeriodInMinutes + ", actual time = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date()));
 				}
-			} else {// missed reading alert according to current time not enabled, but check if next period has the alert enabled
-				myTrace("in checkMissedReadingAlert, alertType not enabled");
-				if (((now).valueOf() - _missedReadingAlertLatestSnoozeTimeInMs) > _missedReadingAlertSnoozePeriodInMinutes * 60 * 1000
-					||
-					isNaN(_missedReadingAlertLatestSnoozeTimeInMs)) {
-					myTrace("in checkMissedReadingAlert, missed reading, current alert not enabled and also not snoozed, checking future alert");
-					//get the next alertname
-					alertName = listOfAlerts.getNextAlarmName(Number.NaN, "", now);
-					alertValue = listOfAlerts.getNextValue(Number.NaN, "", now);
-					alertType = Database.getAlertType(alertName);
-					if (alertType.enabled) {
-						myTrace("in checkMissedReadingAlert, next alert is enabled");
-						//cance any planned alert because it's not snoozed and we actually received a reading
-						myTrace("cancel any existing alert for ID_FOR_MISSED_READING_ALERT");
-						Notifications.service.cancel(NotificationService.ID_FOR_MISSED_READING_ALERT);
-						disableRepeatAlert(5);
-						var currentHourLocal:int = now.hours;
-						var currentMinuteLocal:int = now.minutes;
-						var currentSecondsLocal:int = now.seconds;
-						var currentTimeInSeconds:int = 3600 * currentHourLocal + 60 * currentMinuteLocal + currentSecondsLocal;
-						var fromTimeNextAlertInSeconds:int = listOfAlerts.getNextFromTime(Number.NaN, "", now);
-						if (fromTimeNextAlertInSeconds > currentTimeInSeconds)
-							delay = fromTimeNextAlertInSeconds - currentTimeInSeconds;
-						else 
-							delay = 24 * 3600  - (currentTimeInSeconds - fromTimeNextAlertInSeconds);
-						if (delay < alertValue * 60)
-							delay = alertValue * 60;
-						myTrace("in checkMissedReadingAlert, calculated delay in minutes = " + delay/60);
-						latestAlertTypeUsedInMissedReadingNotification = alertType;
-						myTrace("in checkMissedReadingAlert, adding 30 seconds to the planned firedate, to avoid it fires just before a new reading is received");
-						delay += 30;
-						myTrace("in checkMissedReadingAlert, missed reading planned with delay in minutes = " + delay/60);
-						fireAlert(
-							5,
-							alertType, 
-							NotificationService.ID_FOR_MISSED_READING_ALERT, 
-							ModelLocator.resourceManagerInstance.getString("alarmservice","missed_reading_alert_notification_alert"), 
-							alertType.enableVibration,
-							alertType.enableLights,
-							null,
-							delay
-						); 
-						_missedReadingAlertLatestSnoozeTimeInMs = Number.NaN;
-						_missedReadingAlertSnoozePeriodInMinutes = 0;
-					} else {
-						//no need to set the notification, on the contrary just cancel any existing notification
-						myTrace("in checkMissedReadingAlert, missed reading, snoozed, and current alert not enabled anymore, so canceling alert and resetting snooze");
-						myTrace("cancel any existing alert for ID_FOR_MISSED_READING_ALERT");
-						Notifications.service.cancel(NotificationService.ID_FOR_MISSED_READING_ALERT);
-						disableRepeatAlert(5);
-						_missedReadingAlertLatestSnoozeTimeInMs = Number.NaN;
-						_missedReadingAlertLatestNotificationTime = Number.NaN;
-						_missedReadingAlertSnoozePeriodInMinutes = 0;
-					}
-					
-				} else {
-					//snoozed no need to do anything
-					myTrace("in checkMissedReadingAlert, missed reading snoozed, _missedReadingAlertLatestSnoozeTime = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date(_missedReadingAlertLatestSnoozeTimeInMs)) + ", _missedReadingAlertSnoozePeriodInMinutes = " + _missedReadingAlertSnoozePeriodInMinutes + ", actual time = " + DateTimeUtilities.createNSFormattedDateAndTime(new Date()));
-				}
+			} else {
+				//remove missed reading notification, even if there isn't any
+				resetMissedReadingAlert();
 			}
 		}
 		
@@ -1549,9 +1403,18 @@ package services
 			_lowAlertSnoozePeriodInMinutes = 0;
 		}
 		
+		private static function resetMissedReadingAlert():void {
+			myTrace("cancel any existing alert for ID_FOR_MISSED_READING_ALERT");
+			Notifications.service.cancel(NotificationService.ID_FOR_MISSED_READING_ALERT);
+			disableRepeatAlert(5);
+			_missedReadingAlertLatestSnoozeTimeInMs = Number.NaN;
+			_missedReadingAlertLatestNotificationTime = Number.NaN;
+			_missedReadingAlertSnoozePeriodInMinutes = 0;
+		}
+		
 		private static function settingChanged(event:SettingsServiceEvent):void {
 			if (event.data == CommonSettings.COMMON_SETTING_CURRENT_SENSOR) {
-				checkMissedReadingAlert(new Date(), true);
+				checkMissedReadingAlert();
 				//need to plan missed reading alert
 				//in case user has started, stopped a sensor
 				//    if It was a sensor stop, then the setting COMMON_SETTING_CURRENT_SENSOR has value "0", and in checkMissedReadingAlert, the alert will be canceled and not replanned
@@ -1673,8 +1536,7 @@ package services
 								repeatAlertsTexts[cntr], 
 								alertType.enableVibration, 
 								alertType.enableLights, 
-								repeatAlertsCategoryIds[cntr],
-								0);//alerts with delay should not be repeated
+								repeatAlertsCategoryIds[cntr]);
 							enableRepeatAlert(cntr, repeatAlertsAlertTypeNameArray[cntr], repeatAlertsTexts[cntr], repeatAlertsRepeatCount[cntr] + 1);
 							
 							//if it's a low, very low, high or very high alert, 
