@@ -881,68 +881,43 @@ package services
 				.setAlert(alertText)
 				.setTitle(alertText)
 				.setBody(" ")
-				.enableVibration(enableVibration)
+				.enableVibration(false)//vibration will be done through BackgroundFetch ANE
 				.enableLights(enableLights);
 			if (categoryId != null)
 				notificationBuilder.setCategory(categoryId);
 			
-			if (StringUtil.trim(alertType.sound) == "no_sound" && enableVibration) {//using trim because during tests sometimes the soundname had a preceding white space
-				soundToSet = "../assets/silence-1sec.aif";
-			} else 	if (StringUtil.trim(alertType.sound) == "no_sound" && !enableVibration) {//using trim because during tests sometimes the soundname had a preceding white space
-				soundToSet = "";
-			} else {
-				if (StringUtil.trim(alertType.sound) == "default") {//using trim because during tests sometimes the soundname had a preceding white space
-					soundToSet = "default";//only here for backward compatibility. default sound has been removed release 2.2.5
-				} else {
-					for (var cntr:int = 0;cntr < soundsAsDisplayedSplitted.length;cntr++) {
-						newSound = StringUtil.trim(soundsAsDisplayedSplitted[cntr]);//using trim because during tests sometimes the soundname had a preceding white space
-						if (newSound == StringUtil.trim(alertType.sound)) {//using trim because during tests sometimes the soundname had a preceding white space
-							soundToSet = soundsAsStoredInAssetsSplitted[cntr];
-							break;
-						}
+			if (StringUtil.trim(alertType.sound) == "default") {//using trim because during tests sometimes the soundname had a preceding white space
+				soundToSet = "default";//only here for backward compatibility. default sound has been removed release 2.2.5
+			} else if (StringUtil.trim(alertType.sound) == "no_sound") {
+				//keep soundToSet = "";
+			} else {	
+				for (var cntr:int = 0;cntr < soundsAsDisplayedSplitted.length;cntr++) {
+					newSound = StringUtil.trim(soundsAsDisplayedSplitted[cntr]);//using trim because during tests sometimes the soundname had a preceding white space
+					if (newSound == StringUtil.trim(alertType.sound)) {//using trim because during tests sometimes the soundname had a preceding white space
+						soundToSet = soundsAsStoredInAssetsSplitted[cntr];
+						break;
 					}
 				}
 			}
 
-			if (ModelLocator.phoneMuted && !(StringUtil.trim(alertType.sound) == "default")) {//check against default for backward compability. Default sound can't be played with playSound
+			if (ModelLocator.phoneMuted && !(StringUtil.trim(alertType.sound) == "default") && !(StringUtil.trim(alertType.sound) == "")) {//check against default for backward compability. Default sound can't be played with playSound
 				if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_OVERRIDE_MUTE) == "true") {
-					//play the sound through backend ane, 
-					//this will ensure that sound will be played, 
-					// - no matter if it's in foreground or not, 
-					// - no matter if any other sounds are played now
-					// - no matter if phone is muted or not
 					BackgroundFetch.playSound(soundToSet);
-					
-					//make sure the phone vibrates depending on the setting
-					//could also be done through BackgroundFetch.vibrate(); 
-					if (enableVibration) {
-						notificationBuilder.setSound("../assets/silence-1sec.aif");
-					} else {
-						notificationBuilder.setSound("");
-					}
-				} else {
-					//phone is muted
-					//play sound through notification, as a result it will actually not be played because notification sounds are not played when phone is muted
-					notificationBuilder.setSound(soundToSet);
 				}
 			} else {
-				//play the sound through backend ane, 
-				//this will ensure that sound will be played, 
-				// - no matter if it's in foreground or not, 
-				// - no matter if any other sounds are played now
-				// - no matter if phone is muted or not
-				// not for default sound
 				BackgroundFetch.playSound(soundToSet);		
-				
-				//make sure the phone vibrates depending on the setting
-				//could also be done through BackgroundFetch.vibrate(); 
-				if (enableVibration) {
-					notificationBuilder.setSound("../assets/silence-1sec.aif");
-				} else {
-					notificationBuilder.setSound("");
-				}
+			}
+			
+			if (soundToSet == "default") {
+				notificationBuilder.setSound("default");//just in case  soundToSet = default
+			} else {
+				notificationBuilder.setSound("");
 			}
 			Notifications.service.notify(notificationBuilder.build());
+			
+			if (enableVibration) {
+				BackgroundFetch.vibrate();
+			}
 			
 			//set repeat arrays
 			enableRepeatAlert(repeatId, alertType.alarmName, alertText);
