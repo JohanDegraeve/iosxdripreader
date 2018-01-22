@@ -181,6 +181,7 @@ package services
 		private static var lastCheckMuteTimeStamp:Number;
 		private static var latestAlertTypeUsedInMissedReadingNotification:AlertType;
 		private static var lastMissedReadingAlertCheckTimeStamp:Number;
+		private static var lastApplicationStoppedAlertCheckTimeStamp:Number;
 		
 		//for repeat of alarms every minute, this is only for non-snoozed alerts
 		//each element in an array represents certain alarm 
@@ -278,6 +279,7 @@ package services
 			DeepSleepService.instance.addEventListener(DeepSleepServiceEvent.DEEP_SLEEP_SERVICE_TIMER_EVENT, deepSleepServiceTimerHandler);
 			lastAlarmCheckTimeStamp = 0;
 			lastMissedReadingAlertCheckTimeStamp = 0;
+			lastApplicationStoppedAlertCheckTimeStamp = 0;
 			lastCheckMuteTimeStamp = 0;
 			
 			for (var cntr:int = 0;cntr < snoozeValueMinutes.length;cntr++) {
@@ -289,6 +291,7 @@ package services
 			}
 			
 			checkMuted(null);
+			Notifications.service.cancel(NotificationService.ID_FOR_APPLICATION_INACTIVE_ALERT);
 		}
 		
 		private static function checkMuted(event:Event):void {
@@ -930,6 +933,24 @@ package services
 			}
 			checkMuted(null);
 			repeatAlerts();
+			//
+			if (((new Date()).valueOf() - lastApplicationStoppedAlertCheckTimeStamp)/1000 > 5 * 60) {
+				myTrace("in deepSleepServiceTimerHandler, calling planApplicationStoppedAlert");
+				planApplicationStoppedAlert();
+				lastApplicationStoppedAlertCheckTimeStamp = (new Date()).valueOf();
+			}
+		}
+		
+		private static function planApplicationStoppedAlert():void {
+			var notificationBuilder:NotificationBuilder = new NotificationBuilder()
+				.setId(NotificationService.ID_FOR_APPLICATION_INACTIVE_ALERT)
+				.setAlert(ModelLocator.resourceManagerInstance.getString("alarmservice","application_stopped_alert_title"))
+				.setTitle(ModelLocator.resourceManagerInstance.getString("alarmservice","application_stopped_alert_title"))
+				.setBody(ModelLocator.resourceManagerInstance.getString("alarmservice","application_stopped_alert_body"))
+				.enableVibration(true)
+				.enableLights(true)
+				.setDelay(320);
+			Notifications.service.notify(notificationBuilder.build());
 		}
 		
 		private static function checkMissedReadingAlert():void {
