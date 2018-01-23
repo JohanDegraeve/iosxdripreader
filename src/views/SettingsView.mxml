@@ -91,6 +91,8 @@
 			private static var dexcomShareURL:String="";
 			[Bindable]
 			private static var overrideMuteTextOnOrOff:String = "";
+			[Bindable]
+			private static var appInactiveAlertTextOnOrOff:String = "";
 
 			private static var resetColorTimer:Timer;
 			
@@ -135,6 +137,12 @@
 					alwaysOnNotificationTextOnOrOff = ModelLocator.resourceManagerInstance.getString('settingsview','on');
 				} else {
 					alwaysOnNotificationTextOnOrOff = ModelLocator.resourceManagerInstance.getString('settingsview','off');
+				}
+				
+				if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_APP_INACTIVE_ALERT) == "true"){
+					appInactiveAlertTextOnOrOff = ModelLocator.resourceManagerInstance.getString('settingsview','on');
+				} else {
+					appInactiveAlertTextOnOrOff = ModelLocator.resourceManagerInstance.getString('settingsview','off');
 				}
 				
 				if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_OVERRIDE_MUTE) == "true") {
@@ -499,6 +507,20 @@
 				} else {
 					LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_ALWAYS_ON_NOTIFICATION, "true");
 					alwaysOnNotificationTextOnOrOff = ModelLocator.resourceManagerInstance.getString('settingsview','on');
+				}
+			}
+			
+			private function appInactiveAlert_clickHandler(event:MouseEvent):void {
+				rectappinactive1.color = uint("0xD3D3D3");
+				rectappinactive2.color = uint("0xD3D3D3");
+				setResetColorTimer();
+
+				if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_APP_INACTIVE_ALERT) == "true") {
+					LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_APP_INACTIVE_ALERT, "false");
+					appInactiveAlertTextOnOrOff = ModelLocator.resourceManagerInstance.getString('settingsview','off');
+				} else {
+					LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_APP_INACTIVE_ALERT, "true");
+					appInactiveAlertTextOnOrOff = ModelLocator.resourceManagerInstance.getString('settingsview','on');
 				}
 			}
 			
@@ -1403,6 +1425,8 @@
 					rectoverrideMute2.color = uint("0x212121");//mute
 					rectexportsidiary1.color = uint("0x212121");
 					rectexportsidiary2.color = uint("0x212121");
+					rectappinactive1.color = uint("0x212121");
+					rectappinactive2.color = uint("0x212121");
 				}
 			}
 			
@@ -1874,6 +1898,31 @@
 					<s:Rect height="100%" width="5" >
 						<s:fill>
 							<s:SolidColor color="#212121" id="rect38"/>
+						</s:fill>
+					</s:Rect>
+				</s:HGroup>
+				<s:Line width="100%">
+					<s:stroke>
+						<s:SolidColorStroke color="0xFFFFFF" weight="1" alpha="0.25"/>
+					</s:stroke>
+				</s:Line>	
+			</s:VGroup>
+			
+			<!-- Chapter Alerts Subsection application inactive alert -->
+			<s:VGroup click="appInactiveAlert_clickHandler(event)" width="100%">
+				<s:HGroup width="100%">
+					<s:Rect height="100%" width="5" >
+						<s:fill>
+							<s:SolidColor color="#212121" id="rectappinactive1"/>
+						</s:fill>
+					</s:Rect>
+					<s:Label text = "{ModelLocator.resourceManagerInstance.getString('settingsview','app_inactive_alert')}"
+							 width="100%" paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
+					<s:Label text = "{appInactiveAlertTextOnOrOff}"  
+							 paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
+					<s:Rect height="100%" width="5" >
+						<s:fill>
+							<s:SolidColor color="#212121" id="rectappinactive2"/>
 						</s:fill>
 					</s:Rect>
 				</s:HGroup>

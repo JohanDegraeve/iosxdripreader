@@ -276,6 +276,7 @@ package services
 			BluetoothLE.service.centralManager.addEventListener(PeripheralEvent.DISCOVERED, checkMuted);
 			BluetoothLE.service.centralManager.addEventListener(PeripheralEvent.CONNECT, checkMuted );
 			CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, settingChanged);
+			LocalSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, settingChanged);
 			DeepSleepService.instance.addEventListener(DeepSleepServiceEvent.DEEP_SLEEP_SERVICE_TIMER_EVENT, deepSleepServiceTimerHandler);
 			lastAlarmCheckTimeStamp = 0;
 			lastMissedReadingAlertCheckTimeStamp = 0;
@@ -933,11 +934,13 @@ package services
 			}
 			checkMuted(null);
 			repeatAlerts();
-			//
-			if (((new Date()).valueOf() - lastApplicationStoppedAlertCheckTimeStamp)/1000 > 5 * 60) {
-				myTrace("in deepSleepServiceTimerHandler, calling planApplicationStoppedAlert");
-				planApplicationStoppedAlert();
-				lastApplicationStoppedAlertCheckTimeStamp = (new Date()).valueOf();
+
+			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_APP_INACTIVE_ALERT) == "true") {
+				if (((new Date()).valueOf() - lastApplicationStoppedAlertCheckTimeStamp)/1000 > 5 * 60) {
+					myTrace("in deepSleepServiceTimerHandler, calling planApplicationStoppedAlert");
+					planApplicationStoppedAlert();
+					lastApplicationStoppedAlertCheckTimeStamp = (new Date()).valueOf();
+				}
 			}
 		}
 		
@@ -1416,6 +1419,14 @@ package services
 				//    if It was a sensor stop, then the setting COMMON_SETTING_CURRENT_SENSOR has value "0", and in checkMissedReadingAlert, the alert will be canceled and not replanned
 			} else if (event.data == CommonSettings.COMMON_SETTING_CALIBRATION_REQUEST_ALERT) {
 				checkCalibrationRequestAlert(new Date());
+			} else if (event.data == LocalSettings.LOCAL_SETTING_APP_INACTIVE_ALERT) {
+				if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_APP_INACTIVE_ALERT) == "true") {
+					planApplicationStoppedAlert();
+					lastApplicationStoppedAlertCheckTimeStamp = (new Date()).valueOf();
+				} else {
+					Notifications.service.cancel(NotificationService.ID_FOR_APPLICATION_INACTIVE_ALERT);
+					lastApplicationStoppedAlertCheckTimeStamp = 0;
+				}
 			}
 		}
 		
