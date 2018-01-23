@@ -1,5 +1,5 @@
 # connects to xDrip, G5, BluKon and BlueReader
-
+# can also work as Follower
 
 
 xdrip/xbridge/G5/Bluereader/Blukon for iOS devices - 
@@ -11,8 +11,9 @@ xdrip/xbridge/G5/Bluereader/Blukon for iOS devices -
 * store values in HealthKit
 * upload to Dexcom Share
 * speak Bloodglucose readings, languages Dutch, English, French, Portugese, Spanish. If more languages needed send me an e-mail please (xdrip@proximus.be)
+* export readings to SiDiary format
 
-Nice video about steps to take, created by Kamil (diabetic_energetic) : https://youtu.be/sNqj-Pvz53A
+* Follower mode : using NightScout, the app can be used in follower mode.
 
 # Alerts
 
