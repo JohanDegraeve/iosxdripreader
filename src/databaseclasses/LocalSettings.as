@@ -101,6 +101,7 @@ package databaseclasses
 		public static const LOCAL_SETTING_UPDATE_SERVICE_INITIALCHECK:int = 29;
 		public static const LOCAL_SETTING_TIMESTAMP_SINCE_LAST_EXPORT_SIDIARY:int = 30;
 		public static const LOCAL_SETTING_APP_INACTIVE_ALERT:int = 31;
+		public static const LOCAL_SETTING_AMOUNT_OF_WARNINGS_ABOUT_OTHER_APP:int = 32;
 		
 		private static var localSettings:Array = [
 			"false",//LOCAL_SETTING_DETAILED_TRACING_ENABLED
@@ -134,7 +135,8 @@ package databaseclasses
 			"false",//LOCAL_SETTING_OVERRIDE_MUTE
 			"true",//LOCAL_SETTING_UPDATE_SERVICE_INITIALCHECK
 			"0",//LOCAL_SETTING_TIMESTAMP_SINCE_LAST_EXPORT_SIDIARY
-			"true"//LOCAL_SETTING_APP_INACTIVE_ALERT
+			"true",//LOCAL_SETTING_APP_INACTIVE_ALERT
+			"0"//LOCAL_SETTING_AMOUNT_OF_WARNINGS_ABOUT_OTHER_APP
 		];
 		
 		public function LocalSettings() {
