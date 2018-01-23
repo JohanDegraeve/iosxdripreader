@@ -1050,8 +1050,8 @@
 					if (event.values.length < 1)
 						return;
 					
-					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_SERIALNUMBER, event.values[0] as String);
-					dexcomShareSerialNumber = event.values[0] as String;
+					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_SERIALNUMBER, (event.values[0] as String).toUpperCase());
+					dexcomShareSerialNumber = (event.values[0] as String).toUpperCase();
 				}
 			}
 			
