@@ -149,6 +149,10 @@ package databaseclasses
 			return (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE).toUpperCase() == "LIMITTER");
 		}
 
+		public static function isSimblee():Boolean {
+			return (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE).toUpperCase() == "SIMBLEE");
+		}
+		
 		/**
 		 * Follower mode, not really a bluetoothdevice but it comes in handy to put it here also
 		 */
@@ -162,7 +166,7 @@ package databaseclasses
 		 *  
 		 */
 		public static function isTypeLimitter():Boolean {
-			return (isBlueReader() || isBluKon() || isLimitter());
+			return (isBlueReader() || isBluKon() || isLimitter() || isSimblee());
 		}
 		
 		/**
@@ -207,6 +211,8 @@ package databaseclasses
 				return "Limitter";
 			if (isFollower())
 				return "Follow";
+			if (isSimblee())
+				return "Simblee";
 			return "unknown";
 		}
 
