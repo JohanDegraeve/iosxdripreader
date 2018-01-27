@@ -833,9 +833,11 @@
 					selectedTransmitterType = 4;
 				} else if (currentType.toUpperCase() == "FOLLOW") {
 					selectedTransmitterType = 5;
+				} else if (currentType.toUpperCase() == "SIMBLEE") {
+					selectedTransmitterType = 6;
 				}
 				var transmitterTypeNames:Array = new Array();
-				transmitterTypeNames.push("G4", "G5", "Limitter", "Bluereader", "BluKon", "Follow");
+				transmitterTypeNames.push("G4", "G5", "Limitter", "Bluereader", "BluKon", "Follow", "Simblee");
 				
 				var picker:PickerDialogView = Dialog.service.create(
 					new PickerDialogBuilder()
