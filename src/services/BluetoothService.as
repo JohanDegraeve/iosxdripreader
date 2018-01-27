@@ -142,7 +142,14 @@ package services
 		private static const uuids_G5_Characteristics:Vector.<String> = new <String>[G5_Authentication_Characteristic_UUID, G5_Communication_Characteristic_UUID, G5_Control_Characteristic_UUID];
 		private static const uuids_BLUKON_Characteristics:Vector.<String> = new <String>[BC_desiredReceiveCharacteristicUUID, BC_desiredTransmitCharacteristicUUID];
 		private static const uuids_BlueReader_Characteristics:Vector.<String> = new <String>[BlueReader_TX_Characteristic_UUID, BlueReader_RX_Characteristic_UUID];
-			
+
+		//Simblee
+		private static const SIMBLEE_SERVICE_UUID:String = "c97433f0-be8f-4dc8-b6f0-5343e6100eb4";
+		private static const uuids_SIMBLEE_Service:Vector.<String> = new <String>[SIMBLEE_SERVICE_UUID];
+		private static const SIMBLEE_RX_CHARACTERISTIC_UUID:String = "c97433f1-be8f-4dc8-b6f0-5343e6100eb4";
+		private static const SIMBLEE_TX_CHARACTERISTIC_UUID:String = "c97433f2-be8f-4dc8-b6f0-5343e6100eb4";
+		private static const uuids_Simblee_Characteristics:Vector.<String> = new <String>[SIMBLEE_RX_CHARACTERISTIC_UUID, SIMBLEE_TX_CHARACTERISTIC_UUID];
+		
 		private static var connectionAttemptTimeStamp:Number;
 		private static const maxTimeBetweenConnectAttemptAndConnectSuccess:Number = 3;
 		private static var waitingForPeripheralCharacteristicsDiscovered:Boolean = false;
@@ -238,6 +245,10 @@ package services
 		private static var BlueReader_RX_Characteristic:Characteristic;
 		
 		private static var BlueReader_TX_Characteristic:Characteristic;
+		
+		private static var Simblee_Tx_characteristic:Characteristic;
+		
+		private static var Simblee_Rx_characteristic:Characteristic;
 		
 		//blukon global vars for backfill processing
 		private static var m_currentTrendIndex:int;
@@ -433,7 +444,8 @@ package services
 				if (!BluetoothLE.service.centralManager.scanForPeripherals(
 					BlueToothDevice.isBluKon() ? uuids_BLUKON_Service : 
 					(BlueToothDevice.isDexcomG5() ? uuids_G5_Advertisement:
-					(BlueToothDevice.isBlueReader() ? uuids_Bluereader_Advertisement :uuids_G4_Service))))
+					(BlueToothDevice.isSimblee() ? uuids_SIMBLEE_Service:
+					(BlueToothDevice.isBlueReader() ? uuids_Bluereader_Advertisement :uuids_G4_Service)))))
 				{
 					myTrace("failed to start scanning for peripherals");
 					return;
@@ -516,16 +528,7 @@ package services
 			}
 			
 			if (
-				(!(BlueToothDevice.alwaysScan()) &&
-					(
-						(event.peripheral.name as String).toUpperCase().indexOf("DRIP") > -1 
-						|| (event.peripheral.name as String).toUpperCase().indexOf("BRIDGE") > -1 
-						|| (event.peripheral.name as String).toUpperCase().indexOf("LIMITIX") > -1
-						|| (event.peripheral.name as String).toUpperCase().indexOf("LIMITTER") > -1
-						|| (event.peripheral.name as String).toUpperCase().indexOf("BLUEREADER") > -1
-						|| (event.peripheral.name as String).toUpperCase().indexOf("DINANTRONICS") > -1
-					)
-				) 
+				!(BlueToothDevice.alwaysScan()) 
 				||
 				(BlueToothDevice.isDexcomG5() &&
 					(
@@ -658,8 +661,9 @@ package services
 				activeBluetoothPeripheral.discoverServices(
 					BlueToothDevice.isBluKon() ? uuids_BLUKON_Service : 
 					(BlueToothDevice.isDexcomG5() ? uuids_G5_Service:
+					(BlueToothDevice.isSimblee() ? uuids_SIMBLEE_Service:
 					(BlueToothDevice.isBlueReader() ? uuids_BlueReader_Service:
-					uuids_G4_Service)));
+					uuids_G4_Service))));
 				if (!BlueToothDevice.isBluKon()) {
 					discoverServiceOrCharacteristicTimer = new Timer(DISCOVER_SERVICES_OR_CHARACTERISTICS_RETRY_TIME_IN_SECONDS * 1000, 1);
 					discoverServiceOrCharacteristicTimer.addEventListener(TimerEvent.TIMER, discoverServices);
@@ -825,6 +829,13 @@ package services
 						}
 						index++;
 					}
+				} else if (BlueToothDevice.isSimblee()) {
+					for each (var o:Object in activeBluetoothPeripheral.services) {
+						if (SIMBLEE_SERVICE_UUID.toUpperCase().indexOf((o.uuid as String).toUpperCase()) > -1) {
+							break;
+						}
+						index++;
+					}
 				}
 				
 				waitingForPeripheralCharacteristicsDiscovered = true;
@@ -832,7 +843,8 @@ package services
 					BlueToothDevice.isBluKon() ? uuids_BLUKON_Characteristics : 
 					(BlueToothDevice.isDexcomG5() ? uuids_G5_Characteristics:
 					(BlueToothDevice.isBlueReader() ? uuids_BlueReader_Characteristics:
-					uuids_G4_Characteristics)));
+					(BlueToothDevice.isSimblee() ? uuids_Simblee_Characteristics:
+					uuids_G4_Characteristics))));
 				discoverServiceOrCharacteristicTimer = new Timer(DISCOVER_SERVICES_OR_CHARACTERISTICS_RETRY_TIME_IN_SECONDS * 1000, 1);
 				discoverServiceOrCharacteristicTimer.addEventListener(TimerEvent.TIMER, discoverCharacteristics);
 				discoverServiceOrCharacteristicTimer.start();
@@ -865,6 +877,8 @@ package services
 			var BC_desiredTransmitCharacteristicIndex:int = 0;
 			var BlueReader_Rx_CharacteristicIndex:int = 0;
 			var BlueReader_Tx_CharacteristicIndex:int = 0;
+			var Simblee_Rx_CharacteristicIndex:int = 0;
+			var Simblee_Tx_CharacteristicIndex:int = 0;
 			
 			var o:Object;
 			if (BlueToothDevice.isDexcomG5()) {
@@ -956,6 +970,38 @@ package services
 				{
 					myTrace("Subscribe to characteristic failed due to invalid adapter state.");
 				}
+			} else if (BlueToothDevice.isSimblee()) {
+				for each (o in activeBluetoothPeripheral.services) {
+					if (SIMBLEE_SERVICE_UUID.indexOf(o.uuid as String) > -1) {
+						myTrace("peripheral_discoverCharacteristicsHandler, found service " + SIMBLEE_SERVICE_UUID);
+						break;
+					}
+					servicesIndex++;
+				}
+
+				for each (o in activeBluetoothPeripheral.services[servicesIndex].characteristics) {
+					if (SIMBLEE_TX_CHARACTERISTIC_UUID.indexOf(o.uuid as String) > -1) {
+						myTrace("peripheral_discoverCharacteristicsHandler, found characteristic " + SIMBLEE_TX_CHARACTERISTIC_UUID);
+						break;
+					}
+					Simblee_Tx_CharacteristicIndex++;
+				}
+				Simblee_Tx_characteristic = event.peripheral.services[servicesIndex].characteristics[Simblee_Tx_CharacteristicIndex];
+
+				for each (o in activeBluetoothPeripheral.services[servicesIndex].characteristics) {
+					if (SIMBLEE_RX_CHARACTERISTIC_UUID.indexOf(o.uuid as String) > -1) {
+						myTrace("peripheral_discoverCharacteristicsHandler, found characteristic " + SIMBLEE_RX_CHARACTERISTIC_UUID);
+						break;
+					}
+					Simblee_Rx_CharacteristicIndex++;
+				}
+				Simblee_Rx_characteristic = event.peripheral.services[servicesIndex].characteristics[Simblee_Rx_CharacteristicIndex];
+
+				myTrace("subscribing to Simblee_Rx_characteristic");
+				if (!activeBluetoothPeripheral.subscribeToCharacteristic(Simblee_Rx_characteristic))
+				{
+					myTrace("Subscribe to characteristic failed due to invalid adapter state.");
+				}
 			} else if (BlueToothDevice.isBlueReader()) {
 				myTrace("in peripheral_discoverCharacteristicsHandler, handling bluereader, search for servicesIndex");
 				for each (o in activeBluetoothPeripheral.services) {
@@ -1031,6 +1077,8 @@ package services
 					processG4TransmitterData(value);
 				} else if (BlueToothDevice.isBlueReader()) {
 					processBlueReaderTransmitterData(value);
+				} else if (BlueToothDevice.isSimblee()) {
+					processSimbleeTransmitterData(value);
 				} else {
 					myTrace("in peripheral_characteristic_updatedHandler, device type not known");
 				}
@@ -1686,6 +1734,16 @@ package services
 			}
 		}
 		
+		public static function processSimbleeTransmitterData(buffer:ByteArray):void {
+			buffer.position = 0;
+			buffer.endian = Endian.LITTLE_ENDIAN;
+			myTrace("in processSimbleeTransmitterData data packet received from transmitter : " + Utilities.UniqueId.bytesToHex(buffer));
+			
+			buffer.position = 0;
+			var bufferAsString:String = buffer.readUTFBytes(buffer.length);
+			myTrace("in processBlueReaderTransmitterData buffer as string =  " + bufferAsString);
+		}
+		
 		public static function processBlueReaderTransmitterData(buffer:ByteArray):void {
 			buffer.position = 0;
 			buffer.endian = Endian.LITTLE_ENDIAN;
@@ -1909,6 +1967,10 @@ package services
 				return "BlueReader_TX_Characteristic_UUID";
 			} else if (uuid.toUpperCase() == HM_RX_TX_G4.toUpperCase()) {
 				return "HM_RX_TX_G4";
+			} else if (uuid.toUpperCase() == SIMBLEE_RX_CHARACTERISTIC_UUID.toUpperCase()) {
+				return "SIMBLEE_RX_CHARACTERISTIC_UUID";
+			} else if (uuid.toUpperCase() == SIMBLEE_TX_CHARACTERISTIC_UUID.toUpperCase()) {
+				return "SIMBLEE_TX_CHARACTERISTIC_UUID";
 			} 
 			return uuid + ", unknown characteristic uuid";
 		}
