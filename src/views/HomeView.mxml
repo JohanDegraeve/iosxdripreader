@@ -1186,8 +1186,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 		]]>
 	</fx:Script>
 	<s:actionContent>
-		<s:Button icon="../assets/bell48.png" id="presnoozeicon" click="preSnoozeButtonClicked(event)" enabled="true" alpha="1"/>
-		<s:Button id="bluetoothbutton" icon="../assets/bluetooth.png" alpha="{_bluetoothButtonActive ? 1:0.25}" enabled="{_bluetoothButtonActive}" click="deviceTypeButtonClicked(event)"/>
+		<s:Button icon="{ModelLocator.imageBell}" id="presnoozeicon" click="preSnoozeButtonClicked(event)" enabled="true" alpha="1"/>
+		<s:Button id="bluetoothbutton" icon="{ModelLocator.imageBluetooth}" alpha="{_bluetoothButtonActive ? 1:0.25}" enabled="{_bluetoothButtonActive}" click="deviceTypeButtonClicked(event)"/>
 		<s:Button icon="{ModelLocator.image_calibrate_active}" id="calibrateButton" alpha="{_calibrateButtonActive ? 1:0.25}" enabled="{_calibrateButtonActive}" click="calibrationButtonClicked(event)"/>
 	</s:actionContent>
 	

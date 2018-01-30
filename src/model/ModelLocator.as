@@ -75,6 +75,8 @@ package model
 		public static var image_calibrate_active:Image;
 		public static var image_add:Image;
 		public static var imageDone:Image;
+		public static var imageBluetooth:Image;
+		public static var imageBell:Image;
 		public static var iconCache:ContentCache;
 
 		public static const MAX_DAYS_TO_STORE_BGREADINGS_IN_MODELLOCATOR:int = 1;
@@ -241,6 +243,13 @@ package model
 			imageDone.contentLoader = iconCache;
 			imageDone.source = "../assets/Done_48x48.png";
 			
+			imageBluetooth = new Image();
+			imageBluetooth.contentLoader = iconCache;
+			imageBluetooth.source = "../assets/bluetooth.png";
+			
+			imageBell = new Image();
+			imageBell.contentLoader = iconCache;
+			imageBell.source = "../assets/bell48.png";
 		}
 		
 		private static function coreEvent(event:Event):void {
