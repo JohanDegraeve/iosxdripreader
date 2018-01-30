@@ -1080,14 +1080,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			
 			private function preSnoozeButtonClicked(event:MouseEvent):void {
 				var preSnoozeAlertBuilder:AlertBuilder = new AlertBuilder();
-				preSnoozeAlertBuilder.setTitle("Pre- or unsnooze Alert");
-				preSnoozeAlertBuilder.setMessage("Select alert to pre- or unsnooze");
-				preSnoozeAlertBuilder.addOption("Very Low", DialogAction.STYLE_DEFAULT, 1);
-				preSnoozeAlertBuilder.addOption("Low", DialogAction.STYLE_DEFAULT, 2);
-				preSnoozeAlertBuilder.addOption("High", DialogAction.STYLE_DEFAULT, 3);
-				preSnoozeAlertBuilder.addOption("Very High", DialogAction.STYLE_DEFAULT, 4);
-				preSnoozeAlertBuilder.addOption("Missed Reading", DialogAction.STYLE_DEFAULT, 5);
-				preSnoozeAlertBuilder.addOption("Phone Muted", DialogAction.STYLE_DEFAULT, 6);
+				preSnoozeAlertBuilder.setTitle(ModelLocator.resourceManagerInstance.getString("homeview","pre_or_unsnooze_alert"));
+				preSnoozeAlertBuilder.setMessage(ModelLocator.resourceManagerInstance.getString("homeview","select_alert_to_pre_or_unsnooze"));
+				preSnoozeAlertBuilder.addOption(ModelLocator.resourceManagerInstance.getString("homeview","very_low"), DialogAction.STYLE_DEFAULT, 1);
+				preSnoozeAlertBuilder.addOption(ModelLocator.resourceManagerInstance.getString("homeview","low"), DialogAction.STYLE_DEFAULT, 2);
+				preSnoozeAlertBuilder.addOption(ModelLocator.resourceManagerInstance.getString("homeview","high"), DialogAction.STYLE_DEFAULT, 3);
+				preSnoozeAlertBuilder.addOption(ModelLocator.resourceManagerInstance.getString("homeview","very_high"), DialogAction.STYLE_DEFAULT, 4);
+				preSnoozeAlertBuilder.addOption(ModelLocator.resourceManagerInstance.getString("homeview","missed_reading"), DialogAction.STYLE_DEFAULT, 5);
+				preSnoozeAlertBuilder.addOption(ModelLocator.resourceManagerInstance.getString("homeview","phone_muted"), DialogAction.STYLE_DEFAULT, 6);
 				preSnoozeAlertBuilder.addOption(ModelLocator.resourceManagerInstance.getString("general","cancel"), DialogAction.STYLE_CANCEL, 0);
 				var preSnoozeDialogView:DialogView = Dialog.service.create(preSnoozeAlertBuilder.build());
 				preSnoozeDialogView.addEventListener(DialogViewEvent.CLOSED, preSnoozeDialogViewClosedHandler);
@@ -1102,51 +1102,51 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 				}
 				if (event.index == 1) {
 					if (AlarmService.veryLowAlertSnoozed()) {
-						snoozeOverviewAlertBuilder.setTitle("Very low alert snoozed for " + AlarmService.veryLowAlertSnoozeAsString());
-						snoozeOverviewAlertBuilder.addOption("Unsnooze", DialogAction.STYLE_DEFAULT, 1);
+						snoozeOverviewAlertBuilder.setTitle(ModelLocator.resourceManagerInstance.getString("homeview","very_low_alert_snoozed_for") + " " + AlarmService.veryLowAlertSnoozeAsString());
+						snoozeOverviewAlertBuilder.addOption(ModelLocator.resourceManagerInstance.getString("homeview","unsnooze"), DialogAction.STYLE_DEFAULT, 1);
 					} else {
-						snoozeOverviewAlertBuilder.setTitle("Very low alert not snoozed");
-						snoozeOverviewAlertBuilder.addOption("PreSnooze", DialogAction.STYLE_DEFAULT, 2);
+						snoozeOverviewAlertBuilder.setTitle(ModelLocator.resourceManagerInstance.getString("homeview","very_low_alert_not_snoozed"));
+						snoozeOverviewAlertBuilder.addOption(ModelLocator.resourceManagerInstance.getString("homeview","presnooze"), DialogAction.STYLE_DEFAULT, 2);
 					}
 				} else if (event.index == 2) {
 					if (AlarmService.lowAlertSnoozed()) {
-						snoozeOverviewAlertBuilder.setTitle("Low alert snoozed for " + AlarmService.lowAlertSnoozeAsString());
-						snoozeOverviewAlertBuilder.addOption("Unsnooze", DialogAction.STYLE_DEFAULT, 3);
+						snoozeOverviewAlertBuilder.setTitle(ModelLocator.resourceManagerInstance.getString("homeview","low_alert_snoozed_for") + " "  + AlarmService.lowAlertSnoozeAsString());
+						snoozeOverviewAlertBuilder.addOption(ModelLocator.resourceManagerInstance.getString("homeview","unsnooze"), DialogAction.STYLE_DEFAULT, 3);
 					} else {
-						snoozeOverviewAlertBuilder.setTitle("Low alert not snoozed");
-						snoozeOverviewAlertBuilder.addOption("PreSnooze", DialogAction.STYLE_DEFAULT, 4);
+						snoozeOverviewAlertBuilder.setTitle(ModelLocator.resourceManagerInstance.getString("homeview","low_alert_not_snoozed"));
+						snoozeOverviewAlertBuilder.addOption(ModelLocator.resourceManagerInstance.getString("homeview","presnooze"), DialogAction.STYLE_DEFAULT, 4);
 					}
 				} else if (event.index == 3) {
 					if (AlarmService.highAlertSnoozed()) {
-						snoozeOverviewAlertBuilder.setTitle("High alert snoozed for " + AlarmService.highAlertSnoozeAsString());
-						snoozeOverviewAlertBuilder.addOption("Unsnooze", DialogAction.STYLE_DEFAULT, 5);
+						snoozeOverviewAlertBuilder.setTitle(ModelLocator.resourceManagerInstance.getString("homeview","high_alert_snoozed_for") + " "  + AlarmService.highAlertSnoozeAsString());
+						snoozeOverviewAlertBuilder.addOption(ModelLocator.resourceManagerInstance.getString("homeview","unsnooze"), DialogAction.STYLE_DEFAULT, 5);
 					} else {
-						snoozeOverviewAlertBuilder.setTitle("High alert not snoozed");
-						snoozeOverviewAlertBuilder.addOption("PreSnooze", DialogAction.STYLE_DEFAULT, 6);
+						snoozeOverviewAlertBuilder.setTitle(ModelLocator.resourceManagerInstance.getString("homeview","high_alert_not_snoozed"));
+						snoozeOverviewAlertBuilder.addOption(ModelLocator.resourceManagerInstance.getString("homeview","presnooze"), DialogAction.STYLE_DEFAULT, 6);
 					}
 				} else if (event.index == 4) {
 					if (AlarmService.veryHighAlertSnoozed()) {
-						snoozeOverviewAlertBuilder.setTitle("Very high alert snoozed for " + AlarmService.veryHighAlertSnoozeAsString());
-						snoozeOverviewAlertBuilder.addOption("Unsnooze", DialogAction.STYLE_DEFAULT, 7);
+						snoozeOverviewAlertBuilder.setTitle(ModelLocator.resourceManagerInstance.getString("homeview","very_high_alert_snoozed_for") + " "  + AlarmService.veryHighAlertSnoozeAsString());
+						snoozeOverviewAlertBuilder.addOption(ModelLocator.resourceManagerInstance.getString("homeview","unsnooze"), DialogAction.STYLE_DEFAULT, 7);
 					} else {
-						snoozeOverviewAlertBuilder.setTitle("Very high alert not snoozed");
-						snoozeOverviewAlertBuilder.addOption("PreSnooze", DialogAction.STYLE_DEFAULT, 8);
+						snoozeOverviewAlertBuilder.setTitle(ModelLocator.resourceManagerInstance.getString("homeview","very_high_alert_not_snoozed"));
+						snoozeOverviewAlertBuilder.addOption(ModelLocator.resourceManagerInstance.getString("homeview","presnooze"), DialogAction.STYLE_DEFAULT, 8);
 					}
 				} else if (event.index == 5) {
 					if (AlarmService.missedReadingAlertSnoozed()) {
-						snoozeOverviewAlertBuilder.setTitle("Missed reading alert snoozed for " + AlarmService.missedReadingAlertSnoozeAsString());
-						snoozeOverviewAlertBuilder.addOption("Unsnooze", DialogAction.STYLE_DEFAULT, 9);
+						snoozeOverviewAlertBuilder.setTitle(ModelLocator.resourceManagerInstance.getString("homeview","missed_reading_alert_snoozed_for") + " "  + AlarmService.missedReadingAlertSnoozeAsString());
+						snoozeOverviewAlertBuilder.addOption(ModelLocator.resourceManagerInstance.getString("homeview","unsnooze"), DialogAction.STYLE_DEFAULT, 9);
 					} else {
-						snoozeOverviewAlertBuilder.setTitle("Missed reading alert not snoozed");
-						snoozeOverviewAlertBuilder.addOption("PreSnooze", DialogAction.STYLE_DEFAULT, 10);
+						snoozeOverviewAlertBuilder.setTitle(ModelLocator.resourceManagerInstance.getString("homeview","missed_reading_alert_not_snoozed"));
+						snoozeOverviewAlertBuilder.addOption(ModelLocator.resourceManagerInstance.getString("homeview","presnooze"), DialogAction.STYLE_DEFAULT, 10);
 					}
 				} else if (event.index == 6) {
 					if (AlarmService.phoneMutedAlertSnoozed()) {
-						snoozeOverviewAlertBuilder.setTitle("Phone muted alert snoozed for " + AlarmService.phoneMutedAlertSnoozeAsString());
-						snoozeOverviewAlertBuilder.addOption("Unsnooze", DialogAction.STYLE_DEFAULT, 11);
+						snoozeOverviewAlertBuilder.setTitle(ModelLocator.resourceManagerInstance.getString("homeview","phone_muted_alert_snoozed_for") + " "  + AlarmService.phoneMutedAlertSnoozeAsString());
+						snoozeOverviewAlertBuilder.addOption(ModelLocator.resourceManagerInstance.getString("homeview","unsnooze"), DialogAction.STYLE_DEFAULT, 11);
 					} else {
-						snoozeOverviewAlertBuilder.setTitle("Phone muted alert not snoozed");
-						snoozeOverviewAlertBuilder.addOption("PreSnooze", DialogAction.STYLE_DEFAULT, 12);
+						snoozeOverviewAlertBuilder.setTitle(ModelLocator.resourceManagerInstance.getString("homeview","phone_muted_alert_not_snoozed"));
+						snoozeOverviewAlertBuilder.addOption(ModelLocator.resourceManagerInstance.getString("homeview","presnooze"), DialogAction.STYLE_DEFAULT, 12);
 					}
 				}
 				if (event.index > 0) {
