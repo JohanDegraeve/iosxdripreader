@@ -76,11 +76,11 @@ package services
 				NightScoutService.instance.addEventListener(NightScoutServiceEvent.NIGHTSCOUT_SERVICE_BG_READING_RECEIVED, onBgReadingReceived);
 				
 				//Set speech language
-				speechLanguageCode = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEECH_LANGUAGE);
+				speechLanguageCode = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_LANGUAGE);
 				
 				setLocaleChain();
 				
-				myTrace("TextToSpeech started. Enabled: " + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_READINGS_ON) + " | Interval: " + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_READINGS_INTERVAL) + " | Language: " + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEECH_LANGUAGE));
+				myTrace("TextToSpeech started. Enabled: " + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_READINGS_ON) + " | Interval: " + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_READINGS_INTERVAL) + " | Language: " + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_LANGUAGE));
 			}
 		}
 		
@@ -235,16 +235,17 @@ package services
 			{
 				myTrace("Settings changed! Speak readings feature is now " + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_READINGS_ON));
 			}
-			else if (event.data == CommonSettings.COMMON_SETTING_SPEECH_LANGUAGE) 
+			else if (event.data == CommonSettings.COMMON_SETTING_LANGUAGE) 
 			{
-				myTrace("Settings changed! Speak readings language is now " + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEECH_LANGUAGE));
+				myTrace("Settings changed! Speak readings language is now " + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_LANGUAGE));
 				
 				//Set new language code in database
-				speechLanguageCode = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEECH_LANGUAGE);
+				speechLanguageCode = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_LANGUAGE);
 				setLocaleChain();
 			}
 		}
 		
+		//defined for historical reason, originally, only the text to speech strings were translated
 		public static function setLocaleChain():void {
 			//Define locales and fallbacks
 			if(speechLanguageCode == "en-GB" || 
@@ -294,6 +295,8 @@ package services
 			else if(speechLanguageCode == "zh-CN")
 			{
 				ModelLocator.resourceManagerInstance.localeChain = ["zh_CN","en_US"];
+			} else {
+				ModelLocator.resourceManagerInstance.localeChain = ["en_US"];
 			}
 		}
 	}

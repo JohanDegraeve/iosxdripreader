@@ -203,7 +203,7 @@
 				}
 				
 				//Set previously selected language
-				var languageCode:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEECH_LANGUAGE);
+				var languageCode:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_LANGUAGE);
 				var languagePackCodes:Array = (ModelLocator.resourceManagerInstance.getString('texttospeech','ttslanguagelistcodes') as String).split(",");
 				var languagePackDescriptions:Array = (ModelLocator.resourceManagerInstance.getString('texttospeech','ttslanguagelistdescription') as String).split(",");
 				
@@ -247,6 +247,10 @@
 					groupAppUpdates.visible = false;
 					groupAppUpdates.includeInLayout = false;
 				}
+			}
+			
+			private static function setLanguageSpecificStrings():void {
+				
 			}
 			
 			private static function replaceByStars(input:String):String {
@@ -1215,13 +1219,13 @@
 				}
 			}
 			
-			private function changeSpeechLanguage_clickHandler(event:MouseEvent):void {
-				rectSpeechLanguage1.color = uint("0xD3D3D3");
-				rectSpeechLanguage1.color = uint("0xD3D3D3");
+			private function changeLanguage_clickHandler(event:MouseEvent):void {
+				rectlanguage1.color = uint("0xD3D3D3");
+				rectlanguage1.color = uint("0xD3D3D3");
 				setResetColorTimer();
 				
 				var selectedLanguage:int = 0;
-				var currentLanguage:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEECH_LANGUAGE);
+				var currentLanguage:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_LANGUAGE);
 				var languagePackDesc:Array = (ModelLocator.resourceManagerInstance.getString("texttospeech","ttslanguagelistdescription") as String).split(",");
 				var languagePackCodes:Array = (ModelLocator.resourceManagerInstance.getString("texttospeech","ttslanguagelistcodes") as String).split(",");
 				
@@ -1270,8 +1274,11 @@
 						return;
 					
 					//Update selected language in text field and database
-					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_SPEECH_LANGUAGE, newLanguageCode);
+					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_LANGUAGE, newLanguageCode);
 					speakReadingsLanguageText = newLanguageDesc;
+					
+					//this will reset all language fields according to the language
+					onInitialize();
 				}
 			}
 			
@@ -1318,10 +1325,6 @@
 					speakDeltaNameGroup.visible = true;
 					speakDeltaNameGroup.enabled = true;
 					speakreadingsline4.includeInLayout = true;speakreadingsline4.visible = true;
-					speakLanguageNameGroup.includeInLayout = true;
-					speakLanguageNameGroup.visible = true;
-					speakLanguageNameGroup.enabled = true;
-					speakreadingsline5.includeInLayout = true;speakreadingsline5.visible = true;
 				} else {
 					speakIntervalNameGroup.includeInLayout = false;
 					speakIntervalNameGroup.visible = false;
@@ -1335,10 +1338,6 @@
 					speakDeltaNameGroup.visible = false;
 					speakDeltaNameGroup.enabled = false;
 					speakreadingsline4.includeInLayout = false;speakreadingsline4.visible = false;
-					speakLanguageNameGroup.includeInLayout = false;
-					speakLanguageNameGroup.visible = false;
-					speakLanguageNameGroup.enabled = false;
-					speakreadingsline5.includeInLayout = false;speakreadingsline5.visible = false;
 				}
 			}
 			
@@ -1415,8 +1414,8 @@
 					rect64.color = uint("0x212121");//speech trend
 					rect65.color = uint("0x212121");//speech delta
 					rect66.color = uint("0x212121");//speech delta
-					rectSpeechLanguage1.color = uint("0x212121");//speech language
-					rectSpeechLanguage2.color = uint("0x212121");//speech language
+					rectlanguage1.color = uint("0x212121");//language
+					rectlanguage2.color = uint("0x212121");//language
 					rectAppUpdate1.color = uint("0x212121");//updates onoff
 					rectAppUpdate2.color = uint("0x212121");//updates onoff
 					rectAppUpdate3.color = uint("0x212121");//updates onoff
@@ -1661,12 +1660,36 @@
 					</s:Rect>
 				</s:HGroup>
 			</s:VGroup>
+			
+			<!-- Chapter general settings Subsection Application Language -->
+			<s:Line width="100%">
+				<s:stroke>
+					<s:SolidColorStroke color="0xFFFFFF" weight="1" alpha="0.25"/>
+				</s:stroke>
+			</s:Line>
+			<s:HGroup click="changeLanguage_clickHandler(event)" width="100%" id = "languageNameGroup">
+				<s:Rect height="100%" width="5" >
+					<s:fill>
+						<s:SolidColor color="#212121" id="rectlanguage1"/>
+					</s:fill>
+				</s:Rect>
+				<s:Label text = "{ModelLocator.resourceManagerInstance.getString('settingsview','speakreadingslanguagetitle')}"
+						 width="100%" paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
+				<s:Label text = "{speakReadingsLanguageText}"  
+						 paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
+				<s:Rect height="100%" width="5" >
+					<s:fill>
+						<s:SolidColor color="#212121" id="rectlanguage2"/>
+					</s:fill>
+				</s:Rect>
+			</s:HGroup>
+
 			<s:Line width="100%">
 				<s:stroke>
 					<s:SolidColorStroke color="#3B6999"  weight="3"/>
 				</s:stroke>
 			</s:Line>	
-			
+
 			<!-- Chapter Alerts-->
 			<s:Label text = "{ModelLocator.resourceManagerInstance.getString('settingsview','alerts')}" textAlign="center"  color="#3B6999" 
 					 width="100%" paddingLeft="3" paddingRight="0" fontSize="20" fontWeight="bold" paddingTop="10" paddingBottom ="10"/>
@@ -2198,27 +2221,6 @@
 					<s:Rect height="100%" width="5" >
 						<s:fill>
 							<s:SolidColor color="#212121" id="rect62"/>
-						</s:fill>
-					</s:Rect>
-				</s:HGroup>
-				<s:Line width="100%"  id = "speakreadingsline5">
-					<s:stroke>
-						<s:SolidColorStroke color="0xFFFFFF" weight="1" alpha="0.25"/>
-					</s:stroke>
-				</s:Line>
-				<s:HGroup click="changeSpeechLanguage_clickHandler(event)" width="100%" id = "speakLanguageNameGroup">
-					<s:Rect height="100%" width="5" >
-						<s:fill>
-							<s:SolidColor color="#212121" id="rectSpeechLanguage1"/>
-						</s:fill>
-					</s:Rect>
-					<s:Label text = "{ModelLocator.resourceManagerInstance.getString('settingsview','speakreadingslanguagetitle')}"
-							 width="100%" paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
-					<s:Label text = "{speakReadingsLanguageText}"  
-							 paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
-					<s:Rect height="100%" width="5" >
-						<s:fill>
-							<s:SolidColor color="#212121" id="rectSpeechLanguage2"/>
 						</s:fill>
 					</s:Rect>
 				</s:HGroup>

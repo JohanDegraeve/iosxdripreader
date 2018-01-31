@@ -156,6 +156,10 @@ package model
 			Database.instance.addEventListener(DatabaseEvent.DATABASE_INIT_FINISHED_EVENT,getBgReadingsAndLogsFromDatabase);
 						
 			function getBgReadingsAndLogsFromDatabase():void {
+				//this seems to be the best place to set ModelLocator.resourceManagerInstance.localeChain
+				//which is set in TextToSpeech.init and which needs to be set after opening the database, because that's when the language setting is retrieved from the database
+				TextToSpeech.init();
+				
 				Database.instance.addEventListener(DatabaseEvent.BGREADING_RETRIEVAL_EVENT, bgReadingReceivedFromDatabase);
 				//bgreadings created after app start time are not needed because they are already stored in the _bgReadings by the transmitter service
 				Database.getBgReadings((new Date()).valueOf() - 24 * 3600 * 1000, _appStartTimestamp);
@@ -213,7 +217,6 @@ package model
 							
 							DexcomShareService.init();
 							NightScoutService.init();
-							TextToSpeech.init();
 							DeepSleepService.init();
 							SettingsView.init();
 							

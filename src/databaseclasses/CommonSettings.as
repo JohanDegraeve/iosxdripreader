@@ -30,6 +30,7 @@
 	 public class CommonSettings extends EventDispatcher
 	 {
 		 [ResourceBundle("settingsview")]
+		 [ResourceBundle("general")]
 		 
 		 private static var _instance:CommonSettings = new CommonSettings();
 
@@ -217,7 +218,7 @@
 		 public static const COMMON_SETTING_APP_UPDATE_LAST_UPDATE_CHECK:int = 54;
 		 public static const COMMON_SETTING_APP_UPDATE_IGNORE_UPDATE:int = 55;
 		 public static const COMMON_SETTING_APP_UPDATE_USER_GROUP:int = 56;
-		 public static const COMMON_SETTING_SPEECH_LANGUAGE:int = 57;
+		 public static const COMMON_SETTING_LANGUAGE:int = 57;
 
 		 private static var commonSettings:Array = [
 			 "0",//COMMON_SETTING_CURRENT_SENSOR
@@ -277,7 +278,7 @@
 			 "0",//COMMON_SETTING_APP_UPDATE_LAST_UPDATE_CHECK
 			 "",//COMMON_SETTING_APP_UPDATE_IGNORE_UPDATE
 			 "",//COMMON_SETTING_APP_UPDATE_USER_GROUP
-			 "en-US"//COMMON_SETTING_SPEECH_LANGUAGE
+			 "default"//COMMON_SETTING_LANGUAGE
 		 ];
 		 
 		 public function CommonSettings()
@@ -389,6 +390,11 @@
 					 newString = (commonSettings[COMMON_SETTING_CALIBRATION_REQUEST_ALERT] as String)
 						 .replace('SilentToBeReplaced', noAlert);
 					 setCommonSetting(COMMON_SETTING_CALIBRATION_REQUEST_ALERT, newString);
+				 }
+			 }
+			 if (commonSettingId == COMMON_SETTING_LANGUAGE) {
+				 if ((commonSettings[COMMON_SETTING_LANGUAGE] as String).indexOf('default') > -1) {
+					 setCommonSetting(COMMON_SETTING_LANGUAGE, ModelLocator.resourceManagerInstance.getString("general","languagecode"));
 				 }
 			 }
 			 return commonSettings[commonSettingId];
