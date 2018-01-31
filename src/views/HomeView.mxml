@@ -1080,14 +1080,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			
 			private function preSnoozeButtonClicked(event:MouseEvent):void {
 				var preSnoozeAlertBuilder:AlertBuilder = new AlertBuilder();
+				var snoozedString:String = ModelLocator.resourceManagerInstance.getString("homeview","snoozed");
 				preSnoozeAlertBuilder.setTitle(ModelLocator.resourceManagerInstance.getString("homeview","pre_or_unsnooze_alert"));
 				preSnoozeAlertBuilder.setMessage(ModelLocator.resourceManagerInstance.getString("homeview","select_alert_to_pre_or_unsnooze"));
-				preSnoozeAlertBuilder.addOption(ModelLocator.resourceManagerInstance.getString("homeview","very_low"), DialogAction.STYLE_DEFAULT, 1);
-				preSnoozeAlertBuilder.addOption(ModelLocator.resourceManagerInstance.getString("homeview","low"), DialogAction.STYLE_DEFAULT, 2);
-				preSnoozeAlertBuilder.addOption(ModelLocator.resourceManagerInstance.getString("homeview","high"), DialogAction.STYLE_DEFAULT, 3);
-				preSnoozeAlertBuilder.addOption(ModelLocator.resourceManagerInstance.getString("homeview","very_high"), DialogAction.STYLE_DEFAULT, 4);
-				preSnoozeAlertBuilder.addOption(ModelLocator.resourceManagerInstance.getString("homeview","missed_reading"), DialogAction.STYLE_DEFAULT, 5);
-				preSnoozeAlertBuilder.addOption(ModelLocator.resourceManagerInstance.getString("homeview","phone_muted"), DialogAction.STYLE_DEFAULT, 6);
+				preSnoozeAlertBuilder.addOption(ModelLocator.resourceManagerInstance.getString("homeview","very_low") + (AlarmService.veryLowAlertSnoozed() ? (" (" + snoozedString + ")"):""), DialogAction.STYLE_DEFAULT, 1);
+				preSnoozeAlertBuilder.addOption(ModelLocator.resourceManagerInstance.getString("homeview","low") + (AlarmService.lowAlertSnoozed() ? (" (" + snoozedString + ")"):""), DialogAction.STYLE_DEFAULT, 2);
+				preSnoozeAlertBuilder.addOption(ModelLocator.resourceManagerInstance.getString("homeview","high") + (AlarmService.highAlertSnoozed() ? (" (" + snoozedString + ")"):""), DialogAction.STYLE_DEFAULT, 3);
+				preSnoozeAlertBuilder.addOption(ModelLocator.resourceManagerInstance.getString("homeview","very_high") + (AlarmService.veryHighAlertSnoozed() ? (" (" + snoozedString + ")"):""), DialogAction.STYLE_DEFAULT, 4);
+				preSnoozeAlertBuilder.addOption(ModelLocator.resourceManagerInstance.getString("homeview","missed_reading") + (AlarmService.missedReadingAlertSnoozed() ? (" (" + snoozedString + ")"):""), DialogAction.STYLE_DEFAULT, 5);
+				preSnoozeAlertBuilder.addOption(ModelLocator.resourceManagerInstance.getString("homeview","phone_muted") + (AlarmService.phoneMutedAlertSnoozed() ? (" (" + snoozedString + ")"):""), DialogAction.STYLE_DEFAULT, 6);
 				preSnoozeAlertBuilder.addOption(ModelLocator.resourceManagerInstance.getString("general","cancel"), DialogAction.STYLE_CANCEL, 0);
 				var preSnoozeDialogView:DialogView = Dialog.service.create(preSnoozeAlertBuilder.build());
 				preSnoozeDialogView.addEventListener(DialogViewEvent.CLOSED, preSnoozeDialogViewClosedHandler);
