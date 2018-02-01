@@ -149,8 +149,8 @@ package databaseclasses
 			return (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE).toUpperCase() == "LIMITTER");
 		}
 
-		public static function isSimblee():Boolean {
-			return (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE).toUpperCase() == "SIMBLEE");
+		public static function isTransmiter_PL():Boolean {
+			return (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE).toUpperCase() == "TRANSMITER PL");
 		}
 		
 		/**
@@ -166,7 +166,7 @@ package databaseclasses
 		 *  
 		 */
 		public static function isTypeLimitter():Boolean {
-			return (isBlueReader() || isBluKon() || isLimitter() || isSimblee());
+			return (isBlueReader() || isBluKon() || isLimitter() || isTransmiter_PL());
 		}
 		
 		/**
@@ -211,8 +211,8 @@ package databaseclasses
 				return "Limitter";
 			if (isFollower())
 				return "Follow";
-			if (isSimblee())
-				return "Simblee";
+			if (isTransmiter_PL())
+				return "Transmiter PL";
 			return "unknown";
 		}
 

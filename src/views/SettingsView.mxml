@@ -825,19 +825,17 @@
 				var currentType:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE);
 				if (currentType.toUpperCase() == "G5") {
 					selectedTransmitterType = 1;
-				} else if (currentType.toUpperCase() == "LIMITTER") {
+				}else if (currentType.toUpperCase() == "BLUEREADER") {
 					selectedTransmitterType = 2;
-				} else if (currentType.toUpperCase() == "BLUEREADER") {
-					selectedTransmitterType = 3;
 				} else if (currentType.toUpperCase() == "BLUKON") {
+					selectedTransmitterType = 3;
+				} else if (currentType.toUpperCase() == "TRANSMITER PL") {
 					selectedTransmitterType = 4;
 				} else if (currentType.toUpperCase() == "FOLLOW") {
 					selectedTransmitterType = 5;
-				} else if (currentType.toUpperCase() == "SIMBLEE") {
-					selectedTransmitterType = 6;
-				}
+				} 
 				var transmitterTypeNames:Array = new Array();
-				transmitterTypeNames.push("G4", "G5", "Limitter", "Bluereader", "BluKon", "Follow", "Simblee");
+				transmitterTypeNames.push("G4", "G5", "Bluereader", "BluKon", "Transmiter PL", "Follow");
 				
 				var picker:PickerDialogView = Dialog.service.create(
 					new PickerDialogBuilder()
