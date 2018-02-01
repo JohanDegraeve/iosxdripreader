@@ -110,7 +110,7 @@
 		 * Bluereader<br>
 		 * BluKon<br>
 		 * Follow<br>
-		 * Simblee<br>
+		 * Transmiter PL<br>
 		 * <br>
 		 * Default value is an empty string, peripheral type unknown
 		  */

@@ -46,6 +46,7 @@ package services
 	import model.TransmitterDataBlueReaderBatteryPacket;
 	import model.TransmitterDataBlueReaderPacket;
 	import model.TransmitterDataG5Packet;
+	import model.TransmitterDataTransmiter_PLPacket;
 	import model.TransmitterDataXBridgeBeaconPacket;
 	import model.TransmitterDataXBridgeDataPacket;
 	import model.TransmitterDataXdripDataPacket;
@@ -277,6 +278,21 @@ package services
 						transmitterServiceEvent = new TransmitterServiceEvent(TransmitterServiceEvent.BGREADING_EVENT);
 						_instance.dispatchEvent(transmitterServiceEvent);
 					}
+				} else if (be.data is TransmitterDataTransmiter_PLPacket) {
+					var transmitterDataTransmiter_PLPacket:TransmitterDataTransmiter_PLPacket = be.data as TransmitterDataTransmiter_PLPacket;
+					if (!isNaN(transmitterDataTransmiter_PLPacket.bridgeBatteryLevel)) {
+						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_BLUEREADER_BATTERY_LEVEL, transmitterDataTransmiter_PLPacket.bridgeBatteryLevel.toString());
+					}
+					if (!isNaN(transmitterDataTransmiter_PLPacket.sensorAge)) {
+						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_FSL_SENSOR_AGE, transmitterDataTransmiter_PLPacket.sensorAge.toString());
+					}
+					BgReading.
+						create(transmitterDataTransmiter_PLPacket.bgValue, transmitterDataTransmiter_PLPacket.bgValue)
+						.saveToDatabaseSynchronous();
+					
+					//dispatch the event that there's new data
+					transmitterServiceEvent = new TransmitterServiceEvent(TransmitterServiceEvent.BGREADING_EVENT);
+					_instance.dispatchEvent(transmitterServiceEvent);
 				} else if (be.data is TransmitterDataBlueReaderPacket) {
 					var transmitterDataBlueReaderPacket:TransmitterDataBlueReaderPacket = be.data as TransmitterDataBlueReaderPacket;
 					if (!isNaN(transmitterDataBlueReaderPacket.bridgeBatteryLevel)) {
