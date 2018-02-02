@@ -1742,6 +1742,27 @@ package services
 			var bufferAsString:String = buffer.readUTFBytes(buffer.length);
 			myTrace("in processTRANSMITER_PLTransmitterData buffer as string =  " + bufferAsString);
 			var bufferAsStringSplitted:Array = bufferAsString.split(/\s/);
+			if (bufferAsStringSplitted.length > 1) {
+				if (bufferAsStringSplitted[0] == "000999") {
+					if (bufferAsStringSplitted[1] == "0001") {
+						myTrace("in processTRANSMITER_PLTransmitterData, error code 0001, to low voltage for nfc reading");
+						if (BackgroundFetch.appIsInForeground()) {
+							DialogService.openSimpleDialog("Error", "to low voltage for nfc reading", 4 * 60 + 30);
+						} 					
+					} else if (bufferAsStringSplitted[1] == "0002") {
+						myTrace("in processTRANSMITER_PLTransmitterData, error code 0002, please check position of device. Is it fixed on sensor ? ");
+						if (BackgroundFetch.appIsInForeground()) {
+							DialogService.openSimpleDialog("Error", "please check position of device. Is it fixed on sensor ? ", 4 * 60 + 30);
+						} 					
+					} else {
+						myTrace("in processTRANSMITER_PLTransmitterData, Error code = " + bufferAsStringSplitted[1] + ", call the service man");
+						if (BackgroundFetch.appIsInForeground()) {
+							DialogService.openSimpleDialog("Error", "Error code = " + bufferAsStringSplitted[1] + ". call the service man", 4 * 60 + 30);
+						} 					
+					}
+					return;
+				}
+			}
 			if (bufferAsStringSplitted.length < 4) {
 				myTrace("in processTRANSMITER_PLTransmitterData. Response has less than 4 elements, no further processing");
 				return;
