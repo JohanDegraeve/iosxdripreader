@@ -836,7 +836,6 @@
 				} 
 				var transmitterTypeNames:Array = new Array();
 				transmitterTypeNames.push("G4", "G5", "Bluereader", "BluKon", "Transmiter PL", "Follow");
-				
 				var picker:PickerDialogView = Dialog.service.create(
 					new PickerDialogBuilder()
 					.setTitle(ModelLocator.resourceManagerInstance.getString('settingsview', 'transmittertype_picker_title'))
