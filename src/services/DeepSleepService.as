@@ -10,8 +10,12 @@ package services
 	
 	import Utilities.Trace;
 	
+	import databaseclasses.BlueToothDevice;
+	import databaseclasses.CommonSettings;
+	
 	import events.DeepSleepServiceEvent;
 	import events.IosXdripReaderEvent;
+	import events.SettingsServiceEvent;
 
 	/**
 	 * deepsleep timer will start a timer that expires every 10 seconds, indefinitely<br>
@@ -24,6 +28,11 @@ package services
 		private static var deepSleepTimer:Timer;
 
 		private static var _instance:DeepSleepService = new DeepSleepService();
+		
+		/**
+		 * how often to play the 1ms sound, in ms 
+		 */
+		private static var deepSleepInterval:int = 5000;
 
 		public static function get instance():DeepSleepService
 		{
@@ -39,12 +48,49 @@ package services
 		}
 		
 		public static function init():void {
+			setDeepSleepInterval();
 			startDeepSleepTimer();
 			iosxdripreader.instance.addEventListener(IosXdripReaderEvent.APP_IN_FOREGROUND, checkDeepSleepTimer);
+			CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, onCommonSettingsChanged);
+		}
+		
+		private static function onCommonSettingsChanged(event:SettingsServiceEvent):void {
+			if (event.data == CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE) {
+				setDeepSleepInterval();
+			}
+		}
+		
+		/**
+		 * sets  deepSleepInterval, dependent on type of peripheral
+		 */
+		private static function setDeepSleepInterval():void {
+			if (BlueToothDevice.isDexcomG4() || BlueToothDevice.isDexcomG5()) {
+				//for dexcom G4 and G5 it is sufficient to wake up every 10 seconds
+				if (deepSleepInterval != 10000) {
+					deepSleepInterval = 10000;
+					if (deepSleepTimer != null) {
+						if (deepSleepTimer.running) {
+							deepSleepTimer.stop();
+							startDeepSleepTimer();
+						}
+					}
+				}
+			} else {
+				//for follower it must be every 5 seconds, also for blucon it is better
+				if (deepSleepInterval != 5000) {
+					deepSleepInterval = 5000;
+					if (deepSleepTimer != null) {
+						if (deepSleepTimer.running) {
+							deepSleepTimer.stop();
+							startDeepSleepTimer();
+						}
+					}
+				}
+			}
 		}
 		
 		private static function startDeepSleepTimer():void {
-			deepSleepTimer = new Timer(5000,0);
+			deepSleepTimer = new Timer(deepSleepInterval,0);
 			deepSleepTimer.addEventListener(TimerEvent.TIMER, deepSleepTimerListener);
 			deepSleepTimer.start();
 		}
