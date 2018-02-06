@@ -64,8 +64,6 @@
 			[Bindable]
 			private static var checkUpdatesOnOffText:String="";
 			[Bindable]
-			private static var checkUpdatesGroupText:String="";
-			[Bindable]
 			private static var dexcomShareAccountName:String="";
 			[Bindable]
 			private static var dexcomSharePassword:String="";
@@ -219,12 +217,9 @@
 				//Set App Updates related states
 				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_APP_UPDATE_NOTIFICATIONS_ON) == "true") {
 					checkUpdatesOnOffText = ModelLocator.resourceManagerInstance.getString('settingsview','on');
-					changeAppUpdateStatus();
 				} else {
 					checkUpdatesOnOffText = ModelLocator.resourceManagerInstance.getString('settingsview','off');
-					changeAppUpdateStatus();
 				}
-				checkUpdatesGroupText = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_APP_UPDATE_USER_GROUP);
 				
 				LocalSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, settingChanged);
 				CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, settingChanged);
@@ -901,56 +896,9 @@
 				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_APP_UPDATE_NOTIFICATIONS_ON) == "true") {
 					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_APP_UPDATE_NOTIFICATIONS_ON, "false");
 					checkUpdatesOnOffText = ModelLocator.resourceManagerInstance.getString('settingsview','off');
-					changeAppUpdateStatus();
 				} else {
 					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_APP_UPDATE_NOTIFICATIONS_ON, "true");
 					checkUpdatesOnOffText = ModelLocator.resourceManagerInstance.getString('settingsview','on');
-					changeAppUpdateStatus();
-				}
-			}
-			
-			private function appUpdateGroup_clickHandler(event:MouseEvent):void {
-				rectAppUpdate3.color = uint("0xD3D3D3");
-				rectAppUpdate4.color = uint("0xD3D3D3");
-				setResetColorTimer();
-				
-				var alert:DialogView = Dialog.service.create(
-					new AlertBuilder()
-					.setTitle(ModelLocator.resourceManagerInstance.getString("settingsview","enter_app_update_group_title"))
-					.setMessage(ModelLocator.resourceManagerInstance.getString("settingsview","enter_app_update_group_message"))
-					.addTextField(checkUpdatesGroupText,"",false,4)
-					.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
-					.addOption(ModelLocator.resourceManagerInstance.getString("general","cancel"), DialogAction.STYLE_CANCEL, 1)
-					.build()
-				);
-				DialogService.addDialog(alert);
-				alert.addEventListener(DialogViewEvent.CLOSED, groupentered);
-				
-				function groupentered(event:DialogViewEvent):void {
-					if (event.index == 1) {
-						return;
-					}
-					
-					if (event.values.length < 1)
-						return;
-					
-					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_APP_UPDATE_USER_GROUP, event.values[0] as String);
-					checkUpdatesGroupText = event.values[0] as String;
-				}
-			}
-			
-			private function changeAppUpdateStatus():void {
-				var enabled:Boolean = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_APP_UPDATE_NOTIFICATIONS_ON) == "true";
-				if (enabled) {
-					appUpdateGroupGroup.includeInLayout = true;
-					appUpdateGroupGroup.visible = true;
-					appUpdateGroupGroup.enabled = true;
-					appUpdateLine.includeInLayout = true;appUpdateLine.visible = true;
-				} else {
-					appUpdateGroupGroup.includeInLayout = false;
-					appUpdateGroupGroup.visible = false;
-					appUpdateGroupGroup.enabled = false;
-					appUpdateLine.includeInLayout = false;appUpdateLine.visible = false;
 				}
 			}
 			
@@ -1418,8 +1366,6 @@
 					rectlanguage2.color = uint("0x212121");//language
 					rectAppUpdate1.color = uint("0x212121");//updates onoff
 					rectAppUpdate2.color = uint("0x212121");//updates onoff
-					rectAppUpdate3.color = uint("0x212121");//updates onoff
-					rectAppUpdate4.color = uint("0x212121");//updates onoff
 					rectoverrideMute1.color = uint("0x212121");//mute
 					rectoverrideMute2.color = uint("0x212121");//mute
 					rectexportsidiary1.color = uint("0x212121");
@@ -1635,27 +1581,6 @@
 					<s:Rect height="100%" width="5" >
 						<s:fill>
 							<s:SolidColor color="#212121" id="rectAppUpdate2"/>
-						</s:fill>
-					</s:Rect>
-				</s:HGroup>
-				<s:Line width="100%"  id = "appUpdateLine">
-					<s:stroke>
-						<s:SolidColorStroke color="0xFFFFFF" weight="1" alpha="0.25"/>
-					</s:stroke>
-				</s:Line>
-				<s:HGroup click="appUpdateGroup_clickHandler(event)" width="100%" verticalAlign="bottom" id = "appUpdateGroupGroup">
-					<s:Rect height="100%" width="5" >
-						<s:fill>
-							<s:SolidColor color="#212121" id="rectAppUpdate3"/>
-						</s:fill>
-					</s:Rect>
-					<s:Label text = "{ModelLocator.resourceManagerInstance.getString('settingsview','usergroup')}" 
-							 width="100%" paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
-					<s:Label text = "{checkUpdatesGroupText}"  
-							 paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="14"/>
-					<s:Rect height="100%" width="5" >
-						<s:fill>
-							<s:SolidColor color="#212121" id="rectAppUpdate4"/>
 						</s:fill>
 					</s:Rect>
 				</s:HGroup>

@@ -181,9 +181,6 @@ package services
 				var assets:Array = data.assets as Array;
 				if(assets.length > 0)
 				{
-					//Assets are available
-					//Define variables
-					//var userGroup:int = int("2");
 					var userGroup:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_APP_UPDATE_USER_GROUP);
 					var userUpdateAvailable:Boolean = false;
 					
@@ -196,33 +193,10 @@ package services
 						
 						if (fileType == "application/x-itunes-ipa")
 						{
-							//Asset is an ipa, let's check what group it belongs
-							if(fileName.indexOf("group") >= 0)
-							{
-								//Get group
-								var firstIndex:int = fileName.indexOf("group") + 5;
-								var lastIndex:int = fileName.indexOf(".ipa");
-								var ipaGroup:String = fileName.slice(firstIndex, lastIndex);
-								
-								//Does the ipa group match the user group?
-								if(userGroup == ipaGroup)
-								{
-									userUpdateAvailable = true;
-									updateURL = data.html_url;
-									break;
-								}
-							}
-							else
-							{
-								//No group associated. This is the main ipa
-								if(userGroup == "0" || userGroup == "")
-								{
-									//The user has no group associated so and update is available
-									userUpdateAvailable = true;
-									updateURL = data.html_url;
-									break;
-								}
-							}
+							//The user has no group associated so and update is available
+							userUpdateAvailable = true;
+							updateURL = data.html_url;
+							break;
 						}
 					}
 					
