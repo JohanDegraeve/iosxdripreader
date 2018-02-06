@@ -301,6 +301,11 @@ package model
 					}
 				}
 				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_APPLICATION_VERSION, newVersion); 
+			} else if (currentVersion == newVersion) {
+				//version is equal nothing to do
+			} else {
+				//currentversion is greater than newversion, can happen if user did rollback to older version
+				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_APPLICATION_VERSION, newVersion);
 			}
 		}
 		
