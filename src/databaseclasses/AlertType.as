@@ -78,6 +78,10 @@ package databaseclasses
 			return _sound;
 		}
 		
+		public function set sound(newSound:String):void {
+			_sound = newSound;
+		}
+		
 		private var _defaultSnoozePeriodInMinutes:int;
 
 		public function get defaultSnoozePeriodInMinutes():int

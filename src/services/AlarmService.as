@@ -240,6 +240,11 @@ package services
 
 		private static var flipTrans:FlipViewTransition; 
 		
+		private static var soundsAsDisplayed:String;
+		private static var soundsAsStoredInAssets:String;
+		private static var soundsAsDisplayedSplitted:Array;
+		private static var soundsAsStoredInAssetsSplitted:Array;
+
 		public static function get instance():AlarmService {
 			return _instance;
 		}
@@ -267,8 +272,8 @@ package services
 			BluetoothService.instance.addEventListener(BlueToothServiceEvent.CHARACTERISTIC_UPDATE, checkMuted);
 			BluetoothLE.service.centralManager.addEventListener(PeripheralEvent.DISCOVERED, checkMuted);
 			BluetoothLE.service.centralManager.addEventListener(PeripheralEvent.CONNECT, checkMuted );
-			CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, settingChanged);
-			LocalSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, settingChanged);
+			CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, commonSettingChanged);
+			LocalSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, localSettingChanged);
 			DeepSleepService.instance.addEventListener(DeepSleepServiceEvent.DEEP_SLEEP_SERVICE_TIMER_EVENT, deepSleepServiceTimerHandler);
 			lastAlarmCheckTimeStamp = 0;
 			lastMissedReadingAlertCheckTimeStamp = 0;
@@ -285,6 +290,11 @@ package services
 			
 			checkMuted(null);
 			Notifications.service.cancel(NotificationService.ID_FOR_APPLICATION_INACTIVE_ALERT);
+			
+			soundsAsDisplayed = ModelLocator.resourceManagerInstance.getString("alerttypeview","sound_names_as_displayed_can_be_translated_must_match_above_list");
+			soundsAsStoredInAssets = ModelLocator.resourceManagerInstance.getString("alerttypeview","sound_names_as_in_assets_no_translation_needed_comma_seperated");
+			soundsAsDisplayedSplitted = soundsAsDisplayed.split(',');
+			soundsAsStoredInAssetsSplitted = soundsAsStoredInAssets.split(',');
 		}
 		
 		private static function checkMuted(event:Event):void {
@@ -919,10 +929,6 @@ package services
 		 * repeatId ==> 0:calibration, 1:Low, 2:Very Low, 3:High, 4:Very High, 5:Missed Reading, 6:Battery Low, 7:Phone Muted<br>
 		 */
 		private static function fireAlert(repeatId:int, alertType:AlertType, notificationId:int, alertText:String, enableVibration:Boolean, enableLights:Boolean, categoryId:String):void {
-			var soundsAsDisplayed:String = ModelLocator.resourceManagerInstance.getString("alerttypeview","sound_names_as_displayed_can_be_translated_must_match_above_list");
-			var soundsAsStoredInAssets:String = ModelLocator.resourceManagerInstance.getString("alerttypeview","sound_names_as_in_assets_no_translation_needed_comma_seperated");
-			var soundsAsDisplayedSplitted:Array = soundsAsDisplayed.split(',');
-			var soundsAsStoredInAssetsSplitted:Array = soundsAsStoredInAssets.split(',');
 			var notificationBuilder:NotificationBuilder;
 			var newSound:String;
 			var soundToSet:String = "";
@@ -1475,15 +1481,8 @@ package services
 			_phoneMutedAlertPreSnoozed = false;
 		}
 		
-		private static function settingChanged(event:SettingsServiceEvent):void {
-			if (event.data == CommonSettings.COMMON_SETTING_CURRENT_SENSOR) {
-				checkMissedReadingAlert();
-				//need to plan missed reading alert
-				//in case user has started, stopped a sensor
-				//    if It was a sensor stop, then the setting COMMON_SETTING_CURRENT_SENSOR has value "0", and in checkMissedReadingAlert, the alert will be canceled and not replanned
-			} else if (event.data == CommonSettings.COMMON_SETTING_CALIBRATION_REQUEST_ALERT) {
-				checkCalibrationRequestAlert(new Date());
-			} else if (event.data == LocalSettings.LOCAL_SETTING_APP_INACTIVE_ALERT) {
+		private static function localSettingChanged(event:SettingsServiceEvent):void {
+			if (event.data == LocalSettings.LOCAL_SETTING_APP_INACTIVE_ALERT) {
 				if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_APP_INACTIVE_ALERT) == "true") {
 					planApplicationStoppedAlert();
 					lastApplicationStoppedAlertCheckTimeStamp = (new Date()).valueOf();
@@ -1491,6 +1490,32 @@ package services
 					Notifications.service.cancel(NotificationService.ID_FOR_APPLICATION_INACTIVE_ALERT);
 					lastApplicationStoppedAlertCheckTimeStamp = 0;
 				}
+			}
+		}
+		
+		private static function commonSettingChanged(event:SettingsServiceEvent):void {
+			if (event.data == CommonSettings.COMMON_SETTING_CURRENT_SENSOR) {
+				checkMissedReadingAlert();
+				//need to plan missed reading alert
+				//in case user has started, stopped a sensor
+				//    if It was a sensor stop, then the setting COMMON_SETTING_CURRENT_SENSOR has value "0", and in checkMissedReadingAlert, the alert will be canceled and not replanned
+			} else if (event.data == CommonSettings.COMMON_SETTING_CALIBRATION_REQUEST_ALERT) {
+				checkCalibrationRequestAlert(new Date());
+			} else if (event.data == CommonSettings.COMMON_SETTING_LANGUAGE) {
+				var newSoundsAsDisplayed:String = ModelLocator.resourceManagerInstance.getString("alerttypeview","sound_names_as_displayed_can_be_translated_must_match_above_list");
+				var newSoundsAsDisplayedSplitted:Array = newSoundsAsDisplayed.split(',');
+				var existingAlertTypes:ArrayCollection = Database.getAllAlertTypes();
+				for (var alertTypeCntr:int = 0; alertTypeCntr < existingAlertTypes.length; alertTypeCntr++) {
+					for(var soundCntr:int = 0; soundCntr < soundsAsDisplayedSplitted.length; soundCntr++) {
+						if ((StringUtil.trim(soundsAsDisplayedSplitted[soundCntr] as String)).toUpperCase() == StringUtil.trim((existingAlertTypes.getItemAt(alertTypeCntr) as AlertType).sound).toUpperCase()) {
+							(existingAlertTypes.getItemAt(alertTypeCntr) as AlertType).sound = newSoundsAsDisplayedSplitted[soundCntr] as String;
+							(existingAlertTypes.getItemAt(alertTypeCntr) as AlertType).updateInDatabase();
+							break;
+						}
+					}
+				}
+				soundsAsDisplayed = newSoundsAsDisplayed;
+				soundsAsDisplayedSplitted = newSoundsAsDisplayedSplitted;
 			}
 		}
 		

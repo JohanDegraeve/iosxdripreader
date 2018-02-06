@@ -295,6 +295,9 @@ package services
 			else if(speechLanguageCode == "zh-CN")
 			{
 				ModelLocator.resourceManagerInstance.localeChain = ["zh_CN","en_US"];
+			} else if(speechLanguageCode == "sl-SL")
+			{
+				ModelLocator.resourceManagerInstance.localeChain = ["sl_SL","en_US"];
 			} else {
 				ModelLocator.resourceManagerInstance.localeChain = ["en_US"];
 			}
