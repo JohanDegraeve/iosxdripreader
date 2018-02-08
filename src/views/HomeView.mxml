@@ -104,6 +104,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			[Bindable]
 			private static var deltaValueText:String = "---";
 			[Bindable]
+			private static var batteryLevelText:String = "---";
+			[Bindable]
 			private static var _calibrateButtonActive:Boolean = false;
 			[Bindable]
 			private static var _bluetoothButtonActive:Boolean = false;
@@ -206,7 +208,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 					Database.instance.addEventListener(DatabaseEvent.BGREADING_RETRIEVAL_EVENT, bgReadingReceivedFromDatabase);
 					Database.init();
 					initialStart = false;
-					CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, settingChanged);
+					CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, commonSettingChanged);
 					NightScoutService.instance.addEventListener(NightScoutServiceEvent.NIGHTSCOUT_SERVICE_BG_READING_RECEIVED, bgReadingReceived);
 					NightScoutService.instance.addEventListener(NightScoutServiceEvent.NIGHTSCOUT_SERVICE_BG_READINGS_REMOVED, NSReadingsRemoved);
 
@@ -214,15 +216,19 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 					dateFormatterForSensorStartTimeAndDate.dateTimePattern = ModelLocator.resourceManagerInstance.getString('homeview','datetimepatternforstatusinfo');
 					dateFormatterForSensorStartTimeAndDate.useUTC = false;
 					dateFormatterForSensorStartTimeAndDate.setStyle("locale",Capabilities.language.substr(0,2));
+					
 				} else {
 					//set info
 					displayCurrentInfoFromReading();
+					
+					//transmittertype may have changed while this screen was not open, value needs to be set again
+					enableOrDisableBatteryLevelText();
 					
 					//start timer to check for delay since last receipt of bgreading
 					restartCurrentInfoUpdateTimer();
 				}
 				
-				function settingChanged(event:SettingsServiceEvent):void {
+				function commonSettingChanged(event:SettingsServiceEvent):void {
 					if (event.data == CommonSettings.COMMON_SETTING_DO_MGDL 
 						|| 
 						event.data == CommonSettings.COMMON_SETTING_HIGH_MARK 
@@ -253,6 +259,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 						} else {
 							_bluetoothButtonActive = false;
 							_calibrateButtonActive = false;
+						}
+						if (BlueToothDevice.isTransmiter_PL()) {
+							batteryLevelId.includeInLayout = true;
+							batteryLevelId.visible = true;
+						} else {
+							batteryLevelId.includeInLayout = false;
+							batteryLevelId.visible = false;
 						}
 					}
 					
@@ -289,6 +302,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 						_bluetoothButtonActive = true;
 					}
 					
+					enableOrDisableBatteryLevelText();
+					
 					BluetoothService.instance.addEventListener(BlueToothServiceEvent.BLUETOOTH_SERVICE_INITIATED, blueToothServiceInitiated);
 					
 					TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, bgReadingReceived);
@@ -303,6 +318,20 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 				{	
 					trace("HomeView : database init error");
 				}
+			}
+			
+			/**
+			 * makes the batteryleveltext field visible or not, dependent on transmittertype
+			 */
+			private function enableOrDisableBatteryLevelText():void {
+				if (BlueToothDevice.isTransmiter_PL()) {
+					batteryLevelId.includeInLayout = true;
+					batteryLevelId.visible = true;
+				} else {
+					batteryLevelId.includeInLayout = false;
+					batteryLevelId.visible = false;
+				}
+				
 			}
 			
 			private static function showInfoAboutClickOnChart():void {
@@ -551,6 +580,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 					} else {
 						currentBgLabelColor = 0xFFFFFF;
 					}
+				}
+				if (BlueToothDevice.isTransmiter_PL()) {
+					batteryLevelText = ModelLocator.resourceManagerInstance.getString('homeview','battery') + " " + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BLUEREADER_BATTERY_LEVEL) + " %";
 				}
 			}
 			
@@ -1224,6 +1256,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 					</s:layout>
 					<s:Label id = "minutesAgoLabelId" text="{minutesAgoText}"/>
 					<s:Label id = "deltaValueLabelId" text="{deltaValueText}"/>
+					<s:Label id = "batteryLevelId" text="{batteryLevelText}"/>
 				</s:Group>
 			</s:Group>
 			<s:Label id = "currentBgLabel" text="{currentBgLabelText}" fontSize="60" lineThrough="{currentBgLabellinethrough}" color="{currentBgLabelColor}"/>
