@@ -199,6 +199,11 @@ package services
 		private static var repeatAlertsTexts:Array = ["","","","","","","","",""];
 		/**
 		 * 0:calibration, 1:Low, 2:Very Low, 3:High, 4:Very High, 5:Missed Reading, 6:Battery Low, 7:Phone Muted<br>
+		 * body texts for the alert
+		 */
+		private static var repeatAlertsBodies:Array = ["","","","","","","","",""];
+		/**
+		 * 0:calibration, 1:Low, 2:Very Low, 3:High, 4:Very High, 5:Missed Reading, 6:Battery Low, 7:Phone Muted<br>
 		 * how many times repeated
 		 */
 		private static var repeatAlertsRepeatCount:Array = [1, 1, 1, 1, 1, 1, 1, 1, 1];
@@ -928,16 +933,18 @@ package services
 		/**
 		 * repeatId ==> 0:calibration, 1:Low, 2:Very Low, 3:High, 4:Very High, 5:Missed Reading, 6:Battery Low, 7:Phone Muted<br>
 		 */
-		private static function fireAlert(repeatId:int, alertType:AlertType, notificationId:int, alertText:String, enableVibration:Boolean, enableLights:Boolean, categoryId:String):void {
+		private static function fireAlert(repeatId:int, alertType:AlertType, notificationId:int, alertText:String, enableVibration:Boolean, enableLights:Boolean, categoryId:String, alertBody:String = " "):void {
 			var notificationBuilder:NotificationBuilder;
 			var newSound:String;
 			var soundToSet:String = "";
+			if (alertBody.length == 0)
+				alertBody = " ";
 			
 			notificationBuilder = new NotificationBuilder()
 				.setId(notificationId)
 				.setAlert(alertText)
 				.setTitle(alertText)
-				.setBody(" ")
+				.setBody(alertBody)
 				.enableVibration(false)//vibration will be done through BackgroundFetch ANE
 				.enableLights(enableLights);
 			if (categoryId != null)
@@ -977,7 +984,7 @@ package services
 			}
 			
 			//set repeat arrays
-			enableRepeatAlert(repeatId, alertType.alarmName, alertText);
+			enableRepeatAlert(repeatId, alertType.alarmName, alertText, alertBody);
 		}
 		
 		private static function deepSleepServiceTimerHandler(event:Event):void {
@@ -1227,17 +1234,20 @@ package services
 					 myTrace("in checkAlarms, high alert not snoozed ");
 					 //not snoozed
 					 
-					 if (alertValue < BgReading.lastNoSensor().calculatedValue) {
+					 var lastBgReading:BgReading = BgReading.lastNoSensor(); 
+					 if (alertValue < lastBgReading.calculatedValue) {
 						 myTrace("in checkAlarms, reading is too high");
 						 fireAlert(
 							 3,
 							 alertType, 
 							 NotificationService.ID_FOR_HIGH_ALERT, 
 							 ModelLocator.resourceManagerInstance.getString("alarmservice","high_alert_notification_alert_text")
-							 	+ "     " + BgGraphBuilder.unitizedString(BgReading.lastNoSensor().calculatedValue, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true"),
+							 	+ "   " + BgGraphBuilder.unitizedString(BgReading.lastNoSensor().calculatedValue, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true")
+								+  (lastBgReading.hideSlope ? "":(" " + lastBgReading.slopeArrow())),
 							 alertType.enableVibration,
 							 alertType.enableLights,
-							 NotificationService.ID_FOR_ALERT_HIGH_CATEGORY
+							 NotificationService.ID_FOR_ALERT_HIGH_CATEGORY,
+							 BgGraphBuilder.unitizedDeltaString(true, true)
 						 ); 
 						 _highAlertLatestSnoozeTimeInMs = Number.NaN;
 						 _highAlertSnoozePeriodInMinutes = 0;
@@ -1282,17 +1292,20 @@ package services
 					 myTrace("in checkAlarms, veryHigh alert not snoozed ");
 					 //not snoozed
 					 
-					 if (alertValue < BgReading.lastNoSensor().calculatedValue) {
+					 var lastBgReading:BgReading = BgReading.lastNoSensor(); 
+					 if (alertValue < lastBgReading.calculatedValue) {
 						 myTrace("in checkAlarms, reading is too veryHigh");
 						 fireAlert(
 							 4,
 							 alertType, 
 							 NotificationService.ID_FOR_VERY_HIGH_ALERT, 
 							 ModelLocator.resourceManagerInstance.getString("alarmservice","veryhigh_alert_notification_alert_text")
-							 	+ "     " + BgGraphBuilder.unitizedString(BgReading.lastNoSensor().calculatedValue, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true"),
+							 	+ "   " + BgGraphBuilder.unitizedString(BgReading.lastNoSensor().calculatedValue, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true")
+								+  (lastBgReading.hideSlope ? "":(" " + lastBgReading.slopeArrow())),
 							 alertType.enableVibration,
 							 alertType.enableLights,
-							 NotificationService.ID_FOR_ALERT_VERY_HIGH_CATEGORY
+							 NotificationService.ID_FOR_ALERT_VERY_HIGH_CATEGORY,
+							 BgGraphBuilder.unitizedDeltaString(true, true)
 						 ); 
 						 _veryHighAlertLatestSnoozeTimeInMs = Number.NaN;
 						 _veryHighAlertSnoozePeriodInMinutes = 0;
@@ -1338,17 +1351,20 @@ package services
 					 myTrace("in checkAlarms, low alert not snoozed ");
 					 //not snoozed
 					 
-					 if (alertValue > BgReading.lastNoSensor().calculatedValue) {
+					 var lastBgReading:BgReading = BgReading.lastNoSensor(); 
+					 if (alertValue > lastBgReading.calculatedValue) {
 						 myTrace("in checkAlarms, reading is too low");
 						 fireAlert(
 							 1,
 							 alertType, 
 							 NotificationService.ID_FOR_LOW_ALERT, 
 							 ModelLocator.resourceManagerInstance.getString("alarmservice","low_alert_notification_alert_text")
-							  + "     " + BgGraphBuilder.unitizedString(BgReading.lastNoSensor().calculatedValue, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true"), 
+							  + "   " + BgGraphBuilder.unitizedString(BgReading.lastNoSensor().calculatedValue, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true")
+							  +  (lastBgReading.hideSlope ? "":(" " + lastBgReading.slopeArrow())), 
 							 alertType.enableVibration,
 							 alertType.enableLights,
-							 NotificationService.ID_FOR_ALERT_LOW_CATEGORY
+							 NotificationService.ID_FOR_ALERT_LOW_CATEGORY,
+							 BgGraphBuilder.unitizedDeltaString(true, true)
 						 ); 
 						 _lowAlertLatestSnoozeTimeInMs = Number.NaN;
 						 _lowAlertSnoozePeriodInMinutes = 0;
@@ -1393,17 +1409,20 @@ package services
 					 myTrace("in checkAlarms, veryLow alert not snoozed ");
 					 //not snoozed
 					 
-					 if (alertValue > BgReading.lastNoSensor().calculatedValue) {
+					 var lastBgReading:BgReading = BgReading.lastNoSensor(); 
+					 if (alertValue > lastBgReading.calculatedValue) {
 						 myTrace("in checkAlarms, reading is too veryLow");
 						 fireAlert(
 							 2,
 							 alertType, 
 							 NotificationService.ID_FOR_VERY_LOW_ALERT, 
 							 ModelLocator.resourceManagerInstance.getString("alarmservice","verylow_alert_notification_alert_text")
-							 	+ "     " + BgGraphBuilder.unitizedString(BgReading.lastNoSensor().calculatedValue, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true"), 
+							 	+ "   " + BgGraphBuilder.unitizedString(BgReading.lastNoSensor().calculatedValue, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true")
+								+  (lastBgReading.hideSlope ? "":(" " + lastBgReading.slopeArrow())), 
 							 alertType.enableVibration,
 							 alertType.enableLights,
-							 NotificationService.ID_FOR_ALERT_VERY_LOW_CATEGORY
+							 NotificationService.ID_FOR_ALERT_VERY_LOW_CATEGORY,
+							 BgGraphBuilder.unitizedDeltaString(true, true)
 						 ); 
 						 _veryLowAlertLatestSnoozeTimeInMs = Number.NaN;
 						 _veryLowAlertSnoozePeriodInMinutes = 0;
@@ -1521,7 +1540,7 @@ package services
 		
 		/**
 		 * repeatAlert variables are used for repeating alerts<br><br>
-		 * sets variables repeatAlertsArray, repeatAlertsLastFireTimeStampArray, repeatAlertsAlertTypeNameArray<br>
+		 * sets variables repeatAlertsArray, repeatAlertsLastFireTimeStampArray, repeatAlertsAlertTypeNameArray ...<br>
 		 * <br>
 		 * the function setrepeatAlert will set a specific alert (repeatAlertsArray), with alerttypename (repeatAlertsAlertTypeNameArray) and firedate (repeatAlertsLastFireTimeStampArray) which will be 
 		 * the curren date and time<br><br>
@@ -1531,12 +1550,13 @@ package services
 		 * <br>
 		 * repeatCntr > 0 if this is a repeat
 		 */
-		private static function enableRepeatAlert(id:int, alertTypeName:String, alertText:String, repeatCntr:int = 0):void {
+		private static function enableRepeatAlert(id:int, alertTypeName:String, alertText:String, bodyText:String, repeatCntr:int = 0):void {
 			repeatAlertsArray[id] = true;
 			repeatAlertsAlertTypeNameArray[id] = alertTypeName;
 			repeatAlertsLastFireTimeStampArray[id] = (new Date()).valueOf();
 			repeatAlertsTexts[id] = alertText;
 			repeatAlertsRepeatCount[id] = repeatCntr;
+			repeatAlertsBodies[id] = bodyText;
 		}
 		
 		/**
@@ -1549,6 +1569,7 @@ package services
 			repeatAlertsLastFireTimeStampArray[id] = 0;
 			repeatAlertsTexts[id] = "";
 			repeatAlertsRepeatCount[id] = 0;
+			repeatAlertsBodies[id] = "";
 		}
 		
 		/**
@@ -1632,8 +1653,9 @@ package services
 								repeatAlertsTexts[cntr], 
 								alertType.enableVibration, 
 								alertType.enableLights, 
-								repeatAlertsCategoryIds[cntr]);
-							enableRepeatAlert(cntr, repeatAlertsAlertTypeNameArray[cntr], repeatAlertsTexts[cntr], repeatAlertsRepeatCount[cntr] + 1);
+								repeatAlertsCategoryIds[cntr],
+								repeatAlertsBodies[cntr]);
+							enableRepeatAlert(cntr, repeatAlertsAlertTypeNameArray[cntr], repeatAlertsTexts[cntr], repeatAlertsBodies[cntr], repeatAlertsRepeatCount[cntr] + 1);
 							
 							//if it's a low, very low, high or very high alert, 
 							if (cntr == 1 || cntr == 2 || cntr == 3 || cntr == 4) {
