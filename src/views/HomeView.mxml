@@ -706,7 +706,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 							batteryLevel = ModelLocator.resourceManagerInstance.getString('homeview','unknown');
 							message += " " + batteryLevel;
 						} else {
-							message += " " + (new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BLUEREADER_BATTERY_LEVEL)))/1000 + " %";
+							message += " " + (new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BLUEREADER_BATTERY_LEVEL))) + " %";
 						}
 						
 					} else if (BlueToothDevice.isBluKon()) {
