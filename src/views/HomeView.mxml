@@ -752,7 +752,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 						}
 					}
 					
-					if (BlueToothDevice.isBluKon() || BlueToothDevice.isBlueReader()) {
+					if (BlueToothDevice.isBluKon() || BlueToothDevice.isBlueReader() || BlueToothDevice.isTransmiter_PL()) {
 						message += '\n';
 						message += ModelLocator.resourceManagerInstance.getString('homeview','sensor_age');
 						var sensorAge:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FSL_SENSOR_AGE);
