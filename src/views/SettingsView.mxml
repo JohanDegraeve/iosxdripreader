@@ -201,13 +201,14 @@
 				}
 				
 				//Set previously selected language
-				var languageCode:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_LANGUAGE);
+				//default value is language code as stored in settings, goal is to set the value as set in ttslanguagelistdescription list
+				//but if the code is not found, it stays language code
+				speakReadingsLanguageText = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_LANGUAGE);
 				var languagePackCodes:Array = (ModelLocator.resourceManagerInstance.getString('texttospeech','ttslanguagelistcodes') as String).split(",");
 				var languagePackDescriptions:Array = (ModelLocator.resourceManagerInstance.getString('texttospeech','ttslanguagelistdescription') as String).split(",");
-				
 				for(var i:int = 0; i < languagePackCodes.length; i++)
 				{
-					if(languagePackCodes[i] == languageCode)
+					if(languagePackCodes[i] == speakReadingsLanguageText)
 					{
 						speakReadingsLanguageText = languagePackDescriptions[i];
 						break;
