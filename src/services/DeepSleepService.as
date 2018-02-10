@@ -33,6 +33,7 @@ package services
 		 * how often to play the 1ms sound, in ms 
 		 */
 		private static var deepSleepInterval:int = 5000;
+		private static var lastLogPlaySoundTimeStamp:Number = 0;
 
 		public static function get instance():DeepSleepService
 		{
@@ -108,7 +109,11 @@ package services
 		
 		private static function deepSleepTimerListener(event:Event):void {
 			if (BackgroundFetch.isPlayingSound()) {
-			} else {
+			} else {	
+				if ((new Date()).valueOf() - lastLogPlaySoundTimeStamp > 1 * 60 * 1000) {
+					myTrace("in deepSleepTimerListener, call playSound");
+					lastLogPlaySoundTimeStamp = (new Date()).valueOf();
+				}
 				BackgroundFetch.playSound("../assets/1-millisecond-of-silence.mp3", 0);
 			}
 			//for other services that need to do something at regular intervals
