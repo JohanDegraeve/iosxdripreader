@@ -172,7 +172,10 @@ package services
 			//var currentAppVersion:String = "0.5";
 			latestAppVersion = data.tag_name;
 			var updateAvailable:Boolean = ModelLocator.versionAIsSmallerThanB(currentAppVersion, latestAppVersion);
-			
+
+			//here's the right time to set last update check
+			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_APP_UPDATE_LAST_UPDATE_CHECK, (new Date()).valueOf().toString());
+
 			//Handle User Update
 			if(updateAvailable && latestAppVersion != CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_APP_UPDATE_IGNORE_UPDATE))
 			{
@@ -199,9 +202,6 @@ package services
 							break;
 						}
 					}
-					
-					//here's the right time to set last update check
-					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_APP_UPDATE_LAST_UPDATE_CHECK, (new Date()).valueOf().toString());
 					
 					//If there's an update available to the user, display a notification
 					if(userUpdateAvailable)
