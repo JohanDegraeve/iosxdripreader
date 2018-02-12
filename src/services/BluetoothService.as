@@ -551,6 +551,7 @@ package services
 						//so we ignore it
 						myTrace("UUID of found peripheral does not match with name of the UUID stored in the database - will ignore this xdrip/xbridge/LimiTTer/Dexcom.");
 						//BluetoothLE.service.centralManager.stopScan();
+						startRescan(null);
 						return;
 					}
 				} else {
