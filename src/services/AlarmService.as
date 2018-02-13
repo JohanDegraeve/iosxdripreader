@@ -955,6 +955,8 @@ package services
 			} else if (StringUtil.trim(alertType.sound) == "no_sound") {
 				//keep soundToSet = "";
 			} else {	
+				//if sound not found in assets, take xdrip sound - this could happen if different languages have different sets of sounds and user switches language
+				soundToSet = "../assets/xdripalert.aif";
 				for (var cntr:int = 0;cntr < soundsAsDisplayedSplitted.length;cntr++) {
 					newSound = StringUtil.trim(soundsAsDisplayedSplitted[cntr]);//using trim because during tests sometimes the soundname had a preceding white space
 					if (newSound == StringUtil.trim(alertType.sound)) {//using trim because during tests sometimes the soundname had a preceding white space
@@ -1501,12 +1503,13 @@ package services
 		}
 		
 		private static function localSettingChanged(event:SettingsServiceEvent):void {
-			if (event.data == LocalSettings.LOCAL_SETTING_APP_INACTIVE_ALERT) {
+			if (event.data == LocalSettings.LOCAL_SETTING_APP_INACTIVE_ALERT || event.data == CommonSettings.COMMON_SETTING_LANGUAGE) {
+				//if user changes language, alert needs to be replanned because notification text may have changed
+				Notifications.service.cancel(NotificationService.ID_FOR_APPLICATION_INACTIVE_ALERT);
 				if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_APP_INACTIVE_ALERT) == "true") {
 					planApplicationStoppedAlert();
 					lastApplicationStoppedAlertCheckTimeStamp = (new Date()).valueOf();
 				} else {
-					Notifications.service.cancel(NotificationService.ID_FOR_APPLICATION_INACTIVE_ALERT);
 					lastApplicationStoppedAlertCheckTimeStamp = 0;
 				}
 			}
