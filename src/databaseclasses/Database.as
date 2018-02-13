@@ -146,7 +146,7 @@ package databaseclasses
 			"value TEXT, " +
 			"lastmodifiedtimestamp TIMESTAMP NOT NULL)";
 		
-		private static const CREATE_TABLE_ALERT_TYPES:String = "CREATE TABLE IF NOT EXISTS alerttypes(" +
+		private static const CREATE_TABLE_ALERT_TYPES:String = "CREATE TABLE alerttypes(" +
 			"alerttypeid STRING PRIMARY KEY," +
 			"alarmname STRING," +
 			"enablelights BOOLEAN," +
@@ -616,14 +616,28 @@ package databaseclasses
 					var silentAlert:AlertType = new AlertType(null, Number.NaN, silentAlertName, false, false, true, true, false, "no_sound", 30, 0);
 					insertAlertTypeSychronous(silentAlert);
 				}
+				var vibrateAlertName:String = ModelLocator.resourceManagerInstance.getString("settingsview","vibrate_alert");
+				if (getAlertType(vibrateAlertName) == null) {
+					var vibrateAlert:AlertType = new AlertType(null, Number.NaN, vibrateAlertName, false, true, true, true, false, "no_sound", 30, 0);
+					insertAlertTypeSychronous(vibrateAlert);
+				}
+				var xdripSoundAlarmName:String = ModelLocator.resourceManagerInstance.getString("settingsview","xdrip_sound_alert");
+				var xdripSoundName:String = ModelLocator.resourceManagerInstance.getString("alerttypeview","sound_names_as_displayed_can_be_translated_must_match_above_list").split(",")[0];
+				if (getAlertType(xdripSoundAlarmName) == null) {
+					var xDripSoundAlert:AlertType = new AlertType(null, Number.NaN, xdripSoundAlarmName, false, true, true, true, false, xdripSoundName, 30, 0);
+					insertAlertTypeSychronous(xDripSoundAlert);
+				}
 				finishedCreatingTables();
 			}
 			
 			function tableCreationError(see:SQLErrorEvent):void {
-				if (debugMode) trace("Database.as : Failed to create alerttype table.");
 				sqlStatement.removeEventListener(SQLEvent.RESULT,tableCreated);
 				sqlStatement.removeEventListener(SQLErrorEvent.ERROR,tableCreationError);
-				dispatchInformation('failed_to_create_bgreading_table', see != null ? see.error.message:null);
+				if (see.error.details.indexOf("already exists") > -1) {
+					finishedCreatingTables();
+				} else {
+					dispatchInformation('failed_to_create_bgreading_table', see != null ? see.error.message:null);
+				}
 			}
 		}
 		
