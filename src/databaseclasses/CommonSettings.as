@@ -242,8 +242,8 @@
 			 "false",//COMMON_SETTING_INITIAL_SELECTION_PERIPHERAL_TYPE_DONE
 			 "false",//COMMON_SETTING_LICENSE_INFO_CONFIRMED
 			 "0",//COMMON_SETTING_TIME_SINCE_LAST_QUICK_BLOX_SUBSCRIPTION
-			 "00:00>70>DefaultNoAlertToBeReplaced",//COMMON_SETTING_LOW_ALERT
-			 "00:00>170>DefaultNoAlertToBeReplaced",//COMMON_SETTING_HIGH_ALERT
+			 "00:00>70>DefaultxDripAlertToBeReplaced",//COMMON_SETTING_LOW_ALERT
+			 "00:00>170>DefaultxDripAlertToBeReplaced",//COMMON_SETTING_HIGH_ALERT
 			 "00:00>30>DefaultNoAlertToBeReplaced",//COMMON_SETTING_MISSED_READING_ALERT
 			 "00:00>0>DefaultNoAlertToBeReplaced-21:00>0>SilentToBeReplaced",//COMMON_SETTING_PHONE_MUTED_ALERT
 			 "unknown",//COMMON_SETTING_G5_STATUS
@@ -305,6 +305,12 @@
 						 .replace('DefaultNoAlertToBeReplaced', noAlert);
 					 setCommonSetting(COMMON_SETTING_LOW_ALERT, newString);
 				 }
+				 if ((commonSettings[COMMON_SETTING_LOW_ALERT] as String).indexOf('DefaultxDripAlertToBeReplaced') > -1) {
+					 noAlert = ModelLocator.resourceManagerInstance.getString("settingsview","xdrip_sound_alert").split(",")[0];
+					 newString = (commonSettings[COMMON_SETTING_LOW_ALERT] as String)
+						 .replace('DefaultxDripAlertToBeReplaced', noAlert);
+					 setCommonSetting(COMMON_SETTING_LOW_ALERT, newString);
+				 }
 			 }
 			 if (commonSettingId == COMMON_SETTING_VERY_LOW_ALERT) {
 				 if ((commonSettings[COMMON_SETTING_VERY_LOW_ALERT] as String).indexOf('DefaultNoAlertToBeReplaced') > -1) {
@@ -327,6 +333,12 @@
 					 noAlert = ModelLocator.resourceManagerInstance.getString("settingsview","no_alert")
 					 newString = (commonSettings[COMMON_SETTING_HIGH_ALERT] as String)
 						 .replace('DefaultNoAlertToBeReplaced', noAlert);
+					 setCommonSetting(COMMON_SETTING_HIGH_ALERT, newString);
+				 }
+				 if ((commonSettings[COMMON_SETTING_HIGH_ALERT] as String).indexOf('DefaultxDripAlertToBeReplaced') > -1) {
+					 noAlert = ModelLocator.resourceManagerInstance.getString("settingsview","xdrip_sound_alert").split(",")[0];
+					 newString = (commonSettings[COMMON_SETTING_HIGH_ALERT] as String)
+						 .replace('DefaultxDripAlertToBeReplaced', noAlert);
 					 setCommonSetting(COMMON_SETTING_HIGH_ALERT, newString);
 				 }
 			 }
