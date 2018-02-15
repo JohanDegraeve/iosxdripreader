@@ -1,5 +1,7 @@
-# connects to xDrip, G5, BluKon and BlueReader
-# can also work as Follower
+# there's a new APP now : go to https://spike-app.com/
+
+connects to xDrip, G5, BluKon and BlueReader
+can also work as Follower
 
 
 xdrip/xbridge/G5/Bluereader/Blukon for iOS devices - 
@@ -15,7 +17,7 @@ xdrip/xbridge/G5/Bluereader/Blukon for iOS devices -
 
 * Follower mode : using NightScout, the app can be used in follower mode.
 
-# Alerts
+Alerts
 
 Alerts are configured in the Settings. 
 Possible alerts are
@@ -55,12 +57,9 @@ In such case you would need two Alert Types, and assign each of them to the corr
 You can create as many Alert Types and intervals as you want.
 Alert Types can be re-used for different types of alerts.
 
-# To Install the app.
-
-Send your a request via e-mail to xdrip@proximus.be and you will receive an invite to install the app via TestFlight.
 
 
-# To compile (only if you want to develop):
+To compile (only if you want to develop):
 - install Flash Builder 4.7 with latest FLex SDK (contact me and I'll share you a folder for OSX or Windows)
 - If you don't have an iOS developer account, I can create you a certificate that will allow you to compile. Full explanation : http://help.adobe.com/en_US/flex/mobileapps/WS064a3073e805330f6c6abf312e7545f65e-8000.html
 - clone the repository
