@@ -1010,6 +1010,7 @@ package services
 		}
 		
 		private static function planApplicationStoppedAlert():void {
+			Notifications.service.cancel(NotificationService.ID_FOR_APPLICATION_INACTIVE_ALERT);
 			var notificationBuilder:NotificationBuilder = new NotificationBuilder()
 				.setId(NotificationService.ID_FOR_APPLICATION_INACTIVE_ALERT)
 				.setAlert(ModelLocator.resourceManagerInstance.getString("alarmservice","application_stopped_alert_title"))
