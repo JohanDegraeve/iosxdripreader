@@ -175,12 +175,6 @@ package model
 						if (de.data as String == Database.END_OF_RESULT) {
 							_bgReadings.refresh();
 							getLogsFromDatabase();
-							if (_bgReadings.length < 2) {
-								if (Sensor.getActiveSensor() != null) {
-									//sensor is active but there's less than two bgreadings, this may happen exceptionally if was started previously but not used for exactly or more than  MAX_DAYS_TO_STORE_BGREADINGS_IN_MODELLOCATOR days
-									Sensor.stopSensor();
-								}
-							}
 						}
 					}
 			}
