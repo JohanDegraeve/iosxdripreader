@@ -103,6 +103,13 @@ package databaseclasses
 		public static const LOCAL_SETTING_APP_INACTIVE_ALERT:int = 31;
 		public static const LOCAL_SETTING_AMOUNT_OF_WARNINGS_ABOUT_OTHER_APP:int = 32;
 		public static const LOCAL_SETTING_TRANSMITER_PL_AMOUNT_OF_INVALID_SENSOR_AGE_VALUES:int = 33;
+		/**
+		 * If user has other app running that connects to the same G5 transmitter, this will not work<br>
+		 * The app is trying to detect this situation, to avoid complaints<br>
+		 * However the detection mechanism sometimes thinks there's another app trying to connect althought this is not the case<br>
+		 * Therefore the amount of notifications will be reduced, this setting counts the number
+		 */
+		public static const LOCAL_SETTING_AMOUNT_OF_WARNINGS_OTHER_APP:int = 34;
 		
 		private static var localSettings:Array = [
 			"false",//LOCAL_SETTING_DETAILED_TRACING_ENABLED
@@ -138,7 +145,8 @@ package databaseclasses
 			"0",//LOCAL_SETTING_TIMESTAMP_SINCE_LAST_EXPORT_SIDIARY
 			"true",//LOCAL_SETTING_APP_INACTIVE_ALERT
 			"0",//LOCAL_SETTING_AMOUNT_OF_WARNINGS_ABOUT_OTHER_APP
-			"0"//LOCAL_SETTING_TRANSMITER_PL_AMOUNT_OF_INVALID_SENSOR_AGE_VALUES
+			"0",//LOCAL_SETTING_TRANSMITER_PL_AMOUNT_OF_INVALID_SENSOR_AGE_VALUES
+			"0"//LOCAL_SETTING_AMOUNT_OF_WARNINGS_OTHER_APP
 		];
 		
 		public function LocalSettings() {
