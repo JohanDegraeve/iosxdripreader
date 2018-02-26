@@ -74,7 +74,7 @@
 			protected function vgroup1_clickHandler(event:MouseEvent):void
 			{
 				if (picker != null)
-					if (picker.dispose());
+					picker.dispose();
 				if (navigator != null)
 					navigator.popView(flipTrans);
 			}

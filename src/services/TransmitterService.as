@@ -74,7 +74,7 @@ package services
 		 */
 		private static var lastPacketTime:Number = 0;
 		
-		private static var timeStampSinceLastG5BadlyPlacedBatteriesInfo = 0;
+		private static var timeStampSinceLastG5BadlyPlacedBatteriesInfo:Number = 0;
 		
 		public function TransmitterService()
 		{

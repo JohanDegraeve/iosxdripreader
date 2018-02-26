@@ -284,7 +284,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 					}
 					
 					var asNumber:Number = new Number((event.values[0] as String).replace(",","."));
-					var asNumberAndToStore = asNumber;
+					var asNumberAndToStore:Number = asNumber;
 					if (isNaN(asNumber)) {
 						DialogService.openSimpleDialog(ModelLocator.resourceManagerInstance.getString('fromtimeandvalueelementview', 'change_value_alert_title'),
 							ModelLocator.resourceManagerInstance.getString("calibrationservice","value_should_be_numeric"));
