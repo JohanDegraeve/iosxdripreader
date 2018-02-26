@@ -1,0 +1,7 @@
+1.4.5.
+
+- trace improvement for xbridge, correct logging of subscribed characteristic
+- transmitterservice , added tracing, removed also TransmitterServiceEvent.TRANSMITTER_SERVICE_INFORMATION_EVENT, that's not used anymore
+- If alarm notification, and if user opens app within 30 seconds, not via notification but by clicking app icon, then snoozedialog will pop up
+- If user changes an alert setting, then it will be checked if the alert is still valid at that moment or not, and if not any applicable repeats will be disabled.
+This is only for changing alerts, not alert types.
