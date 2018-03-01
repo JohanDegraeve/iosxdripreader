@@ -358,7 +358,10 @@ package services
 				if (notificationEvent.id == NotificationService.ID_FOR_OTHER_G5_APP) {
 					DialogService.openSimpleDialog(ModelLocator.resourceManagerInstance.getString("bluetoothservice","other_G5_app"),
 						ModelLocator.resourceManagerInstance.getString("bluetoothservice","other_G5_app_info"));
-				}		
+				} else if (notificationEvent.id == NotificationService.ID_FOR_DEAD_OR_EXPIRED_SENSOR_TRANSMITTER_PL) {
+					DialogService.openSimpleDialog(ModelLocator.resourceManagerInstance.getString("settingsview","warning"),
+						ModelLocator.resourceManagerInstance.getString("bluetoothservice","dead_or_expired_sensor"));
+				} 
 			}
 		}
 		
@@ -1815,7 +1818,7 @@ package services
 								BackgroundFetch.vibrate();
 							} else {
 								var notificationBuilder:NotificationBuilder = new NotificationBuilder()
-									.setId(NotificationService.ID_FOR_OTHER_G5_APP)
+									.setId(NotificationService.ID_FOR_DEAD_OR_EXPIRED_SENSOR_TRANSMITTER_PL)
 									.setAlert(ModelLocator.resourceManagerInstance.getString("settingsview","warning"))
 									.setTitle(ModelLocator.resourceManagerInstance.getString("settingsview","warning"))
 									.setBody(ModelLocator.resourceManagerInstance.getString("bluetoothservice","dead_or_expired_sensor"))
