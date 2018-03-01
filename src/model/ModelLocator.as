@@ -153,9 +153,9 @@ package model
 			dataSortForBGReadings = new Sort();
 			dataSortForBGReadings.fields=[dataSortFieldForBGReadings];
 			_bgReadings.sort = dataSortForBGReadings;
-			Database.instance.addEventListener(DatabaseEvent.DATABASE_INIT_FINISHED_EVENT,getBgReadingsAndLogsFromDatabase);
+			Database.instance.addEventListener(DatabaseEvent.DATABASE_INIT_FINISHED_EVENT,getBgReadingsFromDatabase);
 						
-			function getBgReadingsAndLogsFromDatabase():void {
+			function getBgReadingsFromDatabase():void {
 				//this seems to be the best place to set ModelLocator.resourceManagerInstance.localeChain
 				//which is set in TextToSpeech.init and which needs to be set after opening the database, because that's when the language setting is retrieved from the database
 				TextToSpeech.init();
@@ -174,28 +174,12 @@ package model
 					} else if (de.data is String) {
 						if (de.data as String == Database.END_OF_RESULT) {
 							_bgReadings.refresh();
-							getLogsFromDatabase();
-						}
-					}
-			}
-
-			//get stored logs from the database
-			function getLogsFromDatabase():void {
-				Database.instance.addEventListener(DatabaseEvent.LOGRETRIEVED_EVENT, logReceivedFromDatabase);
-				//logs created after app start time are not needed because they are already added in the logginglist
-				Database.getLoggings(_appStartTimestamp);
-			}
-			
-			function logReceivedFromDatabase(de:DatabaseEvent):void {
-				if (de.data != null)
-					if (de.data is String) {
-						if (de.data as String == Database.END_OF_RESULT) {
 							Database.getBlueToothDevice();
 							Message.init(DistriqtKey.distriqtKey);
 							TransmitterService.init();
 							BackGroundFetchService.init();
 							BluetoothService.init();
-
+							
 							NotificationService.instance.addEventListener(NotificationServiceEvent.NOTIFICATION_SERVICE_INITIATED_EVENT, HomeView.notificationServiceInitiated);
 							NotificationService.init();
 							
@@ -219,11 +203,10 @@ package model
 							}
 							
 							checkApplicationVersion();
-						} else {
 						}
 					}
 			}
-			
+
 			iconCache = new ContentCache();
 			iconCache.enableCaching = true;
 			iconCache.enableQueueing = true;
