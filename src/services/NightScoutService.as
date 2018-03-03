@@ -658,7 +658,7 @@ package services
 				waitingForGetBgReadingsFromNS = true;
 				setNextFollowDownloadTimeStamp();
 				timeStampOfLastDownloadAttempt = (new Date()).valueOf();
-				createAndLoadURLRequest(_nightScoutEventsUrl + ".json", URLRequestMethod.GET, urlVariables, null, getNewBgReadingsFromNSSuccess, getNewBgReadingsFromNSFailed);
+				createAndLoadURLRequest(_nightScoutEventsUrl + "/sgv.json", URLRequestMethod.GET, urlVariables, null, getNewBgReadingsFromNSSuccess, getNewBgReadingsFromNSFailed);
 			} else {
 				//next time
 			}
