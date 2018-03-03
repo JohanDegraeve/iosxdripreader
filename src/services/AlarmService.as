@@ -284,9 +284,6 @@ package services
 			
 			BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.PHONE_MUTED, phoneMuted);
 			BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.PHONE_NOT_MUTED, phoneNotMuted);
-			BluetoothService.instance.addEventListener(BlueToothServiceEvent.CHARACTERISTIC_UPDATE, checkMuted);
-			BluetoothLE.service.centralManager.addEventListener(PeripheralEvent.DISCOVERED, checkMuted);
-			BluetoothLE.service.centralManager.addEventListener(PeripheralEvent.CONNECT, checkMuted );
 			CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, commonSettingChanged);
 			LocalSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, localSettingChanged);
 			DeepSleepService.instance.addEventListener(DeepSleepServiceEvent.DEEP_SLEEP_SERVICE_TIMER_EVENT, deepSleepServiceTimerHandler);
@@ -313,13 +310,29 @@ package services
 			soundsAsStoredInAssetsSplitted = soundsAsStoredInAssets.split(',');
 		}
 		
-		private static function checkMuted(event:Event):void {
-				if ((new Date()).valueOf() - lastCheckMuteTimeStamp > (4 * 60 + 45) * 1000) {
-					myTrace("in checkMuted, calling BackgroundFetch.checkMuted");
-					BackgroundFetch.checkMuted();
+		private static function checkMuted(event:flash.events.Event):void {
+			var nowDate:Date = new Date();
+			var nowNumber:Number = nowDate.valueOf();
+			if ((nowNumber - _phoneMutedAlertLatestSnoozeTimeInMs) > _phoneMutedAlertSnoozePeriodInMinutes * 60 * 1000
+				||
+				isNaN(_phoneMutedAlertLatestSnoozeTimeInMs)) {
+				//alert not snoozed
+				if (nowNumber - lastCheckMuteTimeStamp > (4 * 60 + 45) * 1000) {
+					//more than 4 min 45 seconds ago since last check
+					var listOfAlerts:FromtimeAndValueArrayCollection = FromtimeAndValueArrayCollection.createList(
+						CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PHONE_MUTED_ALERT), false);
+					var alertName:String = listOfAlerts.getAlarmName(Number.NaN, "", nowDate);
+					var alertType:AlertType = Database.getAlertType(alertName);
+					if (alertType.enabled) {
+						//alert enabled
+						myTrace("in checkMuted, calling BackgroundFetch.checkMuted");
+						BackgroundFetch.checkMuted();
+					} else {
+						lastCheckMuteTimeStamp = nowNumber;
+					}
 				}
+			}
 		}
-		
 		
 		private static function notificationReceived(event:NotificationServiceEvent):void {
 			myTrace("in notificationReceived");
