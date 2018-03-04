@@ -190,6 +190,9 @@ package model
 							//this ensures that texttospeech and playsound work also in background
 							BackgroundFetch.setAvAudioSessionCategory(true);
 							
+							//to make sure the correct ANE is used
+							BackgroundFetch.isVersion1_4_0();
+							
 							AlarmService.init();
 							HealthKitService.init();
 							
