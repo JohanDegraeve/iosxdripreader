@@ -1,3 +1,11 @@
+1.4.6
+
+- Improve mute check : Mute check done right before raising an alert, to make sure mute statis is correct. Closes #46
+- reduce maximum number of warnings about other app trying to connect to G5 transmitter.
+- fix in notification id for Transmitter PL, case where dead or expired sensor is detected
+- fix for double pop up, closes #45
+- fix for follower mode, added sgv. in nightscout url, as done in Spike https://github.com/SpikeApp/Spike/commit/0d95245af242e184cf5651408afae48ad60f67b6
+
 1.4.5.
 
 - trace improvement for xbridge, correct logging of subscribed characteristic
