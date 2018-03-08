@@ -642,6 +642,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 					}
 				} else if (event.index == ACTION_SHEET_INDEX_FOR_FORGET_DEVICE) {
 					BlueToothDevice.forgetBlueToothDevice();
+					BluetoothService.stopScanning(null);
 				} else if (event.index == ACTION_SHEET_INDEX_FOR_START_SENSOR) {
 					var alert:DialogView = Dialog.service.create(
 						new AlertBuilder()
@@ -750,9 +751,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 						} else {
 							message += " " + new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BLUKON_BATTERY_LEVEL)) + " %";
 						}
+					} else if (BlueToothDevice.isMiaoMiao()) {
+						message += ModelLocator.resourceManagerInstance.getString('homeview','battery_level');
+						var batteryLevel:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_MIAOMIAO_BATTERY_LEVEL);
+						if (batteryLevel == "0") {
+							batteryLevel = ModelLocator.resourceManagerInstance.getString('homeview','unknown');
+							message += " " + batteryLevel;
+						} else {
+							message += " " + new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_MIAOMIAO_BATTERY_LEVEL)) + " %";
+						}
 					}
 					
-					if (BlueToothDevice.isBluKon() || BlueToothDevice.isBlueReader() || BlueToothDevice.isTransmiter_PL()) {
+					if (BlueToothDevice.isBluKon() || BlueToothDevice.isBlueReader() || BlueToothDevice.isTransmiter_PL() || BlueToothDevice.isMiaoMiao()) {
 						message += '\n';
 						message += ModelLocator.resourceManagerInstance.getString('homeview','sensor_age');
 						var sensorAge:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FSL_SENSOR_AGE);

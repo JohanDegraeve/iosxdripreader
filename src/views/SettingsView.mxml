@@ -827,11 +827,13 @@
 					selectedTransmitterType = 3;
 				} else if (currentType.toUpperCase() == "TRANSMITER PL") {
 					selectedTransmitterType = 4;
-				} else if (currentType.toUpperCase() == "FOLLOW") {
+				} else if (currentType.toUpperCase() == "MIAOMIAO") {
 					selectedTransmitterType = 5;
+				} else if (currentType.toUpperCase() == "FOLLOW") {
+					selectedTransmitterType = 6;
 				} 
 				var transmitterTypeNames:Array = new Array();
-				transmitterTypeNames.push("G4", "G5", "Bluereader", "BluKon", "Transmiter PL", "Follow");
+				transmitterTypeNames.push("G4", "G5", "Bluereader", "BluKon", "Transmiter PL", "MiaoMiao", "Follow");
 				
 				var picker:PickerDialogView = Dialog.service.create(
 					new PickerDialogBuilder()
@@ -887,6 +889,7 @@
 				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_BLUEREADER_BATTERY_LEVEL, "0");
 				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_BLUKON_BATTERY_LEVEL, "0");
 				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_FSL_SENSOR_AGE, "0");
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_MIAOMIAO_BATTERY_LEVEL, "0");
 			}
 			
 			private function changeAppUpdates_clickHandler(event:MouseEvent):void {

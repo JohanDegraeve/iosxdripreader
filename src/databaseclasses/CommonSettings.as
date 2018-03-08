@@ -181,12 +181,12 @@
 		  */
 		 public static const COMMON_SETTING_FSL_SENSOR_BATTERY_LEVEL:int = 36;
 		 /**
-		  * For limitter and/or bluereaderw<br>
+		  * For bluereaderw<br>
 		  * value 0 means level not known
 		  */
 		 public static const COMMON_SETTING_BLUEREADER_BATTERY_LEVEL:int = 37;
 		 /**
-		  * For limitter and/or bluereaderw<br>
+		  * For any device that reads Freestyle (bluerader, blukon, transmiter pl, miaomiao<br>
 		  * value 0 means level not known<br>
 		  * time in minutes
 		  */
@@ -219,6 +219,14 @@
 		 public static const COMMON_SETTING_APP_UPDATE_IGNORE_UPDATE:int = 55;
 		 public static const COMMON_SETTING_APP_UPDATE_USER_GROUP:int = 56;
 		 public static const COMMON_SETTING_LANGUAGE:int = 57;
+		 public static const COMMON_SETTING_NFC_AGE_PROBEM:int = 58;
+		 /**
+		 * value 0 means unknown
+		  */
+		 public static const COMMON_SETTING_MIAOMIAO_BATTERY_LEVEL:int = 59;
+		 public static const COMMON_SETTING_MIAOMIAO_HARDWARE:int = 60;
+		 public static const COMMON_SETTING_MIAOMIAO_FW:int = 61;
+		 
 
 		 private static var commonSettings:Array = [
 			 "0",//COMMON_SETTING_CURRENT_SENSOR
@@ -278,7 +286,11 @@
 			 "0",//COMMON_SETTING_APP_UPDATE_LAST_UPDATE_CHECK
 			 "",//COMMON_SETTING_APP_UPDATE_IGNORE_UPDATE
 			 "",//COMMON_SETTING_APP_UPDATE_USER_GROUP
-			 "default"//COMMON_SETTING_LANGUAGE
+			 "default",//COMMON_SETTING_LANGUAGE
+			 "false",//COMMON_SETTING_NFC_AGE_PROBEM
+			 "0",//COMMON_SETTING_MIAOMIAO_BATTERY_LEVEL
+			 "",//COMMON_SETTING_MIAOMIAO_HARDWARE
+			 ""//COMMON_SETTING_MIAOMIAO_FW
 		 ];
 		 
 		 public function CommonSettings()

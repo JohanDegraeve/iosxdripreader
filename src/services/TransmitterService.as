@@ -31,6 +31,8 @@ package services
 	import flash.utils.ByteArray;
 	import flash.utils.Endian;
 	
+	import mx.collections.ArrayCollection;
+	
 	import Utilities.Trace;
 	
 	import databaseclasses.BgReading;
@@ -42,10 +44,12 @@ package services
 	import events.TransmitterServiceEvent;
 	
 	import model.ModelLocator;
+	import model.Tomato;
 	import model.TransmitterDataBluKonPacket;
 	import model.TransmitterDataBlueReaderBatteryPacket;
 	import model.TransmitterDataBlueReaderPacket;
 	import model.TransmitterDataG5Packet;
+	import model.TransmitterDataMiaoMiaoPacket;
 	import model.TransmitterDataTransmiter_PLPacket;
 	import model.TransmitterDataXBridgeBeaconPacket;
 	import model.TransmitterDataXBridgeDataPacket;
@@ -99,7 +103,20 @@ package services
 			if (be.data == null)
 				return;//should never be null actually
 			else {
-				if (be.data is TransmitterDataXBridgeBeaconPacket) {
+				if (be.data is TransmitterDataMiaoMiaoPacket) {
+					var dataToWriteToTransmitter:ArrayCollection = Tomato.decodeTomatoPacket((be.data as TransmitterDataMiaoMiaoPacket).packet);
+					if (dataToWriteToTransmitter != null) {
+						if (dataToWriteToTransmitter.length > 0) {
+							for (var cntr:int = 0;cntr < dataToWriteToTransmitter.length; cntr ++) {
+								BluetoothService.sendMiaoMiaoPacket(dataToWriteToTransmitter.getItemAt(cntr) as ByteArray);
+							}
+						} else {
+							myTrace(" in processMiaoMiaoTransmitterData, dataToWriteToTransmitter.length is 0");
+						}
+					} else {
+						myTrace(" in processMiaoMiaoTransmitterData, dataToWriteToTransmitter is null");
+					}
+				} else if (be.data is TransmitterDataXBridgeBeaconPacket) {
 					myTrace("in transmitterDataReceived, received TransmitterDataXBridgeBeaconPacket");
 					if (((new Date()).valueOf() - lastPacketTime) < 60000) {
 						myTrace("in transmitterDataReceived , is TransmitterDataXBridgeBeaconPacket but lastPacketTime < 60 seconds ago, ignoring");

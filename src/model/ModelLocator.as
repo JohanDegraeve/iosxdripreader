@@ -23,6 +23,7 @@ package model
 	
 	import flash.events.Event;
 	import flash.events.EventDispatcher;
+	import flash.utils.ByteArray;
 	
 	import mx.collections.ArrayCollection;
 	import mx.resources.IResourceManager;
@@ -33,6 +34,11 @@ package model
 	import spark.components.Image;
 	import spark.components.ViewNavigator;
 	import spark.core.ContentCache;
+	
+	import Utilities.UniqueId;
+	import Utilities.Libre.LibreAlarmReceiver;
+	import Utilities.Libre.ReadingData;
+	import Utilities.Libre.TransferObject;
 	
 	import databaseclasses.BgReading;
 	import databaseclasses.Database;
@@ -69,8 +75,6 @@ package model
 		[ResourceBundle("general")]
 		
 		private static var _instance:ModelLocator = new ModelLocator();
-		private static var dataSortFieldForBGReadings:SortField;
-		private static var dataSortForBGReadings:Sort;
 
 		public static var image_calibrate_active:Image;
 		public static var image_add:Image;
@@ -146,13 +150,7 @@ package model
 			
 			//bgreadings arraycollection
 			_bgReadings = new ArrayCollection();
-			dataSortFieldForBGReadings = new SortField();
-			dataSortFieldForBGReadings.name = "timestamp";
-			dataSortFieldForBGReadings.numeric = true;
-			dataSortFieldForBGReadings.descending = false;//ie ascending = from small to large
-			dataSortForBGReadings = new Sort();
-			dataSortForBGReadings.fields=[dataSortFieldForBGReadings];
-			_bgReadings.sort = dataSortForBGReadings;
+			_bgReadings.sort = BgReading.dataSortForBGReadings;
 			Database.instance.addEventListener(DatabaseEvent.DATABASE_INIT_FINISHED_EVENT,getBgReadingsFromDatabase);
 						
 			function getBgReadingsFromDatabase():void {
@@ -173,6 +171,11 @@ package model
 						}
 					} else if (de.data is String) {
 						if (de.data as String == Database.END_OF_RESULT) {
+							/*var test:String = "2378F814030000000000000000000000000000000000C86C1A014003C8741A013203C8881A012E03C86C1A012903C8881A012C03C8801A012C03C8941A012C03C8981A012703C8A41A012603C8A81A014403C8201A014C03C83C1A014603C84C1A014203C87C1A01E704C89858019404C88419013904C85C5901A803C8381A017602C8641A011503C8B45901FA03C8EC19011104C8E419013D04C8F819013F04C8E859011C04C8901A01CC03C84C1A019703C8501A016203C8281A014603C87C1A018C04C8F41A01AB04C8201B01F804C8241B01C206C82C1B01E307C8F01B01B908C8381B018B09C80C1A01F509C8B41901FE09C80059016C09C8F818018008C80498018807C80458014706C8509701F405C8D857013605C8BC5801F204C8DC5801B904C8581801AC040000B26EF8659E422183F2900700060802240C43173CC2430808B240DF000808D242A2F90808D242A3F908080C41";
+							var data:ByteArray = Utilities.UniqueId.hexStringToByteArray(test);
+							var mResult:ReadingData = LibreAlarmReceiver.parseData(0, "tomato", data);
+							LibreAlarmReceiver.CalculateFromDataTransferObject(new TransferObject(1, mResult),false);*/
+
 							_bgReadings.refresh();
 							Database.getBlueToothDevice();
 							Message.init(DistriqtKey.distriqtKey);

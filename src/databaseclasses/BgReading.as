@@ -22,7 +22,11 @@ package databaseclasses
 {
 	import mx.collections.ArrayCollection;
 	
+	import spark.collections.Sort;
+	import spark.collections.SortField;
+	
 	import Utilities.BgGraphBuilder;
+	import Utilities.DateTimeUtilities;
 	import Utilities.Trace;
 	
 	import model.ModelLocator;
@@ -38,6 +42,7 @@ package databaseclasses
 		
 		
 		private var _sensor:Sensor;
+
 		public function get sensor():Sensor
 		{
 			return _sensor;
@@ -239,7 +244,24 @@ package databaseclasses
 		{
 			return _noise;
 		}
-		
+
+		private static var _dataSortFieldForBGReadings:SortField;
+		private static var _dataSortForBGReadings:Sort;
+		/**
+		 * sort ascending timestamp
+		 */
+		public static function get dataSortForBGReadings():Sort
+		{
+			if (_dataSortForBGReadings == null) {
+				_dataSortFieldForBGReadings = new SortField();
+				_dataSortFieldForBGReadings.name = "timestamp";
+				_dataSortFieldForBGReadings.numeric = true;
+				_dataSortFieldForBGReadings.descending = false;//ie ascending = from small to large
+				_dataSortForBGReadings = new Sort();
+				_dataSortForBGReadings.fields=[_dataSortFieldForBGReadings];
+			}
+			return _dataSortForBGReadings;
+		}
 		
 		/**
 		 * if bgreadingid = null, then a new value will be assigned by the constructor<br>
@@ -604,7 +626,7 @@ package databaseclasses
 		/**
 		 * stores in ModelLocator but not in database ! 
 		 */
-		public static function create(rawData:Number, filteredData:Number, timeStamp:Number = Number.NaN):BgReading {
+		public static function create(rawData:Number, filteredData:Number, timeStamp:Number = Number.NaN, quick:Boolean = false):BgReading {
 			var timestamp:Number = timeStamp;
 			if (isNaN(timeStamp)) {
 				timestamp = (new Date()).valueOf();
@@ -652,12 +674,16 @@ package databaseclasses
 					bgReading.filteredCalculatedValue = (((calSlope * bgReading.ageAdjustedRawValue) + calIntercept) -5);
 					
 				} else {
-					var lastBgReading:BgReading = (BgReading.latest(1))[0] as BgReading;
-					if (lastBgReading != null && lastBgReading.calibration != null) {
-						if (lastBgReading.calibrationFlag == true && ((lastBgReading.timestamp + (60000 * 20)) > timestamp) && ((lastBgReading.calibration.timestamp + (60000 * 20)) > timestamp)) {
-							lastBgReading.calibration
-								.rawValueOverride(BgReading.weightedAverageRaw(lastBgReading.timestamp, timestamp, lastBgReading.calibration.timestamp, lastBgReading.ageAdjustedRawValue, bgReading.ageAdjustedRawValue))
-								.updateInDatabaseSynchronous();
+					var lastBgReading:BgReading = null;
+					var lastBgReadings:ArrayCollection = BgReading.latest(1);
+					if (lastBgReadings.length > 0) {
+						lastBgReading = (BgReading.latest(1))[0] as BgReading;
+						if (lastBgReading != null && lastBgReading.calibration != null) {
+							if (lastBgReading.calibrationFlag == true && ((lastBgReading.timestamp + (60000 * 20)) > timestamp) && ((lastBgReading.calibration.timestamp + (60000 * 20)) > timestamp)) {
+								lastBgReading.calibration
+									.rawValueOverride(BgReading.weightedAverageRaw(lastBgReading.timestamp, timestamp, lastBgReading.calibration.timestamp, lastBgReading.ageAdjustedRawValue, bgReading.ageAdjustedRawValue))
+									.updateInDatabaseSynchronous();
+							}
 						}
 					}
 					bgReading.calculatedValue = ((calibration.slope * bgReading.ageAdjustedRawValue) + calibration.intercept);
@@ -665,7 +691,9 @@ package databaseclasses
 				}
 				updateCalculatedValue(bgReading);
 			}
-			bgReading.performCalculations();
+			if (!quick) {
+				bgReading.performCalculations();
+			}
 			return bgReading;
 		}
 		
@@ -894,5 +922,25 @@ package databaseclasses
 			}
 		}
 		
+		public static function getForPreciseTimestamp(timestamp:Number, precision:Number, lock_to_sensor:Boolean = true):BgReading {
+			var activeSensor:Sensor = Sensor.getActiveSensor();
+			var returnValue:BgReading = null;
+			var cntr:int = ModelLocator.bgReadings.length - 1;
+			while (cntr > -1 && returnValue == null) {
+				var bgReading:BgReading = ModelLocator.bgReadings.getItemAt(cntr) as BgReading;
+				if ( (timestamp - precision <= bgReading.timestamp) 
+					&& 
+					 (bgReading.timestamp >= timestamp + precision)
+					&&
+					 (lock_to_sensor ? bgReading.sensor.uniqueId == activeSensor.uniqueId : bgReading.timestamp > 0) ) {
+						 returnValue = bgReading;
+					 }
+					 cntr--;
+			}
+			myTrace("getForPreciseTimestamp: No luck finding a BG timestamp match: " + DateTimeUtilities.createNSFormattedDateAndTime(new Date(timestamp)) + ", precision:" + precision + ", Sensor: " + ((activeSensor == null) ? "null" : activeSensor.uniqueId));
+			return returnValue;
+		}
+		
+
 	}
 }
