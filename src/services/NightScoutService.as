@@ -642,18 +642,10 @@ package services
 				//trace("LOG setting timeStampOfFirstBgReadingToDowload to " + (new Date(timeStampOfFirstBgReadingToDowload)).toLocaleString());
 				var count:Number = (now - timeStampOfFirstBgReadingToDowload)/1000/3600*12 + 1;
 				//trace("LOG setting count to " + count);
-				var latestDate:Date = new Date(timeStampOfFirstBgReadingToDowload);
-				var year:String = latestDate.fullYear.toString();
-				var month:String = (latestDate.month + 1).toString();
-				while (month.length < 2)
-					month = "0" + month;
-				var date:String = latestDate.date.toString();
-				while (date.length < 2)
-					date = "0" + date;
 				
 				var urlVariables:URLVariables = new URLVariables();
 				//trace("LOG setting find[dateString][$gte] " + year + "-" + month + "-" + date);
-				urlVariables["find[dateString][$gte]"] = year + "-" + month + "-" + date;
+				urlVariables["find[dateString][$gte]"] = timeStampOfFirstBgReadingToDowload;
 				urlVariables["count"] = Math.round(count);
 				waitingForGetBgReadingsFromNS = true;
 				setNextFollowDownloadTimeStamp();
