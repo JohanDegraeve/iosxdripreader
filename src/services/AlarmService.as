@@ -327,7 +327,7 @@ package services
 						CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PHONE_MUTED_ALERT), false);
 					var alertName:String = listOfAlerts.getAlarmName(Number.NaN, "", nowDate);
 					var alertType:AlertType = Database.getAlertType(alertName);
-					if (alertType.enabled) {
+					if (alertType.enabled || CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_READINGS_ON) == "true") { 
 						//alert enabled
 						myTrace("in checkMuted, calling BackgroundFetch.checkMuted");
 						BackgroundFetch.checkMuted();
