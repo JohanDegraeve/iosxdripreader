@@ -1,5 +1,6 @@
 package model
 {
+	import flash.events.EventDispatcher;
 	import flash.utils.ByteArray;
 	import flash.utils.Endian;
 	
@@ -14,14 +15,18 @@ package model
 	
 	import databaseclasses.CommonSettings;
 	
-	public class Tomato
+	import events.TransmitterServiceEvent;
+	
+	import services.TransmitterService;
+	
+	public class Tomato extends EventDispatcher
 	{
 		/**
-		 * possible stattus miaomiao 
+		 * possible status miaomiao 
 		 */
 		private static const TOMATO_STATES_REQUEST_DATA_SENT:String = "REQUEST_DATA_SENT";
 		/**
-		 * possible stattus miaomiao 
+		 * possible status miaomiao 
 		 */
 		private static const TOMATO_STATES_RECIEVING_DATA:String = "RECIEVING_DATA";
 		public static const MINIMUM_TIME_BETWEEN_TWO_MIAO_MIAO_READINGS_IN_SECONDS:int = 10;
@@ -34,6 +39,12 @@ package model
 		//other Tomato Variables
 		private static var s_lastReceiveTimestamp:Number = 0;
 		
+		private static var _instance:Tomato = new Tomato();
+		public static function get instance():Tomato
+		{
+			return _instance;
+		}
+
 		public function Tomato()
 		{
 		}
@@ -68,7 +79,9 @@ package model
 			myTrace("in AreWeDone, COMMON_SETTING_MIAOMIAO_HARDWARE = " + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_MIAOMIAO_HARDWARE) + ", COMMON_SETTING_MIAOMIAO_FW = " + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_MIAOMIAO_FW) + ", battery level  " + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_MIAOMIAO_BATTERY_LEVEL)); 
 			
 			var mResult:ReadingData = LibreAlarmReceiver.parseData(0, "tomato", data);
-			LibreAlarmReceiver.CalculateFromDataTransferObject(new TransferObject(1, mResult), true);
+			if (LibreAlarmReceiver.CalculateFromDataTransferObject(new TransferObject(1, mResult), true)) {
+				TransmitterService.dispatchBgReadingEvent();
+			}
 			return new ArrayCollection();
 		}
 		

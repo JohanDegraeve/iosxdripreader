@@ -124,8 +124,6 @@ package databaseclasses
 		 */
 		public static function forgetBlueToothDevice():void {
 			myTrace("in forgetBlueToothDevice");
-			if (_address != "" && isMiaoMiao())
-				BackgroundFetch.cancelMiaoMiaoConnection(_address);
 			_address = "";
 			_name = "";
 			Database.updateBlueToothDeviceSynchronous("", "", (new Date()).valueOf());

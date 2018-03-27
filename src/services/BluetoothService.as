@@ -466,8 +466,9 @@ package services
 				myTrace("Trying to connect to bluereader.");
 			} else if (BlueToothDevice.isMiaoMiao()) {
 				if (BlueToothDevice.known()) {
+					myTrace("in bluetoothStatusIsOn isMiaoMiao");
 					BackgroundFetch.setMiaoMiaoMac(BlueToothDevice.address);
-					BackgroundFetch.startScanning();
+					startScanning();
 				}
 				myTrace("in bluetoothStatusIsOn device is miaomiao - DO WE NEED TO DEVELOP ANYTHING HERE ?.");
 			} else if (BlueToothDevice.known() || (BlueToothDevice.alwaysScan() && BlueToothDevice.transmitterIdKnown())) {
@@ -485,7 +486,8 @@ package services
 			}
 			
 			if (BlueToothDevice.isMiaoMiao()) {
-				BackgroundFetch.startScanning();
+				myTrace("in startScanning is miaomiao");
+				BackgroundFetch.startScanningForMiaoMiao();
 				return;
 			}
 			if (!BluetoothLE.service.centralManager.isScanning) {
@@ -516,13 +518,17 @@ package services
 		
 		public static function stopScanning(event:Event):void {
 			myTrace("in stopScanning");
-			if (BluetoothLE.service.centralManager.isScanning) {
-				myTrace("in stopScanning, is scanning, call stopScan");
-				BluetoothLE.service.centralManager.stopScan();
-				if (BlueToothDevice.isBluKon()) {
-					stopMonitoringAndRangingBeaconsInRegion(uuids_BLUKON_Advertisement);
+			if (BlueToothDevice.isMiaoMiao()) {
+				BackgroundFetch.stopScanningMiaoMiao();				
+			} else {
+				if (BluetoothLE.service.centralManager.isScanning) {
+					myTrace("in stopScanning, is scanning, call stopScan");
+					BluetoothLE.service.centralManager.stopScan();
+					if (BlueToothDevice.isBluKon()) {
+						stopMonitoringAndRangingBeaconsInRegion(uuids_BLUKON_Advertisement);
+					}
+					_instance.dispatchEvent(new BlueToothServiceEvent(BlueToothServiceEvent.STOPPED_SCANNING));
 				}
-				_instance.dispatchEvent(new BlueToothServiceEvent(BlueToothServiceEvent.STOPPED_SCANNING));
 			}
 		}
 		
@@ -1205,11 +1211,10 @@ package services
 		 */
 		public static function forgetActiveBluetoothPeripheral():void {
 			if (BlueToothDevice.isMiaoMiao()) {
-				myTrace("in forgetActiveBluetoothPeripheral  miaomiao device, ignore");
-				if (BlueToothDevice.address != "") {
-					BackgroundFetch.cancelMiaoMiaoConnection(BlueToothDevice.address);
-					BackgroundFetch.resetMiaoMiaoMac();
-				}
+				myTrace("in forgetActiveBluetoothPeripheral  miaomiao device");
+				BackgroundFetch.cancelMiaoMiaoConnection(BlueToothDevice.address);
+				BackgroundFetch.resetMiaoMiaoMac();
+				BackgroundFetch.forgetMiaoMiaoPeripheral();
 			} else {
 				myTrace("in forgetActiveBluetoothPeripheral");
 				if (activeBluetoothPeripheral == null)

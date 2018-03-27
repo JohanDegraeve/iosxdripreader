@@ -25,20 +25,18 @@ package Utilities.Libre
 		private static var oldest:Number = -1;
 		private static var newest:Number = -1;
 		
-		private static var _instance:LibreAlarmReceiver = new LibreAlarmReceiver();
-		public static function get instance():LibreAlarmReceiver
-		{
-			return _instance;
-		}
-		
 		public function LibreAlarmReceiver()
 		{
 		}
 		
-		public static function CalculateFromDataTransferObject(object:TransferObject, use_raw:Boolean):void {
+		/**
+		 * returns true if a new reading is created
+		 */
+		public static function CalculateFromDataTransferObject(object:TransferObject, use_raw:Boolean):Boolean {
 			// insert any recent data we can
 			//mTrend is list of glucosedata
 			var mTrend:ArrayCollection = object.data.trend;
+			var newReadingCreated:Boolean = false;
 			if (mTrend != null) {
 				if (mTrend.length > 0) {
 					//looks like mTrend.size() - 1 needs to be the most recent reading
@@ -55,7 +53,6 @@ package Utilities.Libre
 					} else if (thisSensorAge == sensorAge) {
 						myTrace("in CalculateFromDataTransferObject, Sensor age has not advanced: " + sensorAge);
 						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_NFC_AGE_PROBEM, "true");
-						//return; // do not try to insert again
 					} else {
 						myTrace("in CalculateFromDataTransferObject, Sensor age has gone backwards!!! " + sensorAge);
 						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_FSL_SENSOR_AGE, thisSensorAge.toString());
@@ -77,7 +74,7 @@ package Utilities.Libre
 								continue;
 							}
 							if (use_raw) {
-								createBGfromGD(gd, false);
+								newReadingCreated = createBGfromGD(gd, false);
 							} else {
 								//assuming this will not happen as ios version uses only raw data
 								myTrace("in CalculateFromDataTransferObject, in CalculateFromDataTransferObject, use_raw = " + use_raw + ", VERIFY THE CODE");
@@ -102,7 +99,7 @@ package Utilities.Libre
 							polyxList.addItem(gd2.realDate);
 							if (use_raw) {
 								polyyList.addItem(gd2.glucoseLevelRaw);
-								createBGfromGD(gd2, true);
+								newReadingCreated = createBGfromGD(gd2, true) || newReadingCreated;
 							} else {
 								//polyyList.add((double) gd.glucoseLevel);
 								// add in the actual value
@@ -145,6 +142,7 @@ package Utilities.Libre
 			} else {
 				myTrace("in CalculateFromDataTransferObject, Trend data is null!");
 			}
+			return newReadingCreated;
 		}
 		
 		private static function getTimeShift(gds:ArrayCollection):Number {
@@ -176,9 +174,13 @@ package Utilities.Libre
 			}
 		}
 		
-		private static function createBGfromGD(gd:GlucoseData, quick:Boolean):void {
+		/**
+		 * return true if a new reading is created 
+		 */
+		private static function createBGfromGD(gd:GlucoseData, quick:Boolean):Boolean {
 			var converted:Number;
 			var bgReading:BgReading = null;
+			var newReadingCreated:Boolean = false;
 			if (gd.glucoseLevelRaw > 0) {
 				converted = getGlucose(gd.glucoseLevelRaw);
 			} else {
@@ -194,7 +196,7 @@ package Utilities.Libre
 						myTrace("in createBGfromGD, in createBGfromGD, Creating bgreading at: " + DateTimeUtilities.createNSFormattedDateAndTime(new Date(gd.realDate)));
 						bgReading = BgReading.create(converted, converted, gd.realDate, quick); // quick lite insert
 						bgReading.saveToDatabaseSynchronous();
-						_instance.dispatchEvent(new TransmitterServiceEvent(TransmitterServiceEvent.BGREADING_EVENT));
+						newReadingCreated = true;
 					} else {
 						myTrace("in createBGfromGD, Ignoring duplicate timestamp for: " + DateTimeUtilities.createNSFormattedDateAndTime(new Date(gd.realDate)));
 					}
@@ -205,6 +207,7 @@ package Utilities.Libre
 				myTrace("in createBGfromGD, Fed a zero or negative date");
 			}
 			myTrace("in createBGfromGD, Oldest : " + DateTimeUtilities.createNSFormattedDateAndTime(new Date(oldest_cmp)) + " Newest : " + DateTimeUtilities.createNSFormattedDateAndTime(new Date(newest_cmp)));
+			return newReadingCreated;
 		}
 		
 		public static function getGlucose(rawGlucose:Number):Number {

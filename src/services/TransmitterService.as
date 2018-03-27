@@ -98,6 +98,10 @@ package services
 
 		}
 		
+		public static function dispatchBgReadingEvent():void {
+			_instance.dispatchEvent(new TransmitterServiceEvent(TransmitterServiceEvent.BGREADING_EVENT));
+		}
+		
 		private static function transmitterDataReceived(be:BlueToothServiceEvent):void {
 			if (be.data == null)
 				return;//should never be null actually
