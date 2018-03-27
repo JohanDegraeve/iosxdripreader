@@ -21,7 +21,7 @@ package events
 
 	[Event(name="LoadRequestResult",type="events.BackGroundFetchServiceEvent")]
 	[Event(name="LoadRequestERror",type="events.BackGroundFetchServiceEvent")]
-
+	[Event(name="LoadRequestERror",type="events.BackGroundFetchServiceEvent")]
 
 	public class BackGroundFetchServiceEvent extends Event
 	{

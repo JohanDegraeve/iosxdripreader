@@ -1,8 +1,12 @@
 package model
 {
+	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
+	
 	import flash.events.EventDispatcher;
+	import flash.events.TimerEvent;
 	import flash.utils.ByteArray;
 	import flash.utils.Endian;
+	import flash.utils.Timer;
 	
 	import mx.collections.ArrayCollection;
 	
@@ -39,6 +43,8 @@ package model
 		//other Tomato Variables
 		private static var s_lastReceiveTimestamp:Number = 0;
 		
+		private static var resendPakcetTimer:Timer;
+		
 		private static var _instance:Tomato = new Tomato();
 		public static function get instance():Tomato
 		{
@@ -49,9 +55,21 @@ package model
 		{
 		}
 		
-		public static function decodeTomatoPacket(s_full_data:ByteArray):ArrayCollection {
+		private static function sendStartReadingCommandToMiaoMiao():void {
+			myTrace("in sendStartReadingCommandToMiaoMiao");
+			BackgroundFetch.sendStartReadingCommmandToMiaoMia();
+		}
+		
+		public static function decodeTomatoPacket(s_full_data:ByteArray):void {
+			if (resendPakcetTimer != null) {
+				if (resendPakcetTimer.running) {
+					resendPakcetTimer.stop();
+				}
+				resendPakcetTimer = null;
+			}
+			
 			s_full_data.position = 0;
-			myTrace("in decodeTomatoPacket, received packet " + Utilities.UniqueId.byteArrayToString(s_full_data));
+			myTrace("in decodeTomatoPacket, received packet ");
 			
 			////
 			var data:ByteArray = new ByteArray();
@@ -59,13 +77,15 @@ package model
 			s_full_data.position = TOMATO_HEADER_LENGTH;
 			s_full_data.readBytes(data, 0, 344);
 			var checksum_ok:Boolean = Crc.LibreCrc(data);
-			myTrace("in AreWeDone,  checksum_ok = " + checksum_ok + ". Data = " + Utilities.UniqueId.bytesToHex(data));
+			myTrace("in decodeTomatoPacket,  checksum_ok = " + checksum_ok);
 			
-			/*if (!checksum_ok) {
-			myTrace("in AreWeDone, CHECKSUM NOT OK");
-			throw new Error("CHECKSUM_FAILED"); 
-			return;
-			}*/
+			if (!checksum_ok) {
+				myTrace("in decodeTomatoPacket, checksum not ok. Start timer of 60 seconds to send start reading command");
+				resendPakcetTimer = new Timer(60 * 1000, 1);
+				resendPakcetTimer.addEventListener(TimerEvent.TIMER, sendStartReadingCommandToMiaoMiao);
+				resendPakcetTimer.start();
+				return;
+			}
 			
 			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_MIAOMIAO_BATTERY_LEVEL, (new Number(getByteAt(s_full_data,13))).toString());
 			
@@ -76,13 +96,12 @@ package model
 			s_full_data.position = 16;
 			temp = new ByteArray();s_full_data.readBytes(temp, 0, 2);
 			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_MIAOMIAO_FW,Utilities.UniqueId.bytesToHex(temp));
-			myTrace("in AreWeDone, COMMON_SETTING_MIAOMIAO_HARDWARE = " + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_MIAOMIAO_HARDWARE) + ", COMMON_SETTING_MIAOMIAO_FW = " + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_MIAOMIAO_FW) + ", battery level  " + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_MIAOMIAO_BATTERY_LEVEL)); 
+			myTrace("in decodeTomatoPacket, COMMON_SETTING_MIAOMIAO_HARDWARE = " + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_MIAOMIAO_HARDWARE) + ", COMMON_SETTING_MIAOMIAO_FW = " + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_MIAOMIAO_FW) + ", battery level  " + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_MIAOMIAO_BATTERY_LEVEL)); 
 			
 			var mResult:ReadingData = LibreAlarmReceiver.parseData(0, "tomato", data);
 			if (LibreAlarmReceiver.CalculateFromDataTransferObject(new TransferObject(1, mResult), true)) {
 				TransmitterService.dispatchBgReadingEvent();
 			}
-			return new ArrayCollection();
 		}
 		
 		private static function InitBuffer():void {
