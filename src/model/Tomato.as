@@ -2,13 +2,12 @@ package model
 {
 	import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
 	
+	import flash.events.Event;
 	import flash.events.EventDispatcher;
 	import flash.events.TimerEvent;
 	import flash.utils.ByteArray;
 	import flash.utils.Endian;
 	import flash.utils.Timer;
-	
-	import mx.collections.ArrayCollection;
 	
 	import Utilities.Crc;
 	import Utilities.Trace;
@@ -18,8 +17,6 @@ package model
 	import Utilities.Libre.TransferObject;
 	
 	import databaseclasses.CommonSettings;
-	
-	import events.TransmitterServiceEvent;
 	
 	import services.TransmitterService;
 	
@@ -44,6 +41,8 @@ package model
 		private static var s_lastReceiveTimestamp:Number = 0;
 		
 		private static var resendPakcetTimer:Timer;
+		private static var resendPacketCounter:int = 0;
+		private static const MAX_PACKET_RESEND_REQUESTS:int = 3;
 		
 		private static var _instance:Tomato = new Tomato();
 		public static function get instance():Tomato
@@ -55,7 +54,7 @@ package model
 		{
 		}
 		
-		private static function sendStartReadingCommandToMiaoMiao():void {
+		private static function sendStartReadingCommandToMiaoMiao(event:Event):void {
 			myTrace("in sendStartReadingCommandToMiaoMiao");
 			BackgroundFetch.sendStartReadingCommmandToMiaoMia();
 		}
@@ -80,20 +79,28 @@ package model
 			myTrace("in decodeTomatoPacket,  checksum_ok = " + checksum_ok);
 			
 			if (!checksum_ok) {
-				myTrace("in decodeTomatoPacket, checksum not ok. Start timer of 60 seconds to send start reading command");
-				resendPakcetTimer = new Timer(60 * 1000, 1);
-				resendPakcetTimer.addEventListener(TimerEvent.TIMER, sendStartReadingCommandToMiaoMiao);
-				resendPakcetTimer.start();
+				resendPacketCounter++;
+				if (resendPacketCounter <= MAX_PACKET_RESEND_REQUESTS) {
+					myTrace("in decodeTomatoPacket, checksum not ok. Start timer of 60 seconds to send start reading command");
+					resendPakcetTimer = new Timer(60 * 1000, 1);
+					resendPakcetTimer.addEventListener(TimerEvent.TIMER, sendStartReadingCommandToMiaoMiao);
+					resendPakcetTimer.start();
+				} else {
+					myTrace("in decodeTomatoPacket, checksum not ok. Reached maximum number of retries, which is " + MAX_PACKET_RESEND_REQUESTS);
+					resendPacketCounter = 0;
+				}
 				return;
+			} else {
+				resendPacketCounter = 0;
 			}
 			
 			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_MIAOMIAO_BATTERY_LEVEL, (new Number(getByteAt(s_full_data,13))).toString());
 			
-			s_full_data.position = 14;
+			s_full_data.position = 16;
 			var temp:ByteArray = new ByteArray();s_full_data.readBytes(temp, 0,2);
 			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_MIAOMIAO_HARDWARE, Utilities.UniqueId.bytesToHex(temp));
 			
-			s_full_data.position = 16;
+			s_full_data.position = 14;
 			temp = new ByteArray();s_full_data.readBytes(temp, 0, 2);
 			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_MIAOMIAO_FW,Utilities.UniqueId.bytesToHex(temp));
 			myTrace("in decodeTomatoPacket, COMMON_SETTING_MIAOMIAO_HARDWARE = " + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_MIAOMIAO_HARDWARE) + ", COMMON_SETTING_MIAOMIAO_FW = " + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_MIAOMIAO_FW) + ", battery level  " + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_MIAOMIAO_BATTERY_LEVEL)); 

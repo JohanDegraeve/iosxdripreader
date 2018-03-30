@@ -486,7 +486,7 @@ package services
 			}
 			
 			if (BlueToothDevice.isMiaoMiao()) {
-				myTrace("in startScanning is miaomiao");
+				myTrace("in startScanning, is miaomiao");
 				BackgroundFetch.startScanningForMiaoMiao();
 				return;
 			}

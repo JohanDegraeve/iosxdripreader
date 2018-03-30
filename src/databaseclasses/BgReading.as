@@ -926,18 +926,21 @@ package databaseclasses
 			var activeSensor:Sensor = Sensor.getActiveSensor();
 			var returnValue:BgReading = null;
 			var cntr:int = ModelLocator.bgReadings.length - 1;
-			while (cntr > -1 && returnValue == null) {
-				var bgReading:BgReading = ModelLocator.bgReadings.getItemAt(cntr) as BgReading;
-				if ( (timestamp - precision <= bgReading.timestamp) 
-					&& 
-					 (bgReading.timestamp >= timestamp + precision)
-					&&
-					 (lock_to_sensor ? bgReading.sensor.uniqueId == activeSensor.uniqueId : bgReading.timestamp > 0) ) {
-						 returnValue = bgReading;
-					 }
-					 cntr--;
+			if ((activeSensor != null) || (!lock_to_sensor)) {
+				while (cntr > -1 && returnValue == null) {
+					var bgReading:BgReading = ModelLocator.bgReadings.getItemAt(cntr) as BgReading;
+					if ( (timestamp - precision <= bgReading.timestamp) 
+						&& 
+						(bgReading.timestamp >= timestamp + precision)
+						&&
+						(lock_to_sensor ? bgReading.sensor.uniqueId == activeSensor.uniqueId : bgReading.timestamp > 0) ) {
+						returnValue = bgReading;
+					}
+					cntr--;
+				}
 			}
-			myTrace("getForPreciseTimestamp: No luck finding a BG timestamp match: " + DateTimeUtilities.createNSFormattedDateAndTime(new Date(timestamp)) + ", precision:" + precision + ", Sensor: " + ((activeSensor == null) ? "null" : activeSensor.uniqueId));
+			if (returnValue == null)
+				myTrace("getForPreciseTimestamp: No luck finding a BG timestamp match: " + DateTimeUtilities.createNSFormattedDateAndTime(new Date(timestamp)) + ", precision:" + precision + ", Sensor: " + ((activeSensor == null) ? "null" : activeSensor.uniqueId));
 			return returnValue;
 		}
 		

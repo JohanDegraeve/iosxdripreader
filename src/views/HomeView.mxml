@@ -43,6 +43,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			import com.distriqt.extension.dialog.events.DialogViewEvent;
 			import com.distriqt.extension.dialog.objects.DialogAction;
 			import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetch;
+			import com.freshplanet.ane.AirBackgroundFetch.BackgroundFetchEvent;
 			
 			import mx.charts.chartClasses.IAxis;
 			import mx.collections.ArrayCollection;
@@ -454,7 +455,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 				}
 			}
 			
-			private function bluetoothDeviceConnectionCompleted(event:BlueToothServiceEvent):void {
+			private function bluetoothDeviceConnectionCompleted(event:Event):void {
 				myTrace("in bluetoothDeviceConnectionCompleted");
 				if (!peripheralConnected) {
 					myTrace("in bluetoothDeviceConnectionCompleted, setting peripheralConnected = true");
@@ -463,7 +464,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 				}
 			}
 			
-			private function userInitiatedScanningSucceeded(event:PeripheralEvent):void {
+			private function userInitiatedScanningSucceeded(event:Event):void {
 				if (scanningWasUserInitiated) {
 					scanningWasUserInitiated = false;
 					DialogService.openSimpleDialog(ModelLocator.resourceManagerInstance.getString('homeview',"scan_for_device"),
@@ -472,7 +473,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 				}
 			}
 			
-			private function central_peripheralDisconnectHandler(event:PeripheralEvent):void {
+			private function central_peripheralDisconnectHandler(event:Event):void {
 				if (peripheralConnected) {
 					myTrace("in central_peripheralDisconnectHandler, setting peripheralConnected = false");
 					peripheralConnected = false;
@@ -481,9 +482,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 			}
 			
 			private function blueToothServiceInitiated(be:BlueToothServiceEvent):void {
+				BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.MIAOMIAO_CONNECTED, bluetoothDeviceConnectionCompleted);
 				BluetoothService.instance.addEventListener(BlueToothServiceEvent.BLUETOOTH_DEVICE_CONNECTION_COMPLETED, bluetoothDeviceConnectionCompleted);
 				BluetoothLE.service.centralManager.addEventListener(PeripheralEvent.DISCONNECT, central_peripheralDisconnectHandler);
-
+				BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.MIAOMIAO_DISCONNECTED, central_peripheralDisconnectHandler);
 				resetChartValues();
 			}
 			
@@ -628,6 +630,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 					if (BluetoothLE.service.centralManager.state == BluetoothLEState.STATE_ON) {
 						BluetoothService.instance.addEventListener(BlueToothServiceEvent.STOPPED_SCANNING, scanningStopped);
 						BluetoothLE.service.centralManager.addEventListener(PeripheralEvent.CONNECT, userInitiatedScanningSucceeded);
+						BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.MIAOMIAO_CONNECTED, userInitiatedScanningSucceeded);
 						scanningWasUserInitiated = true;
 						BluetoothService.startScanning(true);
 						DialogService.openSimpleDialog(ModelLocator.resourceManagerInstance.getString('homeview',"scan_for_device"),
@@ -684,7 +687,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 					}
 					message += "\n";
 					
-					//only for xdrip type of device, the status will be shown, because peripheralConnected is usually not connected for Dexcom (or other alike)
+					//only for xdrip, miaomiao, bluereader, blucon, transmiter pl type of device, the status will be shown, because peripheralConnected is usually not connected for Dexcom (or other alike)
 					//and peripheralConnectionStatusChangeTimestamp is not being set for Dexcom (or other alike)
 					if (peripheralConnected) {
 						message += ModelLocator.resourceManagerInstance.getString('homeview','connected');

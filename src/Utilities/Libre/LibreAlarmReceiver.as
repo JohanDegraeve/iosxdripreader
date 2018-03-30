@@ -73,8 +73,9 @@ package Utilities.Libre
 								myTrace("in CalculateFromDataTransferObject, Skipping record due to closeness: " + DateTimeUtilities.createNSFormattedDateAndTime(new Date(gd.realDate)));
 								continue;
 							}
+							myTrace("in CalculateFromDataTransferObject createbgd, trend : " + DateTimeUtilities.createNSFormattedDateAndTime(new Date(gd.realDate)) + " " + gd.glucose(0, false));
 							if (use_raw) {
-								newReadingCreated = createBGfromGD(gd, false);
+								newReadingCreated = createBGfromGD(gd, false, "trend");
 							} else {
 								//assuming this will not happen as ios version uses only raw data
 								myTrace("in CalculateFromDataTransferObject, in CalculateFromDataTransferObject, use_raw = " + use_raw + ", VERIFY THE CODE");
@@ -91,15 +92,15 @@ package Utilities.Libre
 						mHistory.sort = GlucoseData.dataSort;
 						mHistory.refresh();
 						//applyTimeShift(mTrend, shiftx);
-						var polyxList:ArrayCollection = new ArrayCollection();
-						var polyyList:ArrayCollection = new ArrayCollection();
+						//var polyxList:ArrayCollection = new ArrayCollection();
+						//var polyyList:ArrayCollection = new ArrayCollection();
 						for (var cntr2:int = 0; cntr2 < mHistory.length ;cntr2 ++) {
 							var gd2:GlucoseData = mHistory.getItemAt(cntr2) as GlucoseData;
-							myTrace("in CalculateFromDataTransferObject, history : " + DateTimeUtilities.createNSFormattedDateAndTime(new Date(gd2.realDate)) + " " + gd2.glucose(0, false));
-							polyxList.addItem(gd2.realDate);
+							myTrace("in CalculateFromDataTransferObject createbgd, history : " + DateTimeUtilities.createNSFormattedDateAndTime(new Date(gd2.realDate)) + " " + gd2.glucose(0, false));
+							//polyxList.addItem(gd2.realDate);
 							if (use_raw) {
-								polyyList.addItem(gd2.glucoseLevelRaw);
-								newReadingCreated = createBGfromGD(gd2, true) || newReadingCreated;
+								//polyyList.addItem(gd2.glucoseLevelRaw);
+								newReadingCreated = createBGfromGD(gd2, true, "history") || newReadingCreated;
 							} else {
 								//polyyList.add((double) gd.glucoseLevel);
 								// add in the actual value
@@ -107,32 +108,6 @@ package Utilities.Libre
 								myTrace("in CalculateFromDataTransferObject, in CalculateFromDataTransferObject, use_raw = " + use_raw + ", VERIFY THE CODE");
 							}
 						}
-						
-						//NEEDED ?
-						//ConstrainedSplineInterpolator splineInterp = new ConstrainedSplineInterpolator();
-						/*final SplineInterpolator splineInterp = new SplineInterpolator();
-						
-						try {
-						PolynomialSplineFunction polySplineF = splineInterp.interpolate(
-						Forecast.PolyTrendLine.toPrimitiveFromList(polyxList),
-						Forecast.PolyTrendLine.toPrimitiveFromList(polyyList));
-						
-						final long startTime = mHistory.get(0).realDate;
-						final long endTime = mHistory.get(mHistory.size() - 1).realDate;
-						
-						for (long ptime = startTime; ptime <= endTime; ptime += 300000) {
-						if (d)
-						myTrace("in CalculateFromDataTransferObject, Spline: " + JoH.dateTimeText((long) ptime) + " value: " + (int) polySplineF.value(ptime));
-						if (use_raw) {
-						createBGfromGD(new GlucoseData((int) polySplineF.value(ptime), ptime), true);
-						} else {
-						BgReading.bgReadingInsertFromInt((int) polySplineF.value(ptime), ptime, false);
-						}
-						}
-						} catch (org.apache.commons.math3.exception.NonMonotonicSequenceException e) {
-						myTrace("in CalculateFromDataTransferObject, NonMonotonicSequenceException: " + e);
-						}*/
-						
 					} else {
 						myTrace("in CalculateFromDataTransferObject, no librealarm history data");
 					}
@@ -177,7 +152,7 @@ package Utilities.Libre
 		/**
 		 * return true if a new reading is created 
 		 */
-		private static function createBGfromGD(gd:GlucoseData, quick:Boolean):Boolean {
+		private static function createBGfromGD(gd:GlucoseData, quick:Boolean, type:String):Boolean {
 			var converted:Number;
 			var bgReading:BgReading = null;
 			var newReadingCreated:Boolean = false;
@@ -193,8 +168,8 @@ package Utilities.Libre
 					if ((gd.realDate > newest) || (newest == -1)) newest = gd.realDate;
 					
 					if (BgReading.getForPreciseTimestamp(gd.realDate, 4.5 * 60 * 1000) == null) {
-						myTrace("in createBGfromGD, in createBGfromGD, Creating bgreading at: " + DateTimeUtilities.createNSFormattedDateAndTime(new Date(gd.realDate)));
 						bgReading = BgReading.create(converted, converted, gd.realDate, quick); // quick lite insert
+						myTrace("in createBGfromGD, Creating bgreading of type " + type + " at: " + DateTimeUtilities.createNSFormattedDateAndTime(new Date(gd.realDate)) + ", with value " + bgReading.calculatedValue);
 						bgReading.saveToDatabaseSynchronous();
 						newReadingCreated = true;
 					} else {
@@ -249,22 +224,17 @@ package Utilities.Libre
 				//       getGlucose(new byte[]{data[(i * 6 + 125)], data[(i * 6 + 124)]});
 				
 				byte = new ByteArray();
-				if (i * 6 + 125 < data.length - 1 && i * 6 + 124 < data.length - 1) {
-					byte.writeByte(getByteAt(data, (i * 6 + 125)));
-					byte.writeByte(getByteAt(data, (i * 6 + 124)));
-					glucoseData.glucoseLevelRaw = getGlucoseRaw(byte, thirteen_bit_mask);
-					
-					time = Math.max(0, Math.abs(Math.round((sensorTime - 3) / 15)) * 15 - index * 15);
-					
-					glucoseData.realDate = sensorStartTime + time * 60 * 1000;
-					glucoseData.sensorId = tagId;
-					glucoseData.sensorTime = time;
-					historyList.addItem(glucoseData);
-					//myTrace("in parseData history, glucoselevelraw = " + glucoseData.glucoseLevelRaw + ", realdata = " + glucoseData.realDate + ", glucoseData.sensorId = " + glucoseData.sensorId + ", sensorTime = " + glucoseData.sensorTime); 
-				} else {
-					//while testing and connected to Flash Builder I had one occurrence off end of file reached, that's why a check and a log is added
-					myTrace("in parseData, i  " + i + ", i * 6 + 125 = " + (i * 6 + 125) + ". Max value is 343 ignoring a glucose Data");
-				}
+				byte.writeByte(getByteAt(data, (i * 6 + 125)));
+				byte.writeByte(getByteAt(data, (i * 6 + 124)));
+				glucoseData.glucoseLevelRaw = getGlucoseRaw(byte, thirteen_bit_mask);
+				
+				time = Math.max(0,(int)(Math.abs(sensorTime - 3)/15)*15 - index*15);
+				
+				glucoseData.realDate = sensorStartTime + time * 60 * 1000;
+				glucoseData.sensorId = tagId;
+				glucoseData.sensorTime = time;
+				//myTrace("add history with realDate = " + glucoseData.realDate + ", sensorTime = " + glucoseData.sensorTime + ", glucoselevelRaw = " + glucoseData.glucoseLevelRaw);
+				historyList.addItem(glucoseData);
 			}
 			
 			var trendList:ArrayCollection = new ArrayCollection();//arraylist of glucosedata
@@ -278,21 +248,17 @@ package Utilities.Libre
 				//         getGlucose(new byte[]{data[(i * 6 + 29)], data[(i * 6 + 28)]});
 				
 				byte = new ByteArray();
-				if (i * 6 + 29 < data.length - 1 && i * 6 + 28 < data.length - 1) {
-					byte.writeByte(getByteAt(data, (i * 6 + 29)));
-					byte.writeByte(getByteAt(data, (i * 6 + 28)));
-					glucoseData.glucoseLevelRaw = getGlucoseRaw(byte, thirteen_bit_mask);
-					time = Math.max(0, sensorTime - index);
-					
-					glucoseData.realDate = sensorStartTime + time * 60 * 1000;
-					glucoseData.sensorId = tagId;
-					glucoseData.sensorTime = time;
-					//myTrace("in parseData trendlist, glucoselevelraw = " + glucoseData.glucoseLevelRaw + ", realdata = " + glucoseData.realDate + ", glucoseData.sensorId = " + glucoseData.sensorId + ", sensorTime = " + glucoseData.sensorTime); 
-					trendList.addItem(glucoseData);
-				} else {
-					//while testing and connected to Flash Builder I had one occurrence off end of file reached, that's why a check and a log is added
-					myTrace("in parseData, i  " + i + "indexTrend = " + indexTrend + ", i * 6 + 29 = " + (i * 6 + 29) + ". Max value is 343 ignoring a glucose Data");
-				}
+				byte.writeByte(getByteAt(data, (i * 6 + 29)));
+				byte.writeByte(getByteAt(data, (i * 6 + 28)));
+				glucoseData.glucoseLevelRaw = getGlucoseRaw(byte, thirteen_bit_mask);
+				time = Math.max(0, sensorTime - index);
+				
+				glucoseData.realDate = sensorStartTime + time * 60 * 1000;
+				glucoseData.sensorId = tagId;
+				glucoseData.sensorTime = time;
+				//myTrace("in parseData trendlist, glucoselevelraw = " + glucoseData.glucoseLevelRaw + ", realdata = " + glucoseData.realDate + ", glucoseData.sensorId = " + glucoseData.sensorId + ", sensorTime = " + glucoseData.sensorTime);
+				//myTrace("add trend with realDate = " + glucoseData.realDate + ", sensorTime = " + glucoseData.sensorTime + ", glucoselevelRaw = " + glucoseData.glucoseLevelRaw);
+				trendList.addItem(glucoseData);
 			}
 			return ReadingData.createReadingData(null, trendList, historyList);
 		}
