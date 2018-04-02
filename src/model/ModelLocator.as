@@ -35,15 +35,9 @@ package model
 	import spark.components.ViewNavigator;
 	import spark.core.ContentCache;
 	
-	import Utilities.UniqueId;
-	import Utilities.Libre.LibreAlarmReceiver;
-	import Utilities.Libre.ReadingData;
-	import Utilities.Libre.TransferObject;
-	
 	import databaseclasses.BgReading;
 	import databaseclasses.Database;
 	import databaseclasses.LocalSettings;
-	import databaseclasses.Sensor;
 	
 	import distriqtkey.DistriqtKey;
 	
@@ -263,6 +257,25 @@ package model
 					firstBGReading = _bgReadings.getItemAt(0) as BgReading;
 				}
 			}
+		}
+		
+		/**
+		 * returns true if last reading was successfully removed 
+		 */
+		public static function removeLastBgReading():Boolean {
+			if (_bgReadings.length > 0) {
+				var removedReading:BgReading = _bgReadings.removeItemAt(_bgReadings.length - 1) as BgReading;
+				Database.deleteBgReadingSynchronous(removedReading);
+				return true;
+			}
+			return false;
+		}
+		
+		public static function getLastBgReading():BgReading {
+			if (_bgReadings.length > 0) {
+				return _bgReadings.getItemAt(_bgReadings.length - 1) as BgReading;
+			}
+			return null;
 		}
 		
 		public static function refreshBgReadingArrayCollection():void {

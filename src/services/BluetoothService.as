@@ -393,9 +393,11 @@ package services
 					}
 				}
 				if (BlueToothDevice.isMiaoMiao()) {
+					BackgroundFetch.startScanDeviceMiaoMiao();
 					removeBluetoothLEEventListeners();
 					addMiaoMiaoEventListeners();
 				} else {
+					BackgroundFetch.stopScanDeviceMiaoMiao();
 					addBluetoothLEEventListeners();
 					removeMiaoMiaoEventListeners();
 				}
@@ -2182,13 +2184,27 @@ package services
 		}
 		
 		private static function addMiaoMiaoEventListeners():void {
+			//BackgroundFetchEvent.SENSOR_NOT_DETECTED_MESSAGE_RECEIVED_FROM_MIAOMIAO
 			BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.MIAO_MIAO_NEW_MAC, receivedMiaoMiaoDeviceAddress);
 			BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.MIAO_MIAO_DATA_PACKET_RECEIVED, receivedMiaoMiaoDataPacket);
+			BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.SENSOR_NOT_DETECTED_MESSAGE_RECEIVED_FROM_MIAOMIAO, receivedSensorNotDetectedFromMiaoMiao);
+			BackgroundFetch.instance.addEventListener(BackgroundFetchEvent.SENSOR_CHANGED_MESSAGE_RECEIVED_FROM_MIAOMIAO, receivedSensorChangedFromMiaoMiao);
+		}
+		
+		private static function receivedSensorChangedFromMiaoMiao(event:Event):void {
+			myTrace("in receivedSensorChangedFromMiaoMiao");
+			Tomato.receivedSensorChangedFromMiaoMiao();
+		}
+
+		private static function receivedSensorNotDetectedFromMiaoMiao(event:Event):void {
+			myTrace("in receivedSensorNotDetectedFromMiaoMiao received sensor not detected");
+			Tomato.receivedSensorNotDetectedFromMiaoMiao();
 		}
 		
 		private static function removeMiaoMiaoEventListeners():void {
 			BackgroundFetch.instance.removeEventListener(BackgroundFetchEvent.MIAO_MIAO_NEW_MAC, receivedMiaoMiaoDeviceAddress);
 			BackgroundFetch.instance.removeEventListener(BackgroundFetchEvent.MIAO_MIAO_DATA_PACKET_RECEIVED, receivedMiaoMiaoDataPacket);
+			BackgroundFetch.instance.removeEventListener(BackgroundFetchEvent.SENSOR_NOT_DETECTED_MESSAGE_RECEIVED_FROM_MIAOMIAO, receivedSensorNotDetectedFromMiaoMiao);
 		}
 		
 		private static function receivedMiaoMiaoDeviceAddress(event:BackgroundFetchEvent):void {

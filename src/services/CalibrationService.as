@@ -152,17 +152,21 @@ package services
 				return;
 			}
 			
-
-			
 			if (Sensor.getActiveSensor() == null) {
 				myTrace("bgReadingReceived, but sensor is null, returning");
 				return;
 			}
+			
+			var warmupTimeInMs:Number = 2 * 3600 * 1000;
+			if (BlueToothDevice.isMiaoMiao()) {
+				warmupTimeInMs = 1 * 3600 * 1000;
+			}
+			
 			//if there's already more than two calibrations, then there's no need anymore to request initial calibration
 			if (Calibration.allForSensor().length < 2) {
 				myTrace("Calibration.allForSensor().length < 2");
-				if (((new Date()).valueOf() - Sensor.getActiveSensor().startedAt < 2 * 3600 * 1000) && !BlueToothDevice.isTypeLimitter()) {
-					myTrace("CalibrationService : bgreading received but sensor age < 2 hours, so ignoring");
+				if ((new Date()).valueOf() - Sensor.getActiveSensor().startedAt < warmupTimeInMs) {
+					myTrace("CalibrationService : bgreading received but sensor age < " + warmupTimeInMs + " milliseconds, so ignoring");
 				} else {
 					//launch a notification
 					//don't do it via the notificationservice, this could result in the notification being cleared but not recreated (NotificationService.updateAllNotifications)

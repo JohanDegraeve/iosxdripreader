@@ -9,12 +9,12 @@ package model
 	import flash.utils.Endian;
 	import flash.utils.Timer;
 	
+	import mx.collections.ArrayCollection;
+	
 	import Utilities.Crc;
 	import Utilities.Trace;
 	import Utilities.UniqueId;
 	import Utilities.Libre.LibreAlarmReceiver;
-	import Utilities.Libre.ReadingData;
-	import Utilities.Libre.TransferObject;
 	
 	import databaseclasses.CommonSettings;
 	
@@ -105,11 +105,20 @@ package model
 			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_MIAOMIAO_FW,Utilities.UniqueId.bytesToHex(temp));
 			myTrace("in decodeTomatoPacket, COMMON_SETTING_MIAOMIAO_HARDWARE = " + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_MIAOMIAO_HARDWARE) + ", COMMON_SETTING_MIAOMIAO_FW = " + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_MIAOMIAO_FW) + ", battery level  " + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_MIAOMIAO_BATTERY_LEVEL)); 
 			
-			var mResult:ReadingData = LibreAlarmReceiver.parseData(0, "tomato", data);
-			if (LibreAlarmReceiver.CalculateFromDataTransferObject(new TransferObject(1, mResult), true)) {
+			var mResult:ArrayCollection = LibreAlarmReceiver.parseData("tomato", data);
+			if (LibreAlarmReceiver.CalculateFromDataTransferObject(mResult)) {
 				TransmitterService.dispatchBgReadingEvent();
 			}
 		}
+		
+		public static function receivedSensorNotDetectedFromMiaoMiao():void {
+			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_FSL_SENSOR_AGE, "-1");
+		}
+		
+		public static function receivedSensorChangedFromMiaoMiao():void {
+			BackgroundFetch.confirmSensorChangeMiaoMiao();
+		}
+		
 		
 		private static function InitBuffer():void {
 		}

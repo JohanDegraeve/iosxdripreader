@@ -95,8 +95,8 @@
 			private static var resetColorTimer:Timer;
 			
 			public static function init():void {
-				LocalSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, peripheralTypeSettingChanged);
-				CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, peripheralTypeSettingChanged);
+				LocalSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, localSettingChanged);
+				CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, commonSettingChanged);
 			}
 			
 			private function onInitialize():void {
@@ -259,7 +259,7 @@
 				return returnValue;
 			}
 			
-			private static function peripheralTypeSettingChanged(event:SettingsServiceEvent):void {
+			private static function commonSettingChanged(event:SettingsServiceEvent):void {
 				if (event.data == CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE) {
 					if (BlueToothDevice.needsTransmitterId() && (transmitterIdText == "BLU00000" || transmitterIdText == "00000" || transmitterIdText == "")) {
 						SettingsView.requestNewTransmitterId();
@@ -270,6 +270,9 @@
 						}
 					}
 				}				
+			}
+			
+			private static function localSettingChanged(event:SettingsServiceEvent):void {
 			}
 			
 			private function settingChanged(event:SettingsServiceEvent):void {
@@ -302,6 +305,17 @@
 						calibrationalertgroup.enabled = true;
 						calibrationalertgroup.visible = true;
 						calibrationalertgroup.includeInLayout = true;
+					}
+					
+					//change battery alert
+					if (BlueToothDevice.isMiaoMiao()) {
+						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_BATTERY_ALERT, "00:00>20>DefaultNoAlertToBeReplaced-08:00>DefaultValue>SilentToBeReplaced");
+					} else if (BlueToothDevice.isDexcomG4()) {
+						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_BATTERY_ALERT, "00:00>210>DefaultNoAlertToBeReplaced-08:00>DefaultValue>SilentToBeReplaced");
+					} else if (BlueToothDevice.isDexcomG5()) {
+						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_BATTERY_ALERT, "00:00>300>DefaultNoAlertToBeReplaced-08:00>DefaultValue>SilentToBeReplaced");
+					} else if (BlueToothDevice.isBluKon()) {
+						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_BATTERY_ALERT, "00:00>5>DefaultNoAlertToBeReplaced-08:00>DefaultValue>SilentToBeReplaced");
 					}
 				}
 			}

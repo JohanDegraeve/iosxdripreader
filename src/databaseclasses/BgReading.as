@@ -626,7 +626,7 @@ package databaseclasses
 		/**
 		 * stores in ModelLocator but not in database ! 
 		 */
-		public static function create(rawData:Number, filteredData:Number, timeStamp:Number = Number.NaN, quick:Boolean = false):BgReading {
+		public static function create(rawData:Number, filteredData:Number, timeStamp:Number = Number.NaN):BgReading {
 			var timestamp:Number = timeStamp;
 			if (isNaN(timeStamp)) {
 				timestamp = (new Date()).valueOf();
@@ -691,9 +691,7 @@ package databaseclasses
 				}
 				updateCalculatedValue(bgReading);
 			}
-			if (!quick) {
-				bgReading.performCalculations();
-			}
+			bgReading.performCalculations();
 			return bgReading;
 		}
 		
@@ -763,7 +761,6 @@ package databaseclasses
 			}
 			var adjust_for:Number = AGE_ADJUSTMENT_TIME - (timestamp - sensor.startedAt);
 			if (adjust_for <= 0 || BlueToothDevice.isTypeLimitter()) {
-				myTrace("in calculateAgeAdjustedRawValue, istypelimitter, not applying age adjustment");
 				_ageAdjustedRawValue = rawData;
 			} else {
 				_ageAdjustedRawValue = ((AGE_ADJUSTMENT_FACTOR * (adjust_for / AGE_ADJUSTMENT_TIME)) * rawData) + rawData;

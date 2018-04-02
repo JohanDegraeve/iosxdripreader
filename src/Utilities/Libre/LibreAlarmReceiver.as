@@ -13,37 +13,42 @@ package Utilities.Libre
 	
 	import databaseclasses.BgReading;
 	import databaseclasses.CommonSettings;
+	import databaseclasses.Sensor;
 	
-	import events.TransmitterServiceEvent;
+	import model.ModelLocator;
 	
 	public class LibreAlarmReceiver extends EventDispatcher
 	{
 		private static var sensorAge:Number = 0;
 		private static var timeShiftNearest:Number = -1;
-		private static var oldest_cmp:Number = -1;
-		private static var newest_cmp:Number = -1;
-		private static var oldest:Number = -1;
-		private static var newest:Number = -1;
 		
 		public function LibreAlarmReceiver()
 		{
 		}
 		
+		private static function toDateString(timestamp:Number):String {
+			var date:Date = new Date(timestamp);
+			return date.toLocaleString();
+		}
+		
 		/**
 		 * returns true if a new reading is created
 		 */
-		public static function CalculateFromDataTransferObject(object:TransferObject, use_raw:Boolean):Boolean {
-			// insert any recent data we can
-			//mTrend is list of glucosedata
-			var mTrend:ArrayCollection = object.data.trend;
-			var newReadingCreated:Boolean = false;
-			if (mTrend != null) {
-				if (mTrend.length > 0) {
-					//looks like mTrend.size() - 1 needs to be the most recent reading
-					mTrend.sort = GlucoseData.dataSort;
-					myTrace("in CalculateFromDataTransferObject");
-					mTrend.refresh();
-					var thisSensorAge:Number = (mTrend.getItemAt(mTrend.length - 1) as GlucoseData).sensorTime;//mTrend.get(mTrend.size() - 1).sensorTime;
+		public static function CalculateFromDataTransferObject(bgReadings:ArrayCollection):Boolean {
+			myTrace("in CalculateFromDataTransferObject");
+			var timeStampLastBgReadingBeforeStart:Number = 0;
+			
+			if ( ModelLocator.getLastBgReading() != null) {
+				timeStampLastBgReadingBeforeStart = (ModelLocator.getLastBgReading()).timestamp;
+			}
+			var timeStampLastAddedBgReading:Number = timeStampLastBgReadingBeforeStart;
+			/**
+			 * latest reading in bgReadings that was not added because time difference with previous added reading was too narrow.
+			 */
+			var lastReadingNotAdded:GlucoseData = null;
+			if (bgReadings != null) {
+				if (bgReadings.length > 0) {
+					var thisSensorAge:Number = (bgReadings.getItemAt(bgReadings.length - 1) as GlucoseData).sensorTime;
 					sensorAge = new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FSL_SENSOR_AGE));
 					if (thisSensorAge > sensorAge) {
 						sensorAge = thisSensorAge;
@@ -58,58 +63,46 @@ package Utilities.Libre
 						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_FSL_SENSOR_AGE, thisSensorAge.toString());
 						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_NFC_AGE_PROBEM, "true");
 					}
-					myTrace("in CalculateFromDataTransferObject, Oldest cmp: " + DateTimeUtilities.createNSFormattedDateAndTime(new Date(oldest_cmp)) + " Newest cmp: " + DateTimeUtilities.createNSFormattedDateAndTime(new Date(newest_cmp)));
-					var shiftx:Number = 0;
-					if (mTrend.length > 0) {
-						
-						shiftx = getTimeShift(mTrend);
-						if (shiftx != 0) 
-							myTrace("in CalculateFromDataTransferObject, Lag Timeshift: " + shiftx);
-						//applyTimeShift(mTrend, shiftx);
-						for (var cntr:int = 0; cntr < mTrend.length ;cntr ++) {
-							var gd:GlucoseData = mTrend.getItemAt(cntr) as GlucoseData;
-							myTrace("in CalculateFromDataTransferObject, DEBUG: sensor time: " + gd.sensorTime);
-							if ((timeShiftNearest > 0) && ((timeShiftNearest - gd.realDate) < 4.5 * 60 * 1000) && (timeShiftNearest - gd.realDate != 0)) {
-								myTrace("in CalculateFromDataTransferObject, Skipping record due to closeness: " + DateTimeUtilities.createNSFormattedDateAndTime(new Date(gd.realDate)));
-								continue;
-							}
-							myTrace("in CalculateFromDataTransferObject createbgd, trend : " + DateTimeUtilities.createNSFormattedDateAndTime(new Date(gd.realDate)) + " " + gd.glucose(0, false));
-							if (use_raw) {
-								newReadingCreated = createBGfromGD(gd, false, "trend");
-							} else {
-								//assuming this will not happen as ios version uses only raw data
-								myTrace("in CalculateFromDataTransferObject, in CalculateFromDataTransferObject, use_raw = " + use_raw + ", VERIFY THE CODE");
-								//BgReading.bgReadingInsertFromInt(gd.glucoseLevel, gd.realDate, true);
-							}
+					
+					if (sensorAge > 14.5 * 24 * 60) {
+						myTrace("in CalculateFromDataTransferObject, sensorage more than 14.5 * 24 * 60 minutes, no further processing");
+						if (Sensor.getActiveSensor() != null) {
+							//start sensor without user intervention 
+							Sensor.stopSensor();
 						}
-					} else {
-						myTrace("in CalculateFromDataTransferObject, Trend data was empty!");
 					}
 					
-					// munge and insert the history data if any is missing
-					var mHistory:ArrayCollection = object.data.history;
-					if ((mHistory != null) && (mHistory.length > 1)) {
-						mHistory.sort = GlucoseData.dataSort;
-						mHistory.refresh();
-						//applyTimeShift(mTrend, shiftx);
-						//var polyxList:ArrayCollection = new ArrayCollection();
-						//var polyyList:ArrayCollection = new ArrayCollection();
-						for (var cntr2:int = 0; cntr2 < mHistory.length ;cntr2 ++) {
-							var gd2:GlucoseData = mHistory.getItemAt(cntr2) as GlucoseData;
-							myTrace("in CalculateFromDataTransferObject createbgd, history : " + DateTimeUtilities.createNSFormattedDateAndTime(new Date(gd2.realDate)) + " " + gd2.glucose(0, false));
-							//polyxList.addItem(gd2.realDate);
-							if (use_raw) {
-								//polyyList.addItem(gd2.glucoseLevelRaw);
-								newReadingCreated = createBGfromGD(gd2, true, "history") || newReadingCreated;
+					if (Sensor.getActiveSensor() == null) {
+						//start sensor without user intervention 
+						Sensor.startSensor(((new Date()).valueOf() - sensorAge * 60 * 1000));
+					}
+					
+					//got all readings and if there's new one add them, at least 4.5 minutes between two readings
+					for (var cntr:int = 0; cntr < bgReadings.length ;cntr ++) {
+						var gd:GlucoseData = bgReadings.getItemAt(cntr) as GlucoseData;
+						trace("timeStampLastBgReadingBeforeStart = " + toDateString(timeStampLastBgReadingBeforeStart));
+						trace("timeStampLastAddedBgReading = " + toDateString(timeStampLastAddedBgReading));
+						trace("timestamp of gd = " + toDateString(gd.realDate));
+						if (gd.glucoseLevelRaw > 0) {
+							if (gd.realDate > timeStampLastAddedBgReading + 4.5 * 60 * 1000) {
+								//myTrace("in CalculateFromDataTransferObject, DEBUG: sensor time: " + gd.sensorTime);
+								myTrace("in CalculateFromDataTransferObject createbgd : " + DateTimeUtilities.createNSFormattedDateAndTime(new Date(gd.realDate)) + " " + gd.glucose(0, false));
+								createBGfromGD(gd);
+								timeStampLastAddedBgReading = gd.realDate;
+								lastReadingNotAdded = null;
 							} else {
-								//polyyList.add((double) gd.glucoseLevel);
-								// add in the actual value
-								//BgReading.bgReadingInsertFromInt(gd.glucoseLevel, gd.realDate, false);
-								myTrace("in CalculateFromDataTransferObject, in CalculateFromDataTransferObject, use_raw = " + use_raw + ", VERIFY THE CODE");
+								lastReadingNotAdded = gd;
 							}
+						} else {
+							myTrace("in CalculateFromDataTransferObject, received glucoseLevelRaw = 0");
+
 						}
-					} else {
-						myTrace("in CalculateFromDataTransferObject, no librealarm history data");
+					}
+					if (lastReadingNotAdded != null) {
+						//lastreading was not added because it was too close to previous reading
+						//remove the last bgreading in modellocator and add lastReadingNotAdded
+						ModelLocator.removeLastBgReading();
+						createBGfromGD(lastReadingNotAdded);
 					}
 				} else {
 					myTrace("in CalculateFromDataTransferObject, Trend data has no elements")
@@ -117,72 +110,14 @@ package Utilities.Libre
 			} else {
 				myTrace("in CalculateFromDataTransferObject, Trend data is null!");
 			}
-			return newReadingCreated;
+			return timeStampLastAddedBgReading > timeStampLastBgReadingBeforeStart;
 		}
 		
-		private static function getTimeShift(gds:ArrayCollection):Number {
-			var nearest:Number = -1;
-			var cntr:int;
-			for (cntr = 0; cntr < gds.length ;cntr ++) {
-				if (((gds.getItemAt(cntr) as GlucoseData).realDate > nearest))
-					nearest = (gds.getItemAt(cntr) as GlucoseData).realDate;
-			}
-			timeShiftNearest = nearest;
-			if (nearest > 0) {
-				var since:Number = (new Date()).valueOf() - nearest;
-				if ((since > 0) && (since < 60 * 1000 * 5)) {
-					return since;
-				}
-			}
-			return 0;
-		}
-		
-		private static function applyTimeShift(gds:ArrayCollection, timeshift:Number):void {
-			if (timeshift == 0) return;
-			for (var cntr:int = 0; cntr < gds.length ;cntr ++) {
-				myTrace("in applyTimeShift, REMOVE THIS IF RESULT IS OK");
-				myTrace("in applyTimeShift, (gds[cntr] as GlucoseData).realDate = " + (gds[cntr] as GlucoseData).realDate);
-				myTrace("in applyTimeShift, timeshift = " + timeshift);
-				myTrace("in applyTimeShift, value of (gds[cntr] as GlucoseData).realDate should change to " + new Number((gds[cntr] as GlucoseData).realDate  + timeshift));
-				(gds[cntr] as GlucoseData).realDate += timeshift;		
-				myTrace("in applyTimeShift, value = " + (gds[cntr] as GlucoseData).realDate);
-			}
-		}
-		
-		/**
-		 * return true if a new reading is created 
-		 */
-		private static function createBGfromGD(gd:GlucoseData, quick:Boolean, type:String):Boolean {
-			var converted:Number;
+		private static function createBGfromGD(gd:GlucoseData):void {
 			var bgReading:BgReading = null;
-			var newReadingCreated:Boolean = false;
-			if (gd.glucoseLevelRaw > 0) {
-				converted = getGlucose(gd.glucoseLevelRaw);
-			} else {
-				converted = 12; // RF error message - might be something else like unconstrained spline
-			}
-			if (gd.realDate > 0) {
-				if ((newest_cmp == -1) || (oldest_cmp == -1) || (gd.realDate < oldest_cmp) || (gd.realDate > newest_cmp)) {
-					// if (BgReading.readingNearTimeStamp(gd.realDate) == null) {
-					if ((gd.realDate < oldest) || (oldest == -1)) oldest = gd.realDate;
-					if ((gd.realDate > newest) || (newest == -1)) newest = gd.realDate;
-					
-					if (BgReading.getForPreciseTimestamp(gd.realDate, 4.5 * 60 * 1000) == null) {
-						bgReading = BgReading.create(converted, converted, gd.realDate, quick); // quick lite insert
-						myTrace("in createBGfromGD, Creating bgreading of type " + type + " at: " + DateTimeUtilities.createNSFormattedDateAndTime(new Date(gd.realDate)) + ", with value " + bgReading.calculatedValue);
-						bgReading.saveToDatabaseSynchronous();
-						newReadingCreated = true;
-					} else {
-						myTrace("in createBGfromGD, Ignoring duplicate timestamp for: " + DateTimeUtilities.createNSFormattedDateAndTime(new Date(gd.realDate)));
-					}
-				} else {
-					myTrace("in createBGfromGD, Already processed from date range: " + DateTimeUtilities.createNSFormattedDateAndTime(new Date(gd.realDate)));
-				}
-			} else {
-				myTrace("in createBGfromGD, Fed a zero or negative date");
-			}
-			myTrace("in createBGfromGD, Oldest : " + DateTimeUtilities.createNSFormattedDateAndTime(new Date(oldest_cmp)) + " Newest : " + DateTimeUtilities.createNSFormattedDateAndTime(new Date(newest_cmp)));
-			return newReadingCreated;
+			bgReading = BgReading.create(gd.glucoseLevelRaw, gd.glucoseLevelRaw, gd.realDate);
+			myTrace("in createBGfromGD, created bgreading at: " + DateTimeUtilities.createNSFormattedDateAndTime(new Date(gd.realDate)) + ", with value " + bgReading.calculatedValue);
+			bgReading.saveToDatabaseSynchronous();
 		}
 		
 		public static function getGlucose(rawGlucose:Number):Number {
@@ -191,9 +126,12 @@ package Utilities.Libre
 		}
 		
 		/**
-		 * comes from xdripplus NFCReaderX.java 
+		 * original comes from xdripplus NFCReaderX.java<br>
+		 * returnvalue will have bgreading list chronologically sorted, ascending according to realdate<br> 
+		 * <br>
+		 * Any reading in data that is younger than the latest BGReading will be ignored<br>
 		 */
-		public static function parseData(attempt:int, tagId:String, data:ByteArray):ReadingData {
+		public static function parseData(tagId:String, data:ByteArray):ArrayCollection {
 			var index:int;
 			var i:int;
 			var glucoseData:GlucoseData;
@@ -210,57 +148,58 @@ package Utilities.Libre
 			
 			var sensorStartTime:Number = ourTime - sensorTime * 60 * 1000;
 			
+			var latestBgReading:BgReading = BgReading.lastNoSensor();
+			var timeStampLastBgReading:Number = 0;
+			if (latestBgReading != null) {
+				timeStampLastBgReading = latestBgReading.timestamp;
+			}
+			
 			// option to use 13 bit mask
 			var thirteen_bit_mask:Boolean = true;//Pref.getBooleanDefaultFalse("testing_use_thirteen_bit_mask");
 			
-			var historyList:ArrayCollection = new ArrayCollection();//arraylist of glucosedata
+			var bgReadingList:ArrayCollection = new ArrayCollection();//arraylist of glucosedata
 			
 			// loads history values (ring buffer, starting at index_trent. byte 124-315)
 			for (index = 0; index < 32; index++) {
 				i = indexHistory - index - 1;
 				if (i < 0) i += 32;
-				glucoseData = new GlucoseData();
-				// glucoseData.glucoseLevel =
-				//       getGlucose(new byte[]{data[(i * 6 + 125)], data[(i * 6 + 124)]});
-				
-				byte = new ByteArray();
-				byte.writeByte(getByteAt(data, (i * 6 + 125)));
-				byte.writeByte(getByteAt(data, (i * 6 + 124)));
-				glucoseData.glucoseLevelRaw = getGlucoseRaw(byte, thirteen_bit_mask);
-				
 				time = Math.max(0,(int)(Math.abs(sensorTime - 3)/15)*15 - index*15);
-				
-				glucoseData.realDate = sensorStartTime + time * 60 * 1000;
-				glucoseData.sensorId = tagId;
-				glucoseData.sensorTime = time;
-				//myTrace("add history with realDate = " + glucoseData.realDate + ", sensorTime = " + glucoseData.sensorTime + ", glucoselevelRaw = " + glucoseData.glucoseLevelRaw);
-				historyList.addItem(glucoseData);
+				if (sensorStartTime + time * 60 * 1000 > timeStampLastBgReading) {
+					byte = new ByteArray();
+					byte.writeByte(getByteAt(data, (i * 6 + 125)));
+					byte.writeByte(getByteAt(data, (i * 6 + 124)));
+					glucoseData = new GlucoseData();
+					glucoseData.glucoseLevelRaw = getGlucoseRaw(byte, thirteen_bit_mask);
+					glucoseData.realDate = sensorStartTime + time * 60 * 1000;
+					glucoseData.sensorId = tagId;
+					glucoseData.sensorTime = time;
+					//myTrace("add history with realDate = " + glucoseData.realDate + ", sensorTime = " + glucoseData.sensorTime + ", glucoselevelRaw = " + glucoseData.glucoseLevelRaw);
+					bgReadingList.addItem(glucoseData);
+				}
 			}
-			
-			var trendList:ArrayCollection = new ArrayCollection();//arraylist of glucosedata
-			
+						
 			// loads trend values (ring buffer, starting at index_trent. byte 28-123)
 			for (index = 0; index < 16; index++) {
 				i = indexTrend - index - 1;
 				if (i < 0) i += 16;
-				glucoseData = new GlucoseData();
-				// glucoseData.glucoseLevel =
-				//         getGlucose(new byte[]{data[(i * 6 + 29)], data[(i * 6 + 28)]});
-				
-				byte = new ByteArray();
-				byte.writeByte(getByteAt(data, (i * 6 + 29)));
-				byte.writeByte(getByteAt(data, (i * 6 + 28)));
-				glucoseData.glucoseLevelRaw = getGlucoseRaw(byte, thirteen_bit_mask);
 				time = Math.max(0, sensorTime - index);
-				
-				glucoseData.realDate = sensorStartTime + time * 60 * 1000;
-				glucoseData.sensorId = tagId;
-				glucoseData.sensorTime = time;
-				//myTrace("in parseData trendlist, glucoselevelraw = " + glucoseData.glucoseLevelRaw + ", realdata = " + glucoseData.realDate + ", glucoseData.sensorId = " + glucoseData.sensorId + ", sensorTime = " + glucoseData.sensorTime);
-				//myTrace("add trend with realDate = " + glucoseData.realDate + ", sensorTime = " + glucoseData.sensorTime + ", glucoselevelRaw = " + glucoseData.glucoseLevelRaw);
-				trendList.addItem(glucoseData);
+				if (sensorStartTime + time * 60 * 1000 > timeStampLastBgReading) {
+					byte = new ByteArray();
+					byte.writeByte(getByteAt(data, (i * 6 + 29)));
+					byte.writeByte(getByteAt(data, (i * 6 + 28)));
+					glucoseData = new GlucoseData();
+					glucoseData.glucoseLevelRaw = getGlucoseRaw(byte, thirteen_bit_mask);
+					glucoseData.realDate = sensorStartTime + time * 60 * 1000;
+					glucoseData.sensorId = tagId;
+					glucoseData.sensorTime = time;
+					//myTrace("in parseData trendlist, glucoselevelraw = " + glucoseData.glucoseLevelRaw + ", realdata = " + glucoseData.realDate + ", glucoseData.sensorId = " + glucoseData.sensorId + ", sensorTime = " + glucoseData.sensorTime);
+					//myTrace("add trend with realDate = " + glucoseData.realDate + ", sensorTime = " + glucoseData.sensorTime + ", glucoselevelRaw = " + glucoseData.glucoseLevelRaw);
+					bgReadingList.addItem(glucoseData);
+				}
 			}
-			return ReadingData.createReadingData(null, trendList, historyList);
+			bgReadingList.sort = GlucoseData.dataSort;
+			bgReadingList.refresh();
+			return bgReadingList;
 		}
 		
 		private static function getGlucoseRaw(bytes:ByteArray, thirteenBitMask:Boolean):int {

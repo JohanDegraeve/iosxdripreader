@@ -292,7 +292,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 				
 				function onInitResult(event:Event):void
 				{
-					trace("HomeView : database init result ok");
+					myTrace("HomeView : database init result ok");
 					//at this moment the database is intialised, but the logs, bgreadings, ... might still be read in the ModelLocator, Modellocator is listening to the same event
 					
 					//set calibration button in the correct state
@@ -317,7 +317,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 				
 				function onInitError(event:Event):void
 				{	
-					trace("HomeView : database init error");
+					myTrace("HomeView : database init error");
 				}
 			}
 			
@@ -608,10 +608,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 					actionsheetBuilder.addAction(ModelLocator.resourceManagerInstance.getString('homeview','forget_device'), DialogAction.STYLE_DEFAULT, ACTION_SHEET_INDEX_FOR_FORGET_DEVICE);
 				}
 				
-				if (Sensor.getActiveSensor() == null) {
+				//for miaomiao, sensor will be started automatically based on sensorage, (could also be done for blucon)
+				if (Sensor.getActiveSensor() == null && !BlueToothDevice.isMiaoMiao()) {
 					actionsheetBuilder.addAction(ModelLocator.resourceManagerInstance.getString('homeview','start_sensor'), DialogAction.STYLE_DEFAULT, ACTION_SHEET_INDEX_FOR_START_SENSOR);
 				} else {
-					actionsheetBuilder.addAction(ModelLocator.resourceManagerInstance.getString('homeview','stop_sensor'), DialogAction.STYLE_DEFAULT, ACTION_SHEET_INDEX_FOR_STOP_SENSOR);
+					if (!BlueToothDevice.isMiaoMiao()) {
+						actionsheetBuilder.addAction(ModelLocator.resourceManagerInstance.getString('homeview','stop_sensor'), DialogAction.STYLE_DEFAULT, ACTION_SHEET_INDEX_FOR_STOP_SENSOR);
+					}
 				}
 				
 				actionsheetBuilder.addAction(ModelLocator.resourceManagerInstance.getString('general','cancel'),DialogAction.STYLE_CANCEL, ACTION_SHEET_INDEX_FOR_CANCEL);
@@ -772,12 +775,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 						if (sensorAge == "0") {
 							sensorAge = ModelLocator.resourceManagerInstance.getString('homeview','unknown');
 							message += " " + sensorAge;
+						} else if (sensorAge == "-1") {
+							sensorAge = ModelLocator.resourceManagerInstance.getString('homeview','sensor_not_detected_received_from_miaomiao');
+							message += " " + sensorAge;
+						} else if ((new Number(sensorAge)) > 14.5 * 24 * 60) {
+							sensorAge = ModelLocator.resourceManagerInstance.getString('homeview','sensor_expired');
+							message += " " + sensorAge;
 						} else {
 							var sensorAgeInDays:int = (new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FSL_SENSOR_AGE)))/1440;
 							message += " " + sensorAgeInDays + " " + ModelLocator.resourceManagerInstance.getString('homeview','days');
 						}
 					}
-					
+
 					DialogService.openSimpleDialog(ModelLocator.resourceManagerInstance.getString('homeview',"status_title"),
 						message, 60);
 				}
@@ -912,23 +921,38 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 				}
 			}
 			
-			private static function addToChartValues(bgReading:BgReading):void {
-				if (bgReading == null)
-					return;
-				if ((new Date()).valueOf() - bgReading.timestamp > hoursToShowInChart * 60 * 60 * 1000) {
+			private static function addToChartValues(bgReading:BgReading, callResetChartValuesIfNecessary:Boolean = true):void {
+				if (bgReading == null) {
+					myTrace("in addToChartValues, bgreading = null");
 					return;
 				}
+				if ((new Date()).valueOf() - bgReading.timestamp > hoursToShowInChart * 60 * 60 * 1000) {
+					myTrace("in addToChartValues, bgreading timestamp > hoursToShowInChart * 60 * 60 * 1000");
+					return;
+				}
+				
 				if (chartValues == null)
 					chartValues = new ArrayCollection();
 				if (chartValues.length == 0) {
 					chartValues.addItem(bgReading);
 				} else {
+					//for miaomiao, if there's gaps, then do a resetchart
+					var timeStampPreviousReading:Number = (chartValues.getItemAt(chartValues.length - 1)).timestamp;
+					var timeStampOfBgReading:Number = bgReading.timestamp;
+					if ((timeStampOfBgReading - timeStampPreviousReading > (5 + 2) * 60 * 1000) && callResetChartValuesIfNecessary) {
+						myTrace("in addToChartValues, resetting chartvalue because there's a gap");
+						resetChartValues();
+						return;
+					}
+					
 					if (!(bgReading.timestamp > (chartValues.getItemAt(chartValues.length - 1)).timestamp)) {
+						myTrace("in addToChartValues, bgreading timestamp < (chartValues.getItemAt(chartValues.length - 1)).timestamp, not processed");
 						//it's an old reading, this may happen eg when sensor has been stopped, lastNoSensor is called, but this returns the last reading with calculated value not 0
 						//If a sensor is stopped, the app keeps receiving readings, and hence this function is called, but bgreading is an older reading
 						return;
 					}
 
+					myTrace("in addToChartValues with bgReading timestamp = " + (new Date(bgReading.timestamp)).toLocaleString());
 					//first if length is already > amount expected, remove those
 					//this can be more than 1 because we're adding some in call to completeChartValues
 					while (chartValues.length > hoursToShowInChart * 12) {
@@ -947,8 +971,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 					}
 					
 					//fill up gaps if any
-					var timeStampPreviousReading:Number = (chartValues.getItemAt(chartValues.length - 1)).timestamp;
-					var timeStampOfBgReading:Number = bgReading.timestamp;
 					var newItem:Object
 					while (timeStampOfBgReading - timeStampPreviousReading > (5 + 2) * 60 * 1000) {
 						timeStampPreviousReading += 5 * 60 * 1000;
@@ -1058,7 +1080,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 				for (var cntr:int = 0; cntr < ModelLocator.bgReadings.length; cntr++) {
 					var reading:BgReading = ModelLocator.bgReadings.getItemAt(cntr) as BgReading;
 					if (reading.timestamp >= ((new Date()).valueOf() - hoursToShowInChart * 60 * 60 * 1000)) {
-						addToChartValues(reading);
+						addToChartValues(reading, false);
 					}
 				}
 				completeChartValues();
