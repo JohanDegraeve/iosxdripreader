@@ -612,7 +612,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 				if (Sensor.getActiveSensor() == null && !BlueToothDevice.isMiaoMiao()) {
 					actionsheetBuilder.addAction(ModelLocator.resourceManagerInstance.getString('homeview','start_sensor'), DialogAction.STYLE_DEFAULT, ACTION_SHEET_INDEX_FOR_START_SENSOR);
 				} else {
-					if (!BlueToothDevice.isMiaoMiao()) {
+					if (Sensor.getActiveSensor() != null) {
 						actionsheetBuilder.addAction(ModelLocator.resourceManagerInstance.getString('homeview','stop_sensor'), DialogAction.STYLE_DEFAULT, ACTION_SHEET_INDEX_FOR_STOP_SENSOR);
 					}
 				}

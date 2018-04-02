@@ -222,7 +222,6 @@
 					checkUpdatesOnOffText = ModelLocator.resourceManagerInstance.getString('settingsview','off');
 				}
 				
-				LocalSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, settingChanged);
 				CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, settingChanged);
 
 				versionText = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_APPLICATION_VERSION);
@@ -269,6 +268,17 @@
 							SettingsView.nightScoutUrlChangeDialog();
 						}
 					}
+					
+					//change battery alert
+					if (BlueToothDevice.isMiaoMiao()) {
+						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_BATTERY_ALERT, "00:00>20>DefaultNoAlertToBeReplaced-08:00>20>SilentToBeReplaced");
+					} else if (BlueToothDevice.isDexcomG4()) {
+						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_BATTERY_ALERT, "00:00>210>DefaultNoAlertToBeReplaced-08:00>210>SilentToBeReplaced");
+					} else if (BlueToothDevice.isDexcomG5()) {
+						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_BATTERY_ALERT, "00:00>300>DefaultNoAlertToBeReplaced-08:00>300>SilentToBeReplaced");
+					} else if (BlueToothDevice.isBluKon()) {
+						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_BATTERY_ALERT, "00:00>5>DefaultNoAlertToBeReplaced-08:00>5>SilentToBeReplaced");
+					}
 				}				
 			}
 			
@@ -305,17 +315,6 @@
 						calibrationalertgroup.enabled = true;
 						calibrationalertgroup.visible = true;
 						calibrationalertgroup.includeInLayout = true;
-					}
-					
-					//change battery alert
-					if (BlueToothDevice.isMiaoMiao()) {
-						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_BATTERY_ALERT, "00:00>20>DefaultNoAlertToBeReplaced-08:00>DefaultValue>SilentToBeReplaced");
-					} else if (BlueToothDevice.isDexcomG4()) {
-						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_BATTERY_ALERT, "00:00>210>DefaultNoAlertToBeReplaced-08:00>DefaultValue>SilentToBeReplaced");
-					} else if (BlueToothDevice.isDexcomG5()) {
-						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_BATTERY_ALERT, "00:00>300>DefaultNoAlertToBeReplaced-08:00>DefaultValue>SilentToBeReplaced");
-					} else if (BlueToothDevice.isBluKon()) {
-						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_BATTERY_ALERT, "00:00>5>DefaultNoAlertToBeReplaced-08:00>DefaultValue>SilentToBeReplaced");
 					}
 				}
 			}

@@ -115,7 +115,7 @@ package Utilities.Libre
 		
 		private static function createBGfromGD(gd:GlucoseData):void {
 			var bgReading:BgReading = null;
-			bgReading = BgReading.create(gd.glucoseLevelRaw, gd.glucoseLevelRaw, gd.realDate);
+			bgReading = BgReading.create(getGlucose(gd.glucoseLevelRaw), getGlucose(gd.glucoseLevelRaw), gd.realDate);
 			myTrace("in createBGfromGD, created bgreading at: " + DateTimeUtilities.createNSFormattedDateAndTime(new Date(gd.realDate)) + ", with value " + bgReading.calculatedValue);
 			bgReading.saveToDatabaseSynchronous();
 		}
@@ -173,7 +173,7 @@ package Utilities.Libre
 					glucoseData.realDate = sensorStartTime + time * 60 * 1000;
 					glucoseData.sensorId = tagId;
 					glucoseData.sensorTime = time;
-					//myTrace("add history with realDate = " + glucoseData.realDate + ", sensorTime = " + glucoseData.sensorTime + ", glucoselevelRaw = " + glucoseData.glucoseLevelRaw);
+					myTrace("add history with realDate = " + glucoseData.realDate + ", sensorTime = " + glucoseData.sensorTime + ", glucoselevelRaw = " + glucoseData.glucoseLevelRaw);
 					bgReadingList.addItem(glucoseData);
 				}
 			}
@@ -193,7 +193,7 @@ package Utilities.Libre
 					glucoseData.sensorId = tagId;
 					glucoseData.sensorTime = time;
 					//myTrace("in parseData trendlist, glucoselevelraw = " + glucoseData.glucoseLevelRaw + ", realdata = " + glucoseData.realDate + ", glucoseData.sensorId = " + glucoseData.sensorId + ", sensorTime = " + glucoseData.sensorTime);
-					//myTrace("add trend with realDate = " + glucoseData.realDate + ", sensorTime = " + glucoseData.sensorTime + ", glucoselevelRaw = " + glucoseData.glucoseLevelRaw);
+					myTrace("add trend with realDate = " + glucoseData.realDate + ", sensorTime = " + glucoseData.sensorTime + ", glucoselevelRaw = " + glucoseData.glucoseLevelRaw);
 					bgReadingList.addItem(glucoseData);
 				}
 			}

@@ -306,6 +306,8 @@
 			 var newString:String;
 			 if (commonSettingId == COMMON_SETTING_BATTERY_ALERT) {
 				 if ((commonSettings[COMMON_SETTING_BATTERY_ALERT] as String).indexOf('DefaultValue') > -1) {
+					 //actually the alert value is reset when user changes the transmittertype, which is each time the app starts
+					 //as a result this branch is not useful anymore
 					 newString = (commonSettings[COMMON_SETTING_BATTERY_ALERT] as String)
 						 .replace('DefaultValue', "300");//default value for G5 is 300 - if user picks other transmitter type, (s)he will need to change the default value
 					 setCommonSetting(COMMON_SETTING_BATTERY_ALERT, newString);
