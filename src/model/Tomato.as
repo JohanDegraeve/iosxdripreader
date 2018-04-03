@@ -111,10 +111,6 @@ package model
 			}
 		}
 		
-		public static function receivedSensorNotDetectedFromMiaoMiao():void {
-			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_FSL_SENSOR_AGE, "-1");
-		}
-		
 		public static function receivedSensorChangedFromMiaoMiao():void {
 			BackgroundFetch.confirmSensorChangeMiaoMiao();
 		}
