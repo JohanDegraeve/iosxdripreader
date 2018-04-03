@@ -100,8 +100,7 @@ package Utilities.Libre
 					}
 					if (lastReadingNotAdded != null) {
 						//lastreading was not added because it was too close to previous reading
-						//remove the last bgreading in modellocator and add lastReadingNotAdded
-						ModelLocator.removeLastBgReading();
+						//adding it now will guarantee that the most recent reading is shown, next readings will follow 5 minutes later)
 						createBGfromGD(lastReadingNotAdded);
 					}
 				} else {
