@@ -80,9 +80,9 @@ package Utilities.Libre
 					//got all readings and if there's new one add them, at least 4.5 minutes between two readings
 					for (var cntr:int = 0; cntr < bgReadings.length ;cntr ++) {
 						var gd:GlucoseData = bgReadings.getItemAt(cntr) as GlucoseData;
-						trace("timeStampLastBgReadingBeforeStart = " + toDateString(timeStampLastBgReadingBeforeStart));
-						trace("timeStampLastAddedBgReading = " + toDateString(timeStampLastAddedBgReading));
-						trace("timestamp of gd = " + toDateString(gd.realDate));
+						//trace("timeStampLastBgReadingBeforeStart = " + toDateString(timeStampLastBgReadingBeforeStart));
+						//trace("timeStampLastAddedBgReading = " + toDateString(timeStampLastAddedBgReading));
+						//trace("timestamp of gd = " + toDateString(gd.realDate));
 						if (gd.glucoseLevelRaw > 0) {
 							if (gd.realDate > timeStampLastAddedBgReading + 4.5 * 60 * 1000) {
 								//myTrace("in CalculateFromDataTransferObject, DEBUG: sensor time: " + gd.sensorTime);
@@ -101,6 +101,7 @@ package Utilities.Libre
 					if (lastReadingNotAdded != null) {
 						//lastreading was not added because it was too close to previous reading
 						//adding it now will guarantee that the most recent reading is shown, next readings will follow 5 minutes later)
+						myTrace("in CalculateFromDataTransferObject createbgd : " + DateTimeUtilities.createNSFormattedDateAndTime(new Date(gd.realDate)) + " " + gd.glucose(0, false));
 						createBGfromGD(lastReadingNotAdded);
 					}
 				} else {

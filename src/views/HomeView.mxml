@@ -952,7 +952,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 						return;
 					}
 
-					myTrace("in addToChartValues with bgReading timestamp = " + (new Date(bgReading.timestamp)).toLocaleString());
+					//myTrace("in addToChartValues with bgReading timestamp = " + (new Date(bgReading.timestamp)).toLocaleString());
 					//first if length is already > amount expected, remove those
 					//this can be more than 1 because we're adding some in call to completeChartValues
 					while (chartValues.length > hoursToShowInChart * 12) {
