@@ -371,6 +371,9 @@ package services
 				} else if (notificationEvent.id == NotificationService.ID_FOR_DEAD_OR_EXPIRED_SENSOR_TRANSMITTER_PL) {
 					DialogService.openSimpleDialog(ModelLocator.resourceManagerInstance.getString("settingsview","warning"),
 						ModelLocator.resourceManagerInstance.getString("bluetoothservice","dead_or_expired_sensor"));
+				}  else if (notificationEvent.id == NotificationService.ID_FOR_SENSOR_NOT_DETECTED_MIAOMIAO) {
+					DialogService.openSimpleDialog(ModelLocator.resourceManagerInstance.getString("settingsview","warning"),
+						ModelLocator.resourceManagerInstance.getString("bluetoothservice","sensor_not_detected_miaomiao"));
 				} 
 			}
 		}
@@ -2202,7 +2205,14 @@ package services
 
 		private static function receivedSensorNotDetectedFromMiaoMiao(event:Event):void {
 			myTrace("in receivedSensorNotDetectedFromMiaoMiao received sensor not detected");
-			Tomato.receivedSensorNotDetectedFromMiaoMiao();
+			var notificationBuilder:NotificationBuilder = new NotificationBuilder()
+				.setId(NotificationService.ID_FOR_SENSOR_NOT_DETECTED_MIAOMIAO)
+				.setAlert(ModelLocator.resourceManagerInstance.getString("settingsview","warning"))
+				.setTitle(ModelLocator.resourceManagerInstance.getString("settingsview","warning"))
+				.setBody(ModelLocator.resourceManagerInstance.getString("bluetoothservice","sensor_not_detected_miaomiao"))
+				.enableVibration(true)
+			Notifications.service.notify(notificationBuilder.build());
+			BackgroundFetch.vibrate();
 		}
 		
 		private static function removeMiaoMiaoEventListeners():void {
@@ -2221,6 +2231,7 @@ package services
 		}
 		
 		private static function receivedMiaoMiaoDataPacket(event:BackgroundFetchEvent):void {
+			Notifications.service.cancel(NotificationService.ID_FOR_SENSOR_NOT_DETECTED_MIAOMIAO);
 			if (!BlueToothDevice.isMiaoMiao()) {
 				myTrace("in receivedMiaoMiaoDataPacket but not miaomiao device, not processing");
 			} else {

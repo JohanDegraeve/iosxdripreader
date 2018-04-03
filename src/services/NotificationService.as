@@ -115,6 +115,7 @@ package services
 		public static const ID_FOR_OTHER_G5_APP:int = 18;
 		public static const ID_FOR_APPLICATION_INACTIVE_ALERT:int = 19;
 		public static const ID_FOR_DEAD_OR_EXPIRED_SENSOR_TRANSMITTER_PL:int = 20;
+		public static const ID_FOR_SENSOR_NOT_DETECTED_MIAOMIAO:int = 21;
 		
 		public static const ID_FOR_ALERT_LOW_CATEGORY:String = "LOW_ALERT_CATEGORY";
 		public static const ID_FOR_ALERT_HIGH_CATEGORY:String = "HIGH_ALERT_CATEGORY";
@@ -462,6 +463,8 @@ package services
 				returnValue = "ID_FOR_APPLICATION_INACTIVE_ALERT";
 			if (id == ID_FOR_DEAD_OR_EXPIRED_SENSOR_TRANSMITTER_PL)
 				returnValue = "ID_FOR_DEAD_OR_EXPIRED_SENSOR_TRANSMITTER_PL";
+			if (id == ID_FOR_SENSOR_NOT_DETECTED_MIAOMIAO)
+				returnValue = "ID_FOR_SENSOR_NOT_DETECTED_MIAOMIAO";
 			return returnValue;
 		}
 		

@@ -188,7 +188,6 @@
 		 /**
 		  * For any device that reads Freestyle (bluerader, blukon, transmiter pl, miaomiao<br>
 		  * value 0 means level not known<br>
-		  * value -1 means sensor not detected received from Device(ony for miaomiao)
 		  * time in minutes<br>
 		  */
 		 public static const COMMON_SETTING_FSL_SENSOR_AGE:int = 38;
