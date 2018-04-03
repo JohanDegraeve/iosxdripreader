@@ -307,6 +307,7 @@ package services
 			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_MIAOMIAO_BATTERY_LEVEL, "0");
 			
 			if (BlueToothDevice.isMiaoMiao()) {
+				BackgroundFetch.startScanDeviceMiaoMiao();
 				if (BlueToothDevice.known()) {
 					BackgroundFetch.setMiaoMiaoMac(BlueToothDevice.address);
 				}
@@ -376,7 +377,7 @@ package services
 		
 		private static function commonSettingChanged(event:SettingsServiceEvent):void {
 			if (event.data == CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE) {
-				myTrace("in settingChanged, event.data = COMMON_SETTING_PERIPHERAL_TYPE, calling stopscanning");
+				myTrace("in settingChanged, event.data = COMMON_SETTING_PERIPHERAL_TYPE");
 				if (ScanTimer != null) {
 					if (ScanTimer.running) {
 						ScanTimer.stop();
@@ -392,6 +393,9 @@ package services
 					} else {
 					}
 				}
+				
+				BlueToothDevice.forgetBlueToothDevice();
+					
 				if (BlueToothDevice.isMiaoMiao()) {
 					BackgroundFetch.startScanDeviceMiaoMiao();
 					removeBluetoothLEEventListeners();
