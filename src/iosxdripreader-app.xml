@@ -240,7 +240,6 @@
 				<array>
 					<string>bluetooth-central</string>
 					<string>audio</string>
-					<string>remote-notification</string>
 				</array>
 				<key>NSAppTransportSecurity</key>
       				<dict>
@@ -275,10 +274,8 @@
 		<array>
 		<string>8DKSZ5HNLB.*</string>
 		</array>
-		<!--  key>beta-reports-active</key-->
-   		<!--  true/-->
-		<key>aps-environment</key>
-		<string>development</string>	
+		<key>beta-reports-active</key>
+   		<true/>
 		
 			 ]]></Entitlements>
 		<!-- Display Resolution for the app (either "standard" or "high"). Optional. 
