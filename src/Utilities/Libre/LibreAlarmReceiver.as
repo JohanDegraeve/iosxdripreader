@@ -80,27 +80,29 @@ package Utilities.Libre
 					//got all readings and if there's new one add them, at least 4.5 minutes between two readings
 					for (var cntr:int = 0; cntr < bgReadings.length ;cntr ++) {
 						var gd:GlucoseData = bgReadings.getItemAt(cntr) as GlucoseData;
-						//trace("timeStampLastBgReadingBeforeStart = " + toDateString(timeStampLastBgReadingBeforeStart));
-						//trace("timeStampLastAddedBgReading = " + toDateString(timeStampLastAddedBgReading));
-						//trace("timestamp of gd = " + toDateString(gd.realDate));
 						if (gd.glucoseLevelRaw > 0) {
-							if (gd.realDate > timeStampLastAddedBgReading + 4.5 * 60 * 1000) {
-								//myTrace("in CalculateFromDataTransferObject, DEBUG: sensor time: " + gd.sensorTime);
+							if (gd.realDate > timeStampLastAddedBgReading + 4.5 * 60 * 1000) {//
 								myTrace("in CalculateFromDataTransferObject createbgd : " + DateTimeUtilities.createNSFormattedDateAndTime(new Date(gd.realDate)) + " " + gd.glucose(0, false));
 								createBGfromGD(gd);
 								timeStampLastAddedBgReading = gd.realDate;
 								lastReadingNotAdded = null;
 							} else {
+								//save the lastReading that was skipped, because the last reading is too interesting too drop
 								lastReadingNotAdded = gd;
 							}
 						} else {
 							myTrace("in CalculateFromDataTransferObject, received glucoseLevelRaw = 0");
-
 						}
 					}
 					if (lastReadingNotAdded != null) {
 						//lastreading was not added because it was too close to previous reading
 						//adding it now will guarantee that the most recent reading is shown, next readings will follow 5 minutes later)
+
+						//however if the last reading that was added, is less than 2 minutes close to this lastReadingNotAdded, then let's remove the lastreading that was added
+						if (lastReadingNotAdded.realDate - timeStampLastAddedBgReading < 2 * 60 * 1000) {
+							myTrace("in CalculateFromDataTransferObject, removing last reading from modellocator");
+							ModelLocator.removeLastBgReading();
+						}
 						myTrace("in CalculateFromDataTransferObject createbgd : " + DateTimeUtilities.createNSFormattedDateAndTime(new Date(gd.realDate)) + " " + gd.glucose(0, false));
 						createBGfromGD(lastReadingNotAdded);
 					}
