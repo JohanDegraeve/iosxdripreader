@@ -210,6 +210,17 @@ package services
 		 * Therefore the amount of notifications will be reduced, this setting counts the number
 		 */
 		private static var MAX_WARNINGS_OTHER_APP_CONNECTING_TO_G5:Number = 5;
+		
+		private static var _amountOfConsecutiveSensorNotDetectedForMiaoMiao:int = 0;
+
+		/**
+		 * if miaomiao, this is the amount of times a sensorNotDetected was received consecutively without receiving a full data packet
+		 */
+		public static function get amountOfConsecutiveSensorNotDetectedForMiaoMiao():int
+		{
+			return _amountOfConsecutiveSensorNotDetectedForMiaoMiao;
+		}
+
 
 		private static function set activeBluetoothPeripheral(value:Peripheral):void
 		{
@@ -2210,9 +2221,10 @@ package services
 				.setAlert(ModelLocator.resourceManagerInstance.getString("settingsview","warning"))
 				.setTitle(ModelLocator.resourceManagerInstance.getString("settingsview","warning"))
 				.setBody(ModelLocator.resourceManagerInstance.getString("bluetoothservice","sensor_not_detected_miaomiao"))
-				.enableVibration(true)
+				.enableVibration(false)
+				.setSound("");
 			Notifications.service.notify(notificationBuilder.build());
-			BackgroundFetch.vibrate();
+			_amountOfConsecutiveSensorNotDetectedForMiaoMiao++;
 		}
 		
 		private static function removeMiaoMiaoEventListeners():void {
@@ -2232,6 +2244,7 @@ package services
 		
 		private static function receivedMiaoMiaoDataPacket(event:BackgroundFetchEvent):void {
 			Notifications.service.cancel(NotificationService.ID_FOR_SENSOR_NOT_DETECTED_MIAOMIAO);
+			_amountOfConsecutiveSensorNotDetectedForMiaoMiao = 0;
 			if (!BlueToothDevice.isMiaoMiao()) {
 				myTrace("in receivedMiaoMiaoDataPacket but not miaomiao device, not processing");
 			} else {

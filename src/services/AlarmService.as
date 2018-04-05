@@ -1118,6 +1118,15 @@ package services
 					//not snoozed
 					if (((now.valueOf() - lastBgReading.timestamp) > alertValue * 60 * 1000) && ((now.valueOf() - ModelLocator.appStartTimestamp) > 5 * 60 * 1000)) {
 						myTrace("in checkAlarms, missed reading");
+						var alertBody:String = " ";
+						if (BlueToothDevice.isMiaoMiao()) {
+							if (BluetoothService.amountOfConsecutiveSensorNotDetectedForMiaoMiao > 0) {
+								alertBody = ModelLocator.resourceManagerInstance.getString("alarmservice","received");
+								alertBody += " " + BluetoothService.amountOfConsecutiveSensorNotDetectedForMiaoMiao + " ";
+								alertBody += ModelLocator.resourceManagerInstance.getString("alarmservice","consecutive_sensor_not_detected");
+							}
+							myTrace("in checkMissedReadingAlert, fire alert with body = " + alertBody);
+						}
 						fireAlert(
 							5,
 							alertType, 
@@ -1125,7 +1134,8 @@ package services
 							ModelLocator.resourceManagerInstance.getString("alarmservice","missed_reading_alert_notification_alert"), 
 							alertType.enableVibration,
 							alertType.enableLights,
-							NotificationService.ID_FOR_ALERT_MISSED_READING_CATEGORY
+							NotificationService.ID_FOR_ALERT_MISSED_READING_CATEGORY,
+							alertBody
 						); 
 						_missedReadingAlertLatestSnoozeTimeInMs = Number.NaN;
 						_missedReadingAlertSnoozePeriodInMinutes = 0;
