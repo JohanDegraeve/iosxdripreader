@@ -1228,8 +1228,9 @@ package services
 		
 		/**
 		 * Disconnects the active bluetooth peripheral if any and sets it to null(otherwise returns without doing anything)<br>
+		 * address only for miaomiao because the cancelMiaoMiaoConnection method needs that mac, otherwise it will forget the device
 		 */
-		public static function forgetActiveBluetoothPeripheral():void {
+		public static function forgetActiveBluetoothPeripheral(address:String = ""):void {
 			if (BlueToothDevice.isMiaoMiao()) {
 				myTrace("in forgetActiveBluetoothPeripheral  miaomiao device");
 				BackgroundFetch.cancelMiaoMiaoConnection(BlueToothDevice.address);

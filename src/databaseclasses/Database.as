@@ -1700,8 +1700,6 @@ package databaseclasses
 				if (tempObject != null) {
 					if (tempObject is Array) {
 						for each ( var o:Object in tempObject) {
-							var date:Date = new Date(o.timestamp);
-							//trace("retrieved reading timestamp = " + date.toLocaleString() + ", value = " + o.calculatedValue);
 							var event:DatabaseEvent = new DatabaseEvent(DatabaseEvent.BGREADING_RETRIEVAL_EVENT);
 							event.data = new BgReading(
 								o.timestamp,
