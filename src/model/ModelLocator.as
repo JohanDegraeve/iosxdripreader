@@ -35,6 +35,8 @@ package model
 	import spark.components.ViewNavigator;
 	import spark.core.ContentCache;
 	
+	import Utilities.UniqueId;
+	
 	import databaseclasses.BgReading;
 	import databaseclasses.Database;
 	import databaseclasses.LocalSettings;
@@ -165,15 +167,17 @@ package model
 						}
 					} else if (de.data is String) {
 						if (de.data as String == Database.END_OF_RESULT) {
-							/*var test:String = "2378f81403000000000000000000000000000000000000000d4209113009c8e0da001b09c8d4da000d09c8c8da001009c8e8da000d09c810db001809c83cdb003c09c828db005509c810db006009c808db003009c894da003c09c8d4da004709c8e4da005109c8e0da005509c8f0da005509c8e8da004109c8e0da004b03c8a4dd004003c8b89e000603c87cdd00e502c83cdc00bb02c8c0db007702c8e81a015002c8501a015902c8b8da006102c88cda009302c870db001c03c850db00d803c8dc1a010d05c8f4da004c06c8dc1a016e07c8bcda006f08c8acda004809c8e8da00d904c8b8dc002a05c810dc00c605c81c1c011006c8f8db002106c8ecdc001706c80cdd00da05c8c49d004605c838dc00ba04c82cdd005604c834dd00a203c8f0dc001503c8d4dc00ad02c8c89d00b402c86cdd002403c8f4dc0049480000b26e0001f1059950140796805a00eda6066d1ac804bef86529";
-							var data:ByteArray = Utilities.UniqueId.hexStringToByteArray(test);
-							var mResult:ReadingData = LibreAlarmReceiver.parseData(0, "tomato", data);
-							LibreAlarmReceiver.CalculateFromDataTransferObject(new TransferObject(1, mResult),true);*/
-
 							_bgReadings.refresh();
 							Database.getBlueToothDevice();
 							Message.init(DistriqtKey.distriqtKey);
 							TransmitterService.init();
+
+							/*var test:String = "110025B4000025B40000D71AAEB1A50001";
+							var data:ByteArray = Utilities.UniqueId.hexStringToByteArray(test);
+							data.position = 0;
+							BluetoothService.processG4TransmitterData(data);*/
+							
+
 							BackGroundFetchService.init();
 							BluetoothService.init();
 							

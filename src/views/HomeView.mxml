@@ -766,9 +766,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
 						} else {
 							message += " " + new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_MIAOMIAO_BATTERY_LEVEL)) + " %";
 						}
+					} else if (BlueToothDevice.isxBridgeR()) {
+						message += ModelLocator.resourceManagerInstance.getString('homeview','battery_level');
+						var batteryLevel:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_XBRIDGER_BATTERY_LEVEL);
+						if (batteryLevel == "0") {
+							batteryLevel = ModelLocator.resourceManagerInstance.getString('homeview','unknown');
+							message += " " + batteryLevel;
+						} else {
+							message += " " + new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_XBRIDGER_BATTERY_LEVEL)) + " %";
+						}
 					}
 					
-					if (BlueToothDevice.isBluKon() || BlueToothDevice.isBlueReader() || BlueToothDevice.isTransmiter_PL() || BlueToothDevice.isMiaoMiao()) {
+					if (BlueToothDevice.isTypeLimitter()) {
 						message += '\n';
 						message += ModelLocator.resourceManagerInstance.getString('homeview','sensor_age');
 						var sensorAge:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FSL_SENSOR_AGE);

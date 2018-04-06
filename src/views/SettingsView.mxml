@@ -281,6 +281,8 @@
 						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_BATTERY_ALERT, "00:00>300>DefaultNoAlertToBeReplaced-08:00>300>SilentToBeReplaced");
 					} else if (BlueToothDevice.isBluKon()) {
 						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_BATTERY_ALERT, "00:00>5>DefaultNoAlertToBeReplaced-08:00>5>SilentToBeReplaced");
+					} else if (BlueToothDevice.isxBridgeR()) {//value 23 to be fixed, asked Marek Macner
+						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_BATTERY_ALERT, "00:00>23>DefaultNoAlertToBeReplaced-08:00>23>SilentToBeReplaced");
 					}
 				}				
 			}
@@ -750,7 +752,7 @@
 					}
 					return;
 				}
-				if (BlueToothDevice.isDexcomG4()) {
+				if (BlueToothDevice.isDexcomG4() || BlueToothDevice.isxBridgeR()) {
 					message += " (5 characters)";
 				} else if (BlueToothDevice.isDexcomG5()) {
 					message += " (6 characters)";
@@ -774,7 +776,7 @@
 						return;
 					}
 					var idLength:Number = BlueToothDevice.isDexcomG5() ? 6:
-						(BlueToothDevice.isDexcomG4() ? 5: Number.NaN);
+						((BlueToothDevice.isDexcomG4() || BlueToothDevice.isxBridgeR())? 5: Number.NaN);
 					
 					if (!isNaN(idLength)) {
 						if ((event.values[0] as String).length != idLength) {
@@ -845,11 +847,13 @@
 					selectedTransmitterType = 4;
 				} else if (currentType.toUpperCase() == "MIAOMIAO") {
 					selectedTransmitterType = 5;
-				} else if (currentType.toUpperCase() == "FOLLOW") {
+				} else if (currentType.toUpperCase() == "XBRIDGER") {
 					selectedTransmitterType = 6;
+				} else if (currentType.toUpperCase() == "FOLLOW") {
+					selectedTransmitterType = 7;
 				} 
 				var transmitterTypeNames:Array = new Array();
-				transmitterTypeNames.push("G4", "G5", "Bluereader", "BluKon", "Transmiter PL", "MiaoMiao", "Follow");
+				transmitterTypeNames.push("G4", "G5", "Bluereader", "BluKon", "Transmiter PL", "MiaoMiao", "xBridgeR", "Follow");
 				
 				var picker:PickerDialogView = Dialog.service.create(
 					new PickerDialogBuilder()
@@ -905,6 +909,7 @@
 				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_BLUEREADER_BATTERY_LEVEL, "0");
 				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_BLUKON_BATTERY_LEVEL, "0");
 				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_MIAOMIAO_BATTERY_LEVEL, "0");
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_XBRIDGER_BATTERY_LEVEL, "0");
 			}
 			
 			private function changeAppUpdates_clickHandler(event:MouseEvent):void {
