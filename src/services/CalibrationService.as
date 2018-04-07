@@ -39,8 +39,6 @@ package services
 		[ResourceBundle("general")]
 		
 		private static var _instance:CalibrationService = new CalibrationService();
-		private static var bgLevel1:Number;
-		private static var timeStampOfFirstBgLevel:Number;
 		/**
 		 * if notification launched for requesting initial calibration, this value will be true<br>
 		 *
@@ -62,8 +60,6 @@ package services
 		
 		public static function init():void {
 			myTrace("init");
-			bgLevel1 = Number.NaN;
-			timeStampOfFirstBgLevel = new Number(0);
 			TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, bgReadingReceived);
 			NotificationService.instance.addEventListener(NotificationServiceEvent.NOTIFICATION_EVENT, notificationReceived);
 			NotificationService.instance.addEventListener(NotificationServiceEvent.NOTIFICATION_SELECTED_EVENT, notificationReceived);
@@ -100,9 +96,9 @@ package services
 		 */
 		private static function requestInitialCalibration():void {
 			myTrace("in requestInitialCalibration");
-			var latestReadings:ArrayCollection = BgReading.latestBySize(1);
-			if (latestReadings.length == 0) {
-				myTrace("in requestInitialCalibration but latestReadings.length == 0, looks like an error because there shouldn't have been an calibration request, returning");
+			var latestReadings:ArrayCollection = BgReading.latestBySize(2);
+			if (latestReadings.length < 2) {
+				myTrace("in requestInitialCalibration but latestReadings.length < 0, returning");
 				return;
 			}
 			
@@ -115,15 +111,9 @@ package services
 				return;
 			}
 
-			if (((new Date()).valueOf() - timeStampOfFirstBgLevel) > (7 * 60 * 1000 + 100)) {
-				myTrace("previous calibration was more than 7 minutes ago , restart");
-				timeStampOfFirstBgLevel = new Number(0);
-				bgLevel1 = Number.NaN;
-			}
-			
 			var alert:DialogView = Dialog.service.create(
 				new AlertBuilder()
-				.setTitle(isNaN(bgLevel1) ? ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_first_calibration_title") : ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_second_calibration_title"))
+				.setTitle(ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_calibration_title"))
 				.setMessage(ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_calibration"))
 				.addTextField("",ModelLocator.resourceManagerInstance.getString("calibrationservice",ModelLocator.resourceManagerInstance.getString("calibrationservice","blood_glucose_calibration_value")), false, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true" ? 4:8)
 				.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
@@ -138,11 +128,9 @@ package services
 		private static function bgReadingReceived(be:TransmitterServiceEvent):void {
 			myTrace("in bgReadingReceived");
 
-			//if ((new Date()).valueOf() - latestReading.timestamp > MAXIMUM_WAIT_FOR_CALIBRATION_IN_SECONDS * 1000) {
-			var latestReadings:ArrayCollection = BgReading.latestBySize(1);
-			if (latestReadings.length == 0) {
-				//should never happen
-				myTrace("in bgReadingReceived but latestReadings.length == 0, looks like an error");
+			var latestReadings:ArrayCollection = BgReading.latestBySize(2);
+			if (latestReadings.length < 2) {
+				myTrace("in bgReadingReceived but latestReadings.length <2");
 				return;
 			}
 			var latestReading:BgReading = (latestReadings.getItemAt(0)) as BgReading;
@@ -179,7 +167,7 @@ package services
 							.setId(NotificationService.ID_FOR_REQUEST_CALIBRATION)
 							.setAlert(ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_calibration_title"))
 							.setTitle(ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_calibration_title"))
-							.setBody(isNaN(bgLevel1) ? ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_first_calibration_title") : ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_second_calibration_title"))
+							.setBody(ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_calibration_title"))
 							.enableVibration(true)
 							.enableLights(true)
 							.build());
@@ -188,7 +176,7 @@ package services
 						myTrace("opening dialog to request calibration");
 						var alert:DialogView = Dialog.service.create(
 							new AlertBuilder()
-							.setTitle(isNaN(bgLevel1) ? ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_first_calibration_title") : ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_second_calibration_title"))
+							.setTitle(ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_calibration_title"))
 							.setMessage(ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_calibration"))
 							.addTextField("",ModelLocator.resourceManagerInstance.getString("calibrationservice",ModelLocator.resourceManagerInstance.getString("calibrationservice","blood_glucose_calibration_value")))
 							.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
@@ -213,6 +201,12 @@ package services
 				return;
 			}
 			
+			var latestReadings:ArrayCollection = BgReading.latestBySize(2);
+			if (latestReadings.length < 2) {
+				myTrace("in initialCalibrationValueEntered but latestReadings.length < 2, looks like an error");
+				return;
+			}
+			
 			var asNumber:Number = new Number((event.values[0] as String).replace(",","."));
 			if (isNaN(asNumber)) {
 				myTrace("in intialCalibrationValueEntered, user gave non numeric value, opening alert and requesting new value");
@@ -225,20 +219,10 @@ package services
 				if(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) != "true") {
 					asNumber = asNumber * BgReading.MMOLL_TO_MGDL; 	
 				}
-				if (isNaN(bgLevel1)) {
-					myTrace("in intialCalibrationValueEntered, this is the first calibration, waiting for next reading");
-					bgLevel1 = asNumber;
-					timeStampOfFirstBgLevel = (new Date()).valueOf();
-				} else {
-					myTrace("in intialCalibrationValueEntered, this is the second calibration, starting Calibration.initialCalibration");
-					Calibration.initialCalibration(bgLevel1, timeStampOfFirstBgLevel, asNumber, (new Date()).valueOf());
-					var calibrationServiceEvent:CalibrationServiceEvent = new CalibrationServiceEvent(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT);
-					_instance.dispatchEvent(calibrationServiceEvent);
-					
-					//reset values for the case that the sensor is stopped and restarted
-					bgLevel1 = Number.NaN;
-					timeStampOfFirstBgLevel = new Number(0);
-				}
+				myTrace("in intialCalibrationValueEntered, starting Calibration.initialCalibration");
+				Calibration.initialCalibration(asNumber, (new Date()).valueOf() - 5 * 60 * 1000, (new Date()).valueOf());
+				var calibrationServiceEvent:CalibrationServiceEvent = new CalibrationServiceEvent(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT);
+				_instance.dispatchEvent(calibrationServiceEvent);
 			}
 		}
 		

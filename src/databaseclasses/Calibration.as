@@ -332,10 +332,8 @@ package databaseclasses
 			return returnValue;
 		}
 		
-		/**
-		 * bg1 must be before bg2, this is not checked by initialCalibration 
-		 */
-		public static function initialCalibration(bg1:Number, timestampCalibration1:Number, bg2:Number, timestampCalibration2:Number):void {
+		public static function initialCalibration(bg1:Number, timestampCalibration1:Number, timestampCalibration2:Number):void {
+			var bg2:Number = bg1;
 			myTrace("start initialCalibration");
 			//TODO take unit from settings
 			var unit:String = "mgdl";
