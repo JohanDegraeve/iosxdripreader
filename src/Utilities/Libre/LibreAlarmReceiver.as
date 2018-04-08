@@ -105,6 +105,7 @@ package Utilities.Libre
 						}
 						myTrace("in CalculateFromDataTransferObject createbgd : " + DateTimeUtilities.createNSFormattedDateAndTime(new Date(gd.realDate)) + " " + gd.glucose(0, false));
 						createBGfromGD(lastReadingNotAdded);
+						timeStampLastAddedBgReading = gd.realDate;
 					}
 				} else {
 					myTrace("in CalculateFromDataTransferObject, Trend data has no elements")
