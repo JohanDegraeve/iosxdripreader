@@ -11,6 +11,8 @@ package services
 	import events.SettingsServiceEvent;
 	import events.TransmitterServiceEvent;
 	
+	import skins.TimeSpinner36Hours;
+	
 	public class HealthKitService
 	{
 		private static var _instance:HealthKitService = new HealthKitService(); 
@@ -57,10 +59,7 @@ package services
 			if (bgReading.calculatedValue == 0) {
 				return;
 			}
-			if ((new Date()).valueOf() - bgReading.timestamp > 4 * 60 * 1000) {
-				return;
-			}
-			BackgroundFetch.storeBGInHealthKitMgDl(bgReading.calculatedValue);
+			BackgroundFetch.storeBGInHealthKitMgDl(bgReading.calculatedValue, bgReading.timestamp);
 		}
 	}
 }
