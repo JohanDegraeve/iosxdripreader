@@ -17,6 +17,7 @@ package model
 	import Utilities.Libre.LibreAlarmReceiver;
 	
 	import databaseclasses.CommonSettings;
+	import databaseclasses.Sensor;
 	
 	import services.TransmitterService;
 	
@@ -112,7 +113,10 @@ package model
 		}
 		
 		public static function receivedSensorChangedFromMiaoMiao():void {
+			myTrace("in decodeTomatoPacket, received sensor change from miaomioa. Confirming sensor change and Stopping the sensor"); 
 			BackgroundFetch.confirmSensorChangeMiaoMiao();
+			Sensor.stopSensor();
+			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_FSL_SENSOR_AGE, "0");
 		}
 		
 		
