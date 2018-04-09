@@ -220,7 +220,7 @@ package services
 					asNumber = asNumber * BgReading.MMOLL_TO_MGDL; 	
 				}
 				myTrace("in intialCalibrationValueEntered, starting Calibration.initialCalibration");
-				Calibration.initialCalibration(asNumber, (new Date()).valueOf() - 5 * 60 * 1000, (new Date()).valueOf());
+				Calibration.initialCalibration(asNumber, (new Date()).valueOf() - 5 * 60 * 1000, (new Date()).valueOf(), BlueToothDevice.isMiaoMiao() ? 36 : 5);
 				var calibrationServiceEvent:CalibrationServiceEvent = new CalibrationServiceEvent(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT);
 				_instance.dispatchEvent(calibrationServiceEvent);
 			}

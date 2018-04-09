@@ -332,7 +332,7 @@ package databaseclasses
 			return returnValue;
 		}
 		
-		public static function initialCalibration(bg1:Number, timestampCalibration1:Number, timestampCalibration2:Number):void {
+		public static function initialCalibration(bg1:Number, timestampCalibration1:Number, timestampCalibration2:Number, numAdjustedReadings:int = 5):void {
 			var bg2:Number = bg1;
 			myTrace("start initialCalibration");
 			//TODO take unit from settings
@@ -435,7 +435,7 @@ package databaseclasses
 			latest3Calibrations.addItem(calibration2);//the second is the latest, this one comes first, so it will be sorted from large to small
 			latest3Calibrations.addItem(calibration1);
 			
-			adjustRecentBgReadings(5, latest3Calibrations);
+			adjustRecentBgReadings(numAdjustedReadings, latest3Calibrations);
 			//myTrace("after adjustbgreadings");
 			//myTrace("End of initialCalibration bgReading1 = " + bgReading1.print("   "));
 			//myTrace("End of initialCalibration bgReading2 = " + bgReading2.print("   "));
