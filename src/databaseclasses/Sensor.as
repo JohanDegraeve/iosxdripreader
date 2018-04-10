@@ -91,6 +91,7 @@ package databaseclasses
 		
 		/**
 		 * stops the sensor and updates the database<br>
+		 * also sets FSL_SENSOR_AGE to 0
 		 */
 		public static function stopSensor():void {
 			var currentSensor:Sensor = getActiveSensor();
@@ -100,6 +101,7 @@ package databaseclasses
 				Database.updateSensor(currentSensor);
 			}
 			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_CURRENT_SENSOR, "0");
+			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_FSL_SENSOR_AGE, "0");
 		}
 		
 		public function print(indentation:String):String {
