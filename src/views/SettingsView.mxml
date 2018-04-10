@@ -28,6 +28,7 @@
 			import databaseclasses.BlueToothDevice;
 			import databaseclasses.CommonSettings;
 			import databaseclasses.LocalSettings;
+			import databaseclasses.Sensor;
 			
 			import events.SettingsServiceEvent;
 			
@@ -268,6 +269,8 @@
 							SettingsView.nightScoutUrlChangeDialog();
 						}
 					}
+					
+					Sensor.stopSensor();
 					
 					//change battery alert
 					if (BlueToothDevice.isMiaoMiao()) {
