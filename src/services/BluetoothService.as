@@ -25,6 +25,7 @@ package services
 	import com.distriqt.extension.bluetoothle.events.PeripheralEvent;
 	import com.distriqt.extension.bluetoothle.objects.Characteristic;
 	import com.distriqt.extension.bluetoothle.objects.Peripheral;
+	import com.distriqt.extension.bluetoothle.objects.Service;
 	import com.distriqt.extension.dialog.Dialog;
 	import com.distriqt.extension.dialog.DialogView;
 	import com.distriqt.extension.dialog.builders.AlertBuilder;
@@ -970,6 +971,21 @@ package services
 			var G4_Write_CharacteristicsIndex:int = 0;
 			
 			var o:Object;
+			
+			myTrace("==============================================================");
+			myTrace("==========LISTING ALL SERVICES AND CHARACTERISTICS============");
+			myTrace("==============================================================");
+			var p:Object;
+			for each (o in activeBluetoothPeripheral.services) {
+				myTrace("in peripheral_discoverCharacteristicsHandler, found service " + (o.uuid as String));
+				for each (p in (o as Service).characteristics) {
+					myTrace("     found characteristic " + (p.uuid as String));
+				}
+			}
+			myTrace("==============================================================");
+			myTrace("==========END OF LISTING ALL SERVICES AND CHARACTERISTICS=====");
+			myTrace("==============================================================");
+
 			if (BlueToothDevice.isDexcomG5()) {
 				awaitingAuthStatusRxMessage = false;
 				for each (o in activeBluetoothPeripheral.services) {
@@ -1039,6 +1055,7 @@ package services
 					myTrace("Subscribe to characteristic failed due to invalid adapter state.");
 				}
 			} else if (BlueToothDevice.isDexcomG4() || BlueToothDevice.isxBridgeR()) {
+				
 				for each (o in activeBluetoothPeripheral.services) {
 					if (HM_10_SERVICE_G4.indexOf(o.uuid as String) > -1) {
 						myTrace("peripheral_discoverCharacteristicsHandler, found service " + HM_10_SERVICE_G4);
@@ -1993,7 +2010,7 @@ package services
 						var blueToothServiceEvent:BlueToothServiceEvent = new BlueToothServiceEvent(BlueToothServiceEvent.TRANSMITTER_DATA);
 						blueToothServiceEvent.data = new TransmitterDataXBridgeRDataPacket(rawData, filteredData, transmitterBatteryVoltage, bridgeBatteryPercentage, decodeTxID(txID), timestamp);
 						_instance.dispatchEvent(blueToothServiceEvent);
-					} else if (packetLength == 17) {//xbridge
+					} else if (packetLength == 17 && !BlueToothDevice.isxBridgeR()) {//xbridge
 						//following only if the name of the device contains "bridge", if it' doesnt contain bridge, then it's an xdrip (old) and doesn't have those bytes' +
 						//or if packetlenth == 17, why ? because it could be a drip with xbridge software but still with a name xdrip, because it was originally an xdrip that was later on overwritten by the xbridge software, in that case the name will still by xdrip and not xbridge
 						var bridgeBatteryPercentage:Number = buffer.readUnsignedByte();
@@ -2003,10 +2020,12 @@ package services
 						var blueToothServiceEvent:BlueToothServiceEvent = new BlueToothServiceEvent(BlueToothServiceEvent.TRANSMITTER_DATA);
 						blueToothServiceEvent.data = new TransmitterDataXBridgeDataPacket(rawData, filteredData, transmitterBatteryVoltage, bridgeBatteryPercentage, decodeTxID(txID));
 						_instance.dispatchEvent(blueToothServiceEvent);
-					} else {
+					} else if (!BlueToothDevice.isxBridgeR()) {
 						var blueToothServiceEvent:BlueToothServiceEvent = new BlueToothServiceEvent(BlueToothServiceEvent.TRANSMITTER_DATA);
 						blueToothServiceEvent.data = new TransmitterDataXdripDataPacket(rawData, filteredData, transmitterBatteryVoltage);
 						_instance.dispatchEvent(blueToothServiceEvent);
+					} else {
+						myTrace("in processG4TransmitterData, not processing the packet, packettype = 0, packetlength = " + packetLength + ", peripheral type = " + BlueToothDevice.deviceType());
 					}
 					
 					break;

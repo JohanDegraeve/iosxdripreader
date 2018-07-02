@@ -191,12 +191,12 @@ package model
 							//this ensures that texttospeech and playsound work also in background
 							BackgroundFetch.setAvAudioSessionCategory(true);
 							
-							//to make sure the correct ANE is used
-							BackgroundFetch.isVersion2_0_3();
 							
 							AlarmService.init();
 							HealthKitService.init();
-							
+							//to make sure the correct ANE is used
+							BackgroundFetch.isVersion2_1_1();
+							BackgroundFetch.storeInsulin(0,true,(new Date()).valueOf());							
 							DexcomShareService.init();
 							NightScoutService.init();
 							DeepSleepService.init();
