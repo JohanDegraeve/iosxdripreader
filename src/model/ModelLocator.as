@@ -188,7 +188,7 @@ package model
 							BackgroundFetch.setAvAudioSessionCategory(true);
 							
 							//to make sure the correct ANE is used
-							BackgroundFetch.isVersion2_0_3();
+							BackgroundFetch.isVersion2_1_1();
 							
 							AlarmService.init();
 							HealthKitService.init();
