@@ -32,7 +32,7 @@ package services
 		/**
 		 * how often to play the 1ms sound, in ms 
 		 */
-		private static var deepSleepInterval:int = 5000;
+		private static var deepSleepInterval:int = 5001;
 		private static var lastLogPlaySoundTimeStamp:Number = 0;
 
 		public static function get instance():DeepSleepService
