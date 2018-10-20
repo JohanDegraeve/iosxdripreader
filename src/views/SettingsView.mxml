@@ -63,8 +63,6 @@
 			[Bindable]
 			private static var transmitterTypeText:String="";
 			[Bindable]
-			private static var checkUpdatesOnOffText:String="";
-			[Bindable]
 			private static var dexcomShareAccountName:String="";
 			[Bindable]
 			private static var dexcomSharePassword:String="";
@@ -217,12 +215,6 @@
 				}
 				
 				//Set App Updates related states
-				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_APP_UPDATE_NOTIFICATIONS_ON) == "true") {
-					checkUpdatesOnOffText = ModelLocator.resourceManagerInstance.getString('settingsview','on');
-				} else {
-					checkUpdatesOnOffText = ModelLocator.resourceManagerInstance.getString('settingsview','off');
-				}
-				
 				CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, settingChanged);
 
 				versionText = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_APPLICATION_VERSION);
@@ -239,10 +231,6 @@
 					calibrationalertgroup.includeInLayout = false;
 				}
 				
-				if (ModelLocator.IS_PRODUCTION) {
-					groupAppUpdates.visible = false;
-					groupAppUpdates.includeInLayout = false;
-				}
 			}
 			
 			private static function setLanguageSpecificStrings():void {
@@ -907,20 +895,6 @@
 				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_MIAOMIAO_BATTERY_LEVEL, "0");
 			}
 			
-			private function changeAppUpdates_clickHandler(event:MouseEvent):void {
-				rectAppUpdate1.color = uint("0xD3D3D3");
-				rectAppUpdate2.color = uint("0xD3D3D3");
-				setResetColorTimer();
-				
-				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_APP_UPDATE_NOTIFICATIONS_ON) == "true") {
-					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_APP_UPDATE_NOTIFICATIONS_ON, "false");
-					checkUpdatesOnOffText = ModelLocator.resourceManagerInstance.getString('settingsview','off');
-				} else {
-					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_APP_UPDATE_NOTIFICATIONS_ON, "true");
-					checkUpdatesOnOffText = ModelLocator.resourceManagerInstance.getString('settingsview','on');
-				}
-			}
-			
 			private function NSLog_clickHandler(event:MouseEvent):void {
 				rect25.color = uint("0xD3D3D3");
 				rect26.color = uint("0xD3D3D3");
@@ -1383,8 +1357,6 @@
 					rect66.color = uint("0x212121");//speech delta
 					rectlanguage1.color = uint("0x212121");//language
 					rectlanguage2.color = uint("0x212121");//language
-					rectAppUpdate1.color = uint("0x212121");//updates onoff
-					rectAppUpdate2.color = uint("0x212121");//updates onoff
 					rectoverrideMute1.color = uint("0x212121");//mute
 					rectoverrideMute2.color = uint("0x212121");//mute
 					rectexportsidiary1.color = uint("0x212121");
@@ -1583,26 +1555,6 @@
 						<s:SolidColorStroke color="0xFFFFFF" weight="1" alpha="0.25"/>
 					</s:stroke>
 				</s:Line>
-			</s:VGroup>
-			
-			<!-- Chapter general settings Subsection App Updates -->
-			<s:VGroup id="groupAppUpdates"  width="100%">
-				<s:HGroup click="changeAppUpdates_clickHandler(event)" width="100%">
-					<s:Rect height="100%" width="5" >
-						<s:fill>
-							<s:SolidColor color="#212121" id="rectAppUpdate1"/>
-						</s:fill>
-					</s:Rect>
-					<s:Label text = "{ModelLocator.resourceManagerInstance.getString('settingsview','checkappupdatesonoff')}"
-							 width="100%" paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
-					<s:Label text = "{checkUpdatesOnOffText}"  
-							 paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
-					<s:Rect height="100%" width="5" >
-						<s:fill>
-							<s:SolidColor color="#212121" id="rectAppUpdate2"/>
-						</s:fill>
-					</s:Rect>
-				</s:HGroup>
 			</s:VGroup>
 			
 			<!-- Chapter general settings Subsection Application Language -->

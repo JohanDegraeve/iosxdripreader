@@ -56,7 +56,6 @@ package model
 	import services.NotificationService;
 	import services.TextToSpeech;
 	import services.TransmitterService;
-	import services.UpdateService;
 	
 	import views.HomeView;
 	import views.SettingsView;
@@ -197,10 +196,6 @@ package model
 							NightScoutService.init();
 							DeepSleepService.init();
 							SettingsView.init();
-							
-							if (!IS_PRODUCTION) {
-								UpdateService.init();
-							}
 							
 							checkApplicationVersion();
 						}
