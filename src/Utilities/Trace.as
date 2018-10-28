@@ -98,7 +98,7 @@ package Utilities
 				var f:File = File.applicationStorageDirectory.resolvePath(fileName);
 				var attachment:MessageAttachment = new MessageAttachment(f.nativePath, "", "", "");
 				var body:String = "Hi,\n\nFind attached trace file " + fileName + "\n\nregards.";
-				Message.service.sendMailWithOptions("Trace file", body, "xdrip@proximus.be","","",[attachment],false);
+				Message.service.sendMailWithOptions("Trace file", body, "johan.degraeve@gmail.com","","",[attachment],false);
 				f.deleteFileAsync();
 				BackgroundFetch.resetTraceFilePath();
 				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_TRACE_FILE_NAME, "");

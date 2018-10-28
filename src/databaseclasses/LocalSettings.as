@@ -110,6 +110,7 @@ package databaseclasses
 		 * Therefore the amount of notifications will be reduced, this setting counts the number
 		 */
 		public static const LOCAL_SETTING_AMOUNT_OF_WARNINGS_OTHER_APP:int = 34;
+		public static const LOCAL_SETTING_DEEP_SLEEP_SERVICE_INTERVAL_UNPLUGGED_IN_SECONDS:int = 35;
 		
 		private static var localSettings:Array = [
 			"false",//LOCAL_SETTING_DETAILED_TRACING_ENABLED
@@ -146,7 +147,8 @@ package databaseclasses
 			"true",//LOCAL_SETTING_APP_INACTIVE_ALERT
 			"0",//LOCAL_SETTING_AMOUNT_OF_WARNINGS_ABOUT_OTHER_APP
 			"0",//LOCAL_SETTING_TRANSMITER_PL_AMOUNT_OF_INVALID_SENSOR_AGE_VALUES
-			"0"//LOCAL_SETTING_AMOUNT_OF_WARNINGS_OTHER_APP
+			"0",//LOCAL_SETTING_AMOUNT_OF_WARNINGS_OTHER_APP
+			""//LOCAL_SETTING_DEEP_SLEEP_SERVICE_INTERVAL_UNPLUGGED_IN_SECONDS
 		];
 		
 		public function LocalSettings() {

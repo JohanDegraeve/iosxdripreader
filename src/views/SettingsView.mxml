@@ -83,6 +83,8 @@
 			[Bindable]
 			private static var speakReadingsLanguageText:String="en-US";
 			[Bindable]
+			private static var changedeepsleepinterval:String="";
+			[Bindable]
 			private static var versionText:String="";
 			[Bindable]
 			private static var dexcomShareURL:String="";
@@ -213,6 +215,11 @@
 						break;
 					}
 				}
+				
+				//set deepsleepinterval
+				changedeepsleepinterval = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_DEEP_SLEEP_SERVICE_INTERVAL_UNPLUGGED_IN_SECONDS);
+				if (changedeepsleepinterval == "0" || changedeepsleepinterval == "")
+					changedeepsleepinterval = "DEFAULT";
 				
 				//Set App Updates related states
 				CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, settingChanged);
@@ -1223,6 +1230,36 @@
 				}
 			}
 			
+			private function changeDeepSleepInterval(event:MouseEvent):void {
+				rectdeepsleepinterval1.color = uint("0xD3D3D3");
+				rectdeepsleepinterval2.color = uint("0xD3D3D3");
+				setResetColorTimer();
+				
+				var alert:DialogView = Dialog.service.create(
+					new AlertBuilder()
+					.setTitle(ModelLocator.resourceManagerInstance.getString("settingsview","selectdeepsleepinterval"))
+					.addTextField("", ModelLocator.resourceManagerInstance.getString("settingsview","seconds"), false, 4)
+					.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
+					.addOption(ModelLocator.resourceManagerInstance.getString("general","cancel"), DialogAction.STYLE_CANCEL, 1)
+					.build()
+				);
+				alert.addEventListener(DialogViewEvent.CLOSED, deepSleepIntervalSet);
+				DialogService.addDialog(alert);
+				
+				function deepSleepIntervalSet(event:DialogViewEvent):void {
+					if (event.index == 1) {
+						return;
+					}
+					
+					if (event.values.length < 1)
+						return;
+					LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_DEEP_SLEEP_SERVICE_INTERVAL_UNPLUGGED_IN_SECONDS, event.values[0] as String);
+					changedeepsleepinterval = event.values[0] as String;
+					if (changedeepsleepinterval == "0")
+						changedeepsleepinterval = "DEFAULT";
+				}
+			}
+			
 			private function speakReadingsTrendOnOff_clickHandler(event:MouseEvent):void {
 				rect63.color = uint("0xD3D3D3");
 				rect64.color = uint("0xD3D3D3");
@@ -1363,6 +1400,8 @@
 					rectexportsidiary2.color = uint("0x212121");
 					rectappinactive1.color = uint("0x212121");
 					rectappinactive2.color = uint("0x212121");
+					rectdeepsleepinterval1.color = uint("0x212121");//deepsleepinterval
+					rectdeepsleepinterval2.color = uint("0x212121");//deepsleepinterval
 				}
 			}
 			
@@ -1558,11 +1597,6 @@
 			</s:VGroup>
 			
 			<!-- Chapter general settings Subsection Application Language -->
-			<s:Line width="100%">
-				<s:stroke>
-					<s:SolidColorStroke color="0xFFFFFF" weight="1" alpha="0.25"/>
-				</s:stroke>
-			</s:Line>
 			<s:HGroup click="changeLanguage_clickHandler(event)" width="100%" id = "languageNameGroup">
 				<s:Rect height="100%" width="5" >
 					<s:fill>
@@ -1582,10 +1616,34 @@
 
 			<s:Line width="100%">
 				<s:stroke>
-					<s:SolidColorStroke color="#3B6999"  weight="3"/>
+					<s:SolidColorStroke color="0xFFFFFF" weight="1" alpha="0.25"/>
 				</s:stroke>
 			</s:Line>	
 
+			<!-- Chapter general settings Subsection Suspension Prevention -->
+			<s:HGroup click="changeDeepSleepInterval(event)" width="100%" id = "deepSleepIntervalGroup">
+				<s:Rect height="100%" width="5" >
+					<s:fill>
+						<s:SolidColor color="#212121" id="rectdeepsleepinterval1"/>
+					</s:fill>
+				</s:Rect>
+				<s:Label text = "{ModelLocator.resourceManagerInstance.getString('settingsview','changedeepsleepinterval')}"
+						 width="100%" paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
+				<s:Label text = "{changedeepsleepinterval}"  
+						 paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
+				<s:Rect height="100%" width="5" >
+					<s:fill>
+						<s:SolidColor color="#212121" id="rectdeepsleepinterval2"/>
+					</s:fill>
+				</s:Rect>
+			</s:HGroup>
+			
+			<s:Line width="100%">
+				<s:stroke>
+					<s:SolidColorStroke color="#3B6999"  weight="3"/>
+				</s:stroke>
+			</s:Line>	
+			
 			<!-- Chapter Alerts-->
 			<s:Label text = "{ModelLocator.resourceManagerInstance.getString('settingsview','alerts')}" textAlign="center"  color="#3B6999" 
 					 width="100%" paddingLeft="3" paddingRight="0" fontSize="20" fontWeight="bold" paddingTop="10" paddingBottom ="10"/>
