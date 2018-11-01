@@ -27,7 +27,7 @@ package services
 	 */
 	public class DeepSleepService extends EventDispatcher
 	{
-		private static const deepSleepIntervalDefault:int = 5000;
+		private static const deepSleepIntervalMinimumValue:int = 5000;
 
 		private static var deepSleepTimer:Timer;
 
@@ -88,16 +88,15 @@ package services
 		 */
 		private static function setDeepSleepIntervalAndRestartDeepSleepTimer():void {
 			myTrace("in setDeepSleepIntervalAndRestartDeepSleepTimer");
-			if (    !(new Number(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_DEEP_SLEEP_SERVICE_INTERVAL_UNPLUGGED_IN_SECONDS)) == 0)
-			     && 
-				    !BlueToothDevice.isFollower()
+			if (    !BlueToothDevice.isFollower()
 				 && 
 				 	!(previousBatteryStatus == 2)
 			   ) {
 				deepSleepIntervalUsed = new Number(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_DEEP_SLEEP_SERVICE_INTERVAL_UNPLUGGED_IN_SECONDS)) * 1000;
 			} else {
-				deepSleepIntervalUsed = deepSleepIntervalDefault;
-			}myTrace("in setDeepSleepIntervalAndRestartDeepSleepTimer, deepSleepIntervalUsed = " + deepSleepIntervalUsed);
+				deepSleepIntervalUsed = deepSleepIntervalMinimumValue;
+			}
+			myTrace("in setDeepSleepIntervalAndRestartDeepSleepTimer, deepSleepIntervalUsed = " + deepSleepIntervalUsed);
 			stopDeepSleepTimer();
 			startDeepSleepTimer();
 		}
