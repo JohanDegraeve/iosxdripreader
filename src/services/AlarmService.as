@@ -6,6 +6,7 @@ package services
 	import com.distriqt.extension.dialog.DialogView;
 	import com.distriqt.extension.dialog.builders.PickerDialogBuilder;
 	import com.distriqt.extension.dialog.events.DialogViewEvent;
+	import com.distriqt.extension.notifications.NotificationRepeatInterval;
 	import com.distriqt.extension.notifications.Notifications;
 	import com.distriqt.extension.notifications.builders.NotificationBuilder;
 	import com.distriqt.extension.notifications.events.NotificationEvent;
@@ -919,7 +920,8 @@ package services
 							ModelLocator.resourceManagerInstance.getString("alarmservice","phonemuted_alert_notification_alert_text"), 
 							alertType.enableVibration,
 							alertType.enableLights,
-							NotificationService.ID_FOR_PHONE_MUTED_CATEGORY
+							NotificationService.ID_FOR_PHONE_MUTED_CATEGORY,
+							0
 						); 
 						_phoneMutedAlertLatestSnoozeTimeInMs = Number.NaN;
 						_phoneMutedAlertSnoozePeriodInMinutes = 0;
@@ -968,7 +970,7 @@ package services
 		/**
 		 * repeatId ==> 0:calibration, 1:Low, 2:Very Low, 3:High, 4:Very High, 5:Missed Reading, 6:Battery Low, 7:Phone Muted<br>
 		 */
-		private static function fireAlert(repeatId:int, alertType:AlertType, notificationId:int, alertText:String, enableVibration:Boolean, enableLights:Boolean, categoryId:String, alertBody:String = " "):void {
+		private static function fireAlert(repeatId:int, alertType:AlertType, notificationId:int, alertText:String, enableVibration:Boolean, enableLights:Boolean, categoryId:String, delayInSeconds:int, alertBody:String = " "):void {
 			var notificationBuilder:NotificationBuilder;
 			var newSound:String;
 			var soundToSet:String = "";
@@ -980,9 +982,10 @@ package services
 				.setAlert(alertText)
 				.setTitle(alertText)
 				.setBody(alertBody)
-				.enableVibration(false)//vibration will be done through BackgroundFetch ANE
+				.enableVibration(delayInSeconds > 0 ? true:false)//if immediate notification, the vibration will be done through BackgroundFetch ANE
+				.setDelay(delayInSeconds)
 				.enableLights(enableLights);
-			if (categoryId != null)
+			if (categoryId != null && categoryId != "")
 				notificationBuilder.setCategory(categoryId);
 			
 			if (StringUtil.trim(alertType.sound) == "default") {//using trim because during tests sometimes the soundname had a preceding white space
@@ -1001,32 +1004,41 @@ package services
 				}
 			}
 
-			if (ModelLocator.phoneMuted && !(StringUtil.trim(alertType.sound) == "default") && !(StringUtil.trim(alertType.sound) == "")) {//check against default for backward compability. Default sound can't be played with playSound
-				if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_OVERRIDE_MUTE) == "true") {
-					BackgroundFetch.playSound(soundToSet);
-				} else {
-					if (ModelLocator.phoneMuted) {
-						//Phone muted but user may have unmuted, so let's queue the sound and check muted
-						queueAlertSound(soundToSet);
+			if (delayInSeconds == 0) {//if notification with delay, then don't use playsound - the app may be suspended by the time the sound needs to be played
+				if (ModelLocator.phoneMuted && !(StringUtil.trim(alertType.sound) == "default") && !(StringUtil.trim(alertType.sound) == "")) {//check against default for backward compability. Default sound can't be played with playSound
+					if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_OVERRIDE_MUTE) == "true") {
+						BackgroundFetch.playSound(soundToSet);
+					} else {
+						if (ModelLocator.phoneMuted) {
+							//Phone muted but user may have unmuted, so let's queue the sound and check muted
+							queueAlertSound(soundToSet);
+						}
 					}
+				} else {
+					queueAlertSound(soundToSet);
 				}
-			} else {
-				queueAlertSound(soundToSet);
 			}
 			
-			if (soundToSet == "default") {
-				notificationBuilder.setSound("default");//just in case  soundToSet = default
+			if (soundToSet == "default" || delayInSeconds > 0) {
+				//check on default value is probably for backward compatible reasons
+				//check for delay is because it's not possible to use playsound with a future planned notification
+				notificationBuilder.setSound(soundToSet);
 			} else {
 				notificationBuilder.setSound("");
 			}
 			Notifications.service.notify(notificationBuilder.build());
 			
-			if (enableVibration) {
+			if (enableVibration && delayInSeconds == 0) {
 				BackgroundFetch.vibrate();
 			}
 			
+			if (delayInSeconds > 0) {
+				notificationBuilder.setRepeatInterval(NotificationRepeatInterval.REPEAT_MINUTE);
+			}
+			
 			//set repeat arrays
-			enableRepeatAlert(repeatId, alertType.alarmName, alertText, alertBody);
+			if (delayInSeconds == 0) //future planned alerts can't be repeated
+				enableRepeatAlert(repeatId, alertType.alarmName, alertText, alertBody);
 		}
 		
 		private static function queueAlertSound(sound:String):void {
@@ -1075,6 +1087,7 @@ package services
 			var alertName:String;
 			var alertType:AlertType;
 			var now:Date = new Date();
+			var alertBody:String = " ";
 
 			lastMissedReadingAlertCheckTimeStamp = (new Date()).valueOf(); 	
 
@@ -1118,7 +1131,7 @@ package services
 					//not snoozed
 					if (((now.valueOf() - lastBgReading.timestamp) > alertValue * 60 * 1000) && ((now.valueOf() - ModelLocator.appStartTimestamp) > 5 * 60 * 1000)) {
 						myTrace("in checkAlarms, missed reading");
-						var alertBody:String = " ";
+						alertBody = " ";
 						if (BlueToothDevice.isMiaoMiao()) {
 							if (BluetoothService.amountOfConsecutiveSensorNotDetectedForMiaoMiao > 0) {
 								alertBody = ModelLocator.resourceManagerInstance.getString("alarmservice","received");
@@ -1135,6 +1148,7 @@ package services
 							alertType.enableVibration,
 							alertType.enableLights,
 							NotificationService.ID_FOR_ALERT_MISSED_READING_CATEGORY,
+							0,
 							alertBody
 						); 
 						_missedReadingAlertLatestSnoozeTimeInMs = Number.NaN;
@@ -1143,6 +1157,22 @@ package services
 						myTrace("cancel any existing alert for ID_FOR_MISSED_READING_ALERT");
 						Notifications.service.cancel(NotificationService.ID_FOR_MISSED_READING_ALERT);
 						disableRepeatAlert(5);
+
+						var delay:Number = (alertValue * 60 * 1000 - (now.valueOf() - lastBgReading.timestamp))/1000;
+						myTrace("plan future missed reading alert with delay in seconds = " + delay);
+
+						alertBody = " ";
+						fireAlert(
+							5,
+							alertType, 
+							NotificationService.ID_FOR_MISSED_READING_ALERT, 
+							ModelLocator.resourceManagerInstance.getString("alarmservice","missed_reading_alert_notification_alert"), 
+							alertType.enableVibration,
+							alertType.enableLights,
+							"",//NotificationService.ID_FOR_ALERT_MISSED_READING_CATEGORY,
+							delay,
+							alertBody
+						); 
 					}
 				} else {
 					//snoozed no need to do anything
@@ -1182,7 +1212,8 @@ package services
 								ModelLocator.resourceManagerInstance.getString("alarmservice","calibration_request_alert_notification_alert_title"), 
 								alertType.enableVibration,
 								alertType.enableLights,
-								NotificationService.ID_FOR_ALERT_CALIBRATION_REQUEST_CATEGORY
+								NotificationService.ID_FOR_ALERT_CALIBRATION_REQUEST_CATEGORY,
+								0
 							); 
 							_calibrationRequestLatestSnoozeTimeInMs = Number.NaN;
 							_calibrationRequestSnoozePeriodInMinutes = 0;
@@ -1252,7 +1283,8 @@ package services
 							 ModelLocator.resourceManagerInstance.getString("alarmservice","batteryLevel_alert_notification_alert_text"), 
 							 alertType.enableVibration,
 							 alertType.enableLights,
-							 NotificationService.ID_FOR_ALERT_BATTERY_CATEGORY
+							 NotificationService.ID_FOR_ALERT_BATTERY_CATEGORY,
+							 0
 						 ); 
 						 _batteryLevelAlertLatestSnoozeTimeInMs = Number.NaN;
 						 _batteryLevelAlertSnoozePeriodInMinutes = 0;
@@ -1312,6 +1344,7 @@ package services
 							 alertType.enableVibration,
 							 alertType.enableLights,
 							 NotificationService.ID_FOR_ALERT_HIGH_CATEGORY,
+							 0,
 							 BgGraphBuilder.unitizedDeltaString(true, true)
 						 ); 
 						 _highAlertLatestSnoozeTimeInMs = Number.NaN;
@@ -1370,6 +1403,7 @@ package services
 							 alertType.enableVibration,
 							 alertType.enableLights,
 							 NotificationService.ID_FOR_ALERT_VERY_HIGH_CATEGORY,
+							 0,
 							 BgGraphBuilder.unitizedDeltaString(true, true)
 						 ); 
 						 _veryHighAlertLatestSnoozeTimeInMs = Number.NaN;
@@ -1429,6 +1463,7 @@ package services
 							 alertType.enableVibration,
 							 alertType.enableLights,
 							 NotificationService.ID_FOR_ALERT_LOW_CATEGORY,
+							 0,
 							 BgGraphBuilder.unitizedDeltaString(true, true)
 						 ); 
 						 _lowAlertLatestSnoozeTimeInMs = Number.NaN;
@@ -1487,6 +1522,7 @@ package services
 							 alertType.enableVibration,
 							 alertType.enableLights,
 							 NotificationService.ID_FOR_ALERT_VERY_LOW_CATEGORY,
+							 0,
 							 BgGraphBuilder.unitizedDeltaString(true, true)
 						 ); 
 						 _veryLowAlertLatestSnoozeTimeInMs = Number.NaN;
