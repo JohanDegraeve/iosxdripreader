@@ -63,8 +63,6 @@
 			[Bindable]
 			private static var transmitterTypeText:String="";
 			[Bindable]
-			private static var checkUpdatesOnOffText:String="";
-			[Bindable]
 			private static var dexcomShareAccountName:String="";
 			[Bindable]
 			private static var dexcomSharePassword:String="";
@@ -85,6 +83,8 @@
 			[Bindable]
 			private static var speakReadingsLanguageText:String="en-US";
 			[Bindable]
+			private static var changedeepsleepinterval:String="";
+			[Bindable]
 			private static var versionText:String="";
 			[Bindable]
 			private static var dexcomShareURL:String="";
@@ -92,6 +92,16 @@
 			private static var overrideMuteTextOnOrOff:String = "";
 			[Bindable]
 			private static var appInactiveAlertTextOnOrOff:String = "";
+			[Bindable]
+			private static var nightScoutUploadAlwaysOnText:String = "";
+			[Bindable]
+			private static var nightScoutUploadOnWhenPluggedText:String = "";
+			[Bindable]
+			private static var nightScoutUploadOnEvery12HoursText:String = "";
+			[Bindable]
+			private static var nightScoutUploadOnWhenInForeGroundText:String = "";
+			[Bindable]
+			private static var nightScoutUploadOnWhenComingToForeGroundText:String = "";
 
 			private static var resetColorTimer:Timer;
 			
@@ -182,6 +192,32 @@
 					ModelLocator.resourceManagerInstance.getString('settingsview','dexcom_non_us_url');
 				changeDexcomShareStatus();
 				
+				if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_NIGHTSCOUTUPLOAD_ON_ALWAYS) == "true") {
+					nightScoutUploadAlwaysOnText = ModelLocator.resourceManagerInstance.getString('settingsview','on');
+				} else {
+					nightScoutUploadAlwaysOnText = ModelLocator.resourceManagerInstance.getString('settingsview','off');
+				}
+				if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_NIGHTSCOUTUPLOAD_ON_EVERY_12_HOURS) == "true") {
+					nightScoutUploadOnEvery12HoursText = ModelLocator.resourceManagerInstance.getString('settingsview','on');
+				} else {
+					nightScoutUploadOnEvery12HoursText = ModelLocator.resourceManagerInstance.getString('settingsview','off');
+				}
+				if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_NIGHTSCOUTUPLOAD_ON_WHEN_PLUGGED) == "true") {
+					nightScoutUploadOnWhenPluggedText = ModelLocator.resourceManagerInstance.getString('settingsview','on');
+				} else {
+					nightScoutUploadOnWhenPluggedText = ModelLocator.resourceManagerInstance.getString('settingsview','off');
+				}
+				if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_NIGHTSCOUTUPLOAD_ON_WHEN_IN_FOREGROUND) == "true") {
+					nightScoutUploadOnWhenInForeGroundText = ModelLocator.resourceManagerInstance.getString('settingsview','on');
+				} else {
+					nightScoutUploadOnWhenInForeGroundText = ModelLocator.resourceManagerInstance.getString('settingsview','off');
+				}
+				if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_NIGHTSCOUTUPLOAD_ON_WHEN_PLUGGED) == "true") {
+					nightScoutUploadOnWhenComingToForeGroundText = ModelLocator.resourceManagerInstance.getString('settingsview','on');
+				} else {
+					nightScoutUploadOnWhenComingToForeGroundText = ModelLocator.resourceManagerInstance.getString('settingsview','off');
+				}
+				
 				speakReadingsIntervalValue = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_READINGS_INTERVAL);
 				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_READINGS_ON) == "true") {
 					speakReadingsOnOffText = ModelLocator.resourceManagerInstance.getString('settingsview','on');
@@ -216,13 +252,10 @@
 					}
 				}
 				
-				//Set App Updates related states
-				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_APP_UPDATE_NOTIFICATIONS_ON) == "true") {
-					checkUpdatesOnOffText = ModelLocator.resourceManagerInstance.getString('settingsview','on');
-				} else {
-					checkUpdatesOnOffText = ModelLocator.resourceManagerInstance.getString('settingsview','off');
-				}
+				//set deepsleepinterval
+				changedeepsleepinterval = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_DEEP_SLEEP_SERVICE_INTERVAL_UNPLUGGED_IN_SECONDS);
 				
+				//Set App Updates related states
 				CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, settingChanged);
 
 				versionText = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_APPLICATION_VERSION);
@@ -239,10 +272,6 @@
 					calibrationalertgroup.includeInLayout = false;
 				}
 				
-				if (ModelLocator.IS_PRODUCTION) {
-					groupAppUpdates.visible = false;
-					groupAppUpdates.includeInLayout = false;
-				}
 			}
 			
 			private static function setLanguageSpecificStrings():void {
@@ -907,20 +936,6 @@
 				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_MIAOMIAO_BATTERY_LEVEL, "0");
 			}
 			
-			private function changeAppUpdates_clickHandler(event:MouseEvent):void {
-				rectAppUpdate1.color = uint("0xD3D3D3");
-				rectAppUpdate2.color = uint("0xD3D3D3");
-				setResetColorTimer();
-				
-				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_APP_UPDATE_NOTIFICATIONS_ON) == "true") {
-					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_APP_UPDATE_NOTIFICATIONS_ON, "false");
-					checkUpdatesOnOffText = ModelLocator.resourceManagerInstance.getString('settingsview','off');
-				} else {
-					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_APP_UPDATE_NOTIFICATIONS_ON, "true");
-					checkUpdatesOnOffText = ModelLocator.resourceManagerInstance.getString('settingsview','on');
-				}
-			}
-			
 			private function NSLog_clickHandler(event:MouseEvent):void {
 				rect25.color = uint("0xD3D3D3");
 				rect26.color = uint("0xD3D3D3");
@@ -1039,6 +1054,76 @@
 					dexcomShareOnOffText = ModelLocator.resourceManagerInstance.getString('settingsview','on');
 				}
 				changeDexcomShareStatus();
+			}
+			
+			private function nightscoutUploadAlwaysOn_OnOff_clickHandler(event:MouseEvent):void {
+				nightscoutUploadAlwaysOn_OnOff_1.color = uint("0xD3D3D3");
+				nightscoutUploadAlwaysOn_OnOff_2.color = uint("0xD3D3D3");
+				setResetColorTimer();
+				
+				if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_NIGHTSCOUTUPLOAD_ON_ALWAYS) == "true") {
+					LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_NIGHTSCOUTUPLOAD_ON_ALWAYS, "false");
+					nightScoutUploadAlwaysOnText = ModelLocator.resourceManagerInstance.getString('settingsview','off');
+				} else {
+					LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_NIGHTSCOUTUPLOAD_ON_ALWAYS, "true");
+					nightScoutUploadAlwaysOnText = ModelLocator.resourceManagerInstance.getString('settingsview','on');
+				}
+			}
+			
+			private function nightscoutUploadEvery12Hours_OnOff_clickHandler(event:MouseEvent):void {
+				nightscoutUploadEvery12Hours_OnOff_1.color = uint("0xD3D3D3");
+				nightscoutUploadEvery12Hours_OnOff_2.color = uint("0xD3D3D3");
+				setResetColorTimer();
+				
+				if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_NIGHTSCOUTUPLOAD_ON_EVERY_12_HOURS) == "true") {
+					LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_NIGHTSCOUTUPLOAD_ON_EVERY_12_HOURS, "false");
+					nightScoutUploadOnEvery12HoursText = ModelLocator.resourceManagerInstance.getString('settingsview','off');
+				} else {
+					LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_NIGHTSCOUTUPLOAD_ON_EVERY_12_HOURS, "true");
+					nightScoutUploadOnEvery12HoursText = ModelLocator.resourceManagerInstance.getString('settingsview','on');
+				}
+			}
+			
+			private function nightscoutUploadWhenPlugged_OnOff_clickHandler(event:MouseEvent):void {
+				nightscoutUploadWhenPlugged_OnOff_1.color = uint("0xD3D3D3");
+				nightscoutUploadWhenPlugged_OnOff_2.color = uint("0xD3D3D3");
+				setResetColorTimer();
+				
+				if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_NIGHTSCOUTUPLOAD_ON_WHEN_PLUGGED) == "true") {
+					LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_NIGHTSCOUTUPLOAD_ON_WHEN_PLUGGED, "false");
+					nightScoutUploadOnWhenPluggedText = ModelLocator.resourceManagerInstance.getString('settingsview','off');
+				} else {
+					LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_NIGHTSCOUTUPLOAD_ON_WHEN_PLUGGED, "true");
+					nightScoutUploadOnWhenPluggedText = ModelLocator.resourceManagerInstance.getString('settingsview','on');
+				}
+			}
+			
+			private function nightscoutUploadWhenInForeGround_OnOff_clickHandler(event:MouseEvent):void {
+				nightscoutUploadWhenInForeGround_OnOff_1.color = uint("0xD3D3D3");
+				nightscoutUploadWhenInForeGround_OnOff_2.color = uint("0xD3D3D3");
+				setResetColorTimer();
+				
+				if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_NIGHTSCOUTUPLOAD_ON_WHEN_IN_FOREGROUND) == "true") {
+					LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_NIGHTSCOUTUPLOAD_ON_WHEN_IN_FOREGROUND, "false");
+					nightScoutUploadOnWhenInForeGroundText = ModelLocator.resourceManagerInstance.getString('settingsview','off');
+				} else {
+					LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_NIGHTSCOUTUPLOAD_ON_WHEN_IN_FOREGROUND, "true");
+					nightScoutUploadOnWhenInForeGroundText = ModelLocator.resourceManagerInstance.getString('settingsview','on');
+				}
+			}
+			
+			private function nightscoutUploadWhenComingToForeGround_OnOff_clickHandler(event:MouseEvent):void {
+				nightscoutUploadWhenComingToForeGround_OnOff_1.color = uint("0xD3D3D3");
+				nightscoutUploadWhenComingToForeGround_OnOff_2.color = uint("0xD3D3D3");
+				setResetColorTimer();
+				
+				if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_NIGHTSCOUTUPLOAD_ON_WHEN_COMING_TO_FOREGROUND) == "true") {
+					LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_NIGHTSCOUTUPLOAD_ON_WHEN_COMING_TO_FOREGROUND, "false");
+					nightScoutUploadOnWhenComingToForeGroundText = ModelLocator.resourceManagerInstance.getString('settingsview','off');
+				} else {
+					LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_NIGHTSCOUTUPLOAD_ON_WHEN_COMING_TO_FOREGROUND, "true");
+					nightScoutUploadOnWhenComingToForeGroundText = ModelLocator.resourceManagerInstance.getString('settingsview','on');
+				}
 			}
 			
 			private function dexcomShareURL_clickHandler(event:MouseEvent):void {
@@ -1249,6 +1334,34 @@
 				}
 			}
 			
+			private function changeDeepSleepInterval(event:MouseEvent):void {
+				rectdeepsleepinterval1.color = uint("0xD3D3D3");
+				rectdeepsleepinterval2.color = uint("0xD3D3D3");
+				setResetColorTimer();
+				
+				var alert:DialogView = Dialog.service.create(
+					new AlertBuilder()
+					.setTitle(ModelLocator.resourceManagerInstance.getString("settingsview","selectdeepsleepinterval"))
+					.addTextField("", ModelLocator.resourceManagerInstance.getString("settingsview","seconds"), false, 4)
+					.addOption("Ok", DialogAction.STYLE_POSITIVE, 0)
+					.addOption(ModelLocator.resourceManagerInstance.getString("general","cancel"), DialogAction.STYLE_CANCEL, 1)
+					.build()
+				);
+				alert.addEventListener(DialogViewEvent.CLOSED, deepSleepIntervalSet);
+				DialogService.addDialog(alert);
+				
+				function deepSleepIntervalSet(event:DialogViewEvent):void {
+					if (event.index == 1) {
+						return;
+					}
+					
+					if (event.values.length < 1)
+						return;
+					LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_DEEP_SLEEP_SERVICE_INTERVAL_UNPLUGGED_IN_SECONDS, event.values[0] as String);
+					changedeepsleepinterval = event.values[0] as String;
+				}
+			}
+			
 			private function speakReadingsTrendOnOff_clickHandler(event:MouseEvent):void {
 				rect63.color = uint("0xD3D3D3");
 				rect64.color = uint("0xD3D3D3");
@@ -1383,14 +1496,24 @@
 					rect66.color = uint("0x212121");//speech delta
 					rectlanguage1.color = uint("0x212121");//language
 					rectlanguage2.color = uint("0x212121");//language
-					rectAppUpdate1.color = uint("0x212121");//updates onoff
-					rectAppUpdate2.color = uint("0x212121");//updates onoff
 					rectoverrideMute1.color = uint("0x212121");//mute
 					rectoverrideMute2.color = uint("0x212121");//mute
 					rectexportsidiary1.color = uint("0x212121");
 					rectexportsidiary2.color = uint("0x212121");
 					rectappinactive1.color = uint("0x212121");
 					rectappinactive2.color = uint("0x212121");
+					rectdeepsleepinterval1.color = uint("0x212121");//deepsleepinterval
+					rectdeepsleepinterval2.color = uint("0x212121");//deepsleepinterval
+					nightscoutUploadAlwaysOn_OnOff_1.color = uint("0x212121");
+					nightscoutUploadAlwaysOn_OnOff_2.color = uint("0x212121");
+					nightscoutUploadEvery12Hours_OnOff_1.color = uint("0x212121");
+					nightscoutUploadEvery12Hours_OnOff_2.color = uint("0x212121");
+					nightscoutUploadWhenPlugged_OnOff_1.color = uint("0x212121");
+					nightscoutUploadWhenPlugged_OnOff_2.color = uint("0x212121");
+					nightscoutUploadWhenInForeGround_OnOff_1.color = uint("0x212121");
+					nightscoutUploadWhenInForeGround_OnOff_2.color = uint("0x212121");
+					nightscoutUploadWhenComingToForeGround_OnOff_1.color = uint("0x212121");
+					nightscoutUploadWhenComingToForeGround_OnOff_2.color = uint("0x212121");
 				}
 			}
 			
@@ -1585,32 +1708,7 @@
 				</s:Line>
 			</s:VGroup>
 			
-			<!-- Chapter general settings Subsection App Updates -->
-			<s:VGroup id="groupAppUpdates"  width="100%">
-				<s:HGroup click="changeAppUpdates_clickHandler(event)" width="100%">
-					<s:Rect height="100%" width="5" >
-						<s:fill>
-							<s:SolidColor color="#212121" id="rectAppUpdate1"/>
-						</s:fill>
-					</s:Rect>
-					<s:Label text = "{ModelLocator.resourceManagerInstance.getString('settingsview','checkappupdatesonoff')}"
-							 width="100%" paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
-					<s:Label text = "{checkUpdatesOnOffText}"  
-							 paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
-					<s:Rect height="100%" width="5" >
-						<s:fill>
-							<s:SolidColor color="#212121" id="rectAppUpdate2"/>
-						</s:fill>
-					</s:Rect>
-				</s:HGroup>
-			</s:VGroup>
-			
 			<!-- Chapter general settings Subsection Application Language -->
-			<s:Line width="100%">
-				<s:stroke>
-					<s:SolidColorStroke color="0xFFFFFF" weight="1" alpha="0.25"/>
-				</s:stroke>
-			</s:Line>
 			<s:HGroup click="changeLanguage_clickHandler(event)" width="100%" id = "languageNameGroup">
 				<s:Rect height="100%" width="5" >
 					<s:fill>
@@ -1630,10 +1728,34 @@
 
 			<s:Line width="100%">
 				<s:stroke>
-					<s:SolidColorStroke color="#3B6999"  weight="3"/>
+					<s:SolidColorStroke color="0xFFFFFF" weight="1" alpha="0.25"/>
 				</s:stroke>
 			</s:Line>	
 
+			<!-- Chapter general settings Subsection Suspension Prevention -->
+			<s:HGroup click="changeDeepSleepInterval(event)" width="100%" id = "deepSleepIntervalGroup">
+				<s:Rect height="100%" width="5" >
+					<s:fill>
+						<s:SolidColor color="#212121" id="rectdeepsleepinterval1"/>
+					</s:fill>
+				</s:Rect>
+				<s:Label text = "{ModelLocator.resourceManagerInstance.getString('settingsview','changedeepsleepinterval')}"
+						 width="100%" paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
+				<s:Label text = "{changedeepsleepinterval}"  
+						 paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
+				<s:Rect height="100%" width="5" >
+					<s:fill>
+						<s:SolidColor color="#212121" id="rectdeepsleepinterval2"/>
+					</s:fill>
+				</s:Rect>
+			</s:HGroup>
+			
+			<s:Line width="100%">
+				<s:stroke>
+					<s:SolidColorStroke color="#3B6999"  weight="3"/>
+				</s:stroke>
+			</s:Line>	
+			
 			<!-- Chapter Alerts-->
 			<s:Label text = "{ModelLocator.resourceManagerInstance.getString('settingsview','alerts')}" textAlign="center"  color="#3B6999" 
 					 width="100%" paddingLeft="3" paddingRight="0" fontSize="20" fontWeight="bold" paddingTop="10" paddingBottom ="10"/>
@@ -1909,7 +2031,7 @@
 				</s:stroke>
 			</s:Line>
 			
-			<!-- Chapter Nightscout url and api secret --> 
+			<!-- Chapter Nightscout - all parameters --> 
 			<s:VGroup width="100%">
 				<!-- button to change url -->
 				<s:HGroup click="nightScoutUrl_clickHandler(event)" width="100%" verticalAlign="bottom">
@@ -1947,6 +2069,116 @@
 					<s:Rect height="100%" width="5" >
 						<s:fill>
 							<s:SolidColor color="#212121" id="rect4"/>
+						</s:fill>
+					</s:Rect>
+				</s:HGroup>
+				<s:Line width="100%">
+					<s:stroke>
+						<s:SolidColorStroke color="0xFFFFFF" weight="1" alpha="0.25"/>
+					</s:stroke>
+				</s:Line>
+				<!-- LOCAL_SETTING_NIGHTSCOUTUPLOAD_ON_ALWAYS -->
+				<s:HGroup click="nightscoutUploadAlwaysOn_OnOff_clickHandler(event)" width="100%" verticalAlign="bottom">
+					<s:Rect height="100%" width="5" >
+						<s:fill>
+							<s:SolidColor color="#212121" id="nightscoutUploadAlwaysOn_OnOff_1"/>
+						</s:fill>
+					</s:Rect>
+					<s:Label text = "{ModelLocator.resourceManagerInstance.getString('settingsview','nightscout_upload_always')}" 
+							 width="100%" paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
+					<s:Label text = "{nightScoutUploadAlwaysOnText}"  
+							 paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="14"/>
+					<s:Rect height="100%" width="5" >
+						<s:fill>
+							<s:SolidColor color="#212121" id="nightscoutUploadAlwaysOn_OnOff_2"/>
+						</s:fill>
+					</s:Rect>
+				</s:HGroup>
+				<s:Line width="100%">
+					<s:stroke>
+						<s:SolidColorStroke color="0xFFFFFF" weight="1" alpha="0.25"/>
+					</s:stroke>
+				</s:Line>
+				<!-- LOCAL_SETTING_NIGHTSCOUTUPLOAD_ON_EVERY_12_HOURS -->
+				<s:HGroup click="nightscoutUploadEvery12Hours_OnOff_clickHandler(event)" width="100%" verticalAlign="bottom">
+					<s:Rect height="100%" width="5" >
+						<s:fill>
+							<s:SolidColor color="#212121" id="nightscoutUploadEvery12Hours_OnOff_1"/>
+						</s:fill>
+					</s:Rect>
+					<s:Label text = "{ModelLocator.resourceManagerInstance.getString('settingsview','nightscout_upload_every_12_hours')}" 
+							 width="100%" paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
+					<s:Label text = "{nightScoutUploadOnEvery12HoursText}"  
+							 paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="14"/>
+					<s:Rect height="100%" width="5" >
+						<s:fill>
+							<s:SolidColor color="#212121" id="nightscoutUploadEvery12Hours_OnOff_2"/>
+						</s:fill>
+					</s:Rect>
+				</s:HGroup>
+				<s:Line width="100%">
+					<s:stroke>
+						<s:SolidColorStroke color="0xFFFFFF" weight="1" alpha="0.25"/>
+					</s:stroke>
+				</s:Line>
+				<!-- LOCAL_SETTING_NIGHTSCOUTUPLOAD_ON_WHEN_PLUGGED -->
+				<s:HGroup click="nightscoutUploadWhenPlugged_OnOff_clickHandler(event)" width="100%" verticalAlign="bottom">
+					<s:Rect height="100%" width="5" >
+						<s:fill>
+							<s:SolidColor color="#212121" id="nightscoutUploadWhenPlugged_OnOff_1"/>
+						</s:fill>
+					</s:Rect>
+					<s:Label text = "{ModelLocator.resourceManagerInstance.getString('settingsview','ngithscout_upload_when_plugged')}" 
+							 width="100%" paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
+					<s:Label text = "{nightScoutUploadOnWhenPluggedText}"  
+							 paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="14"/>
+					<s:Rect height="100%" width="5" >
+						<s:fill>
+							<s:SolidColor color="#212121" id="nightscoutUploadWhenPlugged_OnOff_2"/>
+						</s:fill>
+					</s:Rect>
+				</s:HGroup>
+				<s:Line width="100%">
+					<s:stroke>
+						<s:SolidColorStroke color="0xFFFFFF" weight="1" alpha="0.25"/>
+					</s:stroke>
+				</s:Line>
+				<!-- LOCAL_SETTING_NIGHTSCOUTUPLOAD_ON_WHEN_IN_FOREGROUND -->
+				<s:HGroup click="nightscoutUploadWhenInForeGround_OnOff_clickHandler(event)" width="100%" verticalAlign="bottom">
+					<s:Rect height="100%" width="5" >
+						<s:fill>
+							<s:SolidColor color="#212121" id="nightscoutUploadWhenInForeGround_OnOff_1"/>
+						</s:fill>
+					</s:Rect>
+					<s:Label text = "{ModelLocator.resourceManagerInstance.getString('settingsview','ngithscout_upload_when_in_foreground')}" 
+							 width="100%" paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
+					<s:Label text = "{nightScoutUploadOnWhenInForeGroundText}"  
+							 paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="14"/>
+					<s:Rect height="100%" width="5" >
+						<s:fill>
+							<s:SolidColor color="#212121" id="nightscoutUploadWhenInForeGround_OnOff_2"/>
+						</s:fill>
+					</s:Rect>
+				</s:HGroup>
+				<s:Line width="100%">
+					<s:stroke>
+						<s:SolidColorStroke color="0xFFFFFF" weight="1" alpha="0.25"/>
+					</s:stroke>
+				</s:Line>
+				<!-- LOCAL_SETTING_NIGHTSCOUTUPLOAD_ON_WHEN_COMING_TO_FOREGROUND -->
+				<s:HGroup click="nightscoutUploadWhenComingToForeGround_OnOff_clickHandler(event)" width="100%" verticalAlign="bottom">
+					<s:Rect height="100%" width="5" >
+						<s:fill>
+							<s:SolidColor color="#212121" id="nightscoutUploadWhenComingToForeGround_OnOff_1"/>
+						</s:fill>
+					</s:Rect>
+					<s:Label text = "{ModelLocator.resourceManagerInstance.getString('settingsview','ngithscout_upload_when_coming_to_foreground')}" 
+							 width="100%" paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
+					<s:Label text = "{nightScoutUploadOnWhenComingToForeGroundText}"  
+							 paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="14"/>
+					<s:Rect height="100%" width="5" >
+						<s:fill>
+							<s:SolidColor color="#212121" id="nightscoutUploadWhenComingToForeGround_OnOff_2"/>
 						</s:fill>
 					</s:Rect>
 				</s:HGroup>

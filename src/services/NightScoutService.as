@@ -67,6 +67,8 @@ package services
 		private static var formatter:DateTimeFormatter;
 		private static var timeStampOfLastBGReadingToUpload:Number = 0;
 		
+		private static var doNightScoutUpload:Boolean = false;
+		
 		/**
 		 * follower related
 		 */
@@ -178,8 +180,11 @@ package services
 			}
 			
 			function appInForeGround(event:Event = null):void {
-				myTrace("in appInForeGround");
-				sync();
+				if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_NIGHTSCOUTUPLOAD_ON_WHEN_COMING_TO_FOREGROUND) == "true") {
+					myTrace("in appInForeGround, launching sync");
+					doNightScoutUpload = true;
+					sync();
+				}
 			}
 			
 			function calibrationReceived(event:CalibrationServiceEvent):void {
@@ -318,8 +323,28 @@ package services
 		public static function sync(event:Event = null):void {
 			myTrace("in sync");
 			
+			var lastSyncTimeStamp:Number = new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_UPLOAD_BGREADING_TIMESTAMP));
+
+			if ( ! (
+				doNightScoutUpload
+				||
+				(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_NIGHTSCOUTUPLOAD_ON_ALWAYS) == "true")
+				||
+				(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_NIGHTSCOUTUPLOAD_ON_EVERY_12_HOURS) == "true" && (new Date()).valueOf() - lastSyncTimeStamp > 12 * 3600 * 1000)
+				||
+				(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_NIGHTSCOUTUPLOAD_ON_WHEN_PLUGGED) == "true" && BackgroundFetch.getBatteryStatus() == 2)
+				||
+				(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_NIGHTSCOUTUPLOAD_ON_WHEN_IN_FOREGROUND) == "true" && BackgroundFetch.appIsInForeground())
+				)) {
+				myTrace("syncing not starting becauuse non of the preconditions are met");
+				syncFinished();
+				return;
+			}
+			
+			doNightScoutUpload = false;
+						
 			if (!NetworkInfo.networkInfo.isReachable()) {
-				myTrace("network not reachable, calling BackGroundFetchService.callCompletionHandler although this wouldn't make any sense, no network, probably backgroundfetch is not waiting");
+				myTrace("network not reachable");
 				syncFinished();
 				return;
 			}
@@ -360,7 +385,6 @@ package services
 			syncRunning = true;
 			
 			var listOfReadingsAsArray:Array = [];
-			var lastSyncTimeStamp:Number = new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_UPLOAD_BGREADING_TIMESTAMP));
 			
 			var cntr:int = ModelLocator.bgReadings.length - 1;
 			var arrayCntr:int = 0;

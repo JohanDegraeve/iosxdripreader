@@ -12,10 +12,12 @@ package services
 	
 	import databaseclasses.BlueToothDevice;
 	import databaseclasses.CommonSettings;
+	import databaseclasses.LocalSettings;
 	
 	import events.DeepSleepServiceEvent;
-	import events.IosXdripReaderEvent;
+	import events.NightScoutServiceEvent;
 	import events.SettingsServiceEvent;
+	import events.TransmitterServiceEvent;
 
 	/**
 	 * deepsleep timer will start a timer that expires every 10 seconds, indefinitely<br>
@@ -25,15 +27,23 @@ package services
 	 */
 	public class DeepSleepService extends EventDispatcher
 	{
+		private static const deepSleepIntervalMinimumValue:int = 5000;
+
 		private static var deepSleepTimer:Timer;
 
 		private static var _instance:DeepSleepService = new DeepSleepService();
 		
 		/**
-		 * how often to play the 1ms sound, in ms 
+		 * how often to play the 1ms sound, in ms<br>
+		 * default value 0 means not initialised
 		 */
-		private static var deepSleepInterval:int = 5001;
+		private static var deepSleepIntervalUsed:int = 0;
 		private static var lastLogPlaySoundTimeStamp:Number = 0;
+		
+		/**
+		 * battery status (charging or not charging) used to set the deepsleep interval. If charging then value will be 5000 ms
+		 */
+		private static var previousBatteryStatus:int = 0;
 
 		public static function get instance():DeepSleepService
 		{
@@ -49,68 +59,58 @@ package services
 		}
 		
 		public static function init():void {
-			setDeepSleepInterval();
-			startDeepSleepTimer();
-			iosxdripreader.instance.addEventListener(IosXdripReaderEvent.APP_IN_FOREGROUND, checkDeepSleepTimer);
 			CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, onCommonSettingsChanged);
+			LocalSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, onLocalSettingsChanged);
+			
+			TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, BGReadingReceived);
+			NightScoutService.instance.addEventListener(NightScoutServiceEvent.NIGHTSCOUT_SERVICE_BG_READING_RECEIVED, BGReadingReceived);
+			
+			previousBatteryStatus = BackgroundFetch.getBatteryStatus();
+			
+			setDeepSleepIntervalAndRestartDeepSleepTimer();
 		}
 		
 		private static function onCommonSettingsChanged(event:SettingsServiceEvent):void {
 			if (event.data == CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE) {
-				setDeepSleepInterval();
+				setDeepSleepIntervalAndRestartDeepSleepTimer();
+			}
+		}
+		
+		private static function onLocalSettingsChanged(event:SettingsServiceEvent):void {
+			if (event.data == LocalSettings.LOCAL_SETTING_DEEP_SLEEP_SERVICE_INTERVAL_UNPLUGGED_IN_SECONDS) {
+				setDeepSleepIntervalAndRestartDeepSleepTimer();
 			}
 		}
 		
 		/**
-		 * sets  deepSleepInterval, dependent on type of peripheral
+		 * sets  deepSleepInterval, dependent on type of peripheral<br>
+		 * will also restart the deepsleep timer
 		 */
-		private static function setDeepSleepInterval():void {
-			if (BlueToothDevice.isDexcomG4() || BlueToothDevice.isDexcomG5()) {
-				//for dexcom G4 and G5 it is sufficient to wake up every 10 seconds
-				if (deepSleepInterval != 10000) {
-					deepSleepInterval = 10000;
-					if (deepSleepTimer != null) {
-						if (deepSleepTimer.running) {
-							deepSleepTimer.stop();
-							startDeepSleepTimer();
-						}
-					}
-				}
+		private static function setDeepSleepIntervalAndRestartDeepSleepTimer():void {
+			myTrace("in setDeepSleepIntervalAndRestartDeepSleepTimer");
+			if (    !BlueToothDevice.isFollower()
+				 && 
+				 	!(previousBatteryStatus == 2)
+			   ) {
+				deepSleepIntervalUsed = new Number(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_DEEP_SLEEP_SERVICE_INTERVAL_UNPLUGGED_IN_SECONDS)) * 1000;
 			} else {
-				//for follower it must be every 5 seconds, also for blucon it is better
-				if (deepSleepInterval != 5000) {
-					deepSleepInterval = 5000;
-					if (deepSleepTimer != null) {
-						if (deepSleepTimer.running) {
-							deepSleepTimer.stop();
-							startDeepSleepTimer();
-						}
-					}
-				}
+				deepSleepIntervalUsed = deepSleepIntervalMinimumValue;
 			}
+			myTrace("in setDeepSleepIntervalAndRestartDeepSleepTimer, deepSleepIntervalUsed = " + deepSleepIntervalUsed);
+			stopDeepSleepTimer();
+			startDeepSleepTimer();
 		}
 		
 		private static function startDeepSleepTimer():void {
-			deepSleepTimer = new Timer(deepSleepInterval,0);
+			deepSleepTimer = new Timer(deepSleepIntervalUsed,0);
 			deepSleepTimer.addEventListener(TimerEvent.TIMER, deepSleepTimerListener);
 			deepSleepTimer.start();
-		}
-		
-		private static function checkDeepSleepTimer(event:Event):void {
-			if (deepSleepTimer != null) {
-				if (deepSleepTimer.running) {
-					return;
-				} else {
-					deepSleepTimer = null;										
-				}
-			}
-			startDeepSleepTimer();
 		}
 		
 		private static function deepSleepTimerListener(event:Event):void {
 			if (BackgroundFetch.isPlayingSound()) {
 			} else {	
-				if ((new Date()).valueOf() - lastLogPlaySoundTimeStamp > 1 * 60 * 1000) {
+				if ((new Date()).valueOf() - lastLogPlaySoundTimeStamp > 1 * 1 * 1000) {
 					myTrace("in deepSleepTimerListener, call playSound");
 					lastLogPlaySoundTimeStamp = (new Date()).valueOf();
 				}
@@ -118,6 +118,22 @@ package services
 			}
 			//for other services that need to do something at regular intervals
 			_instance.dispatchEvent(new DeepSleepServiceEvent(DeepSleepServiceEvent.DEEP_SLEEP_SERVICE_TIMER_EVENT));
+		}
+		
+		private static function stopDeepSleepTimer():void {
+			if (deepSleepTimer != null) {
+				if (deepSleepTimer.running) {
+					deepSleepTimer.stop();
+				}
+			}
+		}
+		
+		private static function BGReadingReceived(be:Event):void {
+			myTrace("batterystatus = " + BackgroundFetch.getBatteryStatus());
+			if (previousBatteryStatus != BackgroundFetch.getBatteryStatus()) {
+				previousBatteryStatus = BackgroundFetch.getBatteryStatus();
+				setDeepSleepIntervalAndRestartDeepSleepTimer();
+			}
 		}
 
 		private static function myTrace(log:String):void 

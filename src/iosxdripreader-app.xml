@@ -8,7 +8,7 @@
 	See the GNU General Public License for more details. You should have received 
 	a copy of the GNU General Public License along with this program. If not, 
 	see <http://www.gnu.org/licenses/gpl.txt>. -->
-<application xmlns="http://ns.adobe.com/air/application/27.0">
+<application xmlns="http://ns.adobe.com/air/application/31.0">
 
 	<!-- Adobe AIR Application Descriptor File Template. Specifies parameters 
 		for identifying, installing, and launching AIR applications. xmlns - The 
@@ -134,7 +134,7 @@
 
 		<!-- Display Resolution for the app (either "standard" or "high"). Optional, 
 			OSX-only. Default "standard" -->
-		<!-- <requestedDisplayResolution></requestedDisplayResolution> -->
+		<requestedDisplayResolution>high</requestedDisplayResolution>
 		<aspectRatio>portrait</aspectRatio>
 		<autoOrients>true</autoOrients>
 		<fullScreen>false</fullScreen>
@@ -235,7 +235,7 @@
                     <string>2</string>
                 </array>
                 <key>MinimumOSVersion</key>
-                <string>8.1.4</string>
+                <string>8.1</string>
                 <key>UIBackgroundModes</key>
 				<array>
 					<string>bluetooth-central</string>
