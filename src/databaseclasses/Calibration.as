@@ -432,8 +432,8 @@ package databaseclasses
 			//myTrace("before adjustbgreadings bgReading1 = " + bgReading1.print("   "));
 			//myTrace("before adjustbgreadings bgReading2 = " + bgReading2.print("   "));
 			var latest3Calibrations:ArrayCollection = new ArrayCollection();
-			latest3Calibrations.addItem(calibration2);//the second is the latest, this one comes first, so it will be sorted from large to small
-			latest3Calibrations.addItem(calibration1);
+			latest3Calibrations.addItem(calibration1);//the first is the latest, this one comes first, so it will be sorted from large to small
+			latest3Calibrations.addItem(calibration2);
 			
 			adjustRecentBgReadings(numAdjustedReadings, latest3Calibrations);
 			//myTrace("after adjustbgreadings");
