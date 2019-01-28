@@ -1991,7 +1991,31 @@ package services
 					xBridgeProtocolLevel = buffer.readUnsignedByte();//not needed for the moment
 					break;
 				default:
-					myTrace("processG4TransmitterData unknown packetType received : " + packetType);
+					myTrace("in processG4TransmitterData, unknown packet type, looks like an xdrip with old wxl code which starts with the raw_data encoded.");
+					//Supports for example xdrip delivered by xdripkit.co.uk
+					//Expected format is \"raw_data transmitter_battery_level bridge_battery_level with bridge_battery_level always 0" 
+					//Example 123632.218.0
+					//Those packets don't start with a fixed packet length and packet type, as they start with representation of an Integer
+					buffer.position = 0;
+					var bufferAsString:String = buffer.readUTFBytes(buffer.length);
+					var bufferAsStringSplitted:Array = bufferAsString.split(/\s/);
+					rawData = new Number(bufferAsStringSplitted[0]);
+					
+					if (isNaN(rawData)) {
+						myTrace("in processG4TransmitterData, data doesn't start with an Integer, no further processing");
+						return;
+					}
+					myTrace("in processG4TransmitterData, raw_data = " + rawData.toString())
+					
+					transmitterBatteryVoltage = Number.NaN; 
+					if (bufferAsStringSplitted.length > 1) {
+						transmitterBatteryVoltage = new Number(bufferAsStringSplitted[1]);
+						myTrace("in processG4TransmitterData, transmitterBatteryVoltage = " + transmitterBatteryVoltage.toString());
+					}
+					myTrace("in processG4TransmitterData, dispatching transmitter data with transmitterBatteryVoltage = " + transmitterBatteryVoltage);
+					blueToothServiceEvent = new BlueToothServiceEvent(BlueToothServiceEvent.TRANSMITTER_DATA);
+					blueToothServiceEvent.data = new TransmitterDataXdripDataPacket(rawData, rawData, transmitterBatteryVoltage);
+					_instance.dispatchEvent(blueToothServiceEvent);
 					warnUnknownG4PacketType(packetType);
 			}
 		}
