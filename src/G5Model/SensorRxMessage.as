@@ -2,10 +2,15 @@ package G5Model
 {
 	import flash.utils.ByteArray;
 	import flash.utils.Endian;
+	
 	import Utilities.Trace;
+	
+	import databaseclasses.BlueToothDevice;
 
 	public class SensorRxMessage extends TransmitterMessage
 	{
+		private const G6_SCALING:int = 34;
+		
 		private var opcode:int = 0x2f;
 		public var timestamp:Number;
 		public var unfiltered:Number;
@@ -22,8 +27,8 @@ package G5Model
 					
 					transmitterStatus = TransmitterStatus.getBatteryLevel(byteSequence.readByte());
 					timestamp = byteSequence.readInt();
-					unfiltered = byteSequence.readInt();
-					filtered = byteSequence.readInt();
+					unfiltered = BlueToothDevice.isDexcomG6() ? byteSequence.readInt() * G6_SCALING : byteSequence.readInt();
+					filtered = BlueToothDevice.isDexcomG6() ? byteSequence.readInt() * G6_SCALING : byteSequence.readInt();
 					myTrace("SensorRX dbg: timestamp = " + timestamp + ", unfiltered = " + unfiltered + ", filtered = " + filtered + ", transmitterStatus = " + transmitterStatus.toString());
 				}
 				byteSequence.position = 0;

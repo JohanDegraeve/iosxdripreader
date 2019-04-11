@@ -63,6 +63,8 @@
 			[Bindable]
 			private static var transmitterTypeText:String="";
 			[Bindable]
+			private static var isG6:String="";
+			[Bindable]
 			private static var dexcomShareAccountName:String="";
 			[Bindable]
 			private static var dexcomSharePassword:String="";
@@ -176,6 +178,8 @@
 				} else {
 					groupTransmitterId.alpha = 0.25;
 				}
+				
+				isG6 = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_ISG6) == "true" ? "yes":"no";
 				
 				dexcomShareAccountName = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_ACCOUNTNAME);
 				dexcomSharePassword = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_PASSWORD);
@@ -1334,6 +1338,20 @@
 				}
 			}
 			
+			private function changeIsG6(event:MouseEvent):void {
+				rectisG61.color = uint("0xD3D3D3");
+				rectisG62.color = uint("0xD3D3D3");
+				setResetColorTimer();
+				
+				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_ISG6) == "true") {
+					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_ISG6, "false");
+					isG6 = "no";
+				} else {
+					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_ISG6, "true");
+					isG6 = "yes";
+				}
+			}
+			
 			private function changeDeepSleepInterval(event:MouseEvent):void {
 				rectdeepsleepinterval1.color = uint("0xD3D3D3");
 				rectdeepsleepinterval2.color = uint("0xD3D3D3");
@@ -1504,6 +1522,8 @@
 					rectappinactive2.color = uint("0x212121");
 					rectdeepsleepinterval1.color = uint("0x212121");//deepsleepinterval
 					rectdeepsleepinterval2.color = uint("0x212121");//deepsleepinterval
+					rectisG61.color = uint("0x212121");//isG6
+					rectisG62.color = uint("0x212121");//isG6
 					nightscoutUploadAlwaysOn_OnOff_1.color = uint("0x212121");
 					nightscoutUploadAlwaysOn_OnOff_2.color = uint("0x212121");
 					nightscoutUploadEvery12Hours_OnOff_1.color = uint("0x212121");
@@ -1730,7 +1750,31 @@
 				<s:stroke>
 					<s:SolidColorStroke color="0xFFFFFF" weight="1" alpha="0.25"/>
 				</s:stroke>
-			</s:Line>	
+			</s:Line>
+			
+			<!-- Chapter general settings Subsection isG6 -->
+			<s:HGroup click="changeIsG6(event)" width="100%" id = "isG6Group">
+				<s:Rect height="100%" width="5" >
+					<s:fill>
+						<s:SolidColor color="#212121" id="rectisG61"/>
+					</s:fill>
+				</s:Rect>
+				<s:Label text = "is G6 ?"
+						 width="100%" paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
+				<s:Label text = "{isG6}"  
+						 paddingLeft="0" paddingRight="0" paddingTop="10" paddingBottom="10" fontSize="18"/>
+				<s:Rect height="100%" width="5" >
+					<s:fill>
+						<s:SolidColor color="#212121" id="rectisG62"/>
+					</s:fill>
+				</s:Rect>
+			</s:HGroup>
+			
+			<s:Line width="100%">
+				<s:stroke>
+					<s:SolidColorStroke color="0xFFFFFF" weight="1" alpha="0.25"/>
+				</s:stroke>
+			</s:Line>
 
 			<!-- Chapter general settings Subsection Suspension Prevention -->
 			<s:HGroup click="changeDeepSleepInterval(event)" width="100%" id = "deepSleepIntervalGroup">

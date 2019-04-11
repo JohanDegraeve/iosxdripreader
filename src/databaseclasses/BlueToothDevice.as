@@ -215,6 +215,10 @@ package databaseclasses
 			return (isDexcomG5() || isDexcomG4() || isBluKon());
 		}
 		
+		public static function isDexcomG6():Boolean {
+			return CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_ISG6) == "true";
+		}
+		
 		public static function transmitterIdKnown():Boolean {
 			return (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID) != "00000");
 		}
