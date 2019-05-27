@@ -1,4 +1,4 @@
-# there's a new APP now : go to https://spike-app.com/
+# there's a new APP now : go to https://github.com/JohanDegraeve/xdripswift
 
 connects to xDrip, G5, BluKon and BlueReader
 can also work as Follower
